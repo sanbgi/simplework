@@ -33,18 +33,18 @@ private://IModule
         return Error::Success;
     }
 
-    SmartPtr<IObject> createObject(const char* szClassKey, IModule* pCaller) {
+    IObjectPtr createObject(const char* szClassKey, IModule* pCaller) {
         SmartPtr<IFactory> spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
             return spFactory->createObject();
         }
-        return SmartPtr<IObject>();
+        return IObjectPtr();
     }
 
     //
     // 根据类名和接口名，创建工厂
     //
-    SmartPtr<IObject> createFactory(const char* szClassKey, IModule* pCaller) {
+    IObjectPtr createFactory(const char* szClassKey, IModule* pCaller) {
         return getRegisteredFactory(szClassKey);
     }
 
@@ -58,8 +58,8 @@ private://IModule
     }
 
 public://ICoreModule
-    SmartPtr<IObject> createModule(const char* szModuleKey) {
-        return SmartPtr<IObject>();
+    IObjectPtr createModule(const char* szModuleKey) {
+        return IObjectPtr();
     }
 
 public://Constructor

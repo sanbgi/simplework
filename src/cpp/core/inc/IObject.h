@@ -16,14 +16,14 @@ protected:
     //
     // 指针强制设置接口，由于设置的是强制转化后的地址，所以，接口不安全，也不能被外界使用
     //
-    struct IPointerForceSetter {
+    struct IPtrForceSaver {
         virtual int forceSetPtr(void* pPtr) = 0;
     };
 
 private:
-    virtual int addRef() = 0;
-    virtual int decRef() = 0;
-    virtual int convertTo(const char* szInterfaceKey, IPointerForceSetter* pSaver) = 0;
+    virtual int __swAddRef() = 0;
+    virtual int __swDecRef() = 0;
+    virtual int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pSaver) = 0;
     template<typename T> friend class SmartPtr;
 
 __SimpleWork_SuperInterface_Leave__

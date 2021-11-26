@@ -12,7 +12,7 @@ public:
 
 public:
     Object createObject() {
-        return getPtr() ? getPtr()->createObject() : Object();
+        return !isNullptr() ? getPtr()->createObject() : Object();
     }
 
 SIMPLEWORK_CLASS_LEAVE

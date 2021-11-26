@@ -11,7 +11,7 @@ SIMPLEWORK_INTERFACE_ENTER(SimpleWork, ICoreModule, IModule)
     //
     // 创建模块
     //
-    virtual SmartPtr<IObject> createModule(const char* szModuleKey) = 0;
+    virtual IObjectPtr createModule(const char* szModuleKey) = 0;
 
 SIMPLEWORK_INTERFACE_LEAVE
 

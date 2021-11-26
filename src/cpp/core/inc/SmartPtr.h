@@ -6,7 +6,7 @@ namespace SimpleWork {
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口
 //
-template<typename TInterface> class SmartPtr : IObject::IPointerForceSetter {
+template<typename TInterface> class SmartPtr : IObject::IPtrForceSaver {
 
 public:
     SmartPtr(){
@@ -33,30 +33,21 @@ public:
     }
 
 public:
-    int setPtr(TInterface* pPtr) { 
-        return assignPtr(pPtr);
-    }
-    template<typename Q> int setPtr(Q* pPtr) {
-        return assignPtr(pPtr);
-    }
     TInterface* getPtr() const { 
         return _ptr; 
     }
 
 public:
-    bool isNullPtr() const { 
+    bool isNullptr() const { 
         return _ptr == nullptr; 
     }
     TInterface* operator->() const {
         return _ptr; 
     }
-    operator const TInterface*() {
-        return _ptr;
-    }
     operator bool(){
         return _ptr != nullptr;
     }
-    operator IObject::IPointerForceSetter*() {
+    operator IObject::IPtrForceSaver*() {
         return this;
     }
 
@@ -70,46 +61,40 @@ private:
 
 private://IConvertObjectContainer
     //
-    //  这个函数非常不安全，因为会将一个指针强制转化为接口，目前只有IObject::convertTo函数调用这个接口，用
+    //  这个函数非常不安全，因为会将一个指针强制转化为接口，目前只有IObject::__swConvertTo函数调用这个接口，用
     //  于返回强制转化为目标接口的指针，而转化工作在宏定义SIMPLEWORK_INTERFACE_ENTRY中。
     //
     int forceSetPtr(void* pPtr) {
-        return setPtr((TInterface*)pPtr);
+        return assignPtr((TInterface*)pPtr);
     }
 
 private:
     void initPtr(TInterface* pPtr = nullptr) {
         if( pPtr ) {
             _ptr = pPtr;
-            _ptr->addRef();
+            _ptr->__swAddRef();
         }
     }
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
-            pPtr->convertTo(TInterface::getInterfaceKey(), this);
+            pPtr->__swConvertTo(TInterface::getInterfaceKey(), this);
         }
     }
     void releasePtr() {
         if( _ptr ) {
-            _ptr->decRef();
+            _ptr->__swDecRef();
             _ptr = nullptr;
         }
     }
-    int assignPtr(TInterface* pPtr = nullptr) {
+    template<typename Q> int assignPtr(Q* pPtr = nullptr) {
         if( _ptr != pPtr ) {
             releasePtr();
             initPtr(pPtr);
         }
         return Error::Success;
     }
-    template<typename Q> int assignPtr(Q* pPtr = nullptr) {
-        if( _ptr != pPtr ) {
-            releasePtr();
-            initPtr<Q>(pPtr);
-        }
-        return Error::Success;
-    }
 };
+typedef SmartPtr<IObject> IObjectPtr;
 
 }//namespace SimpleWork
 

@@ -11,13 +11,13 @@ int main(int argc, char *argv[]){
 
     Factory spFactory = CFactory::createFactory<CMyObject>();
     
-    std::cout << "startRegister = " << (spFactory.isNullPtr() ? "nullprt" : "validptr" );
+    std::cout << "startRegister = " << (spFactory ? "nullprt" : "validptr" );
     
     getSimpleWorkModule()->registerFactory("MyObject", spFactory.getPtr());
 
     Object spOject = getSimpleWorkModule()->createObject("MyObject");
     Object spObject = spFactory.createObject();
-    if( !spObject.isNullPtr() ) {
+    if( !spObject ) {
         std::cout << "Great\n";
     }
     

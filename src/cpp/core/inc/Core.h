@@ -36,6 +36,8 @@
 // 接口宏定义
 //
 #define SIMPLEWORK_INTERFACE_ENTER(namespaceName, interfaceName, superInterfaceName)  \
+    struct interfaceName; \
+    typedef SmartPtr<interfaceName> interfaceName##Ptr; \
     struct interfaceName : superInterfaceName { \
         static const char* getInterfaceKey() { return #namespaceName"."#interfaceName; }
 #define SIMPLEWORK_INTERFACE_LEAVE };

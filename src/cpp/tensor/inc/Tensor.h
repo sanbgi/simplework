@@ -72,7 +72,7 @@ SIMPLEWORK_CLASS_ENTER(Tensor)
 
 private:
     static IFactory* getFactory() {
-        static SmartPtr<IFactory> s_ptrFactory = getSimpleWorkModule()->createFactory("SimpleWork.Tensor");
+        static IFactoryPtr s_ptrFactory = getSimpleWorkModule()->createFactory("SimpleWork.Tensor");
         return s_ptrFactory.getPtr();
     };
 

@@ -32,12 +32,12 @@ SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IModule, IObject)
     // @szClassKey 类名，类似: "SimpleWork.Tensor", "SimpleWork.Video", "SimpleWork.Camera"
     // @szInterfaceKey 接口名，类似："SimpleWork.ITensor"
     //
-    virtual SmartPtr<IObject> createObject(const char* szClassKey, IModule* pCaller=nullptr) = 0;
+    virtual IObjectPtr createObject(const char* szClassKey, IModule* pCaller=nullptr) = 0;
 
     //
     // 根据类名和接口名，创建工厂
     //
-    virtual SmartPtr<IObject> createFactory(const char* szClassKey, IModule* pCaller=nullptr) = 0;
+    virtual IObjectPtr createFactory(const char* szClassKey, IModule* pCaller=nullptr) = 0;
 
 SIMPLEWORK_INTERFACE_LEAVE
 

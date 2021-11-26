@@ -50,19 +50,19 @@ namespace SimpleWork {
 //
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
 protected: \
-    int convertTo(const char* szInterfaceKey, IPointerForceSetter* pTarget) { 
+    int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
     return Error::Failure; \
 };
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
 protected: \
-    int convertTo(const char* szInterfaceKey, IPointerForceSetter* pTarget) { 
+    int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterface) \
         if( strcmp(szInterfaceKey, TInterface::getInterfaceKey()) == 0 ) { \
             return pTarget->forceSetPtr((void*)(TInterface*)this); \
         }
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
-        return TSuperClass::convertTo(szInterfaceKey, pTarget); \
+        return TSuperClass::__swConvertTo(szInterfaceKey, pTarget); \
     };
 
 
@@ -97,7 +97,7 @@ public:
     //
     // 创建对象，并查询获取对象接口
     //
-    template<typename TObject> static SmartPtr<IObject> createObject() {
+    template<typename TObject> static IObjectPtr createObject() {
         return CObjectImp<TObject>::createObjectImp();
     }
 
@@ -106,7 +106,7 @@ public:
     //  @T 工厂用于创建的对象类
     //  @Q 工厂实现类
     //
-    template<typename TObject, typename TFactory=CFactory> static SmartPtr<IObject> createFactory() {
+    template<typename TObject, typename TFactory=CFactory> static IObjectPtr createFactory() {
         return CFactoryImp<TObject,TFactory>::createFactoryImp();
     }
 
@@ -117,8 +117,8 @@ private:
 
     public://IObject
         CObjectImp() { m_nRefCnt = 1; }
-        int addRef() { return ++m_nRefCnt; }
-        int decRef() {
+        int __swAddRef() { return ++m_nRefCnt; }
+        int __swDecRef() {
             int nRefCnt = --m_nRefCnt;
             if( nRefCnt == 0 ) {
                 delete this;
@@ -126,8 +126,8 @@ private:
             return nRefCnt;
         }
 
-        static SmartPtr<IObject> createObjectImp() {
-            return SmartPtr<IObject>( (IObject*)(CObject*)(new CObjectImp<TObject>()) );
+        static IObjectPtr createObjectImp() {
+            return IObjectPtr( (IObject*)(CObject*)(new CObjectImp<TObject>()) );
         }
 
     private:
@@ -136,12 +136,12 @@ private:
 
     template<typename TObject, typename TFactory> class CFactoryImp : public TFactory {
     public://IFactory
-        SmartPtr<IObject> createObject() {
+        IObjectPtr createObject() {
             return CObjectImp<TObject>::createObjectImp();
         }
 
     public:
-        static SmartPtr<IObject> createFactoryImp() {
+        static IObjectPtr createFactoryImp() {
             return CObjectImp<CFactoryImp<TObject, TFactory>>::createObjectImp();
         }
     };

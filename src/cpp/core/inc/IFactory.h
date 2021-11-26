@@ -11,7 +11,7 @@ SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IFactory, IObject)
     /**
      *  创建对象
      */
-    virtual SmartPtr<IObject> createObject() = 0;
+    virtual IObjectPtr createObject() = 0;
 
 SIMPLEWORK_INTERFACE_LEAVE
 
