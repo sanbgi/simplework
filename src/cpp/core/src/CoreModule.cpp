@@ -33,37 +33,33 @@ private://IModule
         return Error::Success;
     }
 
-    int createObject(IModule* pCaller, const char* szClassKey, IObjectContainer* pContainer){
+    SmartPtr<IObject> createObject(const char* szClassKey, IModule* pCaller) {
         SmartPtr<IFactory> spFactory = getRegisteredFactory(szClassKey);
-        if( !spFactory.isNullPtr() ) {
-            return spFactory->createObject(pContainer);
+        if( !spFactory ) {
+            return spFactory->createObject();
         }
-        return Error::Failure;
+        return SmartPtr<IObject>();
     }
 
     //
     // 根据类名和接口名，创建工厂
     //
-    int createFactory(IModule* pCaller, const char* szClassKey, IObjectContainer* pContainer) {
-        SmartPtr<IFactory> spFactory = getRegisteredFactory(szClassKey);
-        if( !spFactory.isNullPtr() ) {
-            return pContainer->setObject(spFactory.getPtr());
-        }
-        return Error::Failure;
+    SmartPtr<IObject> createFactory(const char* szClassKey, IModule* pCaller) {
+        return getRegisteredFactory(szClassKey);
     }
 
     //
     // 注册工厂
     //
-    int registerFactory(IModule* pCaller, const char* szClassKey, IFactory* pFactory) {
+    int registerFactory(const char* szClassKey, IFactory* pFactory, IModule* pCaller) {
         std::cout << "classKey = " << szClassKey;
         _mapFactories[szClassKey] = SmartPtr<IFactory>(pFactory);
         return Error::Success;
     }
 
 public://ICoreModule
-    int createModule(const char* szModuleKey, IObjectContainer* pModule) {
-        return Error::Failure;
+    SmartPtr<IObject> createModule(const char* szModuleKey) {
+        return SmartPtr<IObject>();
     }
 
 public://Constructor

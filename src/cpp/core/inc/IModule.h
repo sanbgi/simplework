@@ -22,46 +22,22 @@ SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IModule, IObject)
     virtual int initModule(IModule* pCaller) = 0;
 
     //
-    // 创建对象
-    //
-    // @szClassKey 对象标识，例如："SimpleWork.Tensor"      
-    //
-    SmartPtr<IObject> createObject(const char* szClassKey) {
-        SmartPtr<IObject> spObject;
-        createObject(nullptr, szClassKey, &spObject);
-        return spObject;
-    }
-
-    //
-    // 创建工厂
-    //
-    // @szClassKey 对象标识，例如："SimpleWork.Tensor"      
-    //
-    SmartPtr<IObject> createFactory(const char* szClassKey) {
-        SmartPtr<IObject> spFactory;
-        createFactory(nullptr, szClassKey, &spFactory);
-        return spFactory;
-    }
-
-    //
     // 注册工厂
     //
-    virtual int registerFactory(IModule* pCaller, const char* szClassKey, IFactory* pFactory) = 0;
+    virtual int registerFactory(const char* szClassKey, IFactory* pFactory, IModule* pCaller = nullptr) = 0;
 
-
-protected:
     //
     // 根据类名和接口名，创建对象
     //
     // @szClassKey 类名，类似: "SimpleWork.Tensor", "SimpleWork.Video", "SimpleWork.Camera"
     // @szInterfaceKey 接口名，类似："SimpleWork.ITensor"
     //
-    virtual int createObject(IModule* pCaller, const char* szClassKey, IObjectContainer* pContainer) = 0;
+    virtual SmartPtr<IObject> createObject(const char* szClassKey, IModule* pCaller=nullptr) = 0;
 
     //
     // 根据类名和接口名，创建工厂
     //
-    virtual int createFactory(IModule* pCaller, const char* szClassKey, IObjectContainer* pContainer) = 0;
+    virtual SmartPtr<IObject> createFactory(const char* szClassKey, IModule* pCaller=nullptr) = 0;
 
 SIMPLEWORK_INTERFACE_LEAVE
 

@@ -98,13 +98,7 @@ public:
     // 创建对象，并查询获取对象接口
     //
     template<typename TObject> static SmartPtr<IObject> createObject() {
-        SmartPtr<IObject> spPtr;
-        CObjectImp<TObject>::createObjectImp(&spPtr);
-        return spPtr;
-    }
-
-    template<typename TObject> static int createObject(IObjectContainer* pContainer) {
-        return CObjectImp<TObject>::createObjectImp(pContainer);
+        return CObjectImp<TObject>::createObjectImp();
     }
 
     //
@@ -113,13 +107,7 @@ public:
     //  @Q 工厂实现类
     //
     template<typename TObject, typename TFactory=CFactory> static SmartPtr<IObject> createFactory() {
-        SmartPtr<IObject> spPtr;
-        CFactoryImp<TObject,TFactory>::createFactoryImp(&spPtr);
-        return spPtr;
-    }
-
-    template<typename TObject, typename TFactory=CFactory> static int createFactory(IObjectContainer* pContainer) {
-        return CFactoryImp<TObject,TFactory>::createFactoryImp(pContainer);
+        return CFactoryImp<TObject,TFactory>::createFactoryImp();
     }
 
 private:
@@ -138,11 +126,8 @@ private:
             return nRefCnt;
         }
 
-        static int createObjectImp(IObjectContainer* pContainer) {
-            CObjectImp<TObject>* pNewObj = new CObjectImp<TObject>();
-            int ret = pContainer->setObject((CObject*)pNewObj);
-            pNewObj->decRef();
-            return ret;
+        static SmartPtr<IObject> createObjectImp() {
+            return SmartPtr<IObject>( (IObject*)(CObject*)(new CObjectImp<TObject>()) );
         }
 
     private:
@@ -151,13 +136,13 @@ private:
 
     template<typename TObject, typename TFactory> class CFactoryImp : public TFactory {
     public://IFactory
-        int createObject(IObjectContainer* pContainer) {
-            return CObjectImp<TObject>::createObjectImp(pContainer);
+        SmartPtr<IObject> createObject() {
+            return CObjectImp<TObject>::createObjectImp();
         }
 
     public:
-        static int createFactoryImp(IObjectContainer* pContainer) {
-            return CObjectImp<CFactoryImp<TObject, TFactory>>::createObjectImp(pContainer);
+        static SmartPtr<IObject> createFactoryImp() {
+            return CObjectImp<CFactoryImp<TObject, TFactory>>::createObjectImp();
         }
     };
 };

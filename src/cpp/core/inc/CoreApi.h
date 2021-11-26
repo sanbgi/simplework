@@ -19,23 +19,6 @@ SimpleWork::IModule* getSimpleWorkModule();
 namespace SimpleWork {
 
 //
-// 对象工场对象的接口
-//
-SIMPLEWORK_INTERFACE_ENTER(SimpleWork, ICoreModule, IModule)
-
-    //
-    // 创建模块
-    //
-    virtual int createModule(const char* szModuleKey, IObjectContainer* pContainer) = 0;
-    SmartPtr<IObject> createModule(const char* szModuleKey) {
-        SmartPtr<IObject> spModule;
-        createModule(szModuleKey, &spModule);
-        return spModule;
-    }
-
-SIMPLEWORK_INTERFACE_LEAVE
-
-//
 // 获取系统模块
 //
 // @pThisModule

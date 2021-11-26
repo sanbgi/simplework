@@ -8,17 +8,10 @@ namespace SimpleWork {
  */
 SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IFactory, IObject)
 
-public:
-    SmartPtr<IObject> createObject() {
-        SmartPtr<IObject> spObj;
-        createObject(&spObj);
-        return spObj;
-    }
-
     /**
      *  创建对象
      */
-    virtual SmartPtr<IObject> createObject(IObjectContainer* pContainer) = 0;
+    virtual SmartPtr<IObject> createObject() = 0;
 
 SIMPLEWORK_INTERFACE_LEAVE
 

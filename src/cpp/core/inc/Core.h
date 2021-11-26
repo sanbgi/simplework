@@ -41,11 +41,11 @@
 #define SIMPLEWORK_INTERFACE_LEAVE };
 
 #include "IObject.h"
-#include "IObjectContainer.h"
 #include "SmartPtr.h"
 
 #include "IFactory.h"
 #include "IModule.h"
+#include "ICoreModule.h"
 #include "CoreApi.h"
 
 //

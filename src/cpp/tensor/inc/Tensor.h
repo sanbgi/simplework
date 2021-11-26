@@ -14,7 +14,7 @@ SIMPLEWORK_CLASS_ENTER(Tensor)
     // 构造张量
     //
     template<typename T> Tensor(int nData, T* pData, int nDim = 1, int* pDimSizeArr = nullptr) {
-        getFactory()->createObject(this);
+        *this = getFactory()->createObject();
         getPtr()->initTensor(ITensor::getDataType<T>(), nDim, pDimSizeArr, nData, pData);
     };
 

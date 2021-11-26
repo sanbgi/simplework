@@ -4,7 +4,6 @@
 namespace SimpleWork {
 
 SIMPLEWORK_CLASS_ENTER(Object)
-
 SIMPLEWORK_CLASS_LEAVE
 
 }//namespace SimpleWork

@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
     
     std::cout << "startRegister = " << (spFactory.isNullPtr() ? "nullprt" : "validptr" );
     
-    getSimpleWorkModule()->registerFactory(nullptr, "MyObject", spFactory.getPtr());
+    getSimpleWorkModule()->registerFactory("MyObject", spFactory.getPtr());
 
     Object spOject = getSimpleWorkModule()->createObject("MyObject");
     Object spObject = spFactory.createObject();

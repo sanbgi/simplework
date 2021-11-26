@@ -6,9 +6,7 @@ namespace SimpleWork {
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口
 //
-template<typename TInterface> class SmartPtr :
-    public IObjectContainer,
-    public IObject::IPointerForceSetter {
+template<typename TInterface> class SmartPtr : IObject::IPointerForceSetter {
 
 public:
     SmartPtr(){
@@ -55,6 +53,9 @@ public:
     operator const TInterface*() {
         return _ptr;
     }
+    operator bool(){
+        return _ptr != nullptr;
+    }
     operator IObject::IPointerForceSetter*() {
         return this;
     }
@@ -66,11 +67,6 @@ public:
 //
 private:
     TInterface* _ptr = nullptr;
-
-private://IObjectContainer
-    int setObject(IObject* pObject) {
-        return assignPtr(pObject);
-    }
 
 private://IConvertObjectContainer
     //
