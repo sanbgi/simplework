@@ -40,11 +40,18 @@ private:
         return Error::Success;
     }
 
-    IModulePtr createModule(int nSimpleWorkCompatibleVer) {
+    IModulePtr createModule(const char* szModuleKey, int nSimpleWorkCompatibleVer) {
         if(nSimpleWorkCompatibleVer != SIMPLEWORK_COMPATIBLE_VER) {
             return nullptr;
         }
-        return CFactory::createObject<CModule>();
+
+        IModulePtr spModule = CFactory::createObject<CModule>();
+        if( szModuleKey != nullptr && strlen(szModuleKey) > 0 ) {
+            if( spModule->initModule(szModuleKey, this) == Error::Success ) {
+                _mapSubModules[szModuleKey] = spModule;
+            }
+        }
+        return spModule;
     }
 
     IFactoryPtr getRegisteredFactory(const char* szClassKey) {
@@ -87,21 +94,13 @@ private:
             //
             // 初始化模块后，再查找一次工厂，看是否注册，并返回已经注册的值
             //
-            spModule->initModule(strModuleKey.c_str(), nullptr);
+            spModule->initModule(strModuleKey.c_str(), this);
             it = _mapFactories.find(szClassKey);
             if(it != _mapFactories.end() ) {
                 return it->second;
             }
         }
         return nullptr;
-    }
-
-public:
-    static IModulePtr createSimpleWorkCoreModule() {
-        ICoreApiPtr spCoreApi = getCoreApi();
-        IModulePtr spCoreModule = CFactory::createObject<CModule>();
-        spCoreModule->initModule("sw", spCoreApi);
-        return spCoreModule;
     }
 
 protected:
@@ -113,9 +112,9 @@ protected:
 //
 // 输出核心模块
 //
-__SimpleWork_API__ ICoreApiPtr getCoreApi(int nCompatibleVer) {
+__SimpleWork_API__ ICoreApi* getCoreApi(int nCompatibleVer) {
     static ICoreApiPtr s_spCoreApi = CFactory::createObject<CCoreApi>();
-    return s_spCoreApi.getPtr();
+    return s_spCoreApi;
 }
 
 __SimpleWork_Core_Namespace_Leave__

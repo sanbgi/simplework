@@ -6,7 +6,7 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
-SIMPLEWORK_INTERFACE_ENTER(sw, ILibrary, IObject)
+SIMPLEWORK_INTERFACE_ENTER(SIMPLEWORK_CORE_NAMESPACE, ILibrary, IObject)
     virtual IModulePtr loadLibraryModule(string strModuleKey) = 0;
 SIMPLEWORK_INTERFACE_LEAVE
 
@@ -71,7 +71,7 @@ private:
         {
             _hDLL = hDLL;
 
-            typedef sw::IModule* (*FUNCTION)();
+            typedef SIMPLEWORK_CORE_NAMESPACE::IModule* (*FUNCTION)();
             FUNCTION fun = (FUNCTION)GetProcAddress(hDLL, "getSimpleWorkModule");
             if (fun)
             { 

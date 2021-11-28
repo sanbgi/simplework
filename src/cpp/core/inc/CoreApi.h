@@ -12,11 +12,16 @@
 //  并且会在初始化模块的时候，将系统模块指针作为参数，传递给当前模块，这样，当前模块就可以调用系统
 //  模块功能了。
 //
-//      当然，如果可执行程序，则还是需要调用sw::getCoreModule进行初始化的。
-//
+
+#if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
+    #define SIMPLEWORK_MODULE_EXPORT extern "C" __declspec(dllexport)
+#else
+    #define SIMPLEWORK_MODULE_EXPORT extern "C" 
+#endif
+
 #ifndef __SimpleWork_getSimpleWorkModule__
 #define __SimpleWork_getSimpleWorkModule__
-    sw::IModule* getSimpleWorkModule();
+    SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::IModule* getSimpleWorkModule();
 #else//__SimpleWork_getSimpleWorkModule__
     __SimpleWork_getSimpleWorkModule__
 #endif//__SimpleWork_getSimpleWorkModule__
@@ -33,7 +38,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 //      这框架唯一一个输出函数，其它模块可以通过链接这个函数，获取框架相关能力。
 //
-__SimpleWork_API__ ICoreApiPtr getCoreApi(int nCompatibleVer=SIMPLEWORK_COMPATIBLE_VER);
+__SimpleWork_API__ ICoreApi* getCoreApi(int nCompatibleVer=SIMPLEWORK_COMPATIBLE_VER);
 
 __SimpleWork_Core_Namespace_Leave__
 

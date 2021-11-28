@@ -3,7 +3,8 @@
 
 #include "typeinfo"
 
-namespace sw {
+using namespace sw::core;
+namespace sw::tensor {
 
 /**
  * 所有对象的接口

@@ -1,7 +1,8 @@
 #include "Core.h"
 #include "CoreApi.hpp"
 
-sw::IModule* __getSimpleWorkCoreModule() {
-    static sw::IModulePtr s_spModule = sw::CCoreApi::createSimpleWorkCoreModule();
+using namespace SIMPLEWORK_CORE_NAMESPACE;
+IModule* __getSimpleWorkCoreModule() {
+    static IModulePtr s_spModule = getCoreApi()->createModule(SIMPLEWORK_CORE_MODULEKEY);
     return s_spModule;
 }

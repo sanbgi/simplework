@@ -9,12 +9,13 @@
 //      1.3, 智能指针定义, SmartPtr
 //
 //
-#define SIMPLEWORK_CORE_NAMESPACE sw
+#define SIMPLEWORK_CORE_NAMESPACE sw::core
+#define SIMPLEWORK_CORE_MODULEKEY "sw.core"
 #define __SimpleWork_Core_Namespace_Enter__ namespace SIMPLEWORK_CORE_NAMESPACE {
 #define __SimpleWork_Core_Namespace_Leave__ }
 #include <cstring>
 #include "Error.h"
-#include "SmartPtr.h"
+#include "TSmartPtr.h"
 
 //
 //
@@ -38,7 +39,7 @@
 //
 #define SIMPLEWORK_INTERFACE_ENTER(namespaceName, interfaceName, superInterfaceName)  \
     struct interfaceName; \
-    typedef SmartPtr<interfaceName> interfaceName##Ptr; \
+    typedef SIMPLEWORK_CORE_NAMESPACE::SmartPtr<interfaceName> interfaceName##Ptr; \
     struct interfaceName : superInterfaceName { \
         static const char* getInterfaceKey() { return #namespaceName"."#interfaceName; }
 #define SIMPLEWORK_INTERFACE_LEAVE };
@@ -89,13 +90,13 @@
 //
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
 protected: \
-    int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pTarget) { 
+    int __swConvertTo(const char* szInterfaceKey, SIMPLEWORK_CORE_NAMESPACE::IPtrForceSaver* pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
     return Error::Failure; \
 };
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
 protected: \
-    int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pTarget) { 
+    int __swConvertTo(const char* szInterfaceKey, SIMPLEWORK_CORE_NAMESPACE::IPtrForceSaver* pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterface) \
         if( strcmp(szInterfaceKey, TInterface::getInterfaceKey()) == 0 ) { \
             return pTarget->forceSetPtr((void*)(TInterface*)this); \
@@ -117,17 +118,24 @@ protected: \
 //
 //
 
-#define SIMPLEWORK_CLASS_ENTER(x) \
-class x : public sw::SmartPtr<I##x> { \
+/*
+#define SIMPLEWORK_CLASS_ENTER(TClassName) \
+class TClassName : public I##TClassName##Ptr { \
 public: \
-    x() : SmartPtr<I##x>() {} \
-    x(const x& src) : SmartPtr<I##x>(src) {} \
-    template<typename Q> x(const SmartPtr<Q>& src) : SmartPtr<I##x>(src) {};\
-    template<typename Q> x(Q* pSrc) : SmartPtr<Q>(pSrc) {};
+    TClassName() : I##TClassName##Ptr() {}; \
+    TClassName(const TClassName& src) : I##TClassName##Ptr(src){}; \
+    TClassName& operator=(const TClassName& src) { assignPtr(src._ptr); return *this; } \
+    TClassName(I##TClassName* pSrc) : I##TClassName##Ptr(pSrc) {}; \
+    template<typename Q> TClassName(const SIMPLEWORK_CORE_NAMESPACE::SmartPtr<Q>& src) : I##TClassName##Ptr(src) {};
+
+#define SIMPLEWORK_CLASS_ENTER(TClassName) class TClassName {
 #define SIMPLEWORK_CLASS_LEAVE };
 
 #include "Object.h"
 #include "Factory.h"
 #include "Module.h"
+*/
+
+#include "TObject.h"
 
 #endif//__SimpleWork_Core_h__

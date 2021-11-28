@@ -42,7 +42,8 @@ private://IModule
         if( pCaller ){
             //不允许重复初始化无效
             if( _spSuperModule ) {
-                return Error::Failure;
+                if( _spSuperModule.getPtr() == pCaller )
+                return _spSuperModule.getPtr() == pCaller ? Error::Success : Error::Failure;
             }
 
             //不允许重命名（修改模块名）

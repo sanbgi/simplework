@@ -1,6 +1,7 @@
 #include "../inc/SimpleWork.h"
 
-sw::IModule* getSimpleWorkModule() {
-    static sw::IModulePtr s_spModule = sw::getCoreApi();
+using namespace SIMPLEWORK_CORE_NAMESPACE;
+SIMPLEWORK_MODULE_EXPORT IModule* getSimpleWorkModule() {
+    static IModulePtr s_spModule = getCoreApi()->createModule("sw.test");
     return s_spModule;
 }

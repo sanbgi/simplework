@@ -1,15 +1,22 @@
 #ifndef __SimpleWork_Tensor_h__
 #define __SimpleWork_Tensor_h__
 
+
+#define SIMPLEWORK_MATH_NAMESPACE sw::math
+#define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace SIMPLEWORK_MATH_NAMESPACE {
+#define SIMPLEWORK_MATH_NAMESPACE_LEAVE }
+
 #include "../../core/inc/Core.h"
 #include "ITensor.h"
 
-namespace sw {
+using namespace SIMPLEWORK_CORE_NAMESPACE;
+SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 /**
  * 张量类定义
  */
-SIMPLEWORK_CLASS_ENTER(Tensor)
+struct Tensor {
+    /*
     //
     // 构造张量
     //
@@ -69,6 +76,7 @@ SIMPLEWORK_CLASS_ENTER(Tensor)
     template<typename T> int setData(int* pPosArr, T& v ) {
         return 0;
     }
+    */
 
 private:
     static IFactory* getFactory() {
@@ -76,8 +84,8 @@ private:
         return s_ptrFactory.getPtr();
     };
 
-SIMPLEWORK_CLASS_LEAVE
+};
 
-}//namespace SimpleWork
+SIMPLEWORK_MATH_NAMESPACE_LEAVE
 
 #endif//__SimpleWork_Tensor_h__

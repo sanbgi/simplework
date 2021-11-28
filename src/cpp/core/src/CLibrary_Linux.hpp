@@ -10,7 +10,7 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
-SIMPLEWORK_INTERFACE_ENTER(sw, ILibrary, IObject)
+SIMPLEWORK_INTERFACE_ENTER(SIMPLEWORK_CORE_NAMESPACE, ILibrary, IObject)
     virtual IModulePtr loadLibraryModule(string strModuleKey) = 0;
 SIMPLEWORK_INTERFACE_LEAVE
 
@@ -30,7 +30,7 @@ class CLibrary : public CObject, ILibrary, IModule {
 public:
     int getSimpleWorkCompatibleVer() 
         { return _spModule->getSimpleWorkCompatibleVer();}
-    int initModule(const char* szModuleKey, IModule* pCaller ) 
+    int initModule(const char* szModuleKey, ICoreApi* pCaller ) 
         { return _spModule->initModule(szModuleKey, pCaller); }
     int registerFactory(const char* szClassKey, IFactory* pFactory) 
         { return Error::Failure; }
@@ -75,7 +75,7 @@ private:
         {
             _pDLL = lib_dl;
 
-            typedef sw::IModule* (*FUNCTION)();
+            typedef IModule* (*FUNCTION)();
             FUNCTION fun = (FUNCTION)dlsym(lib_dl,"getSimpleWorkModule");
             if (fun)
             { 
@@ -88,6 +88,6 @@ private:
     }
 };
 
-__SimpleWork_Core_Namespace_LEAVE__
+__SimpleWork_Core_Namespace_Leave__
 #endif//__SimpleWork_CLibrary_H__
 #endif//#if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)

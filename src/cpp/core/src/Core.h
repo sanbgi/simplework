@@ -8,7 +8,7 @@
 #endif
 
 #define getSimpleWorkModule __getSimpleWorkCoreModule
-#define __SimpleWork_getSimpleWorkModule__ sw::IModule* __getSimpleWorkCoreModule();
+#define __SimpleWork_getSimpleWorkModule__ SIMPLEWORK_CORE_NAMESPACE::IModule* __getSimpleWorkCoreModule();
 
 #include "../inc/Core.h"
 

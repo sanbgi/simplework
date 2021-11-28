@@ -14,20 +14,29 @@ struct IPtrForceSaver {
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口
 //
-template<typename TInterface> struct SmartPtr : IPtrForceSaver {
+template<typename TInterface> struct SmartPtr : public IPtrForceSaver {
 
 public:
     SmartPtr(){
         _ptr = nullptr;
     }
-    SmartPtr(TInterface* ptr) {
-        initPtr(ptr);
-    }
-    SmartPtr(const SmartPtr& src) {
+    SmartPtr(const SmartPtr& src) : _ptr(nullptr)  {
         initPtr(src._ptr);
     }
+    SmartPtr& operator=(const SmartPtr& src) {
+        assignPtr(src._ptr);
+        return *this;
+    }
+    //
+    // 理论上来说，实现了模板指针构造函数（紧邻的第二个）后，不需要再单独实现这个构造函
+    //  数，但当语法 IObjectPtr spObj = nullptr; 里面，构造参数为nullptr，没有类型，
+    //  造成编译器无法支持这种语法，所以，但单独定义了一下这个，后续很多情况类似
+    //
+    SmartPtr(TInterface* ptr) : _ptr(nullptr)  {
+        initPtr(ptr);
+    }
     template<typename Q> SmartPtr(Q* pPtr) : _ptr(nullptr) {
-        initPtr(pPtr);
+       initPtr(pPtr);
     }
     template<typename Q> SmartPtr(const SmartPtr<Q>& src) : _ptr(nullptr) {
         initPtr(src.getPtr());
@@ -35,8 +44,12 @@ public:
     ~SmartPtr() {
         releasePtr();
     }
-    const SmartPtr& operator=(const SmartPtr& src) {
-        assignPtr(src._ptr);
+    template<typename Q> SmartPtr& operator=(Q* pSrc) {
+        assignPtr(pSrc);
+        return *this;
+    }
+    template<typename Q> SmartPtr& operator=(const SmartPtr<Q>& src) {
+        assignPtr(src.getPtr());
         return *this;
     }
 
@@ -98,7 +111,7 @@ private:
         }
     }
     template<typename Q> int assignPtr(Q* pPtr = nullptr) {
-        if( _ptr != pPtr ) {
+        if( _ptr != (TInterface*)pPtr ) {
             releasePtr();
             initPtr(pPtr);
         }
