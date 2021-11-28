@@ -1,9 +1,10 @@
 #include "../inc/Tensor.h"
 
-namespace SimpleWork {
+namespace sw {
 
 class CTensor : public CObject {
 
 };
 
-}//namespace SimpleWork
+
+}//namespace sw

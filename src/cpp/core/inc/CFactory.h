@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_CFactory__h__
 #define __SimpleWork_CFactory__h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 //
 // 系统工厂：主要负责为符合要求的对象(具体要求参照后续说明)，提供如下能力：
@@ -45,44 +45,12 @@ namespace SimpleWork {
 //      SmartPtr<IFactory> spFactory = CFactory::createFactory<CMyObject, IFactory>()
 //
 
-//
-// 工厂类基础宏定义
-//
-#define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
-protected: \
-    int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pTarget) { 
-#define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
-    return Error::Failure; \
-};
-#define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
-protected: \
-    int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pTarget) { 
-#define SIMPLEWORK_INTERFACE_ENTRY(TInterface) \
-        if( strcmp(szInterfaceKey, TInterface::getInterfaceKey()) == 0 ) { \
-            return pTarget->forceSetPtr((void*)(TInterface*)this); \
-        }
-#define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
-        return TSuperClass::__swConvertTo(szInterfaceKey, pTarget); \
-    };
-
 
 //
-// 对象基类
-//  @remark 
-//      所有对象都要从这个基类派生，这个基类帮助实现
-//      1，IObject接口，包括引用技术管理，接口转化等，如果子类有自己派生的接口，则需要实现一个接口转化函数
-//
-class CObject : public IObject {
-    SIMPLEWORK_INTERFACE_ENTRY_ENTER0
-        SIMPLEWORK_INTERFACE_ENTRY(IObject)
-    SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
-};
-
-//
-// 对象基类
-//  @remark 
-//      所有对象都要从这个基类派生，这个基类帮助实现
-//      1，IObject接口，包括引用技术管理，接口转化等，如果子类有自己派生的接口，则需要实现一个接口转化函数
+// 工厂基类，其功能包括:
+//      1, 提供对象创建能力CFactory::createObject
+//      2, 提供工厂对象创建能力CFactory::createFactory
+//      3, 可以作为自定义工厂的基类
 //
 class CFactory : CObject, IFactory{
 
@@ -116,7 +84,7 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public://IObject
-        CObjectImp() { m_nRefCnt = 1; }
+        CObjectImp() { m_nRefCnt = 0; }
         int __swAddRef() { return ++m_nRefCnt; }
         int __swDecRef() {
             int nRefCnt = --m_nRefCnt;
@@ -147,6 +115,6 @@ private:
     };
 };
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_CFactory__h__

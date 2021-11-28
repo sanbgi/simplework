@@ -1,12 +1,12 @@
 #ifndef __SimpleWork_IFactory__h__
 #define __SimpleWork_IFactory__h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 /**
  * 对象工场对象的接口
  */
-SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IFactory, IObject)
+SIMPLEWORK_INTERFACE_ENTER(SIMPLEWORK_CORE_NAMESPACE, IFactory, IObject)
 
     /**
      *  创建对象
@@ -15,6 +15,6 @@ SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IFactory, IObject)
 
 SIMPLEWORK_INTERFACE_LEAVE
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_IFactory__h__

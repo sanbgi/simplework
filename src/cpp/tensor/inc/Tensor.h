@@ -4,7 +4,7 @@
 #include "../../core/inc/Core.h"
 #include "ITensor.h"
 
-namespace SimpleWork {
+namespace sw {
 
 /**
  * 张量类定义

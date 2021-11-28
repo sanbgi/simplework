@@ -1,12 +1,20 @@
 #ifndef __SimpleWork_AutoPrt__h__
 #define __SimpleWork_AutoPrt__h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
+
+//
+// 指针强制设置接口，由于设置的是强制转化后的地址，所以，接口不安全，也不能被外界使用
+//
+struct IPtrForceSaver {
+    virtual int forceSetPtr(void* pPtr) = 0;
+};
+
 
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口
 //
-template<typename TInterface> class SmartPtr : IObject::IPtrForceSaver {
+template<typename TInterface> struct SmartPtr : IPtrForceSaver {
 
 public:
     SmartPtr(){
@@ -47,8 +55,11 @@ public:
     operator bool(){
         return _ptr != nullptr;
     }
-    operator IObject::IPtrForceSaver*() {
+    operator IPtrForceSaver*() {
         return this;
+    }
+    operator TInterface*() const {
+        return _ptr;
     }
 
 //
@@ -94,8 +105,7 @@ private:
         return Error::Success;
     }
 };
-typedef SmartPtr<IObject> IObjectPtr;
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_AutoPrt__h__

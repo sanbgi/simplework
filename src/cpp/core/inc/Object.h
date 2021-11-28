@@ -1,11 +1,11 @@
 #ifndef __SimpleWork_Object_h__
 #define __SimpleWork_Object_h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 SIMPLEWORK_CLASS_ENTER(Object)
 SIMPLEWORK_CLASS_LEAVE
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_Object_h__

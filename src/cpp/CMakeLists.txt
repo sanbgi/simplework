@@ -1,19 +1,35 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(SimpleWork VERSION 0.1.0)
 
+add_subdirectory(core)
+add_subdirectory(tensor)
+add_subdirectory(test)
+
+set ( SIMPLEWORK_CORE_MODULE_NAME sw.core )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/core/src/*.cpp" )
-list ( APPEND LIB_SRC_LIST ${SRC_FILES} )
+set( SRC_LIST )
+list ( APPEND SRC_LIST ${SRC_FILES} )
+add_library(${SIMPLEWORK_CORE_MODULE_NAME} SHARED ${SRC_LIST})
+IF (UNIX)
+    target_link_libraries(${SIMPLEWORK_CORE_MODULE_NAME} dl)
+ENDIF ()
+set_target_properties(${SIMPLEWORK_CORE_MODULE_NAME} PROPERTIES PREFIX "")
 
+set ( SIMPLEWORK_TENSOR_MODULE_NAME sw.tensor )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tensor/src/*.cpp" )
-list ( APPEND LIB_SRC_LIST ${SRC_FILES} )
+set( SRC_LIST )
+list ( APPEND SRC_LIST ${SRC_FILES} )
+add_library(${SIMPLEWORK_TENSOR_MODULE_NAME} SHARED ${SRC_LIST})
+target_link_libraries(${SIMPLEWORK_TENSOR_MODULE_NAME} ${SIMPLEWORK_CORE_MODULE_NAME})
+set_target_properties(${SIMPLEWORK_TENSOR_MODULE_NAME} PROPERTIES PREFIX "")
 
-add_library(SimpleWork SHARED ${LIB_SRC_LIST})
-
+set ( SIMPLEWORK_TEST_MODULE_NAME sw.test )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp" )
-list ( APPEND TEST_SRC_LIST ${SRC_FILES} )
-
-add_executable(SimpleWork_Test ${TEST_SRC_LIST})
-target_link_libraries(SimpleWork_Test SimpleWork)
+set( SRC_LIST )
+list ( APPEND SRC_LIST ${SRC_FILES} )
+add_executable(${SIMPLEWORK_TEST_MODULE_NAME} ${SRC_LIST})
+target_link_libraries(${SIMPLEWORK_TEST_MODULE_NAME} ${SIMPLEWORK_CORE_MODULE_NAME})
+set_target_properties(${SIMPLEWORK_TEST_MODULE_NAME} PROPERTIES PREFIX "")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

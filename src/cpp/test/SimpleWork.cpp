@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../inc/SimpleWork.h"
 
-using namespace SimpleWork;
+using namespace sw;
 
 class CMyObject : public CObject {
 
@@ -26,10 +26,10 @@ int main(int argc, char *argv[]){
 
 
 void say_hello(){
-    SimpleWork::Object ppo;
-    SimpleWork::Object ptr1, ptr0, ptrn(ptr1);
-    SimpleWork::Tensor ppt;
-    SimpleWork::Tensor ptr2, ptr3(ptr2);
+    sw::Object ppo;
+    sw::Object ptr1, ptr0, ptrn(ptr1);
+    sw::Tensor ppt;
+    sw::Tensor ptr2, ptr3(ptr2);
     //char szV[] = "hi";
     //swcore::Tensor ptrTensor(sizeof(szV)/sizeof(char), szV);
     //char* ptrChar = ptrTensor.getDataPtr<char>();
@@ -39,9 +39,4 @@ void say_hello(){
     ptr1 = ptr2;
     ptr3 = ptr2 = ptr1 = ptr0;
     ptr3 = ptr2.getPtr();
-}
-
-SimpleWork::IModule* getSimpleWorkModule() {
-    static SimpleWork::IModule* s_pModule = SimpleWork::getCoreModule();
-    return s_pModule;
 }

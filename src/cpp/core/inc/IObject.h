@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_IObject_h__
 #define __SimpleWork_IObject_h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 
 //
@@ -10,15 +10,7 @@ namespace SimpleWork {
 //  1, 所有对象接口都需要直接或间接从这个接口派生
 //  2, 接口函数都不允许直接访问，避免引用计数错误，或者非法指针访问，请适用智能指针
 //
-__SimpleWork_SuperInterface_Enter__(SimpleWork, IObject)
-
-protected:
-    //
-    // 指针强制设置接口，由于设置的是强制转化后的地址，所以，接口不安全，也不能被外界使用
-    //
-    struct IPtrForceSaver {
-        virtual int forceSetPtr(void* pPtr) = 0;
-    };
+SIMPLEWORK_INTERFACE_ENTER0(SIMPLEWORK_CORE_NAMESPACE, IObject)
 
 private:
     virtual int __swAddRef() = 0;
@@ -26,8 +18,8 @@ private:
     virtual int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pSaver) = 0;
     template<typename T> friend class SmartPtr;
 
-__SimpleWork_SuperInterface_Leave__
+SIMPLEWORK_INTERFACE_LEAVE0
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_IObject_h__

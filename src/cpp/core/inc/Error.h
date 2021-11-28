@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_Error_h__
 #define __SimpleWork_Error_h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 //
 // 错误码定义
@@ -13,6 +13,6 @@ struct Error {
     };
 };
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_Error_h__

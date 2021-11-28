@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_Factory_h__
 #define __SimpleWork_Factory_h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 SIMPLEWORK_CLASS_ENTER(Factory)
 
@@ -17,6 +17,6 @@ public:
 
 SIMPLEWORK_CLASS_LEAVE
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_Factory_h__

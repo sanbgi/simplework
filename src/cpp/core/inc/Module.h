@@ -1,12 +1,12 @@
 #ifndef __SimpleWork_Module_h__
 #define __SimpleWork_Module_h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
 
 SIMPLEWORK_CLASS_ENTER(Module)
 
 SIMPLEWORK_CLASS_LEAVE
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_Module_h__

@@ -1,46 +1,44 @@
 #ifndef __SimpleWork_IModule__h__
 #define __SimpleWork_IModule__h__
 
-namespace SimpleWork {
+__SimpleWork_Core_Namespace_Enter__
+    
+struct ICoreApi;
 
 //
 // 对象工场对象的接口
 //
-SIMPLEWORK_INTERFACE_ENTER(SimpleWork, IModule, IObject)
+SIMPLEWORK_INTERFACE_ENTER(SIMPLEWORK_CORE_NAMESPACE, IModule, IObject)
 
     //
-    // 获取系统版本号
-    // 
-    // @remark
-    //      如果返回的系统版本号，与系统不同，则会出现兼容问题。这个版本号，定义在全局宏
+    // 获取系统版本号，如果返回的系统版本号，与系统不同，则会出现兼容问题。这个版本号，定义在全局宏
     //
-    virtual int getSimpleWorkVer() = 0;
+    virtual int getSimpleWorkCompatibleVer() = 0;
 
     //
     // 初始化模块
     //
-    virtual int initModule(IModule* pCaller) = 0;
+    virtual int initModule(const char* szModuleKey, ICoreApi* pCaller) = 0;
 
     //
     // 注册工厂
     //
-    virtual int registerFactory(const char* szClassKey, IFactory* pFactory, IModule* pCaller = nullptr) = 0;
+    virtual int registerFactory(const char* szClassKey, IFactory* pFactory) = 0;
 
     //
     // 根据类名和接口名，创建对象
+    // @szClassKey 类名，类似: "sw.Tensor", "sw.Video", "sw.Camera"
     //
-    // @szClassKey 类名，类似: "SimpleWork.Tensor", "SimpleWork.Video", "SimpleWork.Camera"
-    // @szInterfaceKey 接口名，类似："SimpleWork.ITensor"
-    //
-    virtual IObjectPtr createObject(const char* szClassKey, IModule* pCaller=nullptr) = 0;
+    virtual IObjectPtr createObject(const char* szClassKey) = 0;
 
     //
     // 根据类名和接口名，创建工厂
+    // @szClassKey 类名，类似: "sw.Tensor", "sw.Video", "sw.Camera"
     //
-    virtual IObjectPtr createFactory(const char* szClassKey, IModule* pCaller=nullptr) = 0;
+    virtual IObjectPtr createFactory(const char* szClassKey) = 0;
 
 SIMPLEWORK_INTERFACE_LEAVE
 
-}//namespace SimpleWork
+__SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_IModule__h__

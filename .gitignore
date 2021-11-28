@@ -33,3 +33,4 @@
 
 # ingore folder
 build
+.vscode

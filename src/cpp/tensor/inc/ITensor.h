@@ -1,9 +1,9 @@
 #ifndef __SimpleWork_ITensor_h__
 #define __SimpleWork_ITensor_h__
 
-#include "typeinfo.h"
+#include "typeinfo"
 
-namespace SimpleWork {
+namespace sw {
 
 /**
  * 所有对象的接口
