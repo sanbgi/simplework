@@ -16,9 +16,11 @@ private:
     virtual int __swAddRef() = 0;
     virtual int __swDecRef() = 0;
     virtual int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pSaver) = 0;
-    template<typename T> friend class SmartPtr;
+    template<typename T> friend class TAutoPtr;
 
 SIMPLEWORK_INTERFACE_LEAVE0
+
+#define IObjectNullptr ((IObject*)nullptr)
 
 __SimpleWork_Core_Namespace_Leave__
 

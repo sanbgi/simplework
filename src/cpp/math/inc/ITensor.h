@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_ITensor_h__
 #define __SimpleWork_ITensor_h__
 
-#include "typeinfo"
+#include <typeinfo>
 
 using namespace sw::core;
 namespace sw::tensor {

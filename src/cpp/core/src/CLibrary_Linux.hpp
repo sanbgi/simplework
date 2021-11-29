@@ -3,10 +3,13 @@
 #ifndef __SimpleWork_CLibrary_H__
 #define __SimpleWork_CLibrary_H__
 
+#include <map>
+#include <string>
 #include <stdio.h>
 #include <unistd.h>
 #include <dlfcn.h>
 #include <iostream>
+using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -35,9 +38,9 @@ public:
     int registerFactory(const char* szClassKey, IFactory* pFactory) 
         { return Error::Failure; }
     IObjectPtr createObject(const char* szClassKey) 
-        { return nullptr; }
+        { return IObjectNullptr; }
     IObjectPtr createFactory(const char* szClassKey)
-        { return nullptr; }
+        { return IObjectNullptr; }
     static IModulePtr loadModule(string strModuleKey) {
         ILibraryPtr spLibrary = CFactory::createObject<CLibrary>();
         return spLibrary->loadLibraryModule(strModuleKey);
@@ -64,7 +67,7 @@ private:
         // 释放已经加载的模块
         //
         if( _pDLL != nullptr ) {
-            _spModule = nullptr;
+            _spModule = IObjectNullptr;
             dlclose(_pDLL);
             _pDLL = nullptr;
         }
@@ -84,7 +87,7 @@ private:
             }
         }
 
-        return nullptr;
+        return IObjectNullptr;
     }
 };
 

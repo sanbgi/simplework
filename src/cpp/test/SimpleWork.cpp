@@ -17,23 +17,25 @@ int main(int argc, char *argv[]){
     
     getCoreApi()->registerFactory("MyObject", spFactory.getPtr());
     
-    Object spOject = getCoreApi()->createObject("MyObject");
+    TObject spOject = getCoreApi()->createObject("MyObject");
 
-    Object spObject = spFactory.createObject();
-    spObject = nullptr;
+    TObject spObject = spFactory.createObject();
+    spObject = IObjectNullptr;
     if( !spObject ) {
         std::cout << "Great\n";
     }
     
 */
     ICoreApiPtr spCoreApi = getCoreApi();
-    IObjectPtr spTensor = spCoreApi->createObject("sw.tensor.Tensor");
+    IObjectPtr spTensor = spCoreApi->createObject("sw.math.Tensor");
+    if( spTensor ) {
+        std::cout << "Great\n";
+    }
 
-
-    Object<> obj;
-    Object<IFactory> fac;
-    Object<ICoreApi> coreapi;
-    fac = coreapi;
+    //TObject<IFactory> fac;
+    //TObject<ICoreApi> coreapi;
+    //TObject<IModule> module = fac;
+    //fac = coreapi;
 
     return 0;
 }
@@ -41,8 +43,8 @@ int main(int argc, char *argv[]){
 
 void say_hello(){
     /*
-    Object ppo;
-    Object ptr1, ptr0, ptrn(ptr1);
+    TObject ppo;
+    TObject ptr1, ptr0, ptrn(ptr1);
     Tensor ppt;
     Tensor ptr2, ptr3(ptr2);
     //char szV[] = "hi";

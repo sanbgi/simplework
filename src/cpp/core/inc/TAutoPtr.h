@@ -10,48 +10,41 @@ struct IPtrForceSaver {
     virtual int forceSetPtr(void* pPtr) = 0;
 };
 
-
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口
 //
-template<typename TInterface> struct SmartPtr : public IPtrForceSaver {
+template<typename TInterface> struct TAutoPtr {
 
 public:
-    SmartPtr(){
+    TAutoPtr(){
         _ptr = nullptr;
     }
-    SmartPtr(const SmartPtr& src) : _ptr(nullptr)  {
+    TAutoPtr(const TAutoPtr& src) : _ptr(nullptr)  {
         initPtr(src._ptr);
     }
-    SmartPtr& operator=(const SmartPtr& src) {
+    TAutoPtr& operator=(const TAutoPtr& src) {
         assignPtr(src._ptr);
         return *this;
     }
-    //
-    // 理论上来说，实现了模板指针构造函数（紧邻的第二个）后，不需要再单独实现这个构造函
-    //  数，但当语法 IObjectPtr spObj = nullptr; 里面，构造参数为nullptr，没有类型，
-    //  造成编译器无法支持这种语法，所以，但单独定义了一下这个，后续很多情况类似
-    //
-    SmartPtr(TInterface* ptr) : _ptr(nullptr)  {
-        initPtr(ptr);
-    }
-    template<typename Q> SmartPtr(Q* pPtr) : _ptr(nullptr) {
-       initPtr(pPtr);
-    }
-    template<typename Q> SmartPtr(const SmartPtr<Q>& src) : _ptr(nullptr) {
-        initPtr(src.getPtr());
-    }
-    ~SmartPtr() {
+    ~TAutoPtr() {
         releasePtr();
     }
-    template<typename Q> SmartPtr& operator=(Q* pSrc) {
+
+    template<typename Q> TAutoPtr(Q* pPtr) : _ptr(nullptr) {
+       initPtr(pPtr);
+    }
+    template<typename Q> TAutoPtr(const Q& src) : _ptr(nullptr) {
+        initPtr(src.getPtr());
+    }
+    template<typename Q> TAutoPtr& operator=(Q* pSrc) {
         assignPtr(pSrc);
         return *this;
     }
-    template<typename Q> SmartPtr& operator=(const SmartPtr<Q>& src) {
+    template<typename Q> TAutoPtr& operator=(const Q& src) {
         assignPtr(src.getPtr());
         return *this;
     }
+
 
 public:
     TInterface* getPtr() const { 
@@ -68,9 +61,6 @@ public:
     operator bool(){
         return _ptr != nullptr;
     }
-    operator IPtrForceSaver*() {
-        return this;
-    }
     operator TInterface*() const {
         return _ptr;
     }
@@ -83,15 +73,6 @@ public:
 private:
     TInterface* _ptr = nullptr;
 
-private://IConvertObjectContainer
-    //
-    //  这个函数非常不安全，因为会将一个指针强制转化为接口，目前只有IObject::__swConvertTo函数调用这个接口，用
-    //  于返回强制转化为目标接口的指针，而转化工作在宏定义SIMPLEWORK_INTERFACE_ENTRY中。
-    //
-    int forceSetPtr(void* pPtr) {
-        return assignPtr((TInterface*)pPtr);
-    }
-
 private:
     void initPtr(TInterface* pPtr = nullptr) {
         if( pPtr ) {
@@ -101,7 +82,12 @@ private:
     }
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
-            pPtr->__swConvertTo(TInterface::getInterfaceKey(), this);
+            struct CForceSetter : public IPtrForceSaver {
+                CForceSetter(TAutoPtr* pAutoPtr) : _pPtr(pAutoPtr){}
+                int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
+                TAutoPtr* _pPtr;
+            }setter(this);
+            pPtr->__swConvertTo(TInterface::getInterfaceKey(), &setter);
         }
     }
     void releasePtr() {

@@ -41,8 +41,8 @@ __SimpleWork_Core_Namespace_Enter__
 //  存在IObject的纯虚函数定义)，也不建议通过实现这些纯虚函数，这样可以统一管理对象的创
 //  建和销毁，避免内存泄漏，具体创建范例：
 //      
-//      SmartPtr<IMyObject> spObj = CFactory::createObject<CMyObject, IMyObject>();
-//      SmartPtr<IFactory> spFactory = CFactory::createFactory<CMyObject, IFactory>()
+//      TAutoPtr<IMyObject> spObj = CFactory::createObject<CMyObject, IMyObject>();
+//      TAutoPtr<IFactory> spFactory = CFactory::createFactory<CMyObject, IFactory>()
 //
 
 //

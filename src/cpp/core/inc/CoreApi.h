@@ -12,19 +12,15 @@
 //  并且会在初始化模块的时候，将系统模块指针作为参数，传递给当前模块，这样，当前模块就可以调用系统
 //  模块功能了。
 //
+#ifndef SIMPLEWORK_MODULE_EXPORT
+    #if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
+        #define SIMPLEWORK_MODULE_EXPORT extern "C" __declspec(dllexport)
+    #else
+        #define SIMPLEWORK_MODULE_EXPORT extern "C" 
+    #endif
+#endif//SIMPLEWORK_MODULE_EXPORT
 
-#if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
-    #define SIMPLEWORK_MODULE_EXPORT extern "C" __declspec(dllexport)
-#else
-    #define SIMPLEWORK_MODULE_EXPORT extern "C" 
-#endif
-
-#ifndef __SimpleWork_getSimpleWorkModule__
-#define __SimpleWork_getSimpleWorkModule__
-    SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::IModule* getSimpleWorkModule();
-#else//__SimpleWork_getSimpleWorkModule__
-    __SimpleWork_getSimpleWorkModule__
-#endif//__SimpleWork_getSimpleWorkModule__
+SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::IModule* getSimpleWorkModule();
 
 __SimpleWork_Core_Namespace_Enter__
 
