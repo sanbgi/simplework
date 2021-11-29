@@ -1,13 +1,6 @@
 #ifndef __SimpleWork_CModule_H__
 #define __SimpleWork_CModule_H__
 
-//
-//      模块类，帮助实现全局模块对象。不建议直接使用，而是通过宏SIMPLEWORK_MODULE_REGISTER间接使用这
-//  个类。这个类只有在模块没有定义宏SIMPLEWORK_MODULE_REGISTER同时定义了宏SIMPLEWORK_WITHOUTAPI的情
-//  况下才会被引入，以达到最小化影响全局头文件的目的。
-//      
-//      由于模块依赖于<map><string>，所以，能不引入则尽量不要引入。
-//
 
 #include <map>
 #include <string>
@@ -15,7 +8,13 @@
 __SimpleWork_Core_Namespace_Enter__
 
 //
-// 框架核心模块
+//  模块类：帮助实现全局模块对象。
+//
+//      不建议直接使用，而是通过宏SIMPLEWORK_MODULE_REGISTER间接使用这个类。这个类只有在模块
+//  没有定义宏SIMPLEWORK_MODULE_REGISTER同时定义了宏SIMPLEWORK_WITHOUTAPI的情况下才会被引
+//  入，以达到最小化影响全局头文件的目的。
+//      
+//      由于模块依赖于<map><string>，所以，能不引入则尽量不要引入。
 //
 class CModule : public CObject, public IModule {
 
@@ -24,6 +23,9 @@ class CModule : public CObject, public IModule {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 protected://IModule
+    //
+    // 获取兼容版本号，系统会率先调用这个函数，检查版本号，符合要求，才会继续使用模块
+    //
     int getSimpleWorkCompatibleVer() {
         return SIMPLEWORK_COMPATIBLE_VER;
     }
@@ -56,6 +58,9 @@ protected://IModule
         return Error::Success;
     }
 
+    //
+    // 根据对象实现类名，创建对象
+    //
     IObjectPtr createObject(const char* szClassKey) {
         if(m_spCoreApi) {
             return m_spCoreApi->createObject(szClassKey);
@@ -68,7 +73,7 @@ protected://IModule
     }
 
     //
-    // 根据类名和接口名，创建工厂
+    // 根据对象实现类名，创建工厂
     //
     IObjectPtr createFactory(const char* szClassKey) {
         if(m_spCoreApi) {
