@@ -15,7 +15,7 @@ SIMPLEWORK_INTERFACE_ENTER0(SIMPLEWORK_CORE_NAMESPACE, IObject)
 private:
     virtual int __swAddRef() = 0;
     virtual int __swDecRef() = 0;
-    virtual int __swConvertTo(const char* szInterfaceKey, IPtrForceSaver* pSaver) = 0;
+    virtual int __swConvertTo(const char* szInterfaceKey, FunPtrForceSaver funSaver) = 0;
     template<typename T> friend class TAutoPtr;
 
 SIMPLEWORK_INTERFACE_LEAVE0

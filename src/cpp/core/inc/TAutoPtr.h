@@ -6,9 +6,10 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 指针强制设置接口，由于设置的是强制转化后的地址，所以，接口不安全，也不能被外界使用
 //
-struct IPtrForceSaver {
+typedef struct __IPtrForceSaver {
     virtual int forceSetPtr(void* pPtr) = 0;
-};
+}* FunPtrForceSaver;
+
 
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口
@@ -82,7 +83,7 @@ private:
     }
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
-            struct CForceSetter : public IPtrForceSaver {
+            struct CForceSetter : public __IPtrForceSaver {
                 CForceSetter(TAutoPtr* pAutoPtr) : _pPtr(pAutoPtr){}
                 int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
                 TAutoPtr* _pPtr;

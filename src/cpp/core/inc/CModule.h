@@ -1,6 +1,14 @@
 #ifndef __SimpleWork_CModule_H__
 #define __SimpleWork_CModule_H__
 
+//
+//      模块类，帮助实现全局模块对象。不建议直接使用，而是通过宏SIMPLEWORK_MODULE_REGISTER间接使用这
+//  个类。这个类只有在模块没有定义宏SIMPLEWORK_MODULE_REGISTER同时定义了宏SIMPLEWORK_WITHOUTAPI的情
+//  况下才会被引入，以达到最小化影响全局头文件的目的。
+//      
+//      由于模块依赖于<map><string>，所以，能不引入则尽量不要引入。
+//
+
 #include <map>
 #include <string>
 

@@ -92,13 +92,13 @@
 //
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        int __swConvertTo(const char* szInterfaceKey, SIMPLEWORK_CORE_NAMESPACE::IPtrForceSaver* pTarget) { 
+        int __swConvertTo(const char* szInterfaceKey, SIMPLEWORK_CORE_NAMESPACE::FunPtrForceSaver pTarget) { 
     #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return Error::Failure; \
     };
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        int __swConvertTo(const char* szInterfaceKey, SIMPLEWORK_CORE_NAMESPACE::IPtrForceSaver* pTarget) { 
+        int __swConvertTo(const char* szInterfaceKey, SIMPLEWORK_CORE_NAMESPACE::FunPtrForceSaver pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterface) \
         if( strcmp(szInterfaceKey, TInterface::getInterfaceKey()) == 0 ) { \
             return pTarget->forceSetPtr((void*)(TInterface*)this); \
