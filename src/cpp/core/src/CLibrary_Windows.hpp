@@ -74,7 +74,7 @@ private:
             _hDLL = hDLL;
 
             typedef SIMPLEWORK_CORE_NAMESPACE::IModule* (*FUNCTION)();
-            FUNCTION fun = (FUNCTION)GetProcAddress(hDLL, "getSimpleWorkModule");
+            FUNCTION fun = (FUNCTION)GetProcAddress(hDLL, "getSimpleWork");
             if (fun)
             { 
                 _spModule = (*fun)();

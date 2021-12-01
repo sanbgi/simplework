@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
     }
     
 */
-    IObjectPtr spTensor = getSimpleWorkModule()->createObject("sw.math.Tensor");
+    IObjectPtr spTensor = getSimpleWork()->createObject("sw.math.Tensor");
     if( spTensor ) {
         std::cout << "Great\n";
     }

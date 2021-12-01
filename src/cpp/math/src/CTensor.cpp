@@ -13,7 +13,7 @@ class __CRegister {
 public: 
     __CRegister() { 
         IFactoryPtr spFactory = CObject::createFactory<CTensor>(); 
-        getSimpleWorkModule()->registerFactory("sw.math.Tensor", spFactory); 
+        getSimpleWork()->registerFactory("sw.math.Tensor", spFactory); 
     } 
 } __gRegister;
 */

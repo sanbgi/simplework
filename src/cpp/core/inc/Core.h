@@ -60,7 +60,7 @@ __SimpleWork_Core_Namespace_Leave__
 //
 //
 //  Part3. 全局函数定义，包括：
-//      3.1 getSimpleWorkModule获取当前模块接口
+//      3.1 getSimpleWork获取当前模块接口
 //      3.2 getCoreModule获取核心模块接口
 //
 //
@@ -130,7 +130,7 @@ __SimpleWork_Core_Namespace_Leave__
     public: \
         __C##className##Register() { \
             IFactoryPtr spFactory = CObject::createFactory<className>(); \
-            getSimpleWorkModule()->registerFactory(classKey, spFactory); \
+            getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 
@@ -139,21 +139,21 @@ __SimpleWork_Core_Namespace_Leave__
     public: \
         __C##className##Register() { \
             IFactoryPtr spFactory = CObject::createFactory<className>(true)); \
-            getSimpleWorkModule()->registerFactory(classKey, spFactory); \
+            getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 
 #ifndef SIMPLEWORK_MODULE_REGISTER
     #ifndef SIMPLEWORK_WITHOUTAPI
         #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-            SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::IModule* getSimpleWorkModule() { \
+            SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::IModule* getSimpleWork() { \
                 static SIMPLEWORK_CORE_NAMESPACE::IModulePtr s_spModule = SIMPLEWORK_CORE_NAMESPACE::getCoreApi()->createModule(moduleKey); \
                 return s_spModule; \
             }
     #else//SIMPLEWORK_WITHOUTAPI
         #include "CModule.h"
         #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-        SIMPLEWORK_MODULE_EXPORT IModule* getSimpleWorkModule() { \
+        SIMPLEWORK_MODULE_EXPORT IModule* getSimpleWork() { \
             static IModulePtr s_spModule = \
                 SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::CModule>(); \
             return s_spModule; \

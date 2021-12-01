@@ -23,7 +23,7 @@ public:
         releasePtr();
     }
     TAutoPtr(const char* szClassKey) {
-        *this = getSimpleWorkModule()->createObject(szClassKey);
+        *this = getSimpleWork()->createObject(szClassKey);
     }
 
     template<typename Q> TAutoPtr(Q* pPtr) : m_ptr(nullptr) {

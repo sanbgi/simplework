@@ -80,7 +80,7 @@ struct Tensor {
 
 private:
     static IFactory* getFactory() {
-        static IFactoryPtr s_ptrFactory = getSimpleWorkModule()->createFactory("SimpleWork.Tensor");
+        static IFactoryPtr s_ptrFactory = getSimpleWork()->createFactory("SimpleWork.Tensor");
         return s_ptrFactory.getPtr();
     };
 

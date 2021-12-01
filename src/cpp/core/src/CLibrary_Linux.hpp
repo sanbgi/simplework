@@ -79,7 +79,7 @@ private:
             _pDLL = lib_dl;
 
             typedef IModule* (*FUNCTION)();
-            FUNCTION fun = (FUNCTION)dlsym(lib_dl,"getSimpleWorkModule");
+            FUNCTION fun = (FUNCTION)dlsym(lib_dl,"getSimpleWork");
             if (fun)
             { 
                 _spModule = (*fun)();
