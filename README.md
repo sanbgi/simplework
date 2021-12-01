@@ -17,7 +17,7 @@
     目前还没有整理，毕竟还在开发阶段，后续应该是类似在命令行的如下操作
     git clone "https://github.com/sanbgi/simplework"
     cd simplework && mkdir build
-    cd build && cmake ../src/cpp
+    cd build && cmake ..
     make .
     make install
 
