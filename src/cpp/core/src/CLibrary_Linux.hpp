@@ -13,7 +13,7 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
-SIMPLEWORK_INTERFACE_ENTER(SIMPLEWORK_CORE_NAMESPACE, ILibrary, IObject)
+SIMPLEWORK_INTERFACE_ENTER(ILibrary, IObject, "sw.core.ILibrary", 211201)
     virtual IModulePtr loadLibraryModule(string strModuleKey) = 0;
 SIMPLEWORK_INTERFACE_LEAVE
 
@@ -42,7 +42,7 @@ public:
     IObjectPtr createFactory(const char* szClassKey)
         { return IObjectNullptr; }
     static IModulePtr loadModule(string strModuleKey) {
-        ILibraryPtr spLibrary = CFactory::createObject<CLibrary>();
+        ILibraryPtr spLibrary = CObject::createObject<CLibrary>();
         return spLibrary->loadLibraryModule(strModuleKey);
     }
     

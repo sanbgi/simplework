@@ -1,17 +1,32 @@
 #include <iostream>
 #include "../inc/SimpleWork.h"
 
+using namespace sw::io;
 using namespace sw::core;
 using namespace sw::tensor;
 
-class CMyObject : public CObject {
-
+class CMyObject : public CObject, public IPipeIn {
+    public:
+    int push(IFluidData* pFluidData) {
+        return Error::Success;
+    }
 }; 
 
+
+int& getInt( int i) {
+    return *((int*)nullptr);
+}
+int& getInt( int& i) {
+    return *((int*)nullptr);
+}
+
 int main(int argc, char *argv[]){
+    int& v = getInt(1);
+    
+    //int* pv = &v;
 
 /*
-    Factory spFactory = CFactory::createFactory<CMyObject>();
+    Factory spFactory = CObject::createFactory<CMyObject>();
     
     std::cout << "startRegister = " << (spFactory ? "nullprt" : "validptr" );
     
@@ -27,6 +42,7 @@ int main(int argc, char *argv[]){
     
 */
     ICoreApiPtr spCoreApi = getCoreApi();
+    std::string sss = IObject::getInterfaceKey();
     IObjectPtr spTensor = spCoreApi->createObject("sw.math.Tensor");
     if( spTensor ) {
         std::cout << "Great\n";

@@ -3,5 +3,6 @@
 
 #include "../core/inc/core.h"
 #include "../math/inc/math.h"
+#include "../io/inc/io.h"
 
 #endif//__SimpleWork_h__

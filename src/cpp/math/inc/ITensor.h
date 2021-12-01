@@ -3,13 +3,12 @@
 
 #include <typeinfo>
 
-using namespace sw::core;
 namespace sw::tensor {
 
 /**
  * 所有对象的接口
  */
-SIMPLEWORK_INTERFACE_ENTER(SimpleWork, ITensor, IObject)
+SIMPLEWORK_INTERFACE_ENTER(ITensor, sw::core::IObject, "sw.math.ITensor", 011130)
 
     //
     // 数据类型定义

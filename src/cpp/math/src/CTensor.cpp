@@ -8,3 +8,12 @@ class CTensor : CObject {
 };
 
 SIMPLEWORK_FACTORY_REGISTER(CTensor, "sw.math.Tensor")
+/*
+class __CRegister { 
+public: 
+    __CRegister() { 
+        IFactoryPtr spFactory = CObject::createFactory<CTensor>(); 
+        getSimpleWorkModule()->registerFactory("sw.math.Tensor", spFactory); 
+    } 
+} __gRegister;
+*/

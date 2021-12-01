@@ -36,7 +36,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 //      这框架唯一一个输出函数，其它模块可以通过链接这个函数，获取框架相关能力。
 //
-__SimpleWork_API__ ICoreApi* getCoreApi(int nCompatibleVer=SIMPLEWORK_COMPATIBLE_VER);
+__SimpleWork_API__ ICoreApi* getCoreApi(int nCompatibleVer=ICoreApi::getInterfaceVer());
 
 __SimpleWork_Core_Namespace_Leave__
 

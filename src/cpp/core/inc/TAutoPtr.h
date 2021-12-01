@@ -4,37 +4,32 @@
 __SimpleWork_Core_Namespace_Enter__
 
 //
-// 指针强制设置接口，由于设置的是强制转化后的地址，所以，接口不安全，也不能被外界使用
-//
-typedef struct __IPtrForceSaver {
-    virtual int forceSetPtr(void* pPtr) = 0;
-}* FunPtrForceSaver;
-
-
-//
 // 对象的智能指针定义，仅适用于从IObject派生的接口
 //
 template<typename TInterface> struct TAutoPtr {
 
 public:
     TAutoPtr(){
-        _ptr = nullptr;
+        m_ptr = nullptr;
     }
-    TAutoPtr(const TAutoPtr& src) : _ptr(nullptr)  {
-        initPtr(src._ptr);
+    TAutoPtr(const TAutoPtr& src) : m_ptr(nullptr)  {
+        initPtr(src.m_ptr);
     }
     TAutoPtr& operator=(const TAutoPtr& src) {
-        assignPtr(src._ptr);
+        assignPtr(src.m_ptr);
         return *this;
     }
     ~TAutoPtr() {
         releasePtr();
     }
+    TAutoPtr(const char* szClassKey) {
+        *this = getSimpleWorkModule()->createObject(szClassKey);
+    }
 
-    template<typename Q> TAutoPtr(Q* pPtr) : _ptr(nullptr) {
+    template<typename Q> TAutoPtr(Q* pPtr) : m_ptr(nullptr) {
        initPtr(pPtr);
     }
-    template<typename Q> TAutoPtr(const Q& src) : _ptr(nullptr) {
+    template<typename Q> TAutoPtr(const Q& src) : m_ptr(nullptr) {
         initPtr(src.getPtr());
     }
     template<typename Q> TAutoPtr& operator=(Q* pSrc) {
@@ -46,24 +41,26 @@ public:
         return *this;
     }
 
-
 public:
     TInterface* getPtr() const { 
-        return _ptr; 
+        return m_ptr; 
+    }
+    TInterface& getRef() const {
+        return *m_ptr;
     }
 
 public:
     bool isNullptr() const { 
-        return _ptr == nullptr; 
+        return m_ptr == nullptr; 
     }
     TInterface* operator->() const {
-        return _ptr; 
+        return m_ptr; 
     }
     operator bool(){
-        return _ptr != nullptr;
+        return m_ptr != nullptr;
     }
     operator TInterface*() const {
-        return _ptr;
+        return m_ptr;
     }
 
 //
@@ -72,33 +69,33 @@ public:
 // 
 //
 private:
-    TInterface* _ptr = nullptr;
+    TInterface* m_ptr = nullptr;
 
 private:
     void initPtr(TInterface* pPtr = nullptr) {
         if( pPtr ) {
-            _ptr = pPtr;
-            _ptr->__swAddRef();
+            m_ptr = pPtr;
+            m_ptr->__swAddRef();
         }
     }
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
-            struct CForceSetter : public __IPtrForceSaver {
+            struct CForceSetter : public IObject::__IPtrForceSaver {
                 CForceSetter(TAutoPtr* pAutoPtr) : _pPtr(pAutoPtr){}
                 int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
                 TAutoPtr* _pPtr;
             }setter(this);
-            pPtr->__swConvertTo(TInterface::getInterfaceKey(), &setter);
+            pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), &setter);
         }
     }
     void releasePtr() {
-        if( _ptr ) {
-            _ptr->__swDecRef();
-            _ptr = nullptr;
+        if( m_ptr ) {
+            m_ptr->__swDecRef();
+            m_ptr = nullptr;
         }
     }
     template<typename Q> int assignPtr(Q* pPtr = nullptr) {
-        if( _ptr != (TInterface*)pPtr ) {
+        if( m_ptr != (TInterface*)pPtr ) {
             releasePtr();
             initPtr(pPtr);
         }

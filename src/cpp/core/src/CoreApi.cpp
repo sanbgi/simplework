@@ -4,7 +4,6 @@
 
 #include <map>
 #include <string>
-#include "windows.h"
 using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
@@ -16,10 +15,7 @@ class CCoreApi : public CObject, public ICoreApi{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private:
-    IObjectPtr createObject(const char* szClassKey, int nSimpleWorkCompatibleVer) {
-        if(nSimpleWorkCompatibleVer != SIMPLEWORK_COMPATIBLE_VER) {
-            return IObjectNullptr;
-        }
+    IObjectPtr createObject(const char* szClassKey) {
         IFactoryPtr spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
             return IObjectNullptr;
@@ -30,27 +26,17 @@ private:
     //
     // 根据类名和接口名，创建工厂
     //
-    IObjectPtr createFactory(const char* szClassKey, int nSimpleWorkCompatibleVer) {
-        if(nSimpleWorkCompatibleVer != SIMPLEWORK_COMPATIBLE_VER) {
-            return IObjectNullptr;
-        }
+    IObjectPtr createFactory(const char* szClassKey) {
         return getRegisteredFactory(szClassKey);
     }
 
-    int registerFactory(const char* szClassKey, IFactory* pFactory, int nSimpleWorkCompatibleVer) {
-        if(nSimpleWorkCompatibleVer != SIMPLEWORK_COMPATIBLE_VER) {
-            return Error::Failure;
-        }
+    int registerFactory(const char* szClassKey, IFactory* pFactory) {
         m_mapFactories[szClassKey] = pFactory;
         return Error::Success;
     }
 
-    IModulePtr createModule(const char* szModuleKey, int nSimpleWorkCompatibleVer) {
-        if(nSimpleWorkCompatibleVer != SIMPLEWORK_COMPATIBLE_VER) {
-            return IObjectNullptr;
-        }
-
-        IModulePtr spModule = CFactory::createObject<CModule>();
+    IModulePtr createModule(const char* szModuleKey) {
+        IModulePtr spModule = CObject::createObject<CModule>();
         if( szModuleKey != nullptr && strlen(szModuleKey) > 0 ) {
             if( spModule->initModule(szModuleKey, this) == Error::Success ) {
                 m_mapSubModules[szModuleKey] = spModule;
@@ -117,8 +103,12 @@ protected:
 // 输出核心模块
 //
 __SimpleWork_API__ ICoreApi* getCoreApi(int nCompatibleVer) {
-    static ICoreApiPtr s_spCoreApi = CFactory::createObject<CCoreApi>();
-    return s_spCoreApi;
+    if(nCompatibleVer <= ICoreApi::getInterfaceVer() ) {
+        static ICoreApiPtr s_spCoreApi = CObject::createObject<CCoreApi>();
+        return s_spCoreApi;
+    }else{
+        return nullptr;
+    }
 }
 
 __SimpleWork_Core_Namespace_Leave__

@@ -8,7 +8,7 @@ struct ICoreApi;
 //
 // 对象工场对象的接口
 //
-SIMPLEWORK_INTERFACE_ENTER(SIMPLEWORK_CORE_NAMESPACE, IModule, IObject)
+SIMPLEWORK_INTERFACE_ENTER(IModule, IObject, "sw.core.IModule", 011130)
 
     //
     // 获取系统版本号，如果返回的系统版本号，与系统不同，则会出现兼容问题。这个版本号，定义在全局宏
