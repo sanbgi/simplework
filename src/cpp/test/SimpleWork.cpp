@@ -41,9 +41,7 @@ int main(int argc, char *argv[]){
     }
     
 */
-    ICoreApiPtr spCoreApi = getCoreApi();
-    std::string sss = IObject::getInterfaceKey();
-    IObjectPtr spTensor = spCoreApi->createObject("sw.math.Tensor");
+    IObjectPtr spTensor = getSimpleWorkModule()->createObject("sw.math.Tensor");
     if( spTensor ) {
         std::cout << "Great\n";
     }

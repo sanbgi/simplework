@@ -111,7 +111,7 @@ private:
         }
         int __swDecRef() { 
             int nRefCnt = --m_nRefCnt;
-            if( --m_nRefCnt == 0 ) {
+            if( nRefCnt == 0 ) {
                  delete this; 
             }
             return nRefCnt;
