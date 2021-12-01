@@ -72,7 +72,7 @@ private:
             _pDLL = nullptr;
         }
 
-        string strLibrary = strModuleKey+".so";
+        string strLibrary = "lib"+strModuleKey+".so";
         void *lib_dl = dlopen(strLibrary.c_str(),RTLD_LAZY);
         if (lib_dl)
         {

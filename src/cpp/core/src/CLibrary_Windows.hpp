@@ -67,7 +67,7 @@ private:
             _hDLL = NULL;
         }
 
-        string strLibrary = strModuleKey+".dll";
+        string strLibrary = "lib"+strModuleKey+".dll";
         HMODULE hDLL = LoadLibrary(strLibrary.c_str());
         if (hDLL)
         {

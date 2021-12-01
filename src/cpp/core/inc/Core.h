@@ -82,6 +82,8 @@ __SimpleWork_Core_Namespace_Leave__
 #include "ICoreApi.h"
 #include "CoreApi.h"
 #include "TAutoPtr.h"
+
+
 //
 //
 //  Part4. 自定义对象、工厂、模块相关支持，包括：
@@ -164,31 +166,23 @@ __SimpleWork_Core_Namespace_Leave__
 
 //
 //
-//  Part5. 指针封装类定义支持，指针封装类主要用户隐藏指针细节，让使用者可以直接像一个类一
-//      样使用对象，这些类其实就是对接口调用的封装。目前的实现大多是直接从智能指针派生
-//      1, 定义封装类需要的宏
-//              SIMPLEWORK_CLASS_ENTER(name)
-//              SIMPLEWORK_CLASS_LEAVE
+//  Part5. 对象封装类定义支持，指针封装类主要用于隐藏指针细节，让使用者可以直接像一个类一
+//      样使用对象，这些类其实就是对接口调用的封装。
 //
 //
-
-/*
-#define SIMPLEWORK_CLASS_ENTER(TClassName) \
-class TClassName : public I##TClassName##Ptr { \
+#define SIMPLEWORK_OBJECT_DATACONVERSION(className) \
 public: \
-    TClassName() : I##TClassName##Ptr() {}; \
-    TClassName(const TClassName& src) : I##TClassName##Ptr(src){}; \
-    TClassName& operator=(const TClassName& src) { assignPtr(src.m_ptr); return *this; } \
-    TClassName(I##TClassName* pSrc) : I##TClassName##Ptr(pSrc) {}; \
-    template<typename Q> TClassName(const SIMPLEWORK_CORE_NAMESPACE::TAutoPtr<Q>& src) : I##TClassName##Ptr(src) {};
-
-#define SIMPLEWORK_CLASS_ENTER(TClassName) class TClassName {
-#define SIMPLEWORK_CLASS_LEAVE };
+    className() {} \
+    template<typename Q> const className& operator=(const Q& src) { \
+        m_autoPtr = src.getAutoPtr(); \
+        return *this; \
+    }\
+    template<typename Q> className(const Q& src) {\
+        m_autoPtr = src.getAutoPtr();\
+    }
 
 #include "TObject.h"
+#include "Object.h"
 #include "Factory.h"
-#include "Module.h"
-*/
-
 
 #endif//__SimpleWork_Core_h__

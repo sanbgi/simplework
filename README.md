@@ -25,8 +25,8 @@
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
     int main() {
-        IObjectPtr spTensor = getSimpleWork()->createObject("sw.math.tensor");
-        if( spTensor ) {
+        Tensor tensor = getSimpleWork()->createObject("sw.math.tensor");
+        if( tensor ) {
             cout << "Great ! SimpleWork is fine!";
         }else {
             cout << "??？ What happen?";
@@ -46,11 +46,11 @@
     SIMPLEWORK_CLASS_REGISTER("TestSimpleWork.MyObject")
 
     int main() {
-        IObjectPtr spMyObject = getSimpleWork()->createObject("TestSimpleWork.MyObject");
-        if( spMyObject ) {
-            cout << "Great ! I have created my first object!";
+        Object myObject = Object::createObject("TestSimpleWork.MyObject");
+        if( myObject ) {
+            std::cout << "Great ! I have created my first object!";
         }else {
-            cout << "??？ What happen?";
+            std::cout << "??？ What happen?";
         }
         return 0;
     }
@@ -64,22 +64,66 @@
         virtual void sayHi() = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
-    class CMyObject : public IObject, public IMyObject {
+    class CMyObject : public CObject, public IMyObject {
+        SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+            SIMPLEWORK_INTERFACE_ENTRY(IMyObject)
+        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+    public:
         void sayHi() {
-            cout << "Great ! Hi everyone!";
+            std::cout << "Great ! Hi everyone!";
         }
-    }
-    SIMPLEWORK_CLASS_REGISTER("TestSimpleWork.MyObject")
+    };
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
     int main() {
-        IMyObjectPtr spMyObject = getSimpleWork()->createObject("TestSimpleWork.MyObject");
+        IMyObjectPtr spMyObject = Object::createObject("TestSimpleWork.MyObject").getAutoPtr();
         if( spMyObject ) {
             spMyObject->sayHi();
         }else {
-            cout << "??？ What happen?";
+            std::cout << "??？ What happen?";
         }
         return 0;
     }
     SIMPLEWORK_MODULE_REGISTER("TestSimpleWork")
 
+(五) 定义封装类，便于使用
 
+    #include "SimpleWork.h" // 目前在src/cpp/inc目录中
+
+    SIMPLEWORK_INTERFACE_ENTER(IMyObject, IObject, "TestSimpleWork.IMyObject", 011130)
+        virtual void sayHi() = 0;
+    SIMPLEWORK_INTERFACE_LEAVE
+
+    class CMyObject : public CObject, public IMyObject {
+        SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+            SIMPLEWORK_INTERFACE_ENTRY(IMyObject)
+        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+    public:
+        void sayHi() {
+            std::cout << "Great ! Hi everyone!";
+        }
+    };
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
+
+    class MyObject : public TObject<MyObject, IMyObject> {
+        SIMPLEWORK_OBJECT_DATACONVERSION(MyObject)
+    public:
+        void sayHi() {
+            if(m_autoPtr) {
+                m_autoPtr->sayHi();
+            }
+        }
+    };
+
+    int main() {
+        MyObject myObject = Object::createObject("TestSimpleWork.MyObject");
+        if( myObject ) {
+            myObject.sayHi();
+        }else {
+            std::cout << "??？ What happen?";
+        }
+        return 0;
+    }
+    SIMPLEWORK_MODULE_REGISTER("TestSimpleWork")

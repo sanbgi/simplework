@@ -32,11 +32,11 @@ public:
     template<typename Q> TAutoPtr(const Q& src) : m_ptr(nullptr) {
         initPtr(src.getPtr());
     }
-    template<typename Q> TAutoPtr& operator=(Q* pSrc) {
+    template<typename Q> const TAutoPtr& operator=(Q* pSrc) {
         assignPtr(pSrc);
         return *this;
     }
-    template<typename Q> TAutoPtr& operator=(const Q& src) {
+    template<typename Q> const TAutoPtr& operator=(const Q& src) {
         assignPtr(src.getPtr());
         return *this;
     }

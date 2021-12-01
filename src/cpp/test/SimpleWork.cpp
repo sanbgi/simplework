@@ -5,27 +5,43 @@ using namespace sw::io;
 using namespace sw::core;
 using namespace sw::tensor;
 
-class CMyObject : public CObject, public IPipeIn {
+    SIMPLEWORK_INTERFACE_ENTER(IMyObject, IObject, "TestSimpleWork.IMyObject", 011130)
+        virtual void sayHi() = 0;
+    SIMPLEWORK_INTERFACE_LEAVE
+
+    class CMyObject : public CObject, public IMyObject {
+        SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+            SIMPLEWORK_INTERFACE_ENTRY(IMyObject)
+        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
     public:
-    int push(IFluidData* pFluidData) {
-        return Error::Success;
-    }
-}; 
+        void sayHi() {
+            std::cout << "Great ! Hi everyone!";
+        }
+    };
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
-
-int& getInt( int i) {
-    return *((int*)nullptr);
-}
-int& getInt( int& i) {
-    return *((int*)nullptr);
-}
+    class MyObject : public TObject<MyObject, IMyObject> {
+        SIMPLEWORK_OBJECT_DATACONVERSION(MyObject)
+    public:
+        void sayHi() {
+            if(m_autoPtr) {
+                m_autoPtr->sayHi();
+            }
+        }
+    };
 
 int main(int argc, char *argv[]){
-    int& v = getInt(1);
     
+/*
+    Factory factory;
+    Object object;
+    Object object2(object);
+    //Object object = factory;
+    factory = object;
+    object = factory;
     //int* pv = &v;
 
-/*
     Factory spFactory = CObject::createFactory<CMyObject>();
     
     std::cout << "startRegister = " << (spFactory ? "nullprt" : "validptr" );
@@ -41,16 +57,20 @@ int main(int argc, char *argv[]){
     }
     
 */
-    IObjectPtr spTensor = getSimpleWork()->createObject("sw.math.Tensor");
-    if( spTensor ) {
+    Object tensor = Object::createObject("sw.math.Tensor");
+    Factory factory = Object::createFactory("sw.math.Tensor");
+    tensor = factory;
+    IObjectPtr spPtr = factory.getAutoPtr();
+    if( tensor ) {
         std::cout << "Great\n";
     }
 
-    //TObject<IFactory> fac;
-    //TObject<ICoreApi> coreapi;
-    //TObject<IModule> module = fac;
-    //fac = coreapi;
-
+    MyObject myObject = Object::createObject("TestSimpleWork.MyObject");
+    if( myObject ) {
+        myObject.sayHi();
+    }else {
+        std::cout << "??？ What happen?";
+    }
     return 0;
 }
 
