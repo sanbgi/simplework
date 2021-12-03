@@ -62,8 +62,8 @@
     SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
         SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IMyObject", 211202)
             virtual void sayHi() = 0;
-        SIMPLEWORK_OBJECT_INTERFACE_LEAVE
-    SIMPLEWORK_INTERFACE_LEAVE(MyObject)
+        SIMPLEWORK_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACECLASS_LEAVE(MyObject)
 
     class CMyObject : public CObject, public IMyObject {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)

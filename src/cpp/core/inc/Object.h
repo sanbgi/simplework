@@ -16,7 +16,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Object)
         virtual int __swDecRef() = 0;
         virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, FunPtrForceSaver funSaver) = 0;
         template<typename T> friend class TAutoPtr;
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACE_LEAVE
 
 public:
     template<typename TFactory=Module> static Object createObject( const char* szClassKey) {
@@ -26,7 +26,7 @@ public:
         return TFactory::createFactory(szClassKey);
     }
 
-SIMPLEWORK_INTERFACE_LEAVE(Object)
+SIMPLEWORK_INTERFACECLASS_LEAVE(Object)
 
 //
 // IObjet类型的空指针定义，方便智能之指针类识别指针的类型

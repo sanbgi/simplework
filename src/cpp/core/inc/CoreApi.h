@@ -29,9 +29,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER(CoreApi)
         //
         virtual Object createModule(const char* szModuleKey = nullptr) = 0;
 
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACE_LEAVE
 
-SIMPLEWORK_INTERFACE_LEAVE(CoreApi)
+SIMPLEWORK_INTERFACECLASS_LEAVE(CoreApi)
 
 __SimpleWork_Core_Namespace_Leave__
 

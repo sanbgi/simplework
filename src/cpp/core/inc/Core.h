@@ -38,7 +38,7 @@ __SimpleWork_Core_Namespace_Leave__
 #define SIMPLEWORK_INTERFACECLASS_ENTER(className) \
     class className {
 
-#define SIMPLEWORK_INTERFACE_LEAVE(className) \
+#define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \
         TAutoPtr<IFace> m_autoPtr;\
     public: \
@@ -84,7 +84,7 @@ __SimpleWork_Core_Namespace_Leave__
             const static char* getInterfaceKey() { return interfaceKey; }\
             static int getInterfaceVer() { return interfaceVer; }
 
-#define SIMPLEWORK_OBJECT_INTERFACE_LEAVE\
+#define SIMPLEWORK_INTERFACE_LEAVE\
         };\
 
 #include "TAutoPtr.h"

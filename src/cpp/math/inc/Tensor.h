@@ -140,7 +140,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         //
         virtual Tensor transposeTensor(int nTransposeDim, int pTransposeDimArr[][2]) = 0;
 
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACE_LEAVE
     /*
     //
     // 构造张量
@@ -202,7 +202,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         return 0;
     }
     */
-SIMPLEWORK_INTERFACE_LEAVE(Tensor)
+SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE
 

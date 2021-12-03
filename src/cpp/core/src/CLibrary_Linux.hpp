@@ -16,8 +16,8 @@ __SimpleWork_Core_Namespace_Enter__
 SIMPLEWORK_INTERFACECLASS_ENTER(Library)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ILibrary", 011130)
         virtual Module loadLibraryModule(string strModuleKey) = 0;
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
-SIMPLEWORK_INTERFACECLASS_ENTER(Library)
+    SIMPLEWORK_INTERFACE_LEAVE
+SIMPLEWORK_INTERFACECLASS_LEAVE(Library)
 
 
 //

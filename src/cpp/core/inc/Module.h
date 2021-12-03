@@ -60,7 +60,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Module)
         //
         virtual Object createFactory(const char* szClassKey) = 0;
 
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACE_LEAVE
 
 
 public:
@@ -71,7 +71,7 @@ public:
         return getSimpleWork()->createFactory(szClassKey);
     }
 
-SIMPLEWORK_INTERFACE_LEAVE(Module)
+SIMPLEWORK_INTERFACECLASS_LEAVE(Module)
 
 __SimpleWork_Core_Namespace_Leave__
 
