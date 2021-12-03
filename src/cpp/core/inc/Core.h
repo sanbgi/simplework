@@ -42,29 +42,29 @@ __SimpleWork_Core_Namespace_Leave__
     private: \
         TAutoPtr<IFace> m_autoPtr;\
     public: \
-        className(){}\
-        template<typename Q> className(const Q& src) {\
+        inline className(){}\
+        template<typename Q> inline className(const Q& src) {\
             m_autoPtr = src.getPtr();\
         }\
-        template<typename Q> const className& operator=(const Q& src) {\
+        template<typename Q> inline const className& operator=(const Q& src) {\
             m_autoPtr = src.getPtr();\
             return *this;\
         }\
     public:\
-        IFace* getPtr() const { \
+        inline IFace* getPtr() const { \
             return m_autoPtr.getPtr(); \
         }\
-        void setPtr(IFace* pFactory) {\
-            m_autoPtr = pFactory;\
+        inline void setPtr(IFace* pFactory) {\
+            m_autoPtr.setPtr(pFactory);\
         }\
-        IFace* operator->() const {\
+        inline IFace* operator->() const {\
             return m_autoPtr.getPtr(); \
         }\
-        operator bool() const {\
+        inline operator bool() const {\
             return m_autoPtr;\
         }\
     public:\
-        static className wrapPtr(IFace* pObject) {\
+        static inline className wrapPtr(IFace* pObject) {\
             className object;\
             object.setPtr(pObject);\
             return object;\
@@ -75,14 +75,14 @@ __SimpleWork_Core_Namespace_Leave__
 #define SIMPLEWORK_INTERFACE_ENTER(superInterfaceClass, interfaceKey, interfaceVer) \
     public:\
         struct IFace : public superInterfaceClass {\
-            const static char* getInterfaceKey() { return interfaceKey; }\
-            static int getInterfaceVer() { return interfaceVer; }
+            const static inline char* getInterfaceKey() { return interfaceKey; }\
+            static inline int getInterfaceVer() { return interfaceVer; }
 
 #define SIMPLEWORK_INTERFACE_ENTER0(interfaceKey, interfaceVer) \
     public:\
         struct IFace {\
-            const static char* getInterfaceKey() { return interfaceKey; }\
-            static int getInterfaceVer() { return interfaceVer; }
+            const static inline char* getInterfaceKey() { return interfaceKey; }\
+            static inline int getInterfaceVer() { return interfaceVer; }
 
 #define SIMPLEWORK_INTERFACE_LEAVE\
         };\

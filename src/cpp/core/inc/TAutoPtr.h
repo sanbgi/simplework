@@ -4,62 +4,58 @@
 __SimpleWork_Core_Namespace_Enter__
 
 //
-// 对象的智能指针定义，仅适用于从IObject派生的接口
+// 对象的智能指针定义，仅适用于从IObject派生的接口，目前建议不要直接使用
 //
 template<typename TInterface> struct TAutoPtr {
 
 public:
-    TAutoPtr(){
+    inline TAutoPtr(){
         m_ptr = nullptr;
     }
-    TAutoPtr(const TAutoPtr& src) : m_ptr(nullptr)  {
+    inline TAutoPtr(const TAutoPtr& src) : m_ptr(nullptr)  {
         initPtr(src.m_ptr);
     }
-    TAutoPtr& operator=(const TAutoPtr& src) {
+    inline TAutoPtr& operator=(const TAutoPtr& src) {
         assignPtr(src.m_ptr);
         return *this;
     }
-    ~TAutoPtr() {
+    inline ~TAutoPtr() {
         releasePtr();
     }
-    //TAutoPtr(const char* szClassKey) {
-    //    *this = getSimpleWork()->createObject(szClassKey);
-    //}
-
-    template<typename Q> TAutoPtr(Q* pPtr) : m_ptr(nullptr) {
+    template<typename Q> inline TAutoPtr(Q* pPtr) : m_ptr(nullptr) {
        initPtr(pPtr);
     }
-    template<typename Q> TAutoPtr(const Q& src) : m_ptr(nullptr) {
+    template<typename Q> inline TAutoPtr(const Q& src) : m_ptr(nullptr) {
         initPtr(src.getPtr());
     }
-    template<typename Q> const TAutoPtr& operator=(Q* pSrc) {
+    template<typename Q> inline const TAutoPtr& operator=(Q* pSrc) {
         assignPtr(pSrc);
         return *this;
     }
-    template<typename Q> const TAutoPtr& operator=(const Q& src) {
+    template<typename Q> inline const TAutoPtr& operator=(const Q& src) {
         assignPtr(src.getPtr());
         return *this;
     }
 
 public:
-    TInterface* getPtr() const { 
+    inline TInterface* getPtr() const { 
         return m_ptr; 
     }
-    TInterface& getRef() const {
-        return *m_ptr;
+    template<typename Q> inline int setPtr(Q* pPtr) {
+        return assignPtr(pPtr);
     }
 
 public:
-    bool isNullptr() const { 
+    inline bool isNullptr() const { 
         return m_ptr == nullptr; 
     }
-    TInterface* operator->() const {
+    inline TInterface* operator->() const {
         return m_ptr; 
     }
-    operator bool() const{
+    inline operator bool() const{
         return m_ptr != nullptr;
     }
-    operator TInterface*() const {
+    inline operator TInterface*() const {
         return m_ptr;
     }
 

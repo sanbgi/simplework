@@ -64,10 +64,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Module)
 
 
 public:
-    static Object createObject(const char* szClassKey) {
+    static inline Object createObject(const char* szClassKey) {
         return getSimpleWork()->createObject(szClassKey);
     }
-    static Object createFactory(const char* szClassKey) {
+    static inline Object createFactory(const char* szClassKey) {
         return getSimpleWork()->createFactory(szClassKey);
     }
 

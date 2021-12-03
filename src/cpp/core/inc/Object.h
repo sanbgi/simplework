@@ -19,19 +19,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Object)
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    template<typename TFactory=Module> static Object createObject( const char* szClassKey) {
+    template<typename TFactory=Module> static inline Object createObject( const char* szClassKey) {
         return TFactory::createObject(szClassKey);
     }
-    template<typename TFactory=Module> static Object createFactory( const char* szClassKey) {
+    template<typename TFactory=Module> static inline Object createFactory( const char* szClassKey) {
         return TFactory::createFactory(szClassKey);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Object)
-
-//
-// IObjet类型的空指针定义，方便智能之指针类识别指针的类型
-//
-#define IObjectNullptr Object()
 
 __SimpleWork_Core_Namespace_Leave__
 
