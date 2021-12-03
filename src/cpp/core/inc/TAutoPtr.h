@@ -22,9 +22,9 @@ public:
     ~TAutoPtr() {
         releasePtr();
     }
-    TAutoPtr(const char* szClassKey) {
-        *this = getSimpleWork()->createObject(szClassKey);
-    }
+    //TAutoPtr(const char* szClassKey) {
+    //    *this = getSimpleWork()->createObject(szClassKey);
+    //}
 
     template<typename Q> TAutoPtr(Q* pPtr) : m_ptr(nullptr) {
        initPtr(pPtr);
@@ -56,7 +56,7 @@ public:
     TInterface* operator->() const {
         return m_ptr; 
     }
-    operator bool(){
+    operator bool() const{
         return m_ptr != nullptr;
     }
     operator TInterface*() const {
@@ -80,7 +80,7 @@ private:
     }
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
-            struct CForceSetter : public IObject::__IPtrForceSaver {
+            struct CForceSetter : public __IPtrForceSaver {
                 CForceSetter(TAutoPtr* pAutoPtr) : _pPtr(pAutoPtr){}
                 int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
                 TAutoPtr* _pPtr;

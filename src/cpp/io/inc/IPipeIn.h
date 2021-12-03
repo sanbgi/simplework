@@ -10,7 +10,7 @@ SIMPLEWORK_IO_NAMESPACE_ENTER
 // 输入管道（可往管道推送数据）
 //
 //
-SIMPLEWORK_INTERFACE_ENTER(IPipeIn, sw::core::IObject, "sw.io.IPipeIn", 011130)
+SIMPLEWORK_INTERFACE_ENTER(IPipeIn, sw::core::Object::IFace, "sw.io.IPipeIn", 011130)
 
     template<typename Q> int pushV(Q v) {
         return push(CFluidData(typeid(Q).hash_code(), &v));

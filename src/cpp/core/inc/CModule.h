@@ -36,17 +36,17 @@ protected://IModule
     //      sw框架通过唯一输出函数sw::core::getCoreModule，来让其它模块获得系统
     //  核心模块接口(IModule)，而实现就是这个模块。
     //
-    int initModule(const char* szModuleKey, ICoreApi* pCaller ) {
+    int initModule(const char* szModuleKey, const CoreApi& pCaller ) {
         if( pCaller ){
             //不允许重复初始化无效
             if( m_spCoreApi ) {
-                return m_spCoreApi.getPtr() == pCaller ? Error::Success : Error::Failure;
+                return m_spCoreApi.getPtr() == pCaller.getPtr() ? Error::Success : Error::Failure;
             }
 
             //
             // 将已经注册的本地工厂，向上级模块注册，并删除本地注册，后续工作由上级模块带管
             //
-            std::map<std::string,IFactoryPtr>::iterator it;
+            std::map<std::string,Factory>::iterator it;
             for(it = m_mapFactories.begin(); it != m_mapFactories.end(); ++it) {
                 pCaller->registerFactory(it->first.c_str(), it->second);
             }
@@ -61,7 +61,7 @@ protected://IModule
     //
     // 根据对象实现类名，创建对象
     //
-    IObjectPtr createObject(const char* szClassKey) {
+    Object createObject(const char* szClassKey) {
         if(m_spCoreApi) {
             return m_spCoreApi->createObject(szClassKey);
         }
@@ -69,23 +69,23 @@ protected://IModule
         if( pFactory ) {
             return pFactory->createObject();
         }
-        return IObjectNullptr;
+        return Object();
     }
 
     //
     // 根据对象实现类名，创建工厂
     //
-    IObjectPtr createFactory(const char* szClassKey) {
+    Object createFactory(const char* szClassKey) {
         if(m_spCoreApi) {
             return m_spCoreApi->createFactory(szClassKey);
         }
-        return findFactory(szClassKey);
+        return Factory::wrapPtr(findFactory(szClassKey));
     }
 
     //
     // 注册工厂
     //
-    int registerFactory(const char* szClassKey, IFactory* pFactory) {
+    int registerFactory(const char* szClassKey, const Factory& pFactory) {
         if(m_spCoreApi) {
             return m_spCoreApi->registerFactory(szClassKey, pFactory);
         }
@@ -95,14 +95,14 @@ protected://IModule
 
 protected:
     IFactory* findFactory(const char* szClassKey) {
-        std::map<std::string,IFactoryPtr>::iterator it = m_mapFactories.find(szClassKey);
+        std::map<std::string,Factory>::iterator it = m_mapFactories.find(szClassKey);
         return (it != m_mapFactories.end()) ? it->second.getPtr() : nullptr;
     }
 
 protected:
     std::string m_strModuleKey;
-    ICoreApiPtr m_spCoreApi;
-    std::map<std::string,IFactoryPtr> m_mapFactories;
+    CoreApi m_spCoreApi;
+    std::map<std::string,Factory> m_mapFactories;
 };
 
 __SimpleWork_Core_Namespace_Leave__

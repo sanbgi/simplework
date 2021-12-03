@@ -1,6 +1,6 @@
 提供一些简单的基础工作（基于C++的)，包括：
 
-    1，动态创建一个指定名字的对象，返回通用智能指针IObjectPtr，而无需链接于对象的动态库；
+    1，动态创建一个指定名字的对象，返回通用智能指针Object，而无需链接于对象的动态库；
     2，定义一个可以被创建的对象；
     3，后续如果想做，会继续提供的能力包括：
         3.1，基础数学计算能力(sw.math)，特别是多维矩阵（张量）
@@ -59,10 +59,12 @@
 (四) 实现对象接口
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
-
-    SIMPLEWORK_INTERFACE_ENTER(IMyObject, IObject, "TestSimpleWork.IMyObject", 011130)
-        virtual void sayHi() = 0;
-    SIMPLEWORK_INTERFACE_LEAVE
+    class MyObject {
+        SIMPLEWORK_OBJECT_INTERFACE_ENTER(MyObject, IObject, "sw.core.IModule", 211202)
+            virtual void sayHi() = 0;
+        SIMPLEWORK_OBJECT_INTERFACE_LEAVE(MyObject)
+    };
+    typedef MyObject::IFace IMyObject;
 
     class CMyObject : public CObject, public IMyObject {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -77,50 +79,9 @@
     SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
     int main() {
-        IMyObjectPtr spMyObject = Object::createObject("TestSimpleWork.MyObject").getAutoPtr();
+        MyObject spMyObject = Object::createObject("TestSimpleWork.MyObject");
         if( spMyObject ) {
             spMyObject->sayHi();
-        }else {
-            std::cout << "??？ What happen?";
-        }
-        return 0;
-    }
-    SIMPLEWORK_MODULE_REGISTER("TestSimpleWork")
-
-(五) 定义封装类，便于使用
-
-    #include "SimpleWork.h" // 目前在src/cpp/inc目录中
-
-    SIMPLEWORK_INTERFACE_ENTER(IMyObject, IObject, "TestSimpleWork.IMyObject", 011130)
-        virtual void sayHi() = 0;
-    SIMPLEWORK_INTERFACE_LEAVE
-
-    class CMyObject : public CObject, public IMyObject {
-        SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-            SIMPLEWORK_INTERFACE_ENTRY(IMyObject)
-        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
-
-    public:
-        void sayHi() {
-            std::cout << "Great ! Hi everyone!";
-        }
-    };
-    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
-
-    class MyObject : public TObject<MyObject, IMyObject> {
-        SIMPLEWORK_OBJECT_DATACONVERSION(MyObject)
-    public:
-        void sayHi() {
-            if(m_autoPtr) {
-                m_autoPtr->sayHi();
-            }
-        }
-    };
-
-    int main() {
-        MyObject myObject = Object::createObject("TestSimpleWork.MyObject");
-        if( myObject ) {
-            myObject.sayHi();
         }else {
             std::cout << "??？ What happen?";
         }

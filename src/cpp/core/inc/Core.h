@@ -16,12 +16,13 @@
 #include "Error.h"
 
 __SimpleWork_Core_Namespace_Enter__
-    struct IObject;
-    struct IModule;
-    struct IFactory;
-    struct ICoreApi;
-    template<typename TInterface> struct TAutoPtr;
-
+    struct Object;
+    struct Module;
+    struct Factory;
+    struct CoreApi;
+    typedef struct __IPtrForceSaver {
+        virtual int forceSetPtr(void* pPtr) = 0;
+    }* FunPtrForceSaver;
 __SimpleWork_Core_Namespace_Leave__
 
 //
@@ -29,33 +30,60 @@ __SimpleWork_Core_Namespace_Leave__
 //  Part2. 核心接口定义，包括：
 //      2.1，定义接口需要的宏定义
 //      2.2，核心接口
-//          -- IObject, IObjectPtr 接口定义基类及对应的智能指针
-//          -- IFactory, IFactoryPtr 工厂接口及对应的智能指针
-//          -- IModule, IModulePtr 模块接口及对应的智能指针
+//          -- IObject, Object 接口定义基类及对应的智能指针
+//          -- IFactory, Factory 工厂接口及对应的智能指针
+//          -- IModule, Module 模块接口及对应的智能指针
 //
 //
-#define SIMPLEWORK_INTERFACE_ENTER0(interfaceName, interfaceKey, interfaceVer) \
-    struct interfaceName; \
-    typedef TAutoPtr<interfaceName> interfaceName##Ptr; \
-    struct interfaceName { \
-        static const char* getInterfaceKey() { return interfaceKey; }\
-        static const int getInterfaceVer() { return interfaceVer; }
-#define SIMPLEWORK_INTERFACE_LEAVE0 };
 
-//
-// 接口宏定义
-//
-#define SIMPLEWORK_INTERFACE_ENTER(interfaceName, superInterfaceName, interfaceKey, interfaceVer)  \
-    struct interfaceName; \
-    typedef SIMPLEWORK_CORE_NAMESPACE::TAutoPtr<interfaceName> interfaceName##Ptr; \
-    struct interfaceName : superInterfaceName { \
-        static const char* getInterfaceKey() { return interfaceKey; }\
-        static const int getInterfaceVer() { return interfaceVer; }
-#define SIMPLEWORK_INTERFACE_LEAVE };
+#define SIMPLEWORK_OBJECT_INTERFACE_ENTER(className, superInterfaceClass, interfaceKey, interfaceVer) \
+    public:\
+        struct IFace : public superInterfaceClass {\
+            const static char* getInterfaceKey() { return interfaceKey; }\
+            static int getInterfaceVer() { return interfaceVer; }
 
-#include "IObject.h"
-#include "IFactory.h"
-#include "IModule.h"
+#define SIMPLEWORK_OBJECT_INTERFACE_ENTER0(className, interfaceKey, interfaceVer) \
+    public:\
+        struct IFace {\
+            const static char* getInterfaceKey() { return interfaceKey; }\
+            static int getInterfaceVer() { return interfaceVer; }
+
+#define SIMPLEWORK_OBJECT_INTERFACE_LEAVE(className) \
+        };\
+    private: \
+        TAutoPtr<IFace> m_autoPtr;\
+    public: \
+        className(){}\
+        template<typename Q> className(const Q& src) {\
+            m_autoPtr = src.getPtr();\
+        }\
+        template<typename Q> const className& operator=(const Q& src) {\
+            m_autoPtr = src.getPtr();\
+            return *this;\
+        }\
+    public:\
+        IFace* getPtr() const { \
+            return m_autoPtr.getPtr(); \
+        }\
+        void setPtr(IFace* pFactory) {\
+            m_autoPtr = pFactory;\
+        }\
+        IFace* operator->() const {\
+            return m_autoPtr.getPtr(); \
+        }\
+        operator bool() const {\
+            return m_autoPtr;\
+        }\
+    public:\
+        static className wrapPtr(IFace* pObject) {\
+            className object;\
+            object.setPtr(pObject);\
+            return object;\
+        };
+
+#include "TAutoPtr.h"
+#include "Object.h"
+#include "Factory.h"
 
 //
 //
@@ -79,10 +107,8 @@ __SimpleWork_Core_Namespace_Leave__
 #define SIMPLEWORK_COMPATIBLE_VER 211124
 #endif//SIMPLEWORK_COMPATIBLE_VER
 
-#include "ICoreApi.h"
 #include "CoreApi.h"
-#include "TAutoPtr.h"
-
+#include "Module.h"
 
 //
 //
@@ -106,19 +132,19 @@ __SimpleWork_Core_Namespace_Leave__
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        IObject * __swGetIObject() { return (IObject*)this; } \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IObject::FunPtrForceSaver pTarget) { 
+        sw::core::Object::IFace * __swGetIObject() { return (sw::core::Object::IFace*)this; } \
+        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::FunPtrForceSaver pTarget) { 
     #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return Error::Failure; \
     };
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        sw::core::IObject * __swGetIObject() { return TSuperClass::__swGetIObject(); } \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IObject::FunPtrForceSaver pTarget) { 
-#define SIMPLEWORK_INTERFACE_ENTRY(TInterface) \
-        if( strcmp(szInterfaceKey, TInterface::getInterfaceKey()) == 0 ) { \
-            if( nInterfaceVer <= TInterface::getInterfaceVer() ) \
-                return pTarget->forceSetPtr((void*)(TInterface*)this); \
+        sw::core::Object::IFace * __swGetIObject() { return TSuperClass::__swGetIObject(); } \
+        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::FunPtrForceSaver pTarget) { 
+#define SIMPLEWORK_INTERFACE_ENTRY(TInterfaceClass) \
+        if( strcmp(szInterfaceKey, TInterfaceClass::getInterfaceKey()) == 0 ) { \
+            if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
+                return pTarget->forceSetPtr((void*)(TInterfaceClass*)this); \
             else \
                 return Error::Failure;\
         }
@@ -131,7 +157,7 @@ __SimpleWork_Core_Namespace_Leave__
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            IFactoryPtr spFactory = CObject::createFactory<className>(); \
+            Factory spFactory = CObject::createFactory<className>(); \
             getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
@@ -140,7 +166,7 @@ __SimpleWork_Core_Namespace_Leave__
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            IFactoryPtr spFactory = CObject::createFactory<className>(true)); \
+            Factory spFactory = CObject::createFactory<className>(true)); \
             getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
@@ -148,41 +174,19 @@ __SimpleWork_Core_Namespace_Leave__
 #ifndef SIMPLEWORK_MODULE_REGISTER
     #ifndef SIMPLEWORK_WITHOUTAPI
         #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-            SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::IModule* getSimpleWork() { \
-                static SIMPLEWORK_CORE_NAMESPACE::IModulePtr s_spModule = SIMPLEWORK_CORE_NAMESPACE::getCoreApi()->createModule(moduleKey); \
+            SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::Module& getSimpleWork() { \
+                static SIMPLEWORK_CORE_NAMESPACE::Module s_spModule = SIMPLEWORK_CORE_NAMESPACE::getCoreApi()->createModule(moduleKey); \
                 return s_spModule; \
             }
     #else//SIMPLEWORK_WITHOUTAPI
         #include "CModule.h"
         #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-        SIMPLEWORK_MODULE_EXPORT IModule* getSimpleWork() { \
-            static IModulePtr s_spModule = \
+        SIMPLEWORK_MODULE_EXPORT Module& getSimpleWork() { \
+            static Module s_spModule = \
                 SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::CModule>(); \
             return s_spModule; \
         }
     #endif//SIMPLEWORK_WITHOUTAPI
 #endif//SIMPLEWORK_MODULE_REGISTER
-
-
-//
-//
-//  Part5. 对象封装类定义支持，指针封装类主要用于隐藏指针细节，让使用者可以直接像一个类一
-//      样使用对象，这些类其实就是对接口调用的封装。
-//
-//
-#define SIMPLEWORK_OBJECT_DATACONVERSION(className) \
-public: \
-    className() {} \
-    template<typename Q> const className& operator=(const Q& src) { \
-        m_autoPtr = src.getAutoPtr(); \
-        return *this; \
-    }\
-    template<typename Q> className(const Q& src) {\
-        m_autoPtr = src.getAutoPtr();\
-    }
-
-#include "TObject.h"
-#include "Object.h"
-#include "Factory.h"
 
 #endif//__SimpleWork_Core_h__

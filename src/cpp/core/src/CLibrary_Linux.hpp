@@ -13,9 +13,12 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
-SIMPLEWORK_INTERFACE_ENTER(ILibrary, IObject, "sw.core.ILibrary", 211201)
-    virtual IModulePtr loadLibraryModule(string strModuleKey) = 0;
-SIMPLEWORK_INTERFACE_LEAVE
+class Library {
+    SIMPLEWORK_OBJECT_INTERFACE_ENTER(Library, IObject, "sw.core.ILibrary", 011130)
+        virtual Module loadLibraryModule(string strModuleKey) = 0;
+    SIMPLEWORK_OBJECT_INTERFACE_LEAVE(Library)
+};
+
 
 //
 // 框架核心模块
@@ -33,22 +36,22 @@ class CLibrary : public CObject, ILibrary, IModule {
 public:
     int getSimpleWorkCompatibleVer() 
         { return _spModule->getSimpleWorkCompatibleVer();}
-    int initModule(const char* szModuleKey, ICoreApi* pCaller ) 
+    int initModule(const char* szModuleKey, const CoreApi& pCaller ) 
         { return _spModule->initModule(szModuleKey, pCaller); }
-    int registerFactory(const char* szClassKey, IFactory* pFactory) 
+    int registerFactory(const char* szClassKey, const Factory& pFactory) 
         { return Error::Failure; }
-    IObjectPtr createObject(const char* szClassKey) 
-        { return IObjectNullptr; }
-    IObjectPtr createFactory(const char* szClassKey)
-        { return IObjectNullptr; }
-    static IModulePtr loadModule(string strModuleKey) {
-        ILibraryPtr spLibrary = CObject::createObject<CLibrary>();
+    Object createObject(const char* szClassKey) 
+        { return Object(); }
+    Object createFactory(const char* szClassKey)
+        { return Object(); }
+    static Module loadModule(string strModuleKey) {
+        Library spLibrary = CObject::createObject<CLibrary>();
         return spLibrary->loadLibraryModule(strModuleKey);
     }
     
 private:
     void* _pDLL;
-    IModulePtr _spModule;
+    Module _spModule;
 
 public:
     CLibrary() {
@@ -62,12 +65,12 @@ public:
     }
 
 private:
-    IModulePtr loadLibraryModule(string strModuleKey) {
+    Module loadLibraryModule(string strModuleKey) {
         //
         // 释放已经加载的模块
         //
         if( _pDLL != nullptr ) {
-            _spModule = IObjectNullptr;
+            _spModule = Object();
             dlclose(_pDLL);
             _pDLL = nullptr;
         }
@@ -77,17 +80,16 @@ private:
         if (lib_dl)
         {
             _pDLL = lib_dl;
-
-            typedef IModule* (*FUNCTION)();
+            typedef SIMPLEWORK_CORE_NAMESPACE::Module& (*FUNCTION)();
             FUNCTION fun = (FUNCTION)dlsym(lib_dl,"getSimpleWork");
             if (fun)
             { 
                 _spModule = (*fun)();
-                return (IModule*)this;
+                return Module::wrapPtr(this);
             }
         }
 
-        return IObjectNullptr;
+        return Object();
     }
 };
 

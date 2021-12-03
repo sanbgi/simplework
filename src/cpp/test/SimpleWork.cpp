@@ -1,13 +1,22 @@
 #include <iostream>
 #include "../inc/SimpleWork.h"
 
-using namespace sw::io;
 using namespace sw::core;
-using namespace sw::tensor;
+using namespace sw::math;
 
-    SIMPLEWORK_INTERFACE_ENTER(IMyObject, IObject, "TestSimpleWork.IMyObject", 011130)
-        virtual void sayHi() = 0;
-    SIMPLEWORK_INTERFACE_LEAVE
+    class MyObject {
+        SIMPLEWORK_OBJECT_INTERFACE_ENTER(MyObject, IObject, "sw.core.IModule", 211202)
+            virtual void sayHi() = 0;
+        SIMPLEWORK_OBJECT_INTERFACE_LEAVE(MyObject)
+
+    public:
+        void sayHi() {
+            if(m_autoPtr) {
+                m_autoPtr->sayHi();
+            }
+        }
+    };
+    typedef MyObject::IFace IMyObject;
 
     class CMyObject : public CObject, public IMyObject {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -21,46 +30,12 @@ using namespace sw::tensor;
     };
     SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
-    class MyObject : public TObject<MyObject, IMyObject> {
-        SIMPLEWORK_OBJECT_DATACONVERSION(MyObject)
-    public:
-        void sayHi() {
-            if(m_autoPtr) {
-                m_autoPtr->sayHi();
-            }
-        }
-    };
 
 int main(int argc, char *argv[]){
     
-/*
-    Factory factory;
-    Object object;
-    Object object2(object);
-    //Object object = factory;
-    factory = object;
-    object = factory;
-    //int* pv = &v;
-
-    Factory spFactory = CObject::createFactory<CMyObject>();
-    
-    std::cout << "startRegister = " << (spFactory ? "nullprt" : "validptr" );
-    
-    getCoreApi()->registerFactory("MyObject", spFactory.getPtr());
-    
-    TObject spOject = getCoreApi()->createObject("MyObject");
-
-    TObject spObject = spFactory.createObject();
-    spObject = IObjectNullptr;
-    if( !spObject ) {
-        std::cout << "Great\n";
-    }
-    
-*/
     Object tensor = Object::createObject("sw.math.Tensor");
     Factory factory = Object::createFactory("sw.math.Tensor");
     tensor = factory;
-    IObjectPtr spPtr = factory.getAutoPtr();
     if( tensor ) {
         std::cout << "Great\n";
     }
@@ -71,6 +46,7 @@ int main(int argc, char *argv[]){
     }else {
         std::cout << "??？ What happen?";
     }
+
     return 0;
 }
 

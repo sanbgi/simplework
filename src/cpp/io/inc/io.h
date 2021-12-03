@@ -7,8 +7,8 @@
 #define SIMPLEWORK_IO_NAMESPACE_ENTER namespace SIMPLEWORK_IO_NAMESPACE {
 #define SIMPLEWORK_IO_NAMESPACE_LEAVE };
 
-#include "IPipeIn.h"
-#include "IPipeOut.h"
-#include "IPipeConnector.h"
+//#include "IPipeIn.h"
+//#include "IPipeOut.h"
+//#include "IPipeConnector.h"
 
 #endif//__SimpleWork_IO_h__

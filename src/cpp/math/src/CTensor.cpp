@@ -1,4 +1,4 @@
-#include "../inc/Tensor.h"
+#include "../inc/math.h"
 
 
 class CTensor : CObject {

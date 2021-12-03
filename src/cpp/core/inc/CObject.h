@@ -17,7 +17,7 @@ __SimpleWork_Core_Namespace_Enter__
 //  实现的接口，否则（无法查询到对象接口）
 //          
 //          SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-//              SIMPLEWORK_INTERFACE_ENTRY(IFactory)
+//              SIMPLEWORK_INTERFACE_ENTRY(Facctory)
 //          SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 //      
 //      范例一：
@@ -42,12 +42,8 @@ __SimpleWork_Core_Namespace_Enter__
 //  存在IObject的纯虚函数定义)，也不建议通过实现这些纯虚函数，这样可以统一管理对象的创
 //  建和销毁，避免内存泄漏，具体创建范例：
 //      
-//      TAutoPtr<IMyObject> spObj = CObject::createObject<CMyObject, IMyObject>();
-//      TAutoPtr<IFactory> spFactory = CObject::createFactory<CMyObject, IFactory>()
-//
-
-//
-//  对象基类：负责实现IObject接口查询能力，所有对象都要从这个基类派生。
+//      Object obj = CObject::createObject<CMyObject>();
+//      Factory fac = CObject::createFactory<CMyObject>()
 //
 class CObject : public IObject {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER0
@@ -61,7 +57,7 @@ public:
     //
     // 创建对象，并查询获取对象接口
     //
-    template<typename TObject> static IObjectPtr createObject(bool bSingleton=false) {
+    template<typename TObject> static Object createObject(bool bSingleton=false) {
         return CObjectImp<TObject>::createObjectImp(bSingleton);
     }
 
@@ -70,7 +66,7 @@ public:
     //  @T 工厂用于创建的对象类
     //  @Q 工厂实现类
     //
-    template<typename TObject> static IObjectPtr createFactory(bool bSingletonFactory=false) {
+    template<typename TObject> static Object createFactory(bool bSingletonFactory=false) {
         if(bSingletonFactory) {
             return CObjectImp<CSingletonFactoryImp<TObject, CObject>>::createObjectImp();
         }else{
@@ -81,9 +77,9 @@ public:
 private:
     template<typename TObject> class CObjectImp : public TObject {
     public:
-        static IObjectPtr createObjectImp(bool bSingleton=false) {
+        static Object createObjectImp(bool bSingleton=false) {
             if(bSingleton) {
-                static IObjectPtr g_spObject = createObjectImp(false);
+                static Object g_spObject = createObjectImp(false);
                 return g_spObject;
             }
             CObjectImp* pObjectImp = new CObjectImp();
@@ -101,7 +97,7 @@ private:
             if( pObject == nullptr ) {
                 delete pObjectImp;
             }
-            return pObject;
+            return Object::wrapPtr(pObject);
         }
 
     private:
@@ -125,7 +121,7 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass)
 
     public://IFactory
-        IObjectPtr createObject() {
+        Object createObject() {
             return CObjectImp<TObject>::createObjectImp(false);
         }
     };
@@ -135,7 +131,7 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass)
 
     public://IFactory
-        IObjectPtr createObject() {
+        Object createObject() {
             return CObjectImp<TObject>::createObjectImp(true);
         }
     };
