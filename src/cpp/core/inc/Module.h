@@ -31,7 +31,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(Module)
     
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.IModule", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IModule", 211202)
 
         //
         // 获取系统版本号，如果返回的系统版本号，与系统不同，则会出现兼容问题。这个版本号，定义在全局宏
@@ -71,7 +71,7 @@ public:
         return getSimpleWork()->createFactory(szClassKey);
     }
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(Module)
+SIMPLEWORK_INTERFACE_LEAVE(Module)
 
 __SimpleWork_Core_Namespace_Leave__
 

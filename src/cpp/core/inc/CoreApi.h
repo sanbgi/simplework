@@ -6,7 +6,7 @@ __SimpleWork_Core_Namespace_Enter__
 
 SIMPLEWORK_INTERFACECLASS_ENTER(CoreApi)
 
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.ICoreApi", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ICoreApi", 211202)
         //
         // 注册工厂
         //
@@ -31,7 +31,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(CoreApi)
 
     SIMPLEWORK_OBJECT_INTERFACE_LEAVE
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(CoreApi)
+SIMPLEWORK_INTERFACE_LEAVE(CoreApi)
 
 __SimpleWork_Core_Namespace_Leave__
 

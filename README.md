@@ -60,10 +60,10 @@
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
     SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
-        SIMPLEWORK_OBJECT_INTERFACE_ENTER("sw.core.IModule", 211202)
+        SIMPLEWORK_INTERFACE_ENTER("sw.core.IModule", 211202)
             virtual void sayHi() = 0;
         SIMPLEWORK_OBJECT_INTERFACE_LEAVE
-    SIMPLEWORK_INTERFACECLASS_LEAVE(MyObject)
+    SIMPLEWORK_INTERFACE_LEAVE(MyObject)
 
     class CMyObject : public CObject, public IMyObject {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)

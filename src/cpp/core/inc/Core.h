@@ -38,7 +38,7 @@ __SimpleWork_Core_Namespace_Leave__
 #define SIMPLEWORK_INTERFACECLASS_ENTER(className) \
     class className {
 
-#define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
+#define SIMPLEWORK_INTERFACE_LEAVE(className) \
     private: \
         TAutoPtr<IFace> m_autoPtr;\
     public: \
@@ -72,13 +72,13 @@ __SimpleWork_Core_Namespace_Leave__
     }; \
     typedef className::IFace I##className;
 
-#define SIMPLEWORK_OBJECT_INTERFACE_ENTER(superInterfaceClass, interfaceKey, interfaceVer) \
+#define SIMPLEWORK_INTERFACE_ENTER(superInterfaceClass, interfaceKey, interfaceVer) \
     public:\
         struct IFace : public superInterfaceClass {\
             const static char* getInterfaceKey() { return interfaceKey; }\
             static int getInterfaceVer() { return interfaceVer; }
 
-#define SIMPLEWORK_OBJECT_INTERFACE_ENTER0(interfaceKey, interfaceVer) \
+#define SIMPLEWORK_INTERFACE_ENTER0(interfaceKey, interfaceVer) \
     public:\
         struct IFace {\
             const static char* getInterfaceKey() { return interfaceKey; }\

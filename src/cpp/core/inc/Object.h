@@ -10,7 +10,7 @@ __SimpleWork_Core_Namespace_Enter__
 //  2, IObject的接口函数都不允许直接访问，避免引用计数错误，或者非法指针访问，请适用智能指针
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(Object)
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER0("sw.core.IObject", 211202)
+    SIMPLEWORK_INTERFACE_ENTER0("sw.core.IObject", 211202)
         private:
         virtual int __swAddRef() = 0;
         virtual int __swDecRef() = 0;
@@ -26,7 +26,7 @@ public:
         return TFactory::createFactory(szClassKey);
     }
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(Object)
+SIMPLEWORK_INTERFACE_LEAVE(Object)
 
 //
 // IObjet类型的空指针定义，方便智能之指针类识别指针的类型

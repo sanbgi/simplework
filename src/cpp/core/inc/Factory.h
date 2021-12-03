@@ -8,11 +8,11 @@ __SimpleWork_Core_Namespace_Enter__
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(Factory)
 
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.IFactory", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IFactory", 211202)
         virtual Object createObject() = 0;
     SIMPLEWORK_OBJECT_INTERFACE_LEAVE
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(Factory)
+SIMPLEWORK_INTERFACE_LEAVE(Factory)
 
 __SimpleWork_Core_Namespace_Leave__
 
