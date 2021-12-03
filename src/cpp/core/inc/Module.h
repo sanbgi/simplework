@@ -29,9 +29,9 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 模块对象
 //
-class Module {
+SIMPLEWORK_INTERFACECLASS_ENTER(Module)
     
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(Module, IObject, "sw.core.IModule", 211202)
+    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.IModule", 211202)
 
         //
         // 获取系统版本号，如果返回的系统版本号，与系统不同，则会出现兼容问题。这个版本号，定义在全局宏
@@ -60,7 +60,7 @@ class Module {
         //
         virtual Object createFactory(const char* szClassKey) = 0;
 
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE(Module)
+    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
 
 
 public:
@@ -70,8 +70,8 @@ public:
     static Object createFactory(const char* szClassKey) {
         return getSimpleWork()->createFactory(szClassKey);
     }
-};
-typedef Module::IFace IModule;
+
+SIMPLEWORK_INTERFACECLASS_LEAVE(Module)
 
 __SimpleWork_Core_Namespace_Leave__
 

@@ -4,8 +4,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
-class CoreApi {
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(CoreApi, IObject, "sw.core.ICoreApi", 211202)
+SIMPLEWORK_INTERFACECLASS_ENTER(CoreApi)
+
+    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.ICoreApi", 211202)
         //
         // 注册工厂
         //
@@ -28,9 +29,9 @@ class CoreApi {
         //
         virtual Object createModule(const char* szModuleKey = nullptr) = 0;
 
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE(CoreApi)
-};
-typedef CoreApi::IFace ICoreApi;
+    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
+
+SIMPLEWORK_INTERFACECLASS_LEAVE(CoreApi)
 
 __SimpleWork_Core_Namespace_Leave__
 

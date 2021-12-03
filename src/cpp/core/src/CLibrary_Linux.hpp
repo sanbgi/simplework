@@ -13,11 +13,11 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
-class Library {
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(Library, IObject, "sw.core.ILibrary", 011130)
+SIMPLEWORK_INTERFACECLASS_ENTER(Library)
+    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.ILibrary", 011130)
         virtual Module loadLibraryModule(string strModuleKey) = 0;
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE(Library)
-};
+    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
+SIMPLEWORK_INTERFACECLASS_ENTER(Library)
 
 
 //

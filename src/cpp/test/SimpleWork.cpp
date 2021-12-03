@@ -4,10 +4,11 @@
 using namespace sw::core;
 using namespace sw::math;
 
-    class MyObject {
-        SIMPLEWORK_OBJECT_INTERFACE_ENTER(MyObject, IObject, "sw.core.IModule", 211202)
+    SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
+    
+        SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.IModule", 211202)
             virtual void sayHi() = 0;
-        SIMPLEWORK_OBJECT_INTERFACE_LEAVE(MyObject)
+        SIMPLEWORK_OBJECT_INTERFACE_LEAVE
 
     public:
         void sayHi() {
@@ -15,8 +16,7 @@ using namespace sw::math;
                 m_autoPtr->sayHi();
             }
         }
-    };
-    typedef MyObject::IFace IMyObject;
+    SIMPLEWORK_INTERFACECLASS_LEAVE(MyObject)
 
     class CMyObject : public CObject, public IMyObject {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)

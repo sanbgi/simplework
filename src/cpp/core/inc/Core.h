@@ -35,21 +35,10 @@ __SimpleWork_Core_Namespace_Leave__
 //          -- IModule, Module 模块接口及对应的智能指针
 //
 //
+#define SIMPLEWORK_INTERFACECLASS_ENTER(className) \
+    class className {
 
-#define SIMPLEWORK_OBJECT_INTERFACE_ENTER(className, superInterfaceClass, interfaceKey, interfaceVer) \
-    public:\
-        struct IFace : public superInterfaceClass {\
-            const static char* getInterfaceKey() { return interfaceKey; }\
-            static int getInterfaceVer() { return interfaceVer; }
-
-#define SIMPLEWORK_OBJECT_INTERFACE_ENTER0(className, interfaceKey, interfaceVer) \
-    public:\
-        struct IFace {\
-            const static char* getInterfaceKey() { return interfaceKey; }\
-            static int getInterfaceVer() { return interfaceVer; }
-
-#define SIMPLEWORK_OBJECT_INTERFACE_LEAVE(className) \
-        };\
+#define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \
         TAutoPtr<IFace> m_autoPtr;\
     public: \
@@ -79,7 +68,24 @@ __SimpleWork_Core_Namespace_Leave__
             className object;\
             object.setPtr(pObject);\
             return object;\
-        };
+        };\
+    }; \
+    typedef className::IFace I##className;
+
+#define SIMPLEWORK_OBJECT_INTERFACE_ENTER(superInterfaceClass, interfaceKey, interfaceVer) \
+    public:\
+        struct IFace : public superInterfaceClass {\
+            const static char* getInterfaceKey() { return interfaceKey; }\
+            static int getInterfaceVer() { return interfaceVer; }
+
+#define SIMPLEWORK_OBJECT_INTERFACE_ENTER0(interfaceKey, interfaceVer) \
+    public:\
+        struct IFace {\
+            const static char* getInterfaceKey() { return interfaceKey; }\
+            static int getInterfaceVer() { return interfaceVer; }
+
+#define SIMPLEWORK_OBJECT_INTERFACE_LEAVE\
+        };\
 
 #include "TAutoPtr.h"
 #include "Object.h"

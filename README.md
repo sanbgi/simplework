@@ -60,9 +60,9 @@
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
     class MyObject {
-        SIMPLEWORK_OBJECT_INTERFACE_ENTER(MyObject, IObject, "sw.core.IModule", 211202)
+        SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.IModule", 211202)
             virtual void sayHi() = 0;
-        SIMPLEWORK_OBJECT_INTERFACE_LEAVE(MyObject)
+        SIMPLEWORK_OBJECT_INTERFACE_LEAVE
     };
     typedef MyObject::IFace IMyObject;
 

@@ -9,7 +9,7 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 /**
  * 张量类定义
  */
-struct Tensor {
+SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
     
     //
     // 数据类型定义
@@ -46,8 +46,7 @@ struct Tensor {
         return dtNull;
     };
 
-
-    SIMPLEWORK_OBJECT_INTERFACE_ENTER(Tensor, IObject, "sw.core.ITensor", 211202)
+    SIMPLEWORK_OBJECT_INTERFACE_ENTER(IObject, "sw.core.ITensor", 211202)
         //
         // 初始化张量，如果已经有数据，则原有数据将被删除
         // @eDt 张量数据类型
@@ -141,7 +140,7 @@ struct Tensor {
         //
         virtual Tensor transposeTensor(int nTransposeDim, int pTransposeDimArr[][2]) = 0;
 
-    SIMPLEWORK_OBJECT_INTERFACE_LEAVE(Tensor)
+    SIMPLEWORK_OBJECT_INTERFACE_LEAVE
     /*
     //
     // 构造张量
@@ -203,8 +202,7 @@ struct Tensor {
         return 0;
     }
     */
-};
-typedef Tensor::IFace ITensor;
+SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE
 
