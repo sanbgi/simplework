@@ -27,7 +27,7 @@ protected://IModule
     // 获取兼容版本号，系统会率先调用这个函数，检查版本号，符合要求，才会继续使用模块
     //
     int getSimpleWorkCompatibleVer() {
-        return SIMPLEWORK_COMPATIBLE_VER;
+        return IModule::getInterfaceVer();
     }
 
     //

@@ -20,6 +20,8 @@
 //      通过实现这个函数，模块甚至都不用依赖于连接SimpleWork库，因为SimpleWork库会自动加载模块，
 //  并且会在初始化模块的时候，将系统模块指针作为参数，传递给当前模块，这样，当前模块就可以调用系统
 //  模块功能了。
+//      
+//      当然，你可以直接使用宏SIMPLEWORK_MODULE_REGISTER(szModuleKey)，让系统自动帮你定义这个Api.
 //
 SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::Module& getSimpleWork();
 

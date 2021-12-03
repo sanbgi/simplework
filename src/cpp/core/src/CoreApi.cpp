@@ -79,7 +79,8 @@ private:
             }
 
             m_mapSubModules[strModuleKey] = spModule;
-            if(spModule->getSimpleWorkCompatibleVer() != SIMPLEWORK_COMPATIBLE_VER) {
+            if(spModule->getSimpleWorkCompatibleVer() < IModule::getInterfaceVer()) 
+            {
                 return Factory();
             }
 

@@ -46,7 +46,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         return dtNull;
     };
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ITensor", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensor", 211202)
         //
         // 初始化张量，如果已经有数据，则原有数据将被删除
         // @eDt 张量数据类型

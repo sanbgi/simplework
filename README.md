@@ -25,7 +25,7 @@
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
     int main() {
-        Tensor tensor = getSimpleWork()->createObject("sw.math.tensor");
+        Tensor tensor = Object::createObject("sw.math.tensor");
         if( tensor ) {
             cout << "Great ! SimpleWork is fine!";
         }else {

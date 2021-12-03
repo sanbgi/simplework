@@ -43,11 +43,18 @@ __SimpleWork_Core_Namespace_Leave__
         TAutoPtr<IFace> m_autoPtr;\
     public: \
         inline className(){}\
+        inline className(const className& src) {\
+            m_autoPtr.setPtr(src.getPtr());\
+        }\
+        inline const className& operator=(const className& src) {\
+            m_autoPtr.setPtr(src.getPtr()); \
+            return *this; \
+        }\
         template<typename Q> inline className(const Q& src) {\
-            m_autoPtr = src.getPtr();\
+            m_autoPtr.setPtr(src.getPtr());\
         }\
         template<typename Q> inline const className& operator=(const Q& src) {\
-            m_autoPtr = src.getPtr();\
+            m_autoPtr.setPtr(src.getPtr());\
             return *this;\
         }\
     public:\
@@ -90,12 +97,12 @@ __SimpleWork_Core_Namespace_Leave__
 #include "TAutoPtr.h"
 #include "Object.h"
 #include "Factory.h"
+#include "Module.h"
 
 //
 //
 //  Part3. 全局函数定义，包括：
-//      3.1 getSimpleWork获取当前模块接口
-//      3.2 getCoreModule获取核心模块接口
+//      3.2 getCoreApi获取核心模块接口
 //
 //
 #ifndef __SimpleWork_API__
@@ -109,12 +116,8 @@ __SimpleWork_Core_Namespace_Leave__
 //
 // 兼容版本号定义，头文件定义需要和编译好的库定义一致，每一次头文件更改后，务必及时修改此版本号
 //
-#ifndef SIMPLEWORK_COMPATIBLE_VER
-#define SIMPLEWORK_COMPATIBLE_VER 211124
-#endif//SIMPLEWORK_COMPATIBLE_VER
-
 #include "CoreApi.h"
-#include "Module.h"
+
 
 //
 //
