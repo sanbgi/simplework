@@ -40,7 +40,7 @@ protected://IModule
         if( pCaller ){
             //不允许重复初始化无效
             if( m_spCoreApi ) {
-                return m_spCoreApi.getPtr() == pCaller.getPtr() ? Error::Success : Error::Failure;
+                return m_spCoreApi == pCaller ? Error::Success : Error::Failure;
             }
 
             //
@@ -100,8 +100,8 @@ protected:
     }
 
 protected:
-    std::string m_strModuleKey;
     CoreApi m_spCoreApi;
+    std::string m_strModuleKey;
     std::map<std::string,Factory> m_mapFactories;
 };
 
