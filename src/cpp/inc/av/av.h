@@ -4,8 +4,8 @@
 #include "../core/core.h"
 
 #define SIMPLEWORK_AV_NAMESPACE sw::av
-#define SIMPLEWORK_AV_NAMESPACE_ENTER namespace SIMPLEWORK_AV_NAMESPACE {
-#define SIMPLEWORK_AV_NAMESPACE_LEAVE };
+#define SIMPLEWORK_AV_NAMESPACE_ENTER namespace sw { namespace av {
+#define SIMPLEWORK_AV_NAMESPACE_LEAVE }}
 
 #include "AvFrame.h"
 #include "AvIn.h"

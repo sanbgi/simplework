@@ -5,16 +5,16 @@
 //
 //  Part1. 基础定义，包括
 //      1.1, 命名域需要的宏
-//      1.2, 错误码, Error
-//      1.3, 智能指针定义, __CPointer
-//      1.4，核心接口申明
+//      1.2, 数据，Data
+//      1.3, 错误码, Error
 //
 //
 #define SIMPLEWORK_CORE_NAMESPACE sw::core
-#define __SimpleWork_Core_Namespace_Enter__ namespace SIMPLEWORK_CORE_NAMESPACE {
-#define __SimpleWork_Core_Namespace_Leave__ }
+#define __SimpleWork_Core_Namespace_Enter__ namespace sw { namespace core {
+#define __SimpleWork_Core_Namespace_Leave__ }}
+#include "Data.h"
 #include "Error.h"
-#include "BasicType.h"
+
 
 //
 //
@@ -118,7 +118,7 @@
         SIMPLEWORK_CORE_NAMESPACE::Object::IFace * __swGetIObject() { return (SIMPLEWORK_CORE_NAMESPACE::Object::IFace*)this; } \
         int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
-        return Error::FAILURE; \
+        return Error::ERRORTYPE_FAILURE; \
     };
 
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
@@ -130,7 +130,7 @@
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
                 return pTarget->forceSetPtr((void*)(TInterfaceClass*)this); \
             else \
-                return SIMPLEWORK_CORE_NAMESPACE::Error::FAILURE;\
+                return SIMPLEWORK_CORE_NAMESPACE::Error::ERRORTYPE_FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
         return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, pTarget); \

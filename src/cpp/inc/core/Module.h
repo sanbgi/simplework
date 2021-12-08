@@ -4,7 +4,7 @@
 #include "Object.h"
 
 __SimpleWork_Core_Namespace_Enter__
-struct Module;
+class Module;
 __SimpleWork_Core_Namespace_Leave__
 
 #ifndef __SimpleWork_API__

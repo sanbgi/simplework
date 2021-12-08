@@ -3,7 +3,7 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
-struct Module;
+class Module;
 
 //
 // 对象接口基类，注意：

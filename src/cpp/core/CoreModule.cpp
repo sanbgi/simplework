@@ -21,7 +21,7 @@ private:
     }
 
     int initModule(const char* szModuleKey, const Module& pCaller) {
-        return Error::SUCCESS;
+        return Error::ERRORTYPE_SUCCESS;
     }
 
     Object createObject(const char* szClassKey) {
@@ -41,7 +41,7 @@ private:
 
     int registerFactory(const char* szClassKey,  const Factory& pFactory) {
         m_mapFactories[szClassKey] = pFactory;
-        return Error::SUCCESS;
+        return Error::ERRORTYPE_SUCCESS;
     }
 
     Factory getRegisteredFactory(const char* szClassKey) {

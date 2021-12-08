@@ -19,12 +19,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         // @return
         //      0 == success
         //
-        virtual int initTensor( EBasicType eDt, int nDim, int* pDimSizes, int nData, void* pData = nullptr) = 0;
+        virtual int initTensor( Data::DataType eDt, int nDim, int* pDimSizes, int nData, void* pData = nullptr) = 0;
 
         //
         // 获取数据类型
         //
-        virtual EBasicType getDataType() = 0;
+        virtual Data::DataType getDataType() = 0;
 
         //
         // 获取维度数量

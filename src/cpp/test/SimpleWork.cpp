@@ -2,6 +2,7 @@
 #include "../inc/SimpleWork.h"
 
 using namespace sw;
+using namespace sw::av;
 
     SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
 
@@ -32,6 +33,17 @@ using namespace sw;
 
 int main(int argc, char *argv[]){
     
+    AvIn avIn = Object::createObject("sw.av.AvIn");
+    avIn->init("d:/tt.mkv");
+    int nframe = 0;
+    AvFrame frame;
+    while(avIn->getFrame(frame) == Error::ERRORTYPE_SUCCESS) {
+        nframe++;
+        if( nframe % 10 == 0) {
+            std::cout << nframe <<  "\n";
+        }
+    }
+
     Object tensor = Object::createObject("sw.math.Tensor");
     Factory factory = Object::createFactory("sw.math.Tensor");
     tensor = factory;
@@ -51,6 +63,8 @@ int main(int argc, char *argv[]){
 
 
 void say_hello(){
+
+
     /*
     TObject ppo;
     TObject ptr1, ptr0, ptrn(ptr1);

@@ -7,9 +7,9 @@ __SimpleWork_Core_Namespace_Enter__
 // 错误码定义
 //
 struct Error {
-    enum{
-        SUCCESS = 0,
-        FAILURE = 1,
+    enum ErrorType{
+        ERRORTYPE_SUCCESS = 0,
+        ERRORTYPE_FAILURE = 1,
     };
 };
 

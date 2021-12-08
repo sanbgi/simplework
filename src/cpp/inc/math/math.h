@@ -4,8 +4,8 @@
 #include "../core/core.h"
 
 #define SIMPLEWORK_MATH_NAMESPACE sw::math
-#define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace SIMPLEWORK_MATH_NAMESPACE {
-#define SIMPLEWORK_MATH_NAMESPACE_LEAVE }
+#define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace sw { namespace math {
+#define SIMPLEWORK_MATH_NAMESPACE_LEAVE }}
 
 #include "Tensor.h"
 

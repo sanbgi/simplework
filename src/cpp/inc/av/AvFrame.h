@@ -7,6 +7,13 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 // 对象工场对象的接口
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(AvFrame)
+public:
+    enum AvFrameType {
+        AVFRAMETYPE_UNKNOWN = 0,
+        AVFRAMETYPE_VIDEO   = 1,
+        AVFRAMETYPE_AUDIO   = 2,
+        AVFRAMETYPE_SUBTITLE= 3
+    };
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvFrame", 211206)
 

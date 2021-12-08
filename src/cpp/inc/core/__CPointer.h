@@ -10,7 +10,7 @@ typedef struct __IPtrForceSaver {
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口，目前建议不要直接使用
 //
-template<typename TInterface> struct __CPointer {
+template<typename TInterface> class __CPointer {
 
 public:
     inline __CPointer(){
@@ -99,7 +99,7 @@ private:
             releasePtr();
             initPtr(pPtr);
         }
-        return Error::SUCCESS;
+        return Error::ERRORTYPE_SUCCESS;
     }
 };
 

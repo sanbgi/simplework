@@ -40,7 +40,7 @@ protected://IModule
         if( pCaller ){
             //不允许重复初始化无效
             if( m_spCoreApi ) {
-                return m_spCoreApi == pCaller ? Error::SUCCESS : Error::FAILURE;
+                return m_spCoreApi == pCaller ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
             }
 
             //
@@ -55,7 +55,7 @@ protected://IModule
         m_strModuleKey = szModuleKey;
         m_spCoreApi = pCaller;
         m_mapFactories.clear();
-        return Error::SUCCESS;
+        return Error::ERRORTYPE_SUCCESS;
     }
 
     //
@@ -90,7 +90,7 @@ protected://IModule
             return m_spCoreApi->registerFactory(szClassKey, pFactory);
         }
         m_mapFactories[szClassKey] = pFactory;
-        return Error::SUCCESS;
+        return Error::ERRORTYPE_SUCCESS;
     }
 
 protected:
