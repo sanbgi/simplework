@@ -95,13 +95,12 @@ public:
                             release();
                             return Error::ERRORTYPE_FAILURE;
                         }
-                        m_vecFrameTypes.push_back(codeType==AVMediaType::AVMEDIA_TYPE_VIDEO ? AvFrame::AVFRAMETYPE_VIDEO : AvFrame::AVFRAMETYPE_AUDIO);
                         m_vecCodecCtxs.push_back(pCodecCtx.detach());
                     }
                     break;
 
                 default:
-                    m_vecFrameTypes.push_back(AvFrame::AVFRAMETYPE_UNKNOWN);
+                    m_vecCodecCtxs.push_back(nullptr);
                     break;
             }
         }
@@ -218,8 +217,12 @@ public:
     void release() {
 
         for(std::vector<AVCodecContext*>::iterator it=m_vecCodecCtxs.begin(); it!=m_vecCodecCtxs.end(); it++) {
-            avcodec_free_context(&*it);
+            AVCodecContext* pCodecCtx = *it;
+            if(pCodecCtx) {
+                avcodec_free_context(&pCodecCtx);
+            }
         }
+        m_vecCodecCtxs.clear();
 
         if(m_pFormatCtx) {
             if( m_bOpenedFormatCtx ) {
@@ -236,6 +239,5 @@ private:
     AVFormatContext* m_pFormatCtx;
     AVCodecContext* m_pContinueReadingCtx;
     std::vector<AVCodecContext*> m_vecCodecCtxs;
-    std::vector<AvFrame::AvFrameType> m_vecFrameTypes;
 };
 SIMPLEWORK_FACTORY_REGISTER(CAvIn, "sw.av.AvIn")
