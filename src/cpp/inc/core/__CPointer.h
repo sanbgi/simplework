@@ -1,38 +1,42 @@
-#ifndef __SimpleWork_AutoPrt__h__
-#define __SimpleWork_AutoPrt__h__
+#ifndef __SimpleWork_CPointer__h__
+#define __SimpleWork_CPointer__h__
 
 __SimpleWork_Core_Namespace_Enter__
+
+typedef struct __IPtrForceSaver {
+    virtual int forceSetPtr(void* pPtr) = 0;
+}* __FunPtrForceSaver;
 
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口，目前建议不要直接使用
 //
-template<typename TInterface> struct TAutoPtr {
+template<typename TInterface> struct __CPointer {
 
 public:
-    inline TAutoPtr(){
+    inline __CPointer(){
         m_ptr = nullptr;
     }
-    inline TAutoPtr(const TAutoPtr& src) : m_ptr(nullptr)  {
+    inline __CPointer(const __CPointer& src) : m_ptr(nullptr)  {
         initPtr(src.m_ptr);
     }
-    inline TAutoPtr& operator=(const TAutoPtr& src) {
+    inline __CPointer& operator=(const __CPointer& src) {
         assignPtr(src.m_ptr);
         return *this;
     }
-    inline ~TAutoPtr() {
+    inline ~__CPointer() {
         releasePtr();
     }
-    template<typename Q> inline TAutoPtr(Q* pPtr) : m_ptr(nullptr) {
+    template<typename Q> inline __CPointer(Q* pPtr) : m_ptr(nullptr) {
        initPtr(pPtr);
     }
-    template<typename Q> inline TAutoPtr(const Q& src) : m_ptr(nullptr) {
+    template<typename Q> inline __CPointer(const Q& src) : m_ptr(nullptr) {
         initPtr(src.getPtr());
     }
-    template<typename Q> inline const TAutoPtr& operator=(Q* pSrc) {
+    template<typename Q> inline const __CPointer& operator=(Q* pSrc) {
         assignPtr(pSrc);
         return *this;
     }
-    template<typename Q> inline const TAutoPtr& operator=(const Q& src) {
+    template<typename Q> inline const __CPointer& operator=(const Q& src) {
         assignPtr(src.getPtr());
         return *this;
     }
@@ -77,9 +81,9 @@ private:
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
             struct CForceSetter : public __IPtrForceSaver {
-                CForceSetter(TAutoPtr* pAutoPtr) : _pPtr(pAutoPtr){}
+                CForceSetter(__CPointer* pAutoPtr) : _pPtr(pAutoPtr){}
                 int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
-                TAutoPtr* _pPtr;
+                __CPointer* _pPtr;
             }setter(this);
             pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), &setter);
         }
@@ -95,10 +99,10 @@ private:
             releasePtr();
             initPtr(pPtr);
         }
-        return Error::Success;
+        return Error::SUCCESS;
     }
 };
 
 __SimpleWork_Core_Namespace_Leave__
 
-#endif//__SimpleWork_AutoPrt__h__
+#endif//__SimpleWork_CPointer__h__

@@ -1,4 +1,4 @@
-#include "../inc/math.h"
+#include "../inc/math/math.h"
 
 
 class CTensor : CObject {

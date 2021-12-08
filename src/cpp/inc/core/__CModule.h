@@ -1,6 +1,6 @@
 #ifndef __SimpleWork_CModule_H__
 #define __SimpleWork_CModule_H__
-
+#ifdef SIMPLEWORK_WITHOUTAPI
 
 #include <map>
 #include <string>
@@ -16,7 +16,7 @@ __SimpleWork_Core_Namespace_Enter__
 //      
 //      由于模块依赖于<map><string>，所以，能不引入则尽量不要引入。
 //
-class CModule : public CObject, public IModule {
+class __CModule : public CObject, public IModule {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IModule)
@@ -36,11 +36,11 @@ protected://IModule
     //      sw框架通过唯一输出函数sw::core::getCoreModule，来让其它模块获得系统
     //  核心模块接口(IModule)，而实现就是这个模块。
     //
-    int initModule(const char* szModuleKey, const CoreApi& pCaller ) {
+    int initModule(const char* szModuleKey, const Module& pCaller ) {
         if( pCaller ){
             //不允许重复初始化无效
             if( m_spCoreApi ) {
-                return m_spCoreApi == pCaller ? Error::Success : Error::Failure;
+                return m_spCoreApi == pCaller ? Error::SUCCESS : Error::FAILURE;
             }
 
             //
@@ -55,7 +55,7 @@ protected://IModule
         m_strModuleKey = szModuleKey;
         m_spCoreApi = pCaller;
         m_mapFactories.clear();
-        return Error::Success;
+        return Error::SUCCESS;
     }
 
     //
@@ -90,7 +90,7 @@ protected://IModule
             return m_spCoreApi->registerFactory(szClassKey, pFactory);
         }
         m_mapFactories[szClassKey] = pFactory;
-        return Error::Success;
+        return Error::SUCCESS;
     }
 
 protected:
@@ -100,11 +100,12 @@ protected:
     }
 
 protected:
-    CoreApi m_spCoreApi;
+    Module m_spCoreApi;
     std::string m_strModuleKey;
     std::map<std::string,Factory> m_mapFactories;
 };
 
 __SimpleWork_Core_Namespace_Leave__
 
+#endif//SIMPLEWORK_WITHOUTAPI
 #endif//__SimpleWork_CModule_H__

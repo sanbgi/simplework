@@ -3,6 +3,8 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+struct Module;
+
 //
 // 对象接口基类，注意：
 //
@@ -10,12 +12,13 @@ __SimpleWork_Core_Namespace_Enter__
 //  2, IObject的接口函数都不允许直接访问，避免引用计数错误，或者非法指针访问，请适用智能指针
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(Object)
-    SIMPLEWORK_INTERFACE_ENTER0("sw.core.IObject", 211202)
-        private:
+
+    SIMPLEWORK_INTERFACE_ENTER0("sw.IObject", 211202)
+    private:
         virtual int __swAddRef() = 0;
         virtual int __swDecRef() = 0;
-        virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, FunPtrForceSaver funSaver) = 0;
-        template<typename T> friend class TAutoPtr;
+        virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, __FunPtrForceSaver funSaver) = 0;
+        template<typename T> friend class __CPointer;
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:

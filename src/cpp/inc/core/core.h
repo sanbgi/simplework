@@ -6,7 +6,7 @@
 //  Part1. 基础定义，包括
 //      1.1, 命名域需要的宏
 //      1.2, 错误码, Error
-//      1.3, 智能指针定义, TAutoPtr
+//      1.3, 智能指针定义, __CPointer
 //      1.4，核心接口申明
 //
 //
@@ -14,16 +14,7 @@
 #define __SimpleWork_Core_Namespace_Enter__ namespace SIMPLEWORK_CORE_NAMESPACE {
 #define __SimpleWork_Core_Namespace_Leave__ }
 #include "Error.h"
-
-__SimpleWork_Core_Namespace_Enter__
-    struct Object;
-    struct Module;
-    struct Factory;
-    struct CoreApi;
-    typedef struct __IPtrForceSaver {
-        virtual int forceSetPtr(void* pPtr) = 0;
-    }* FunPtrForceSaver;
-__SimpleWork_Core_Namespace_Leave__
+#include "BasicType.h"
 
 //
 //
@@ -32,7 +23,7 @@ __SimpleWork_Core_Namespace_Leave__
 //      2.2，核心接口
 //          -- IObject, Object 接口定义基类及对应的智能指针
 //          -- IFactory, Factory 工厂接口及对应的智能指针
-//          -- IModule, Module 模块接口及对应的智能指针
+//      2.3, getSimpleWork()获取全局模块对象
 //
 //
 #define SIMPLEWORK_INTERFACECLASS_ENTER(className) \
@@ -40,35 +31,38 @@ __SimpleWork_Core_Namespace_Leave__
 
 #define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \
-        TAutoPtr<IFace> m_autoPtr;\
+        SIMPLEWORK_CORE_NAMESPACE::__CPointer<IFace> __autoPtr;\
     public: \
         inline className(){}\
+        inline className(IFace* pFace) { \
+            __autoPtr.setPtr(pFace);\
+        }\
         inline className(const className& src) {\
-            m_autoPtr.setPtr(src.getPtr());\
+            __autoPtr.setPtr(src.getPtr());\
         }\
         inline const className& operator=(const className& src) {\
-            m_autoPtr.setPtr(src.getPtr()); \
+            __autoPtr.setPtr(src.getPtr()); \
             return *this; \
         }\
         template<typename Q> inline className(const Q& src) {\
-            m_autoPtr.setPtr(src.getPtr());\
+            __autoPtr.setPtr(src.getPtr());\
         }\
         template<typename Q> inline const className& operator=(const Q& src) {\
-            m_autoPtr.setPtr(src.getPtr());\
+            __autoPtr.setPtr(src.getPtr());\
             return *this;\
         }\
     public:\
         inline IFace* getPtr() const { \
-            return m_autoPtr.getPtr(); \
+            return __autoPtr.getPtr(); \
         }\
         inline void setPtr(IFace* pFactory) {\
-            m_autoPtr.setPtr(pFactory);\
+            __autoPtr.setPtr(pFactory);\
         }\
         inline IFace* operator->() const {\
-            return m_autoPtr.getPtr(); \
+            return __autoPtr.getPtr(); \
         }\
         inline operator bool() const {\
-            return m_autoPtr;\
+            return __autoPtr;\
         }\
     public:\
         static inline className wrapPtr(IFace* pObject) {\
@@ -94,30 +88,10 @@ __SimpleWork_Core_Namespace_Leave__
 #define SIMPLEWORK_INTERFACE_LEAVE\
         };\
 
-#include "TAutoPtr.h"
+#include "__CPointer.h"
 #include "Object.h"
 #include "Factory.h"
 #include "Module.h"
-
-//
-//
-//  Part3. 全局函数定义，包括：
-//      3.2 getCoreApi获取核心模块接口
-//
-//
-#ifndef __SimpleWork_API__
-    #if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
-        #define __SimpleWork_API__ __declspec(dllimport)
-    #else
-        #define __SimpleWork_API__
-    #endif
-#endif//__SimpleWork_API__
-
-//
-// 兼容版本号定义，头文件定义需要和编译好的库定义一致，每一次头文件更改后，务必及时修改此版本号
-//
-#include "CoreApi.h"
-
 
 //
 //
@@ -141,21 +115,22 @@ __SimpleWork_Core_Namespace_Leave__
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        sw::core::Object::IFace * __swGetIObject() { return (sw::core::Object::IFace*)this; } \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::FunPtrForceSaver pTarget) { 
-    #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
-        return Error::Failure; \
+        SIMPLEWORK_CORE_NAMESPACE::Object::IFace * __swGetIObject() { return (SIMPLEWORK_CORE_NAMESPACE::Object::IFace*)this; } \
+        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
+#define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
+        return Error::FAILURE; \
     };
+
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        sw::core::Object::IFace * __swGetIObject() { return TSuperClass::__swGetIObject(); } \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::FunPtrForceSaver pTarget) { 
+        SIMPLEWORK_CORE_NAMESPACE::Object::IFace * __swGetIObject() { return TSuperClass::__swGetIObject(); } \
+        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterfaceClass) \
         if( strcmp(szInterfaceKey, TInterfaceClass::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
                 return pTarget->forceSetPtr((void*)(TInterfaceClass*)this); \
             else \
-                return Error::Failure;\
+                return SIMPLEWORK_CORE_NAMESPACE::Error::FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
         return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, pTarget); \
@@ -166,8 +141,8 @@ __SimpleWork_Core_Namespace_Leave__
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            Factory spFactory = CObject::createFactory<className>(); \
-            getSimpleWork()->registerFactory(classKey, spFactory); \
+            Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(); \
+            SIMPLEWORK_CORE_NAMESPACE::Module::getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 
@@ -175,27 +150,22 @@ __SimpleWork_Core_Namespace_Leave__
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            Factory spFactory = CObject::createFactory<className>(true)); \
-            getSimpleWork()->registerFactory(classKey, spFactory); \
+            Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true)); \
+            SIMPLEWORK_CORE_NAMESPACE::Module::getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 
-#ifndef SIMPLEWORK_MODULE_REGISTER
-    #ifndef SIMPLEWORK_WITHOUTAPI
-        #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-            SIMPLEWORK_MODULE_EXPORT SIMPLEWORK_CORE_NAMESPACE::Module& getSimpleWork() { \
-                static SIMPLEWORK_CORE_NAMESPACE::Module s_spModule = SIMPLEWORK_CORE_NAMESPACE::getCoreApi()->createModule(moduleKey); \
-                return s_spModule; \
-            }
-    #else//SIMPLEWORK_WITHOUTAPI
-        #include "CModule.h"
-        #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-        SIMPLEWORK_MODULE_EXPORT Module& getSimpleWork() { \
-            static Module s_spModule = \
-                SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::CModule>(); \
-            return s_spModule; \
-        }
-    #endif//SIMPLEWORK_WITHOUTAPI
-#endif//SIMPLEWORK_MODULE_REGISTER
+
+#ifdef SIMPLEWORK_WITHOUTAPI
+    #include "__CModule.h"
+    #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
+    SIMPLEWORK_MODULE_EXPORT Module& getSimpleWork() { \
+        static Module s_spModule = \
+            SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::__CModule>(); \
+        return s_spModule; \
+    }
+#else//SIMPLEWORK_WITHOUTAPI
+    #define SIMPLEWORK_MODULE_REGISTER(moduleKey)
+#endif//SIMPLEWORK_WITHOUTAPI
 
 #endif//__SimpleWork_Core_h__

@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_IFactory__h__
 #define __SimpleWork_IFactory__h__
 
+#include "Object.h"
+
 __SimpleWork_Core_Namespace_Enter__
 
 //
@@ -8,7 +10,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(Factory)
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IFactory", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IFactory", 211202)
         virtual Object createObject() = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 

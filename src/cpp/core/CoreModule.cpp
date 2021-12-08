@@ -8,13 +8,22 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
-class CCoreApi : public CObject, public ICoreApi{
+class CCoreModule : public CObject, public IModule{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(ICoreApi)
+        SIMPLEWORK_INTERFACE_ENTRY(IModule)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private:
+
+    int getSimpleWorkCompatibleVer() {
+        return IModule::getInterfaceVer();
+    }
+
+    int initModule(const char* szModuleKey, const Module& pCaller) {
+        return Error::SUCCESS;
+    }
+
     Object createObject(const char* szClassKey) {
         Factory spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
@@ -32,18 +41,7 @@ private:
 
     int registerFactory(const char* szClassKey,  const Factory& pFactory) {
         m_mapFactories[szClassKey] = pFactory;
-        return Error::Success;
-    }
-
-    Object createModule(const char* szModuleKey) {
-        CoreApi coreapi = CoreApi::wrapPtr(this);
-        Module spModule = CObject::createObject<CModule>();
-        if( szModuleKey != nullptr && strlen(szModuleKey) > 0 ) {
-            if( spModule->initModule(szModuleKey, coreapi) == Error::Success ) {
-                m_mapSubModules[szModuleKey] = spModule;
-            }
-        }
-        return spModule;
+        return Error::SUCCESS;
     }
 
     Factory getRegisteredFactory(const char* szClassKey) {
@@ -87,7 +85,7 @@ private:
             //
             // 初始化模块后，再查找一次工厂，看是否注册，并返回已经注册的值
             //
-            CoreApi coreapi = CoreApi::wrapPtr(this);
+            Module coreapi = Module::wrapPtr(this);
             spModule->initModule(strModuleKey.c_str(), coreapi);
             it = m_mapFactories.find(szClassKey);
             if(it != m_mapFactories.end() ) {
@@ -105,12 +103,12 @@ protected:
 //
 // 输出核心模块
 //
-__SimpleWork_API__ CoreApi& getCoreApi(int nCompatibleVer) {
-    if(nCompatibleVer <= ICoreApi::getInterfaceVer() ) {
-        static CoreApi s_spCoreApi = CObject::createObject<CCoreApi>();
-        return s_spCoreApi;
+__SimpleWork_API__ Module& __getSimpleWork(int nCompatibleVer) {
+    if(nCompatibleVer <= IModule::getInterfaceVer() ) {
+        static Module s_spCoreModule = CObject::createObject<CCoreModule>();
+        return s_spCoreModule;
     }else{
-        static CoreApi s_coreapiNullpointer = CoreApi();
+        static Module s_coreapiNullpointer = Module();
         return s_coreapiNullpointer;
     }
 }

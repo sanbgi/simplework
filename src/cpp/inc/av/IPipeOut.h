@@ -1,8 +1,6 @@
 #ifndef __SimpleWork_IO_IPipeOut_h__
 #define __SimpleWork_IO_IPipeOut_h__
 
-#include <typeinfo>
-
 SIMPLEWORK_IO_NAMESPACE_ENTER
 
 struct IPipeIn;
@@ -18,17 +16,17 @@ SIMPLEWORK_INTERFACE_ENTER(IPipeOut, sw::core::IObject, "sw.io.IPipeOut", 011130
     // 从输出管道中获取值
     //
     template<typename Q> int getV(Q& v) {
-        return pull(CFluidAccepterV<Q>(&v), typeid(Q).hash_code());
+        return pull(CFluidAccepterV<Q>(&v), BasicType::getType<Q>());
     }
     template<typename Q> IPipeOut& operator>>(Q& v) {
-        pull(CFluidAccepterV<Q>(&v), typeid(Q).hash_code());
+        pull(CFluidAccepterV<Q>(&v), BasicType::getType<Q>());
         return *this;
     }
     //
     // 从输出管道中推送数值到输入管道中
     //
     template<typename Q> int push(IPipeIn* pAcceptor) {
-        int dt = typeid(Q).hash_code();
+        EBasicType dt = BasicType::getType<Q>();
         return pull(CFluidAccepterR<IPipeIn>(pAcceptor, dt), dt);
     }
     int push(IPipeIn* pAcceptor) {
@@ -38,10 +36,10 @@ SIMPLEWORK_INTERFACE_ENTER(IPipeOut, sw::core::IObject, "sw.io.IPipeOut", 011130
 protected:
     struct IFluidAccepter {
         template<typename Q> int pushV(Q v) {
-            return push(CFluidData(typeid(Q).hash_code(), &v));
+            return push(CFluidData(BasicType::getType<Q>(), &v));
         }
         template<typename Q> int pushR(Q& v) {
-            return push(CFluidData(typeid(Q).hash_code(), &v));
+            return push(CFluidData(BasicType::getType<Q>(), &v));
         }
     private:
         virtual int push(IPipeIn::IFluidData* pFluidData) = 0;
@@ -49,17 +47,17 @@ protected:
 
 private:
     template<typename Q> struct CFluidAccepterV : public IFluidAccepter {
-        int m_dt;
+        EBasicType m_dt;
         Q* m_ptr;
         int push(IPipeIn::IFluidData* pFluidData) {
             if(pFluidData->getDt() == m_dt) {
                 (*m_ptr) = (Q*)pFluidData->getPtr();
-                return Error::Success;
+                return Error::SUCCESS;
             }
-            return Error::Failure;
+            return Error::FAILURE;
         }
         CFluidAccepterV(Q* ptr){
-            m_dt = typeid(Q).hash_code();
+            m_dt = BasicType::getType<Q>();
             m_ptr = ptr;
         }
         operator IFluidAccepter*() { return this; }
@@ -69,7 +67,7 @@ private:
         Q* m_ptr;
         int push(IPipeIn::IFluidData* pFluidData) {
             if(m_dt != 0 && m_dt != pFluidData->getDt()) {
-                return Error::Failure;
+                return Error::FAILURE;
             }
             return m_ptr->push(pFluidData);
         }

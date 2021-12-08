@@ -1,8 +1,8 @@
 #ifndef __SimpleWork_h__
 #define __SimpleWork_h__
 
-#include "../core/inc/core.h"
-#include "../math/inc/math.h"
-#include "../io/inc/io.h"
+#include "core/core.h"
+#include "math/math.h"
+#include "av/av.h"
 
 #endif//__SimpleWork_h__

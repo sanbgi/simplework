@@ -1,8 +1,7 @@
 #include <iostream>
 #include "../inc/SimpleWork.h"
 
-using namespace sw::core;
-using namespace sw::math;
+using namespace sw;
 
     SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
 
@@ -12,8 +11,8 @@ using namespace sw::math;
 
     public:
         void sayHi() {
-            if(m_autoPtr) {
-                m_autoPtr->sayHi();
+            if( getPtr() ) {
+                getPtr()->sayHi();
             }
         }
     SIMPLEWORK_INTERFACECLASS_LEAVE(MyObject)

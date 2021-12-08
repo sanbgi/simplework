@@ -1,8 +1,6 @@
 #ifndef __SimpleWork_Tensor_h__
 #define __SimpleWork_Tensor_h__
 
-#include <typeinfo>
-
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -10,43 +8,8 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
  * 张量类定义
  */
 SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
-    
-    //
-    // 数据类型定义
-    //
-    enum DataType {
-        dtNull     = 0,
-        dtBool     = 101,
-        dtChar     = 102,
-        dtInt      = 104,
-        dtLong     = 105,
-        dtFloat    = 201,
-        dtDouble   = 202,
-    };
 
-    template<typename T> static DataType getDataType() {
-        static DataType s_eRawType = getRawType<T>();
-        return s_eRawType;
-    };
-
-    template<typename T> static DataType getRawType() {
-        if(typeid(T) == typeid(bool)) {
-            return dtBool;
-        } else if(typeid(T) == typeid(char)) {
-            return dtChar;
-        } else if(typeid(T) == typeid(int)) {
-            return dtInt;
-        } else if(typeid(T) == typeid(long)) {
-            return dtLong;
-        } else if(typeid(T) == typeid(float)) {
-            return dtFloat;
-        } else if(typeid(T) == typeid(double)) {
-            return dtDouble;
-        }
-        return dtNull;
-    };
-
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensor", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.ITensor", 211202)
         //
         // 初始化张量，如果已经有数据，则原有数据将被删除
         // @eDt 张量数据类型
@@ -56,12 +19,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         // @return
         //      0 == success
         //
-        virtual int initTensor( DataType eDt, int nDim, int* pDimSizes, int nData, void* pData = nullptr) = 0;
+        virtual int initTensor( EBasicType eDt, int nDim, int* pDimSizes, int nData, void* pData = nullptr) = 0;
 
         //
         // 获取数据类型
         //
-        virtual DataType getDataType() = 0;
+        virtual EBasicType getDataType() = 0;
 
         //
         // 获取维度数量
@@ -149,59 +112,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         *this = getFactory()->createObject();
         getPtr()->initTensor(ITensor::getDataType<T>(), nDim, pDimSizeArr, nData, pData);
     };
-
-    //
-    // 获取数据大小
-    //
-    int getDataSize() {
-        return getPtr()->getDataSize();
-    }
-
-    //
-    // 获取数据指针
-    //
-    template<typename T> T* getDataPtr(int iPos=0) {
-        ITensor* pTensor = getPtr();
-        if( ITensor::getDataType<T>() == pTensor->getDataType() ) {
-            pTensor->getDataPtr(iPos);
-        }
-        return nullptr;
-    }
-
-    //
-    // 获取维度大小
-    //
-    int getDimSize() {
-        return getPtr()->getDimSize();
-    }
-
-    //
-    // 获取维度指针
-    // 
-    int* getDimPtr(int iPos=0) {
-        return getPtr()->getDimPtr(iPos);
-    }
-
-    //
-    // 获取数据
-    //
-    template<typename T> T& getData(int iPos) {
-        return nullptr;
-    }
-    template<typename T> T& getData(int* pPosArr) {
-        return nullptr;
-    }
-
-    //
-    // 修改数据
-    //
-    template<typename T> int setData(int iPos, T& v) {
-        return 0;
-    }
-    template<typename T> int setData(int* pPosArr, T& v ) {
-        return 0;
-    }
     */
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

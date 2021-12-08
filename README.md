@@ -33,8 +33,6 @@
         }
         return 0;
     }
-    // 注册自己为支持SimpleWork的模块，如果不定义，则无法链接全局唯一的getSimpleWork函数
-    SIMPLEWORK_MODULE_REGISTER("TestSimpleWork")
 
 (三) 定义对象类
 
@@ -43,7 +41,7 @@
     class CMyObject : public IObject {
 
     }
-    SIMPLEWORK_CLASS_REGISTER("TestSimpleWork.MyObject")
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
     int main() {
         Object myObject = Object::createObject("TestSimpleWork.MyObject");
@@ -54,8 +52,6 @@
         }
         return 0;
     }
-    SIMPLEWORK_MODULE_REGISTER("TestSimpleWork")
-
 (四) 实现对象接口
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
@@ -86,4 +82,4 @@
         }
         return 0;
     }
-    SIMPLEWORK_MODULE_REGISTER("TestSimpleWork")
+

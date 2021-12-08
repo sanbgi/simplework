@@ -29,11 +29,11 @@ class CLibrary : public CObject, ILibrary, IModule {
 
 public:
     int getSimpleWorkCompatibleVer() 
-        { return _spModule->getSimpleWorkCompatibleVer();}
-    int initModule(const char* szModuleKey, const CoreApi& pCaller) 
-        { return _spModule->initModule(szModuleKey, pCaller); }
+        { return _spModule ? _spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
+    int initModule(const char* szModuleKey, const Module& pCaller) 
+        { return _spModule ? _spModule->initModule(szModuleKey, pCaller) : Error::SUCCESS; }
     int registerFactory(const char* szClassKey, const Factory& pFactory) 
-        { return Error::Failure; }
+        { return Error::FAILURE; }
     Object createObject(const char* szClassKey) 
         { return Object(); }
     Object createFactory(const char* szClassKey)
@@ -80,8 +80,8 @@ private:
             if (fun)
             { 
                 _spModule = (*fun)();
-                return Module::wrapPtr(this);
             }
+            return Module::wrapPtr(this);
         }
 
         return Module();

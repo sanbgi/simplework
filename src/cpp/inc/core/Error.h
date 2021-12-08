@@ -8,8 +8,8 @@ __SimpleWork_Core_Namespace_Enter__
 //
 struct Error {
     enum{
-        Success = 0,
-        Failure = 1,
+        SUCCESS = 0,
+        FAILURE = 1,
     };
 };
 
