@@ -56,13 +56,13 @@ public:
         if(avformat_open_input(&m_pFormatCtx,szFileName,NULL,NULL)!=0){
             printf("Couldn't open input stream.\n");
             release();
-            return -1;
+            return Error::ERRORTYPE_FAILURE;
         }
         m_bOpenedFormatCtx = true;
         if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
             printf("Couldn't find stream information.\n");
             release();
-            return -1;
+            return Error::ERRORTYPE_FAILURE;
         }
 
         for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
@@ -105,7 +105,6 @@ public:
                     break;
             }
         }
-
 
         return Error::ERRORTYPE_SUCCESS;
     }
