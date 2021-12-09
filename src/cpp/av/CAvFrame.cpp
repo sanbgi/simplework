@@ -2,8 +2,12 @@
 #include "CAvFrame.h"
 
 
-AvFrame::AvFrameType CAvFrame::getFrameType() {
-    return m_eAvFrameType;
+AvStreaming::AvStreamingType CAvFrame::getStreamingType() {
+    return m_spAvStream->getStreamingType();
+}
+
+AvStreaming& CAvFrame::getStreaming() {
+    return m_spAvStream;
 }
 
 void CAvFrame::attachAvFrame(AVFrame* pAvFrame) {

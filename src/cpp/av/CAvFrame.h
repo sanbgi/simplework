@@ -17,7 +17,8 @@ class CAvFrame : public CObject, IAvFrame {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    AvFrame::AvFrameType getFrameType();
+    AvStreaming::AvStreamingType getStreamingType();
+    AvStreaming& getStreaming();
 
 public:
     void attachAvFrame(AVFrame* pAvFrame);
@@ -29,6 +30,7 @@ public:
 public:
     AVFrame* m_pAvFrame;
     AvFrame::AvFrameType m_eAvFrameType;
+    AvStreaming m_spAvStream;
 
 };
 

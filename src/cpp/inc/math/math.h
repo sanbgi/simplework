@@ -7,6 +7,7 @@
 #define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace sw { namespace math {
 #define SIMPLEWORK_MATH_NAMESPACE_LEAVE }}
 
+#include "Vector.h"
 #include "Tensor.h"
 
 #endif//__SimpleWork_Math_h__

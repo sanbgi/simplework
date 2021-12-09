@@ -60,13 +60,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Module)
 
         //
         // 根据类名和接口名，创建对象
-        // @szClassKey 类名，类似: "sw.Tensor", "sw.Video", "sw.Camera"
+        // @szClassKey 类名，类似: "sw.Vector", "sw.Video", "sw.Camera"
         //
         virtual Object createObject(const char* szClassKey) = 0;
 
         //
         // 根据类名和接口名，创建工厂
-        // @szClassKey 类名，类似: "sw.Tensor", "sw.Video", "sw.Camera"
+        // @szClassKey 类名，类似: "sw.Vector", "sw.Video", "sw.Camera"
         //
         virtual Object createFactory(const char* szClassKey) = 0;
 

@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_IO_AvFrame_h__
 #define __SimpleWork_IO_AvFrame_h__
 
-SIMPLEWORK_AV_NAMESPACE_ENTER
+SIMPLEWORK_AV_NAMESPACE_ENTER 
 
 //
 // 对象工场对象的接口
@@ -17,7 +17,15 @@ public:
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvFrame", 211206)
 
-        virtual AvFrameType getFrameType() = 0;
+        //
+        // 获取帧数据类型
+        //
+        virtual AvStreaming::AvStreamingType getStreamingType() = 0;
+
+        //
+        //  获取帧对应的流
+        //
+        virtual AvStreaming& getStreaming() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

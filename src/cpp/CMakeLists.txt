@@ -10,7 +10,6 @@ IF (UNIX)
 ENDIF ()
 #set_target_properties(${SIMPLEWORK_CORE_MODULE_NAME} PROPERTIES PREFIX "")
 
-
 set ( SIMPLEWORK_MATH_MODULE_NAME sw.math )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp" )
 set( SRC_LIST )

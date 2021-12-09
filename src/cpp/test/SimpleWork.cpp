@@ -3,6 +3,7 @@
 
 using namespace sw;
 using namespace sw::av;
+using namespace sw::math;
 
     SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
 
@@ -33,19 +34,21 @@ using namespace sw::av;
 
 int main(int argc, char *argv[]){
     
+
     AvIn avIn = Object::createObject("sw.av.AvIn");
     avIn->init("d:/tt.mkv");
     int nframeVideo = 0;
     int nframeAudio = 0;
     int nframeUnknown = 0;
+    int nframe = 0;
     AvFrame frame;
     while(avIn->getFrame(frame) == Error::ERRORTYPE_SUCCESS) {
-        switch(frame->getFrameType()){ 
-        case AvFrame::AVFRAMETYPE_VIDEO:
+        switch(frame->getStreamingType()){ 
+        case AvStreaming::AVSTREAMTYPE_VIDEO:
             nframeVideo++;
             break;
 
-        case AvFrame::AVFRAMETYPE_AUDIO:
+        case AvStreaming::AVSTREAMTYPE_AUDIO:
             nframeAudio++;
             break;
 
@@ -53,14 +56,14 @@ int main(int argc, char *argv[]){
             nframeUnknown++;
             break;
         }
-        if( nframeVideo % 100 == 0) {
+        if( nframe++ % 100 == 0) {
             std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
         }
     }
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
 
-    Object tensor = Object::createObject("sw.math.Tensor");
-    Factory factory = Object::createFactory("sw.math.Tensor");
+    Vector tensor = Object::createObject("sw.math.Vector");
+    Factory factory = Object::createFactory("sw.math.Vector");
     tensor = factory;
     if( tensor ) {
         std::cout << "Great\n";
@@ -83,12 +86,12 @@ void say_hello(){
     /*
     TObject ppo;
     TObject ptr1, ptr0, ptrn(ptr1);
-    Tensor ppt;
-    Tensor ptr2, ptr3(ptr2);
+    Vector ppt;
+    Vector ptr2, ptr3(ptr2);
     //char szV[] = "hi";
-    //swcore::Tensor ptrTensor(sizeof(szV)/sizeof(char), szV);
+    //swcore::Vector ptrTensor(sizeof(szV)/sizeof(char), szV);
     //char* ptrChar = ptrTensor.getDataPtr<char>();
-    //swcore::Tensor tensor = swcore::Tensor::createTensor<char>(1);
+    //swcore::Vector tensor = swcore::Vector::createTensor<char>(1);
     IFactory* pFactory = nullptr;
     ITensorPtr ppO;
     ppO = pFactory;

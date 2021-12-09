@@ -2,6 +2,7 @@
 #include "av.h"
 #include <vector>
 #include "CAvFrame.h"
+#include "CAvStreaming.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -13,35 +14,6 @@ extern "C" {
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_AV_NAMESPACE;
 
-template<typename Q> class CAutoFree {
-public:
-    typedef void (*FUN)(Q**);
-    CAutoFree(Q* pQ, FUN fun) {
-        m_ptr = pQ;
-        m_fun = fun;
-    }
-    ~CAutoFree() {
-        if(m_ptr) {
-            (*m_fun)(&m_ptr);
-        }
-    }
-    Q* operator->() {
-        return m_ptr;
-    }
-    operator Q*() {
-        return m_ptr;
-    }
-    Q* detach() {
-        Q* ptr = m_ptr;
-        m_ptr = nullptr;
-        return ptr;
-    }
-
-private:
-    Q* m_ptr;
-    FUN m_fun;
-};
-
 class CAvIn : public CObject, public IAvIn{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -51,8 +23,10 @@ class CAvIn : public CObject, public IAvIn{
 public:
         
     int init(const char* szFileName) {
+        // 释放之前使用资源
         release();
 
+        // 打开视频流
         m_pFormatCtx = avformat_alloc_context();
         if(avformat_open_input(&m_pFormatCtx,szFileName,NULL,NULL)!=0){
             printf("Couldn't open input stream.\n");
@@ -60,55 +34,32 @@ public:
             return Error::ERRORTYPE_FAILURE;
         }
         m_bOpenedFormatCtx = true;
+
+        // 查找视频流中的具体流信息
         if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
             printf("Couldn't find stream information.\n");
             release();
             return Error::ERRORTYPE_FAILURE; 
         }
 
+        // 初始化所有流参数
         for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
-            AVMediaType codeType = m_pFormatCtx->streams[i]->codecpar->codec_type;
-            switch(codeType) {
-                case AVMediaType::AVMEDIA_TYPE_VIDEO:
-                case AVMediaType::AVMEDIA_TYPE_AUDIO:
-                    {
-                        AVCodecParameters* pCodecParameter = m_pFormatCtx->streams[i]->codecpar;
-                        if(pCodecParameter == nullptr) {
-                            release();
-                            return Error::ERRORTYPE_FAILURE;
-                        }
-
-                        CAutoFree<AVCodecContext> pCodecCtx(avcodec_alloc_context3(nullptr), avcodec_free_context);
-                        if( avcodec_parameters_to_context(pCodecCtx, pCodecParameter) < 0 ) {
-                            release();
-                            return Error::ERRORTYPE_FAILURE;
-                        }
-
-                        AVCodec* pCodec=avcodec_find_decoder(pCodecParameter->codec_id);
-                        if(pCodec==NULL){
-                            printf("Codec not found.\n");
-                            release();
-                            return Error::ERRORTYPE_FAILURE;
-                        }
-
-                        if(avcodec_open2(pCodecCtx, pCodec,NULL)<0){
-                            printf("Could not open codec.\n");
-                            release();
-                            return Error::ERRORTYPE_FAILURE;
-                        }
-                        m_vecCodecCtxs.push_back(pCodecCtx.detach());
-                    }
-                    break;
-
-                default:
-                    m_vecCodecCtxs.push_back(nullptr);
-                    break;
+            CObject::ObjectWithPtr<CAvStreaming> spStream = CObject::createObjectWithPtr<CAvStreaming>();
+            if( spStream.pObject->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+                return Error::ERRORTYPE_FAILURE;
             }
+            m_vecStreamings.push_back(spStream);
         }
-
         return Error::ERRORTYPE_SUCCESS;
     }
 
+    int getStreamingCount() {
+        return m_vecStreamings.size();
+    }
+
+    AvStreaming getStreaming(int iStreamingIndex) {
+        return m_vecStreamings[iStreamingIndex].spObject;
+    }
     int getWidth() {
         return 0;
     }
@@ -118,10 +69,13 @@ public:
     }
 
     int getFrame(AvFrame& frame) {
-        if(m_pContinueReadingCtx) {
-            AVCodecContext* pCodecCtx = m_pContinueReadingCtx;
-            m_pContinueReadingCtx = nullptr;
-            return receiveFrame(frame, pCodecCtx);
+        //
+        // 如果上次流成功读取了数据，则还需要继续读取
+        //
+        if(m_pContinueReadingStreaming) {
+            CObject::ObjectWithPtr<CAvStreaming>* pStreaming = m_pContinueReadingStreaming;
+            m_pContinueReadingStreaming = nullptr;
+            return receiveFrame(frame, pStreaming);
         }
 
         CAutoFree<AVPacket> avPacket(av_packet_alloc(), av_packet_free);
@@ -136,7 +90,9 @@ public:
 public:
     int sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
 
-        AVCodecContext* pCodecCtx = m_vecCodecCtxs[pPackage->stream_index];
+        CObject::ObjectWithPtr<CAvStreaming>* pStreaming = &m_vecStreamings[pPackage->stream_index];
+
+        AVCodecContext* pCodecCtx = pStreaming->pObject->m_pCodecCtx;
         int ret = avcodec_send_packet(pCodecCtx, pPackage);
 /*
  * @return 0 on success, otherwise negative error code:
@@ -156,7 +112,7 @@ public:
                 break;
 
             case AVERROR(EAGAIN):
-                ret = receiveFrame(frame, pCodecCtx);
+                ret = receiveFrame(frame, pStreaming);
                 if( ret == Error::ERRORTYPE_SUCCESS ) {
                     if( (ret = avcodec_send_packet(pCodecCtx, pPackage)) != 0 ) {
                         //按理说，receiveFrame后，应该可以重新发送Package，什么原因造成不能?
@@ -168,11 +124,11 @@ public:
             default:
                 return Error::ERRORTYPE_FAILURE; 
         }
-        return receiveFrame(frame, pCodecCtx);
+        return receiveFrame(frame, pStreaming);
     }
 
-    int receiveFrame(AvFrame& frame,  AVCodecContext* pCodecCtx) {
-
+    int receiveFrame(AvFrame& frame, CObject::ObjectWithPtr<CAvStreaming>* pStreaming) {
+        AVCodecContext* pCodecCtx = pStreaming->pObject->m_pCodecCtx;
         CAutoFree<AVFrame> avFrame(av_frame_alloc(), av_frame_free);
         int ret = avcodec_receive_frame(pCodecCtx, avFrame);
 /*
@@ -202,19 +158,12 @@ public:
         }
 
         CObject::ObjectWithPtr<CAvFrame> spAvFrame = CObject::createObjectWithPtr<CAvFrame>();
-        spAvFrame.pObject->attachAvFrame(avFrame.detach());
-        switch(pCodecCtx->codec_type) {
-        case AVMediaType::AVMEDIA_TYPE_VIDEO:
-            spAvFrame.pObject->m_eAvFrameType = AvFrame::AVFRAMETYPE_VIDEO;
-            break;
-        case AVMediaType::AVMEDIA_TYPE_AUDIO:
-            spAvFrame.pObject->m_eAvFrameType = AvFrame::AVFRAMETYPE_AUDIO;
-            break;
-        }
+        spAvFrame.pObject->m_pAvFrame = avFrame.detach();
+        spAvFrame.pObject->m_spAvStream = pStreaming->spObject;
         frame = spAvFrame.spObject; 
 
         //如果读取成功，则下次继续读取
-        m_pContinueReadingCtx = pCodecCtx;
+        m_pContinueReadingStreaming = pStreaming;
         return Error::ERRORTYPE_SUCCESS;
     }
 
@@ -222,21 +171,13 @@ public:
     CAvIn() {
         m_bOpenedFormatCtx = false;
         m_pFormatCtx = nullptr;
-        m_pContinueReadingCtx = nullptr;
+        m_pContinueReadingStreaming = nullptr;
     }
     ~CAvIn() {
         release();
     }
     void release() {
-
-        for(std::vector<AVCodecContext*>::iterator it=m_vecCodecCtxs.begin(); it!=m_vecCodecCtxs.end(); it++) {
-            AVCodecContext* pCodecCtx = *it;
-            if(pCodecCtx) {
-                avcodec_free_context(&pCodecCtx);
-            }
-        }
-        m_vecCodecCtxs.clear();
-
+        m_vecStreamings.clear();
         if(m_pFormatCtx) {
             if( m_bOpenedFormatCtx ) {
                 avformat_close_input(&m_pFormatCtx);
@@ -250,7 +191,7 @@ public:
 private:
     bool m_bOpenedFormatCtx;
     AVFormatContext* m_pFormatCtx;
-    AVCodecContext* m_pContinueReadingCtx;
-    std::vector<AVCodecContext*> m_vecCodecCtxs;
+    CObject::ObjectWithPtr<CAvStreaming>* m_pContinueReadingStreaming;
+    std::vector<CObject::ObjectWithPtr<CAvStreaming>> m_vecStreamings;
 };
 SIMPLEWORK_FACTORY_REGISTER(CAvIn, "sw.av.AvIn")

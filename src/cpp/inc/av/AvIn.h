@@ -12,6 +12,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvIn)
         
         virtual int init(const char* szFileName) = 0;
 
+        virtual int getStreamingCount() = 0;
+
+        virtual AvStreaming getStreaming(int iStreamingIndex) = 0;
+
         virtual int getWidth() = 0;
 
         virtual int getHeight() = 0;
