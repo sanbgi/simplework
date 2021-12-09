@@ -57,6 +57,7 @@ public://ITensor
             return Error::ERRORTYPE_FAILURE;
         }
         m_spDimVector = spDimVector;
+        return Error::ERRORTYPE_SUCCESS;
     }
 
     const Tensor& getDimVector() {
@@ -140,6 +141,6 @@ private:
     Tensor m_spDimVector;
 };
 
-SIMPLEWORK_FACTORY_REGISTER(CTensor, "sw.math.Tensor")
+SIMPLEWORK_FACTORY_REGISTER(CTensor, Tensor::getClassKey())
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

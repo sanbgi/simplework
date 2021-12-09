@@ -194,4 +194,4 @@ private:
     CObject::ObjectWithPtr<CAvStreaming>* m_pContinueReadingStreaming;
     std::vector<CObject::ObjectWithPtr<CAvStreaming>> m_vecStreamings;
 };
-SIMPLEWORK_FACTORY_REGISTER(CAvIn, "sw.av.AvIn")
+SIMPLEWORK_FACTORY_REGISTER(CAvIn, AvIn::getClassKey())

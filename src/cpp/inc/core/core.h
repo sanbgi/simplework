@@ -26,8 +26,12 @@
 //      2.3, getSimpleWork()获取全局模块对象
 //
 //
-#define SIMPLEWORK_INTERFACECLASS_ENTER(className) \
+#define SIMPLEWORK_INTERFACECLASS_ENTER0(className) \
     class className {
+#define SIMPLEWORK_INTERFACECLASS_ENTER(className, classKey) \
+    class className {\
+    public:\
+    const static inline char* getClassKey() { return classKey; }
 
 #define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \

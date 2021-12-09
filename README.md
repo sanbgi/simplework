@@ -55,7 +55,7 @@
 (四) 实现对象接口
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
-    SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
+    SIMPLEWORK_INTERFACECLASS_ENTER(MyObject, "TestSimpleWork.MyObject")
         SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IMyObject", 211202)
             virtual void sayHi() = 0;
         SIMPLEWORK_INTERFACE_LEAVE
@@ -71,10 +71,10 @@
             std::cout << "Great ! Hi everyone!";
         }
     };
-    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, MyObject::getClassKey())
 
     int main() {
-        MyObject spMyObject = Object::createObject("TestSimpleWork.MyObject");
+        MyObject spMyObject = Object::createObject(MyObject::getClassKey());
         if( spMyObject ) {
             spMyObject->sayHi();
         }else {

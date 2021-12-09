@@ -5,7 +5,7 @@ using namespace sw;
 using namespace sw::av;
 using namespace sw::math;
 
-    SIMPLEWORK_INTERFACECLASS_ENTER(MyObject)
+    SIMPLEWORK_INTERFACECLASS_ENTER(MyObject, "TestSimpleWork.MyObject")
 
         SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IMyObject", 211202)
             virtual void sayHi() = 0;
@@ -29,7 +29,7 @@ using namespace sw::math;
             std::cout << "Great ! Hi everyone!";
         }
     };
-    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, MyObject::getClassKey())
 
 
 int main(int argc, char *argv[]){

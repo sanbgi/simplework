@@ -6,7 +6,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 // 对象工场对象的接口
 //
-SIMPLEWORK_INTERFACECLASS_ENTER(AvStreaming)
+SIMPLEWORK_INTERFACECLASS_ENTER0(AvStreaming)
 public:
     enum AvStreamingType {
         AVSTREAMTYPE_UNKNOWN = 0,

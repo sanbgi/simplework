@@ -8,7 +8,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 对象工场对象的接口
 //
-SIMPLEWORK_INTERFACECLASS_ENTER(Factory)
+SIMPLEWORK_INTERFACECLASS_ENTER0(Factory)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IFactory", 211202)
         virtual Object createObject() = 0;

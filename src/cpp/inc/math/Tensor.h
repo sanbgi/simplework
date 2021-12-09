@@ -7,7 +7,7 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 /**
  * 张量类定义
  */
-SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
+SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensor", 211202)
 
@@ -23,11 +23,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor)
         // 获取维度
         //
         virtual const Tensor& getDimVector() = 0;
-
-    private:
-        //
-        // 初始化一维张量
-        //
 
     public:
         //

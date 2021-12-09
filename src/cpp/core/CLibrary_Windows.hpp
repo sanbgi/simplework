@@ -8,7 +8,7 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
-SIMPLEWORK_INTERFACECLASS_ENTER(Library)
+SIMPLEWORK_INTERFACECLASS_ENTER0(Library)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ILibrary", 011130)
         virtual Module loadLibraryModule(string strModuleKey) = 0;
     SIMPLEWORK_INTERFACE_LEAVE

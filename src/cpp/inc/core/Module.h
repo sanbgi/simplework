@@ -39,7 +39,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 模块对象
 //
-SIMPLEWORK_INTERFACECLASS_ENTER(Module)
+SIMPLEWORK_INTERFACECLASS_ENTER0(Module)
     
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IModule", 211202)
 
