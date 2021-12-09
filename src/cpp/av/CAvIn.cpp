@@ -1,6 +1,7 @@
 
 #include "av.h"
 #include <vector>
+#include "CAvFrame.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -199,6 +200,18 @@ public:
         default:
             return Error::ERRORTYPE_FAILURE;
         }
+
+        CObject::ObjectWithPtr<CAvFrame> spAvFrame = CObject::createObjectWithPtr<CAvFrame>();
+        spAvFrame.pObject->attachAvFrame(avFrame.detach());
+        switch(pCodecCtx->codec_type) {
+        case AVMediaType::AVMEDIA_TYPE_VIDEO:
+            spAvFrame.pObject->m_eAvFrameType = AvFrame::AVFRAMETYPE_VIDEO;
+            break;
+        case AVMediaType::AVMEDIA_TYPE_AUDIO:
+            spAvFrame.pObject->m_eAvFrameType = AvFrame::AVFRAMETYPE_AUDIO;
+            break;
+        }
+        frame = spAvFrame.spObject; 
 
         //如果读取成功，则下次继续读取
         m_pContinueReadingCtx = pCodecCtx;

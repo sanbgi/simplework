@@ -35,14 +35,29 @@ int main(int argc, char *argv[]){
     
     AvIn avIn = Object::createObject("sw.av.AvIn");
     avIn->init("d:/tt.mkv");
-    int nframe = 0;
+    int nframeVideo = 0;
+    int nframeAudio = 0;
+    int nframeUnknown = 0;
     AvFrame frame;
     while(avIn->getFrame(frame) == Error::ERRORTYPE_SUCCESS) {
-        nframe++;
-        if( nframe % 10 == 0) {
-            std::cout << nframe <<  "\n";
+        switch(frame->getFrameType()){ 
+        case AvFrame::AVFRAMETYPE_VIDEO:
+            nframeVideo++;
+            break;
+
+        case AvFrame::AVFRAMETYPE_AUDIO:
+            nframeAudio++;
+            break;
+
+        default:
+            nframeUnknown++;
+            break;
+        }
+        if( nframeVideo % 100 == 0) {
+            std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
         }
     }
+    std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
 
     Object tensor = Object::createObject("sw.math.Tensor");
     Factory factory = Object::createFactory("sw.math.Tensor");

@@ -17,6 +17,8 @@ public:
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvFrame", 211206)
 
+        virtual AvFrameType getFrameType() = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvFrame)
