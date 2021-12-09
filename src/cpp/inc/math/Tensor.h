@@ -134,8 +134,7 @@ public:
 
 private:
     static Tensor createTensor() {
-        static Factory g_factory = Object::createFactory("sw.math.Tensor");
-        return g_factory->createObject();
+        return Object::createObject<Tensor>();
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 

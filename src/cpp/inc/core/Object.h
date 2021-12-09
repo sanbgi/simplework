@@ -4,6 +4,7 @@
 __SimpleWork_Core_Namespace_Enter__
 
 class Module;
+class Factory;
 
 //
 // 对象接口基类，注意：
@@ -22,11 +23,15 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Object)
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    template<typename TFactory=Module> static inline Object createObject( const char* szClassKey) {
-        return TFactory::createObject(szClassKey);
+    template<typename TModule=Module> static inline Object createObject(const char* szClassKey) {
+        return TModule::createObject(szClassKey);
     }
-    template<typename TFactory=Module> static inline Object createFactory( const char* szClassKey) {
-        return TFactory::createFactory(szClassKey);
+    template<typename TModule=Module> static inline Object createFactory(const char* szClassKey) {
+        return TModule::createFactory(szClassKey);
+    }
+    template<typename TObject, typename TFactory=Factory, typename TModule=Module> static Object createObject() {
+        static TFactory s_factory =  TModule::createFactory(TObject::getClassKey());
+        return s_factory->createObject();
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Object)

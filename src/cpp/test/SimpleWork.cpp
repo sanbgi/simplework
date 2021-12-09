@@ -35,7 +35,7 @@ using namespace sw::math;
 int main(int argc, char *argv[]){
     
 
-    AvIn avIn = Object::createObject("sw.av.AvIn");
+    AvIn avIn = Object::createObject<AvIn>();
     avIn->init("d:/tt.mkv");
     int nframeVideo = 0;
     int nframeAudio = 0;
@@ -62,14 +62,12 @@ int main(int argc, char *argv[]){
     }
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
 
-    Tensor tensor = Object::createObject("sw.math.Tensor");
-    Factory factory = Object::createFactory("sw.math.Tensor");
-    tensor = factory;
+    Tensor tensor = Object::createObject<Tensor>();
     if( tensor ) {
         std::cout << "Great\n";
     }
 
-    MyObject myObject = Object::createObject("TestSimpleWork.MyObject");
+    MyObject myObject = Object::createObject<MyObject>();
     if( myObject ) {
         myObject.sayHi();
     }else {
