@@ -80,12 +80,20 @@ private:
     }
     template<typename Q> void initPtr(Q* pPtr = nullptr) {
         if( pPtr ) {
-            struct CForceSetter : public __IPtrForceSaver {
-                CForceSetter(__CPointer* pAutoPtr) : _pPtr(pAutoPtr){}
-                int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
-                __CPointer* _pPtr;
-            }setter(this);
-            pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), &setter);
+            //
+            // 如果指针可以安全的转化为目标类型指针时，直接转化，无需查询接口
+            //
+            TInterface* pDest = dynamic_cast<TInterface*>(pPtr);
+            if(pDest) {
+                initPtr(pDest);
+            }else{
+                struct CForceSetter : public __IPtrForceSaver {
+                    CForceSetter(__CPointer* pAutoPtr) : _pPtr(pAutoPtr){}
+                    int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
+                    __CPointer* _pPtr;
+                }setter(this);
+                pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), &setter);
+            }
         }
     }
     void releasePtr() {

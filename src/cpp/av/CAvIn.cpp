@@ -62,7 +62,7 @@ public:
         if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
             printf("Couldn't find stream information.\n");
             release();
-            return Error::ERRORTYPE_FAILURE;
+            return Error::ERRORTYPE_FAILURE; 
         }
 
         for(int i=0; i<m_pFormatCtx->nb_streams; i++) {

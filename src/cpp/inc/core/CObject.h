@@ -4,7 +4,7 @@
 __SimpleWork_Core_Namespace_Enter__
 
 //
-//  对象基类：负责实现IObject接口查询能力，所有对象都要从这个基类派生。具体提供如下能力：
+//  对象基类：建议对象都要从这个基类派生。具体提供如下能力：
 //
 //      1，提供对象创建能力，参照：CObject::createObject<TObject>
 //      2，提供创建对象的工厂创建能力，参照：CObject::createFactory<TObject>
@@ -38,66 +38,64 @@ __SimpleWork_Core_Namespace_Enter__
 //          ...
 //      }
 //
-//      注意：这些类对象是无法直接创建的，只能通过CObject::createObject来创建(因为
-//  存在IObject的纯虚函数定义)，也不建议通过实现这些纯虚函数，这样可以统一管理对象的创
-//  建和销毁，避免内存泄漏，具体创建范例：
-//      
+//      注意：这些类对象是强烈不建议直接创建，而是通过CObject::createObject来创建，
+//  这样可以统一管理对象的创建和销毁，避免内存泄漏，具体创建范例：
+//  
 //      Object obj = CObject::createObject<CMyObject>();
 //      Factory fac = CObject::createFactory<CMyObject>()
 //
-class CObject : public IObject {
+class CObject {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER0
-        SIMPLEWORK_INTERFACE_ENTRY(IObject)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
-//
-// 下面是模板函数，用于实现对象或者工厂h的创建
-//
 public:
     //
-    // 创建对象，并查询获取对象接口
+    // 带对象指针的数据结构，用于创建对象返回的数据可以带上对象指针
+    //
+    template<typename TObject> struct ObjectWithPtr {
+        TObject* m_pObject;
+        Object m_spObject;
+    };
+
+    //
+    // 创建对象
     //
     template<typename TObject> static Object createObject(bool bSingleton=false) {
-        return CObjectImp<TObject>::createObjectImp(bSingleton);
+        return CObjectImp<TObject>::createObjectWithPtr(bSingleton).m_spObject;
+    }
+    template<typename TObject> static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
+        return CObjectImp<TObject>::createObjectWithPtr(bSingleton);
     }
 
     //
     // 创建工厂
-    //  @T 工厂用于创建的对象类
-    //  @Q 工厂实现类
     //
     template<typename TObject> static Object createFactory(bool bSingletonFactory=false) {
         if(bSingletonFactory) {
-            return CObjectImp<CSingletonFactoryImp<TObject, CObject>>::createObjectImp();
+            return CObjectImp<CSingletonFactoryImp<TObject, CObject>>::createObjectWithPtr().m_spObject;
         }else{
-            return CObjectImp<CFactoryImp<TObject, CObject>>::createObjectImp();
+            return CObjectImp<CFactoryImp<TObject, CObject>>::createObjectWithPtr().m_spObject;
         }
     }
 
 private:
-    template<typename TObject> class CObjectImp : public TObject {
+    struct IObjectImp : public IObject {};
+    template<typename TObject> class CObjectImp : public TObject, public IObjectImp {
+        SIMPLEWORK_INTERFACE_ENTRY_ENTER(TObject)
+        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
+
     public:
-        static Object createObjectImp(bool bSingleton=false) {
+        static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
             if(bSingleton) {
-                static Object g_spObject = createObjectImp(false);
+                static ObjectWithPtr<TObject> g_spObject = createObjectWithPtr(false);
                 return g_spObject;
             }
-            CObjectImp* pObjectImp = new CObjectImp();
-            //
-            //  CObject默认实现了__swGetIObject函数，但三种情况下，下面这一句无法成立
-            //      1, 对象类不是从CObject派生
-            //      2, 对象类是从CObject派生，但CObject基类不可访问，原因可能是：
-            //          -- 基类是私有的并且对象类没有定义宏SIMPLEWORK_INTERFACE_ENTRY_ENTER
-            //          -- 对象从多个CObject派生
-            //  为了避免这个错误，系统要求对象的派生必须遵循规范为：
-            //      1, 对象类只能从一个CObject基类或者符合规范的对象类派生；
-            //      2，对象基类为private时，需要定义SIMPLEWORK_INTERFACE_ENTRY_ENTER
-            //
-            IObject* pObject = pObjectImp->__swGetIObject();
-            if( pObject == nullptr ) {
-                delete pObjectImp;
-            }
-            return Object::wrapPtr(pObject);
+
+            CObjectImp* pNewObj = new CObjectImp();
+            ObjectWithPtr<TObject> obj;
+            obj.m_pObject = pNewObj;
+            obj.m_spObject.setPtr((IObjectImp*)pNewObj);
+            return obj;
         }
 
     private:
@@ -122,7 +120,7 @@ private:
 
     public://IFactory
         Object createObject() {
-            return CObjectImp<TObject>::createObjectImp(false);
+            return CObjectImp<TObject>::createObjectWithPtr(false).m_spObject;
         }
     };
     template<typename TObject, typename TSuperClass> class CSingletonFactoryImp : public TSuperClass, public IFactory {
@@ -132,7 +130,7 @@ private:
 
     public://IFactory
         Object createObject() {
-            return CObjectImp<TObject>::createObjectImp(true);
+            return CObjectImp<TObject>::createObjectWithPtr(true).m_spObject;
         }
     };
 };

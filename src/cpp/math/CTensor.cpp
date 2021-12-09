@@ -1,9 +1,8 @@
 #include "../inc/math/math.h"
 
 
-class CTensor : CObject {
+class CTensor : public CObject {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IObject)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 };
 

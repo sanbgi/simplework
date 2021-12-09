@@ -115,7 +115,6 @@
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        SIMPLEWORK_CORE_NAMESPACE::Object::IFace * __swGetIObject() { return (SIMPLEWORK_CORE_NAMESPACE::Object::IFace*)this; } \
         int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return Error::ERRORTYPE_FAILURE; \
@@ -123,12 +122,18 @@
 
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        SIMPLEWORK_CORE_NAMESPACE::Object::IFace * __swGetIObject() { return TSuperClass::__swGetIObject(); } \
         int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterfaceClass) \
         if( strcmp(szInterfaceKey, TInterfaceClass::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
                 return pTarget->forceSetPtr((void*)(TInterfaceClass*)this); \
+            else \
+                return SIMPLEWORK_CORE_NAMESPACE::Error::ERRORTYPE_FAILURE;\
+        }
+#define SIMPLEWORK_INTERFACE_ENTRY1(TInterface, TSuperInterface) \
+        if( strcmp(szInterfaceKey, TSuperInterface::getInterfaceKey()) == 0 ) { \
+            if( nInterfaceVer <= TSuperInterface::getInterfaceVer() ) \
+                return pTarget->forceSetPtr((void*)(TSuperInterface*)(TInterface*)this); \
             else \
                 return SIMPLEWORK_CORE_NAMESPACE::Error::ERRORTYPE_FAILURE;\
         }
