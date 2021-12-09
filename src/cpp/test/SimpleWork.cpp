@@ -62,8 +62,8 @@ int main(int argc, char *argv[]){
     }
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
 
-    Vector tensor = Object::createObject("sw.math.Vector");
-    Factory factory = Object::createFactory("sw.math.Vector");
+    Tensor tensor = Object::createObject("sw.math.Tensor");
+    Factory factory = Object::createFactory("sw.math.Tensor");
     tensor = factory;
     if( tensor ) {
         std::cout << "Great\n";

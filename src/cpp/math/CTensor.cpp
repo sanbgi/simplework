@@ -8,19 +8,34 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 class CTensor : public CObject, ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(ITensor)
-        SIMPLEWORK_INTERFACE_ENTRY(IVector)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://ITensor
-    int initTensor( const Vector& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
-        Vector spDataVector = Vector::createVector();
-        if( spDataVector->initVector(eElementType, nElementSize, pElementData) != Error::ERRORTYPE_SUCCESS) {
+    int initVector(Data::DataType eDt, int nSize, void* pData) {
+
+        release();
+
+        int nElementByte = s_getDtSize(eDt);
+        if(nSize <= 0 || nElementByte == 0 ) {
             return Error::ERRORTYPE_FAILURE;
         }
-        return initTensor(spDimVector, spDataVector);
+
+        int nDataSize = nSize*nElementByte;
+        m_pElementData = new unsigned char[nDataSize+nElementByte];
+        if(pData) {
+            memcpy(m_pElementData, pData, nDataSize);
+            memset(m_pElementData+nDataSize, 0, nElementByte);
+        }else{
+            memset(m_pElementData, 0, nDataSize+nElementByte);
+        }
+
+        m_nElementSize = nSize;
+        m_nElementByte = nElementByte;
+        return Error::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const Vector& spDimVector, const Vector& spDataVector) {
+    int initTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
+
         if( spDimVector->getDataType() != Data::DATATYPE_INT ) {
             return Error::ERRORTYPE_FAILURE;
         }
@@ -34,43 +49,95 @@ public://ITensor
             }
             nSize *= pDimSize[i];
         }
-        if(nSize!= spDataVector->getDataSize()) {
+        if(nSize!= nElementSize) {
             return Error::ERRORTYPE_FAILURE;
         }
-        m_spDataVector = spDataVector;
+        
+        if( initVector(eElementType, nElementSize, pElementData) != Error::ERRORTYPE_SUCCESS ) {
+            return Error::ERRORTYPE_FAILURE;
+        }
         m_spDimVector = spDimVector;
-        return Error::ERRORTYPE_SUCCESS;
     }
 
-public://IVector
-    int initVector(Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
-        Vector spDimVector = Vector::createVector(1, &nElementSize);
-        return initTensor(spDimVector, eElementType, nElementSize, pElementData);
-    }
-
-    Data::DataType getDataType() const {
-        return m_spDataVector ? m_spDataVector->getDataType() : Data::DATATYPE_UNKNOWN;
-    }
-
-    int getDataSize() const {
-        return m_spDataVector ? m_spDataVector->getDataSize() : 0;
-    }
-
-    const void* getDataPtr(Data::DataType eElementType, int iPos=0) const {
-        return m_spDataVector ? m_spDataVector->getDataPtr(eElementType, iPos) : nullptr;
-    }
-
-    const Vector& getDataVector() {
-        return m_spDataVector;
-    }
-
-    const Vector& getDimVector() {
+    const Tensor& getDimVector() {
+        if(!m_spDimVector && m_nElementSize > 0) {
+            m_spDimVector = Tensor::createVector(1, &m_nElementSize);
+        }
         return m_spDimVector;
     }
 
+public:
+    static int s_getDtSize(Data::DataType eDt) {
+        switch (eDt)
+        {
+        case Data::DATATYPE_BOOL:
+            return sizeof(bool);
+
+        case Data::DATATYPE_CHAR:
+            return sizeof(char);
+
+        case Data::DATATYPE_SHORT:
+            return sizeof(short);
+
+        case Data::DATATYPE_INT:
+            return sizeof(int);
+
+        case Data::DATATYPE_LONG:
+            return sizeof(long);
+
+        case Data::DATATYPE_FLOAT:
+            return sizeof(float);
+
+        case Data::DATATYPE_DOUBLE:
+            return sizeof(double);
+
+        default:
+            return 0;
+        }
+    }
+
+public://ITensor
+
+    Data::DataType getDataType() const {
+        return m_eElementDt;
+    }
+
+    int getDataSize() const {
+        return m_nElementSize;
+    }
+
+    const void* getDataPtr(Data::DataType eElementType, int iPos=0) const {
+        if( eElementType == m_eElementDt &&
+            iPos >=0 && iPos < m_nElementSize ) {
+            return m_pElementData+iPos*m_nElementByte;
+        }
+        return nullptr;
+    }
+
+public:
+    CTensor() {
+        m_eElementDt = Data::DATATYPE_UNKNOWN;
+        m_pElementData = nullptr;
+        m_nElementSize = 0;
+    }
+    ~CTensor() {
+        release();
+    }
+    void release() {
+        if(m_pElementData) {
+            delete [] m_pElementData;
+            m_pElementData = nullptr;
+        }
+        m_eElementDt = Data::DATATYPE_UNKNOWN;
+        m_nElementSize = 0;
+    }
+
 private:
-    Vector m_spDataVector;
-    Vector m_spDimVector;
+    int m_nElementSize;
+    int m_nElementByte;
+    Data::DataType m_eElementDt;
+    unsigned char* m_pElementData;
+    Tensor m_spDimVector;
 };
 
 SIMPLEWORK_FACTORY_REGISTER(CTensor, "sw.math.Tensor")
