@@ -53,15 +53,15 @@ public:
     // 带对象指针的数据结构，用于创建对象返回的数据可以带上对象指针
     //
     template<typename TObject> struct ObjectWithPtr {
-        TObject* m_pObject;
-        Object m_spObject;
+        TObject* pObject;
+        Object spObject;
     };
 
     //
     // 创建对象
     //
     template<typename TObject> static Object createObject(bool bSingleton=false) {
-        return CObjectImp<TObject>::createObjectWithPtr(bSingleton).m_spObject;
+        return CObjectImp<TObject>::createObjectWithPtr(bSingleton).spObject;
     }
     template<typename TObject> static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
         return CObjectImp<TObject>::createObjectWithPtr(bSingleton);
@@ -72,9 +72,9 @@ public:
     //
     template<typename TObject> static Object createFactory(bool bSingletonFactory=false) {
         if(bSingletonFactory) {
-            return CObjectImp<CSingletonFactoryImp<TObject, CObject>>::createObjectWithPtr().m_spObject;
+            return CObjectImp<CSingletonFactoryImp<TObject, CObject>>::createObjectWithPtr().spObject;
         }else{
-            return CObjectImp<CFactoryImp<TObject, CObject>>::createObjectWithPtr().m_spObject;
+            return CObjectImp<CFactoryImp<TObject, CObject>>::createObjectWithPtr().spObject;
         }
     }
 
@@ -93,8 +93,8 @@ private:
 
             CObjectImp* pNewObj = new CObjectImp();
             ObjectWithPtr<TObject> obj;
-            obj.m_pObject = pNewObj;
-            obj.m_spObject.setPtr((IObjectImp*)pNewObj);
+            obj.pObject = pNewObj;
+            obj.spObject.setPtr((IObjectImp*)pNewObj);
             return obj;
         }
 
@@ -120,7 +120,7 @@ private:
 
     public://IFactory
         Object createObject() {
-            return CObjectImp<TObject>::createObjectWithPtr(false).m_spObject;
+            return CObjectImp<TObject>::createObjectWithPtr(false).spObject;
         }
     };
     template<typename TObject, typename TSuperClass> class CSingletonFactoryImp : public TSuperClass, public IFactory {
@@ -130,7 +130,7 @@ private:
 
     public://IFactory
         Object createObject() {
-            return CObjectImp<TObject>::createObjectWithPtr(true).m_spObject;
+            return CObjectImp<TObject>::createObjectWithPtr(true).spObject;
         }
     };
 };
