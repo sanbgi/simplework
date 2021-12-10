@@ -15,6 +15,12 @@ public:
         AVFRAMETYPE_SUBTITLE= 3
     };
 
+    enum AvFrameImageType {
+        AVFRAMEIMAGETYPE_RGB24  = 1,
+        AVFRAMEIMAGETYPE_RGB32  = 2,
+        AVFRAMEIMAGETYPE_YUV420 = 3,
+    };
+
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvFrame", 211206)
 
         //
@@ -23,9 +29,14 @@ public:
         virtual AvStreaming::AvStreamingType getStreamingType() = 0;
 
         //
-        //  获取帧对应的流
+        // 获取帧对应的流
         //
         virtual AvStreaming& getStreaming() = 0;
+
+        //
+        // 获取帧视频的图像张量
+        //
+        virtual sw::math::Tensor getVideoImage(AvFrameImageType eImageType) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -15,9 +15,10 @@ struct Data {
         DATATYPE_UNKNOWN  = 0,
         DATATYPE_BOOL     = 101,
         DATATYPE_CHAR     = 102,
-        DATATYPE_SHORT    = 103,
-        DATATYPE_INT      = 104,
-        DATATYPE_LONG     = 105,
+        DATATYPE_UCHAR    = 103,
+        DATATYPE_SHORT    = 104,
+        DATATYPE_INT      = 106,
+        DATATYPE_LONG     = 108,
         DATATYPE_FLOAT    = 201,
         DATATYPE_DOUBLE   = 202,
         DATATYPE_OBJECT   = 301,
@@ -33,7 +34,9 @@ private:
         if(typeid(T) == typeid(bool)) {
             return Data::DATATYPE_BOOL;
         } else if(typeid(T) == typeid(char)) {
-            return Data::DATATYPE_CHAR;
+            return Data::DATATYPE_CHAR;        
+        } else if(typeid(T) == typeid(unsigned char)) {
+            return Data::DATATYPE_UCHAR;
         } else if(typeid(T) == typeid(int)) {
             return Data::DATATYPE_INT;
         } else if(typeid(T) == typeid(short)) {

@@ -1,6 +1,7 @@
 #include "Av.h"
 #include "CAvFrame.h"
 
+using namespace sw::math;
 
 AvStreaming::AvStreamingType CAvFrame::getStreamingType() {
     return m_spAvStream->getStreamingType();
@@ -8,6 +9,10 @@ AvStreaming::AvStreamingType CAvFrame::getStreamingType() {
 
 AvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
+}
+
+Tensor CAvFrame::getVideoImage(AvFrame::AvFrameImageType eImageType) { 
+    return Tensor();
 }
 
 void CAvFrame::attachAvFrame(AVFrame* pAvFrame) {

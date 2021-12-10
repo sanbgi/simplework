@@ -9,6 +9,7 @@ extern "C" {
 }
 
 using namespace sw::core;
+using namespace sw::math;
 using namespace sw::av;
 
 class CAvFrame : public CObject, IAvFrame {
@@ -19,6 +20,7 @@ class CAvFrame : public CObject, IAvFrame {
 public://IAvFrame
     AvStreaming::AvStreamingType getStreamingType();
     AvStreaming& getStreaming();
+    Tensor getVideoImage(AvFrame::AvFrameImageType eImageType);
 
 public:
     void attachAvFrame(AVFrame* pAvFrame);

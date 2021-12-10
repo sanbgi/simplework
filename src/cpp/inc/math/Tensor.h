@@ -13,11 +13,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
 
     private:
         //
-        // 初始化张量
+        // 构造全新的张量
         //
-        virtual int initVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-        virtual int initTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
-
+        virtual Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+        virtual Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+        
     public:
         //
         // 获取维度
@@ -47,14 +47,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         template<typename Q> inline const Q* getDataPtr(int iPos=0) const {
             return (Q*)getDataPtr(Data::getType<Q>(), iPos);
-        }
-        template<typename Q> int getDataValue(int iPos, Q& v) const {
-            Q* pV = getDataPtr<Q>(iPos);
-            if(pV) {
-                v = *pV;
-                return Error::ERRORTYPE_SUCCESS;
-            }
-            return Error::ERRORTYPE_FAILURE;
         }
 
     public:
@@ -112,30 +104,29 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         //virtual Tensor transposeTensor(int nTransposeDim, int pTransposeDimArr[][2]) = 0;
         friend Tensor;
-        friend class CTensor;
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
     template<typename Q=void> static Tensor createTensor(Tensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        Tensor tensor = createTensor();
-        if(tensor) {
-            tensor->initTensor(spDimVector, Data::getType<Q>(), nElementSize, (void*)pElementData);
+        Tensor factory = getFactory();
+        if(factory) {
+            return factory->createTensor(spDimVector, Data::getType<Q>(), nElementSize, (void*)pElementData);
         }
-        return tensor;
+        return Tensor();
     }
 
     template<typename Q=void> static Tensor createVector(int nElementSize, Q* pElementData=nullptr) {
-        Tensor tensor = createTensor();
-        if(tensor) {
-            tensor->initVector(Data::getType<Q>(), nElementSize, (void*)pElementData);
+        Tensor factory = getFactory();
+        if(factory) {
+            return factory->createVector(Data::getType<Q>(), nElementSize, (void*)pElementData);
         }
-        return tensor;
+        return Tensor();
     }
 
 private:
-    static Tensor createTensor() {
-        static Factory g_factory = Object::createFactory(Tensor::getClassKey());
-        return g_factory->createObject();
+    static Tensor getFactory() {
+        static Tensor g_factory = Object::createFactory(Tensor::getClassKey());
+        return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 

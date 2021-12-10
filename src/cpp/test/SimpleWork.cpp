@@ -66,6 +66,7 @@ int main(int argc, char *argv[]){
     if( tensor ) {
         std::cout << "Great\n";
     }
+    //tensor = Tensor::createVector()
 
     MyObject myObject = Object::createObject<MyObject>();
     if( myObject ) {

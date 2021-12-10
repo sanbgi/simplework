@@ -63,8 +63,8 @@ public:
     template<typename TObject> static Object createObject(bool bSingleton=false) {
         return __CObjectImp<TObject>::createObjectWithPtr(bSingleton).spObject;
     }
-    template<typename TObject> static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
-        return __CObjectImp<TObject>::createObjectWithPtr(bSingleton);
+    template<typename TObject, typename TPointer=TObject> static ObjectWithPtr<TPointer> createObjectWithPtr(bool bSingleton=false) {
+        return __CObjectImp<TObject, TPointer>::createObjectWithPtr(bSingleton);
     }
 
     //
@@ -80,19 +80,19 @@ public:
 
 private:
     struct __IObjectImp : public IObject {};
-    template<typename TObject> class __CObjectImp : public TObject, public __IObjectImp {
+    template<typename TObject, typename TPointer=TObject> class __CObjectImp : public TObject, public __IObjectImp {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(TObject)
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
+        static ObjectWithPtr<TPointer> createObjectWithPtr(bool bSingleton=false) {
             if(bSingleton) {
-                static ObjectWithPtr<TObject> g_spObject = createObjectWithPtr(false);
+                static ObjectWithPtr<TPointer> g_spObject = createObjectWithPtr(false);
                 return g_spObject;
             }
 
             __CObjectImp* pNewObj = new __CObjectImp();
-            ObjectWithPtr<TObject> obj;
+            ObjectWithPtr<TPointer> obj;
             obj.pObject = pNewObj;
             obj.spObject.setPtr((__IObjectImp*)pNewObj);
             return obj;

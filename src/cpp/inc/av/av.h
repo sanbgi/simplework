@@ -2,6 +2,7 @@
 #define __SimpleWork_IO_h__
 
 #include "../core/core.h"
+#include "../math/math.h"
 
 #define SIMPLEWORK_AV_NAMESPACE sw::av
 #define SIMPLEWORK_AV_NAMESPACE_ENTER namespace sw { namespace av {
