@@ -8,48 +8,48 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-class CBaseTensor : public CObject, ITensor {
+class CPlaceTensor : public CObject, ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(ITensor)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    virtual int initVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-    virtual int initTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+    virtual int initVector( Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
 };
 
 //
 // 张量模板类
 //
-template<typename T> class CTensor : public CBaseTensor {
+template<typename T> class CTensor : public CPlaceTensor {
 
 public://ITensor
-    ObjectWithPtr<CBaseTensor> createTensor(Data::DataType eElementType) {
+    ObjectWithPtr<CPlaceTensor> createTensor(Data::DataType eElementType) {
         switch(eElementType) {
             case Data::DATATYPE_BOOL:
-                return CObject::createObjectWithPtr<CTensor<bool>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<bool>, CPlaceTensor>();
             case Data::DATATYPE_CHAR:
-                return CObject::createObjectWithPtr<CTensor<char>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<char>, CPlaceTensor>();
             case Data::DATATYPE_UCHAR:
-                return CObject::createObjectWithPtr<CTensor<unsigned char>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<unsigned char>, CPlaceTensor>();
             case Data::DATATYPE_SHORT:
-                return CObject::createObjectWithPtr<CTensor<short>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<short>, CPlaceTensor>();
             case Data::DATATYPE_INT:
-                return CObject::createObjectWithPtr<CTensor<int>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<int>, CPlaceTensor>();
             case Data::DATATYPE_LONG:
-                return CObject::createObjectWithPtr<CTensor<long>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<long>, CPlaceTensor>();
             case Data::DATATYPE_FLOAT:
-                return CObject::createObjectWithPtr<CTensor<float>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<float>, CPlaceTensor>();
             case Data::DATATYPE_DOUBLE:
-                return CObject::createObjectWithPtr<CTensor<double>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<double>, CPlaceTensor>();
             case Data::DATATYPE_OBJECT:
-                return CObject::createObjectWithPtr<CTensor<Object>, CBaseTensor>();
+                return CObject::createObjectWithPtr<CTensor<Object>, CPlaceTensor>();
         }
-        return ObjectWithPtr<CBaseTensor>();
+        return ObjectWithPtr<CPlaceTensor>();
     }
 
-    Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
-        ObjectWithPtr<CBaseTensor> spWrapTensor = createTensor(eElementType);
+    Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData) {
+        ObjectWithPtr<CPlaceTensor> spWrapTensor = createTensor(eElementType);
         if(spWrapTensor.spObject) {
             if( spWrapTensor.pObject->initVector(eElementType, nElementSize, pElementData) )
                 return Tensor::wrapPtr((ITensor*)spWrapTensor.pObject);
@@ -58,8 +58,8 @@ public://ITensor
         return spWrapTensor.spObject;
     }
 
-    Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ){
-        ObjectWithPtr<CBaseTensor> spWrapTensor = createTensor(eElementType);
+    Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData){
+        ObjectWithPtr<CPlaceTensor> spWrapTensor = createTensor(eElementType);
         if(spWrapTensor.spObject) {
             if( spWrapTensor.pObject->initTensor(spDimVector, eElementType, nElementSize, pElementData) )
                 return Tensor::wrapPtr((ITensor*)spWrapTensor.pObject);
@@ -70,14 +70,16 @@ public://ITensor
 
     int initVector(Data::DataType eDt, int nSize, void* pData) {
 
-        if( eDt != getDataType() ) {
+        if( eDt != getDataType() || pData == nullptr ) {
             return Error::ERRORTYPE_FAILURE;
         }
 
         release();
-
         m_pElementData = new T[nSize];
-        if(pData) {
+        if(Data::isPuryMemoryType(eDt)) {
+            memcpy(m_pElementData, (T*)pData, nSize*sizeof(T));
+        }
+        else {
             T* pSrc = (T*)pData;
             T* pDesc = m_pElementData;
             while(nSize--) {
@@ -85,7 +87,6 @@ public://ITensor
                 pSrc++, pDesc++;
             }
         }
-
         m_nElementSize = nSize;
         return Error::ERRORTYPE_SUCCESS;
     }

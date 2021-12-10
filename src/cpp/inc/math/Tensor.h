@@ -2,6 +2,7 @@
 #define __SimpleWork_Tensor_h__
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
+
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 /**
@@ -13,7 +14,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
 
     private:
         //
-        // 构造全新的张量
+        // 构造全新的张量，私有函数，因为指针没类型，易出错
         //
         virtual Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
         virtual Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
@@ -24,7 +25,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         virtual const Tensor& getDimVector() = 0;
 
-    public:
         //
         // 获取元素类型
         //
@@ -49,6 +49,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
             return (Q*)getDataPtr(Data::getType<Q>(), iPos);
         }
 
+        //
+        // 获取元素值，不安全
+        //
+        template<typename Q> inline const Q& getDataAt(int iPos) const {
+            return *getDataPtr<Q>(iPos);
+        }
+
     public:
         //
         // 截取
@@ -67,7 +74,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         // @iDim 连接的第几个维度
         //
         //virtual Tensor catTensor(int iDim, Tensor& pTensor) = 0;
-
         
         //
         // 截取降维
@@ -107,24 +113,21 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    template<typename Q=void> static Tensor createTensor(Tensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        Tensor factory = getFactory();
-        if(factory) {
-            return factory->createTensor(spDimVector, Data::getType<Q>(), nElementSize, (void*)pElementData);
-        }
-        return Tensor();
-    }
-
+    //
+    // 构造一维张量
+    //
     template<typename Q=void> static Tensor createVector(int nElementSize, Q* pElementData=nullptr) {
-        Tensor factory = getFactory();
-        if(factory) {
-            return factory->createVector(Data::getType<Q>(), nElementSize, (void*)pElementData);
-        }
-        return Tensor();
+        return getFactory()->createVector(Data::getType<Q>(), nElementSize, (void*)pElementData);
+    }
+    //
+    // 构造多维张量
+    //
+    template<typename Q=void> static Tensor createTensor(Tensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
+        return getFactory()->createTensor(spDimVector, Data::getType<Q>(), nElementSize, (void*)pElementData);
     }
 
 private:
-    static Tensor getFactory() {
+    static Tensor& getFactory() {
         static Tensor g_factory = Object::createFactory(Tensor::getClassKey());
         return g_factory;
     }

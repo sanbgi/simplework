@@ -28,6 +28,20 @@ struct Data {
         static DataType s_eRawType = getRawType<T>();
         return s_eRawType;
     };
+    static bool isPuryMemoryType(DataType eDt) {
+        switch(eDt) {
+            case DATATYPE_BOOL:
+            case DATATYPE_CHAR:
+            case DATATYPE_UCHAR:
+            case DATATYPE_SHORT:
+            case DATATYPE_INT:
+            case DATATYPE_LONG:
+            case DATATYPE_FLOAT:
+            case DATATYPE_DOUBLE:
+                return true;
+        }
+        return false;
+    }
 
 private:
     template<typename T> static DataType getRawType() {
