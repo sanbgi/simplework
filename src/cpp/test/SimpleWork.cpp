@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
         switch(frame->getStreamingType()){ 
         case AvStreaming::AVSTREAMTYPE_VIDEO:
             {
-                Tensor image = frame->getVideoImage();
+                Tensor image = frame->getVideoImage(AvFrame::AVFRAMEIMAGETYPE_RGB);
                 nframeVideo++;
             }
             break;

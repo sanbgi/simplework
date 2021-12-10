@@ -21,7 +21,7 @@ class CAvFrame : public CObject, IAvFrame {
 public://IAvFrame
     AvStreaming::AvStreamingType getStreamingType();
     AvStreaming& getStreaming();
-    Tensor getVideoImage();
+    Tensor getVideoImage(AvFrame::AvFrameImageType eType);
 
 public:
     void attachAvFrame(AVFrame* pAvFrame);
