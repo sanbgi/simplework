@@ -96,6 +96,7 @@
 #include "Object.h"
 #include "Factory.h"
 #include "Module.h"
+#include "NamedMap.h"
 
 //
 //

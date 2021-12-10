@@ -51,7 +51,7 @@ public://ITensor
     Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData) {
         ObjectWithPtr<CPlaceTensor> spWrapTensor = createTensor(eElementType);
         if(spWrapTensor.spObject) {
-            if( spWrapTensor.pObject->initVector(eElementType, nElementSize, pElementData) )
+            if( spWrapTensor.pObject->initVector(eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
                 return Tensor::wrapPtr((ITensor*)spWrapTensor.pObject);
             return Tensor();
         }
@@ -61,7 +61,7 @@ public://ITensor
     Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData){
         ObjectWithPtr<CPlaceTensor> spWrapTensor = createTensor(eElementType);
         if(spWrapTensor.spObject) {
-            if( spWrapTensor.pObject->initTensor(spDimVector, eElementType, nElementSize, pElementData) )
+            if( spWrapTensor.pObject->initTensor(spDimVector, eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
                 return Tensor::wrapPtr((ITensor*)spWrapTensor.pObject);
             return Tensor();
         }

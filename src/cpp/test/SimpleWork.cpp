@@ -45,7 +45,10 @@ int main(int argc, char *argv[]){
     while(avIn->getFrame(frame) == Error::ERRORTYPE_SUCCESS) {
         switch(frame->getStreamingType()){ 
         case AvStreaming::AVSTREAMTYPE_VIDEO:
-            nframeVideo++;
+            {
+                Tensor image = frame->getVideoImage();
+                nframeVideo++;
+            }
             break;
 
         case AvStreaming::AVSTREAMTYPE_AUDIO:

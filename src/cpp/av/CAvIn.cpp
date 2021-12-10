@@ -160,7 +160,9 @@ public:
         CObject::ObjectWithPtr<CAvFrame> spAvFrame = CObject::createObjectWithPtr<CAvFrame>();
         spAvFrame.pObject->m_pAvFrame = avFrame.detach();
         spAvFrame.pObject->m_spAvStream = pStreaming->spObject;
-        frame = spAvFrame.spObject; 
+        spAvFrame.pObject->m_pCodecCtx = pCodecCtx;
+        spAvFrame.pObject->m_mapCtx = m_mapCtx;
+        frame = spAvFrame.spObject;
 
         //如果读取成功，则下次继续读取
         m_pContinueReadingStreaming = pStreaming;
@@ -172,6 +174,7 @@ public:
         m_bOpenedFormatCtx = false;
         m_pFormatCtx = nullptr;
         m_pContinueReadingStreaming = nullptr;
+        m_mapCtx = NamedMap::createMap();
     }
     ~CAvIn() {
         release();
@@ -193,5 +196,6 @@ private:
     AVFormatContext* m_pFormatCtx;
     CObject::ObjectWithPtr<CAvStreaming>* m_pContinueReadingStreaming;
     std::vector<CObject::ObjectWithPtr<CAvStreaming>> m_vecStreamings;
+    NamedMap m_mapCtx;
 };
 SIMPLEWORK_FACTORY_REGISTER(CAvIn, AvIn::getClassKey())

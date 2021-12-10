@@ -128,7 +128,7 @@ public:
 
 private:
     static Tensor& getFactory() {
-        static Tensor g_factory = Object::createFactory(Tensor::getClassKey());
+        static Tensor g_factory = Object::createObject(Tensor::getClassKey());
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)

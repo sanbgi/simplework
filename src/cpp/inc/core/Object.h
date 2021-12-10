@@ -33,6 +33,10 @@ public:
         static TFactory s_factory =  TModule::createFactory(TObject::getClassKey());
         return s_factory->createObject();
     }
+    static const Object& getNullObject() {
+        static Object g_spNullObject;
+        return g_spNullObject;
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Object)
 
