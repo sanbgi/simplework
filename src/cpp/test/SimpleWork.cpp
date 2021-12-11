@@ -34,25 +34,29 @@ using namespace sw::math;
 
 int main(int argc, char *argv[]){
     
-    //AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    
-    AvIn avIn = AvIn::openVideoCapture("vfwcap");
-    AvOut avOut = AvOut::openWindow("Display Video", 640, 360);
+    AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    
+    //AvIn avIn = AvIn::openVideoCapture("vfwcap");
+    AvOut avVideoOut = AvOut::openWindow("Display Video", 640, 360);
+    AvOut avAudioOut = AvOut::openSpeaker(nullptr, 44000, 2);
     int nframeVideo = 0;
     int nframeAudio = 0;
     int nframeUnknown = 0;
     int nframe = 0;
     AvFrame frame;
     while(avIn->getFrame(frame) == Error::ERRORTYPE_SUCCESS) {
-        switch(frame->getStreamingType()){ 
-        case AvStreaming::AVSTREAMTYPE_VIDEO:
+        switch(frame->getFrameType()){ 
+        case AvFrame::AVSTREAMTYPE_VIDEO:
             {
-                avOut->putFrame(frame);
+                avVideoOut->putFrame(frame);
                 nframeVideo++;
             }
             break;
 
-        case AvStreaming::AVSTREAMTYPE_AUDIO:
-            nframeAudio++;
+        case AvFrame::AVSTREAMTYPE_AUDIO:
+            {
+                avAudioOut->putFrame(frame);
+                nframeAudio++;
+            }
             break;
 
         default:
@@ -64,11 +68,6 @@ int main(int argc, char *argv[]){
         }
     }
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
-
-    Tensor tensor = Object::createObject<Tensor>();
-    if( tensor ) {
-        std::cout << "Great\n";
-    }
 
     MyObject myObject = Object::createObject<MyObject>();
     if( myObject ) {

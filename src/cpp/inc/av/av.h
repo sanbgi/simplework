@@ -10,8 +10,8 @@
 #define SIMPLEWORK_AV_NAMESPACE_ENTER namespace sw { namespace av {
 #define SIMPLEWORK_AV_NAMESPACE_LEAVE }}
 
-#include "AvStreaming.h"
 #include "AvFrame.h"
+#include "AvStreaming.h"
 #include "AvIn.h"
 #include "AvOut.h"
 

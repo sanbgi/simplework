@@ -37,11 +37,11 @@ public:
 
     int putFrame(const AvFrame& frame) {
         
-        if(frame->getStreamingType() != AvStreaming::AVSTREAMTYPE_VIDEO ) {
+        if(frame->getFrameType() != AvFrame::AVSTREAMTYPE_VIDEO ) {
             return Error::ERRORTYPE_FAILURE;
         }
 
-        Tensor spTensor = frame->getVideoImage(AvFrame::AVFRAMEIMAGETYPE_RGB);
+        Tensor spTensor = frame->getFrameVideoImage(AvFrame::AVFRAMEIMAGETYPE_RGB);
         const Tensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
         int width = pDim[0];

@@ -1,26 +1,22 @@
 #ifndef __SimpleWork_Av_CAvFrame_h__
 #define __SimpleWork_Av_CAvFrame_h__
 
-extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libswscale/swscale.h>
-    #include <libavutil/imgutils.h>
-}
+#include "av_ffmpeg.h"
 
-using namespace sw::core;
-using namespace sw::math;
-using namespace sw::av;
+FFMPEG_NAMESPACE_ENTER
 
+class CAvStreaming;
 class CAvFrame : public CObject, public IAvFrame {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvFrame)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    AvStreaming::AvStreamingType getStreamingType();
+    AvFrame::AvFrameType getFrameType();
     AvStreaming& getStreaming();
-    Tensor getVideoImage(AvFrame::AvFrameImageType eType);
+
+    Tensor getFrameVideoImage(AvFrame::AvFrameImageType eType);
+    Tensor getFrameAudioSamples(AvFrame::AvFrameSampleType eType, int nSampleRate, int nChannels);
 
 public:
     void attachAvFrame(AVFrame* pAvFrame);
@@ -31,10 +27,11 @@ public:
 
 public:
     AVFrame* m_pAvFrame;
-    AvStreaming::AvStreamingType m_eAvFrameType;
+    AvFrame::AvFrameType m_eAvFrameType;
     AvStreaming m_spAvStream;
-    AVCodecContext* m_pCodecCtx;
-    NamedMap m_mapCtx;
+    CAvStreaming* m_pStreaming;
 };
+
+FFMPEG_NAMESPACE_LEAVE
 
 #endif//__SimpleWork_Av_CAvFrame_h__

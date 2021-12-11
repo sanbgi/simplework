@@ -17,6 +17,14 @@ public:
         }
         return AvOut::wrapPtr((IAvOut*)wrapAvOut.pObject);
     }
+
+    AvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
+        ObjectWithPtr<CAvOut_SDLSpeaker> wrapAvOut = CObject::createObjectWithPtr<CAvOut_SDLSpeaker>();
+        if( wrapAvOut.pObject->initSpeaker(szName, sampleRate, nChannels) != Error::ERRORTYPE_SUCCESS ) {
+            return AvOut();
+        }
+        return AvOut::wrapPtr((IAvOut*)wrapAvOut.pObject);
+    }
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvOutFactory, AvOut::AvOutFactory::getClassKey())

@@ -9,14 +9,6 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER(AvIn, "sw.av.AvIn")
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvIn", 211206)
-        virtual int getStreamingCount() = 0;
-
-        virtual AvStreaming getStreaming(int iStreamingIndex) = 0;
-
-        virtual int getWidth() = 0;
-
-        virtual int getHeight() = 0;
-
         virtual int getFrame(AvFrame& frame) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 

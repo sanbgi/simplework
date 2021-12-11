@@ -1,6 +1,6 @@
 
 #include "av.h"
-#include "CAvIn_ffmpeg.h"
+#include "ffmpeg/CAvIn.h"
 
 class CAvInFactory : public CObject, public AvIn::IAvInFactory{
 
@@ -10,7 +10,7 @@ class CAvInFactory : public CObject, public AvIn::IAvInFactory{
 
 public:
     AvIn openVideoFile(const char* szFileName) {
-        ObjectWithPtr<CAvIn_ffmpeg> wrapAvOut = CObject::createObjectWithPtr<CAvIn_ffmpeg>();
+        ObjectWithPtr<ffmpeg::CAvIn> wrapAvOut = CObject::createObjectWithPtr<ffmpeg::CAvIn>();
         if( wrapAvOut.pObject->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
             return AvIn();
         }
@@ -18,7 +18,7 @@ public:
     }
 
     AvIn openVideoCapture(const char* szName) {
-        ObjectWithPtr<CAvIn_ffmpeg> wrapAvOut = CObject::createObjectWithPtr<CAvIn_ffmpeg>();
+        ObjectWithPtr<ffmpeg::CAvIn> wrapAvOut = CObject::createObjectWithPtr<ffmpeg::CAvIn>();
         if( wrapAvOut.pObject->initVideoCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
             return AvIn();
         }
