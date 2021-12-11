@@ -186,6 +186,6 @@ public://ITensor
     }
 };
 
-SIMPLEWORK_FACTORY_REGISTER(CTensorFactory, Tensor::TensorFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CTensorFactory, Tensor::TensorFactory::getClassKey())
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

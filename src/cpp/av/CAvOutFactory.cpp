@@ -18,4 +18,4 @@ public:
     }
 };
 
-SIMPLEWORK_FACTORY_REGISTER(CAvOutFactory, AvOut::AvOutFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvOutFactory, AvOut::AvOutFactory::getClassKey())

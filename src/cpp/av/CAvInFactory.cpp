@@ -25,4 +25,4 @@ public:
         return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
     }
 };
-SIMPLEWORK_FACTORY_REGISTER(CAvInFactory, AvIn::AvInFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvInFactory, AvIn::AvInFactory::getClassKey())

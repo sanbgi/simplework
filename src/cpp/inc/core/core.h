@@ -160,7 +160,7 @@
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true)); \
+            Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true); \
             SIMPLEWORK_CORE_NAMESPACE::Module::getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
