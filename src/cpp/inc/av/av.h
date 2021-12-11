@@ -1,5 +1,5 @@
-#ifndef __SimpleWork_IO_h__
-#define __SimpleWork_IO_h__
+#ifndef __SimpleWork_AV_h__
+#define __SimpleWork_AV_h__
 
 #define SIMPLEWORK_WITHOUTAPI
 
@@ -18,4 +18,4 @@
 //#include "IPipeIn.h"
 //#include "IPipeOut.h"
 
-#endif//__SimpleWork_IO_h__
+#endif//__SimpleWork_AV_h__

@@ -12,13 +12,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensor", 211202)
 
-    private:
-        //
-        // 构造全新的张量，私有函数，因为指针没类型，易出错
-        //
-        virtual Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-        virtual Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
-        
     public:
         //
         // 获取维度
@@ -112,6 +105,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         friend Tensor;
     SIMPLEWORK_INTERFACE_LEAVE
 
+    SIMPLEWORK_INTERFACECLASS_ENTER(TensorFactory, "sw.math.TensorFactory")
+        SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensorFactory", 211211)
+            //
+            // 构造全新的张量，私有函数，因为指针没类型，易出错
+            //
+            virtual Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+            virtual Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+        SIMPLEWORK_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
+
 public:
     //
     // 构造一维张量
@@ -127,8 +130,8 @@ public:
     }
 
 private:
-    static Tensor& getFactory() {
-        static Tensor g_factory = Object::createObject(Tensor::getClassKey());
+    static TensorFactory& getFactory() {
+        static TensorFactory g_factory = Object::createObject(TensorFactory::getClassKey());
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)

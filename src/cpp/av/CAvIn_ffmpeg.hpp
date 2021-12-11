@@ -14,34 +14,13 @@ extern "C" {
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_AV_NAMESPACE;
 
-class CAvIn : public CObject, public IAvIn{
+class CAvIn_ffmpeg : public CObject, public IAvIn {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvIn)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    AvIn openVideoFile(const char* szFileName) {
-        ObjectWithPtr<CAvIn> wrapAvOut = CObject::createObjectWithPtr<CAvIn>();
-        if( wrapAvOut.pObject->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
-            return AvIn();
-        }
-        return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
-    }
-
-    AvIn openCapture(const char* szName) {
-        static bool g_bInitialized = false;
-        if( !g_bInitialized ) {
-            avdevice_register_all();
-            g_bInitialized = true;
-        }
-        ObjectWithPtr<CAvIn> wrapAvOut = CObject::createObjectWithPtr<CAvIn>();
-        if( wrapAvOut.pObject->initCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
-            return AvIn();
-        }
-        return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
-    }
-        
     int getStreamingCount() {
         return m_vecStreamings.size();
     }
@@ -108,6 +87,12 @@ public:
     }
 
     int initCapture(const char* szName) {
+        static bool g_bInitialized = false;
+        if( !g_bInitialized ) {
+            avdevice_register_all();
+            g_bInitialized = true;
+        }
+        
         // 释放之前使用资源
         release();
         AVInputFormat *ifmt=av_find_input_format("vfwcap");
@@ -224,13 +209,13 @@ public:
     }
 
 public:
-    CAvIn() {
+    CAvIn_ffmpeg() {
         m_bOpenedFormatCtx = false;
         m_pFormatCtx = nullptr;
         m_pContinueReadingStreaming = nullptr;
         m_mapCtx = NamedMap::createMap();
     }
-    ~CAvIn() {
+    ~CAvIn_ffmpeg() {
         release();
     }
     void release() {
@@ -252,4 +237,3 @@ private:
     std::vector<CObject::ObjectWithPtr<CAvStreaming>> m_vecStreamings;
     NamedMap m_mapCtx;
 };
-SIMPLEWORK_FACTORY_REGISTER(CAvIn, AvIn::getClassKey())

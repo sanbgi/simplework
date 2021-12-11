@@ -1,3 +1,6 @@
+#ifndef __SimpleWork_Av_Av_h__
+#define __SimpleWork_Av_Av_h__
+
 #include "../inc/av/av.h"
 
 template<typename Q> class CAutoFree {
@@ -57,3 +60,5 @@ private:
     Q* m_ptr;
     FUN m_fun;
 };
+
+#endif//#define __SimpleWork_Av_Av_h__

@@ -9,15 +9,6 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER(AvIn, "sw.av.AvIn")
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvIn", 211206)
-        
-    private:
-        //打开视频文件
-        virtual AvIn openVideoFile(const char* szFileName) = 0;
-
-        //打开摄像头
-        virtual AvIn openCapture(const char* szName) = 0;
-
-    public:
         virtual int getStreamingCount() = 0;
 
         virtual AvStreaming getStreaming(int iStreamingIndex) = 0;
@@ -27,9 +18,17 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvIn, "sw.av.AvIn")
         virtual int getHeight() = 0;
 
         virtual int getFrame(AvFrame& frame) = 0;
-
-        friend class AvIn;
     SIMPLEWORK_INTERFACE_LEAVE
+
+    SIMPLEWORK_INTERFACECLASS_ENTER(AvInFactory, "sw.av.AvInFactory")
+        SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvInFactory", 211206)
+            //打开视频文件
+            virtual AvIn openVideoFile(const char* szFileName) = 0;
+
+            //打开摄像头
+            virtual AvIn openCapture(const char* szName) = 0;
+        SIMPLEWORK_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACECLASS_LEAVE(AvInFactory)
 
 public:
     static inline AvIn openVideoFile(const char* szFileName) {
@@ -40,8 +39,8 @@ public:
     }
 
 private:
-    static AvIn& getFactory() {
-        static AvIn g_factory = Object::createObject(AvIn::getClassKey());
+    static AvInFactory& getFactory() {
+        static AvInFactory g_factory = Object::createObject(AvInFactory::getClassKey());
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvIn)
