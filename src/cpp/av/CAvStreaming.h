@@ -30,7 +30,7 @@ public:
     void release();
 
 public:
-    AVStream* m_pAvStream;  //CAvIn::m_pFormatCtx持有，无需释放
+    AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     AVCodecContext* m_pCodecCtx;
     AvStreaming::AvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;

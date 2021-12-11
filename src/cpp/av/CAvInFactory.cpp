@@ -17,9 +17,9 @@ public:
         return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
     }
 
-    AvIn openCapture(const char* szName) {
+    AvIn openVideoCapture(const char* szName) {
         ObjectWithPtr<CAvIn_ffmpeg> wrapAvOut = CObject::createObjectWithPtr<CAvIn_ffmpeg>();
-        if( wrapAvOut.pObject->initCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
+        if( wrapAvOut.pObject->initVideoCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
             return AvIn();
         }
         return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);

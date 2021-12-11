@@ -12,7 +12,7 @@ using namespace sw::core;
 using namespace sw::math;
 using namespace sw::av;
 
-class CAvFrame : public CObject, IAvFrame {
+class CAvFrame : public CObject, public IAvFrame {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvFrame)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)

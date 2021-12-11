@@ -59,8 +59,8 @@
         inline IFace* getPtr() const { \
             return __autoPtr.getPtr(); \
         }\
-        inline void setPtr(IFace* pFactory) {\
-            __autoPtr.setPtr(pFactory);\
+        inline void setPtr(IFace* pPtr) {\
+            __autoPtr.setPtr(pPtr);\
         }\
         inline IFace* operator->() const {\
             return __autoPtr.getPtr(); \
@@ -69,9 +69,9 @@
             return __autoPtr;\
         }\
     public:\
-        static inline className wrapPtr(IFace* pObject) {\
+        static inline className wrapPtr(IFace* pPtr) {\
             className object;\
-            object.setPtr(pObject);\
+            object.setPtr(pPtr);\
             return object;\
         };\
     }; \

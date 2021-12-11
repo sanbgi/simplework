@@ -86,7 +86,7 @@ public:
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    int initCapture(const char* szName) {
+    int initVideoCapture(const char* szName) {
         static bool g_bInitialized = false;
         if( !g_bInitialized ) {
             avdevice_register_all();
@@ -201,7 +201,7 @@ public:
         spAvFrame.pObject->m_spAvStream = pStreaming->spObject;
         spAvFrame.pObject->m_pCodecCtx = pCodecCtx;
         spAvFrame.pObject->m_mapCtx = m_mapCtx;
-        frame = spAvFrame.spObject;
+        frame.setPtr(spAvFrame.pObject);
 
         //如果读取成功，则下次继续读取
         m_pContinueReadingStreaming = pStreaming;

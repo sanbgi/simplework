@@ -35,7 +35,7 @@ using namespace sw::math;
 int main(int argc, char *argv[]){
     
     //AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    
-    AvIn avIn = AvIn::openCapture("vfwcap");
+    AvIn avIn = AvIn::openVideoCapture("vfwcap");
     AvOut avOut = AvOut::openWindow("Display Video", 640, 360);
     int nframeVideo = 0;
     int nframeAudio = 0;

@@ -26,7 +26,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvIn, "sw.av.AvIn")
             virtual AvIn openVideoFile(const char* szFileName) = 0;
 
             //打开摄像头
-            virtual AvIn openCapture(const char* szName) = 0;
+            virtual AvIn openVideoCapture(const char* szName) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvInFactory)
 
@@ -34,8 +34,8 @@ public:
     static inline AvIn openVideoFile(const char* szFileName) {
         return getFactory()->openVideoFile(szFileName);
     }
-    static inline AvIn openCapture(const char* szName) {
-        return getFactory()->openCapture(szName);
+    static inline AvIn openVideoCapture(const char* szName) {
+        return getFactory()->openVideoCapture(szName);
     }
 
 private:
