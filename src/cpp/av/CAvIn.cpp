@@ -8,7 +8,7 @@ extern "C" {
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
     #include <libswscale/swscale.h>
-    #include <SDL2/SDL.h>
+    #include <libavdevice/avdevice.h>
 }
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
@@ -21,38 +21,27 @@ class CAvIn : public CObject, public IAvIn{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-        
-    int init(const char* szFileName) {
-        // 释放之前使用资源
-        release();
-
-        // 打开视频流
-        m_pFormatCtx = avformat_alloc_context();
-        if(avformat_open_input(&m_pFormatCtx,szFileName,NULL,NULL)!=0){
-            printf("Couldn't open input stream.\n");
-            release();
-            return Error::ERRORTYPE_FAILURE;
+    AvIn openVideoFile(const char* szFileName) {
+        ObjectWithPtr<CAvIn> wrapAvOut = CObject::createObjectWithPtr<CAvIn>();
+        if( wrapAvOut.pObject->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
+            return AvIn();
         }
-        m_bOpenedFormatCtx = true;
-
-        // 查找视频流中的具体流信息
-        if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
-            printf("Couldn't find stream information.\n");
-            release();
-            return Error::ERRORTYPE_FAILURE; 
-        }
-
-        // 初始化所有流参数
-        for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
-            CObject::ObjectWithPtr<CAvStreaming> spStream = CObject::createObjectWithPtr<CAvStreaming>();
-            if( spStream.pObject->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
-                return Error::ERRORTYPE_FAILURE;
-            }
-            m_vecStreamings.push_back(spStream);
-        }
-        return Error::ERRORTYPE_SUCCESS;
+        return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
     }
 
+    AvIn openCapture(const char* szName) {
+        static bool g_bInitialized = false;
+        if( !g_bInitialized ) {
+            avdevice_register_all();
+            g_bInitialized = true;
+        }
+        ObjectWithPtr<CAvIn> wrapAvOut = CObject::createObjectWithPtr<CAvIn>();
+        if( wrapAvOut.pObject->initCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
+            return AvIn();
+        }
+        return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
+    }
+        
     int getStreamingCount() {
         return m_vecStreamings.size();
     }
@@ -86,8 +75,73 @@ public:
         return Error::ERRORTYPE_FAILURE;
     }
 
-
 public:
+    int initVideoFile(const char* szFileName) {
+        // 释放之前使用资源
+        release();
+
+        // 打开视频流
+        m_pFormatCtx = avformat_alloc_context();
+        if(avformat_open_input(&m_pFormatCtx,szFileName,NULL,NULL)!=0){
+            printf("Couldn't open input stream.\n");
+            release();
+            return Error::ERRORTYPE_FAILURE;
+        }
+        m_bOpenedFormatCtx = true;
+
+        // 查找视频流中的具体流信息
+        if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
+            printf("Couldn't find stream information.\n");
+            release();
+            return Error::ERRORTYPE_FAILURE; 
+        }
+
+        // 初始化所有流参数
+        for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
+            CObject::ObjectWithPtr<CAvStreaming> spStream = CObject::createObjectWithPtr<CAvStreaming>();
+            if( spStream.pObject->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+                return Error::ERRORTYPE_FAILURE;
+            }
+            m_vecStreamings.push_back(spStream);
+        }
+        return Error::ERRORTYPE_SUCCESS;
+    }
+
+    int initCapture(const char* szName) {
+        // 释放之前使用资源
+        release();
+        AVInputFormat *ifmt=av_find_input_format("vfwcap");
+        if(nullptr == ifmt) {
+            return Error::ERRORTYPE_FAILURE;
+        }
+
+        // 打开视频流
+        m_pFormatCtx = avformat_alloc_context();
+        if(avformat_open_input(&m_pFormatCtx,0,ifmt,NULL)!=0){
+            printf("Couldn't open input stream.\n");
+            release();
+            return Error::ERRORTYPE_FAILURE;
+        }
+        m_bOpenedFormatCtx = true;
+
+        // 查找视频流中的具体流信息
+        if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
+            printf("Couldn't find stream information.\n");
+            release();
+            return Error::ERRORTYPE_FAILURE; 
+        }
+
+        // 初始化所有流参数
+        for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
+            CObject::ObjectWithPtr<CAvStreaming> spStream = CObject::createObjectWithPtr<CAvStreaming>();
+            if( spStream.pObject->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+                return Error::ERRORTYPE_FAILURE;
+            }
+            m_vecStreamings.push_back(spStream);
+        }
+        return Error::ERRORTYPE_SUCCESS;
+    }
+
     int sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
 
         CObject::ObjectWithPtr<CAvStreaming>* pStreaming = &m_vecStreamings[pPackage->stream_index];

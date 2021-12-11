@@ -8,14 +8,26 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvOut", 211206)
-        
-        virtual int init(const char* szFileName);
+    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 211206)
+    private:
+        virtual AvOut openWindow(const char* szWindowName, int width, int height) = 0;
 
+    public:
         virtual int putFrame(const AvFrame& frame) = 0;
 
+    friend class AvOut;
     SIMPLEWORK_INTERFACE_LEAVE
 
+public:
+    static inline AvOut openWindow(const char* szWindowName, int width, int height) {
+        return getFactory()->openWindow(szWindowName, width, height);
+    }
+
+private:
+    static AvOut& getFactory() {
+        static AvOut g_factory = Object::createObject(AvOut::getClassKey());
+        return g_factory;
+    }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvOut)
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE

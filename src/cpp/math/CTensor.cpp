@@ -24,26 +24,32 @@ public:
 template<typename T> class CTensor : public CPlaceTensor {
 
 public://ITensor
+    template<typename TType> ObjectWithPtr<CPlaceTensor> createTensor() {
+        ObjectWithPtr<CTensor<TType>> spObj = CObject::createObjectWithPtr<CTensor<TType>>();
+        ObjectWithPtr<CPlaceTensor> spRet = { spObj.pObject, spObj.spObject};
+        return spRet;
+    }
+    
     ObjectWithPtr<CPlaceTensor> createTensor(Data::DataType eElementType) {
         switch(eElementType) {
             case Data::DATATYPE_BOOL:
-                return CObject::createObjectWithPtr<CTensor<bool>, CPlaceTensor>();
+                return createTensor<bool>();
             case Data::DATATYPE_CHAR:
-                return CObject::createObjectWithPtr<CTensor<char>, CPlaceTensor>();
+                return createTensor<char>();
             case Data::DATATYPE_UCHAR:
-                return CObject::createObjectWithPtr<CTensor<unsigned char>, CPlaceTensor>();
+                return createTensor<unsigned char>();
             case Data::DATATYPE_SHORT:
-                return CObject::createObjectWithPtr<CTensor<short>, CPlaceTensor>();
+                return createTensor<short>();
             case Data::DATATYPE_INT:
-                return CObject::createObjectWithPtr<CTensor<int>, CPlaceTensor>();
+                return createTensor<int>();
             case Data::DATATYPE_LONG:
-                return CObject::createObjectWithPtr<CTensor<long>, CPlaceTensor>();
+                return createTensor<long>();
             case Data::DATATYPE_FLOAT:
-                return CObject::createObjectWithPtr<CTensor<float>, CPlaceTensor>();
+                return createTensor<float>();
             case Data::DATATYPE_DOUBLE:
-                return CObject::createObjectWithPtr<CTensor<double>, CPlaceTensor>();
+                return createTensor<double>();
             case Data::DATATYPE_OBJECT:
-                return CObject::createObjectWithPtr<CTensor<Object>, CPlaceTensor>();
+                return createTensor<Object>();
         }
         return ObjectWithPtr<CPlaceTensor>();
     }

@@ -8,20 +8,13 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvFrame)
 public:
-    enum AvFrameType {
-        AVFRAMETYPE_UNKNOWN = 0,
-        AVFRAMETYPE_VIDEO   = 1,
-        AVFRAMETYPE_AUDIO   = 2,
-        AVFRAMETYPE_SUBTITLE= 3
-    };
-
     enum AvFrameImageType {
-        AVFRAMEIMAGETYPE_RGB  = 1,
-        AVFRAMEIMAGETYPE_RGBA  = 2,
+        AVFRAMEIMAGETYPE_RGB  = 1,  //RGB24，注意不是什么RGB888，  后者在不同平台或者有不同顺序定义
+        AVFRAMEIMAGETYPE_RGBA  = 2, //RGB32，注意不是什么RGBA8888，后者在不同平台可能会有不同顺序定义
         //AVFRAMEIMAGETYPE_YUV420 = 3,
     };
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvFrame", 211206)
+    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvFrame", 211206)
 
         //
         // 获取帧数据类型

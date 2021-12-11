@@ -15,7 +15,7 @@ public:
         AVSTREAMTYPE_SUBTITLE= 3
     };
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IAvStreaming", 211206)
+    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvStreaming", 211206)
 
         //
         // 获取流数据类型

@@ -34,9 +34,9 @@ using namespace sw::math;
 
 int main(int argc, char *argv[]){
     
-
-    AvIn avIn = Object::createObject<AvIn>();
-    avIn->init("d:/tt.mkv");
+    //AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    
+    AvIn avIn = AvIn::openCapture("vfwcap");
+    AvOut avOut = AvOut::openWindow("Display Video", 640, 360);
     int nframeVideo = 0;
     int nframeAudio = 0;
     int nframeUnknown = 0;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
         switch(frame->getStreamingType()){ 
         case AvStreaming::AVSTREAMTYPE_VIDEO:
             {
-                Tensor image = frame->getVideoImage(AvFrame::AVFRAMEIMAGETYPE_RGB);
+                avOut->putFrame(frame);
                 nframeVideo++;
             }
             break;
@@ -69,7 +69,6 @@ int main(int argc, char *argv[]){
     if( tensor ) {
         std::cout << "Great\n";
     }
-    //tensor = Tensor::createVector()
 
     MyObject myObject = Object::createObject<MyObject>();
     if( myObject ) {

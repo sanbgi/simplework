@@ -35,9 +35,9 @@ class CLibrary : public CObject, ILibrary, IModule {
 
 public:
     int getSimpleWorkCompatibleVer() 
-        { return _spModule ? _spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
+        { return m_spModule ? m_spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
     int initModule(const char* szModuleKey, const Module& pCaller) 
-        { return _spModule ? _spModule->initModule(szModuleKey, pCaller) : Error::ERRORTYPE_SUCCESS; }
+        { return m_spModule ? m_spModule->initModule(szModuleKey, pCaller) : Error::ERRORTYPE_SUCCESS; }
     int registerFactory(const char* szClassKey, const Factory& pFactory) 
         { return Error::ERRORTYPE_FAILURE; }
     Object createObject(const char* szClassKey) 
@@ -51,7 +51,7 @@ public:
     
 private:
     void* _pDLL;
-    Module _spModule;
+    Module m_spModule;
 
 public:
     CLibrary() {
@@ -70,7 +70,7 @@ private:
         // 释放已经加载的模块
         //
         if( _pDLL != nullptr ) {
-            _spModule = Object();
+            m_spModule = Object();
             dlclose(_pDLL);
             _pDLL = nullptr;
         }
@@ -84,7 +84,7 @@ private:
             FUNCTION fun = (FUNCTION)dlsym(lib_dl,"getSimpleWork");
             if (fun)
             { 
-                _spModule = (*fun)();
+                m_spModule = (*fun)();
             }
             return Module::wrapPtr(this);
         }

@@ -11,7 +11,7 @@ __SimpleWork_Core_Namespace_Enter__
 SIMPLEWORK_INTERFACECLASS_ENTER0(Factory)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IFactory", 211202)
-        virtual Object createObject() = 0;
+        virtual Object createObject() const = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Factory)

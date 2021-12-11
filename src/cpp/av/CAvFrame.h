@@ -6,7 +6,6 @@ extern "C" {
     #include <libavformat/avformat.h>
     #include <libswscale/swscale.h>
     #include <libavutil/imgutils.h>
-    #include <SDL2/SDL.h>
 }
 
 using namespace sw::core;
@@ -32,7 +31,7 @@ public:
 
 public:
     AVFrame* m_pAvFrame;
-    AvFrame::AvFrameType m_eAvFrameType;
+    AvStreaming::AvStreamingType m_eAvFrameType;
     AvStreaming m_spAvStream;
     AVCodecContext* m_pCodecCtx;
     NamedMap m_mapCtx;

@@ -25,7 +25,7 @@ private:
     }
 
     Object createObject(const char* szClassKey) {
-        Factory spFactory = getRegisteredFactory(szClassKey);
+        const Factory& spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
             return Object();
         }
@@ -44,7 +44,7 @@ private:
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    Factory getRegisteredFactory(const char* szClassKey) {
+    const Factory& getRegisteredFactory(const char* szClassKey) {
         map<string, Factory>::iterator it = m_mapFactories.find(szClassKey);
         if(it != m_mapFactories.end() ) {
             return it->second;
@@ -59,7 +59,7 @@ private:
             //
             string strModuleKey = strClassKey.substr(0, iDotPos);
             if( m_mapSubModules.find(strModuleKey) != m_mapSubModules.end() ) {
-                return Factory();
+                return m_spNullfactory;
             }
 
             //
@@ -73,13 +73,13 @@ private:
                 //  这一句去掉，副作用是，可能会反复尝试加载无法加载的模块.
                 //
                 m_mapSubModules[strModuleKey] = Module();
-                return Factory();
+                return m_spNullfactory;
             }
 
             m_mapSubModules[strModuleKey] = spModule;
             if(spModule->getSimpleWorkCompatibleVer() < IModule::getInterfaceVer()) 
             {
-                return Factory();
+                return m_spNullfactory;
             }
 
             //
@@ -92,12 +92,13 @@ private:
                 return it->second;
             }
         }
-        return Factory();
+        return m_spNullfactory;
     }
 
 protected:
     map<string, Factory> m_mapFactories;
     map<string, Module> m_mapSubModules;
+    Factory m_spNullfactory;
 };
 
 //

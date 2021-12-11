@@ -63,38 +63,59 @@ public:
     template<typename TObject> static Object createObject(bool bSingleton=false) {
         return __CObjectImp<TObject>::createObjectWithPtr(bSingleton).spObject;
     }
-    template<typename TObject, typename TPointer=TObject> static ObjectWithPtr<TPointer> createObjectWithPtr(bool bSingleton=false) {
-        return __CObjectImp<TObject, TPointer>::createObjectWithPtr(bSingleton);
+    template<typename TObject> static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
+        return __CObjectImp<TObject>::createObjectWithPtr(bSingleton);
     }
 
     //
     // 创建工厂
     //
     template<typename TObject> static Object createFactory(bool bSingletonFactory=false) {
+        
+        class __CFactoryImp : public IFactory {
+            SIMPLEWORK_INTERFACE_ENTRY_ENTER0
+                SIMPLEWORK_INTERFACE_ENTRY(IFactory)
+            SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
+
+        public://IFactory
+            Object createObject() const {
+                return __CObjectImp<TObject>::createObjectWithPtr(false).spObject;
+            }
+        };
+
+        class __CSingletonFactoryImp : public IFactory {
+        SIMPLEWORK_INTERFACE_ENTRY_ENTER0
+            SIMPLEWORK_INTERFACE_ENTRY(IFactory)
+        SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
+
+        public://IFactory
+            Object createObject() const {
+                return __CObjectImp<TObject>::createObjectWithPtr(true).spObject;
+            }
+        };
+
         if(bSingletonFactory) {
-            return __CObjectImp<__CSingletonFactoryImp<TObject, CObject>>::createObjectWithPtr().spObject;
+            return __CObjectImp<__CSingletonFactoryImp>::createObjectWithPtr().spObject;
         }else{
-            return __CObjectImp<__CFactoryImp<TObject, CObject>>::createObjectWithPtr().spObject;
+            return __CObjectImp<__CFactoryImp>::createObjectWithPtr().spObject;
         }
     }
 
 private:
     struct __IObjectImp : public IObject {};
-    template<typename TObject, typename TPointer=TObject> class __CObjectImp : public TObject, public __IObjectImp {
+    template<typename TObject> class __CObjectImp : public TObject, public __IObjectImp {
         SIMPLEWORK_INTERFACE_ENTRY_ENTER(TObject)
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static ObjectWithPtr<TPointer> createObjectWithPtr(bool bSingleton=false) {
+        static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
             if(bSingleton) {
-                static ObjectWithPtr<TPointer> g_spObject = createObjectWithPtr(false);
+                static ObjectWithPtr<TObject> g_spObject = createObjectWithPtr(false);
                 return g_spObject;
             }
 
             __CObjectImp* pNewObj = new __CObjectImp();
-            ObjectWithPtr<TPointer> obj;
-            obj.pObject = pNewObj;
-            obj.spObject.setPtr((__IObjectImp*)pNewObj);
+            ObjectWithPtr<TObject> obj = {pNewObj, Object::wrapPtr((__IObjectImp*)pNewObj) };
             return obj;
         }
 
@@ -111,27 +132,6 @@ private:
             return nRefCnt;
         }
         int m_nRefCnt;
-    };
-
-    template<typename TObject, typename TSuperClass> class __CFactoryImp : public TSuperClass, public IFactory {
-        SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass)
-            SIMPLEWORK_INTERFACE_ENTRY(IFactory)
-        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass)
-
-    public://IFactory
-        Object createObject() {
-            return __CObjectImp<TObject>::createObjectWithPtr(false).spObject;
-        }
-    };
-    template<typename TObject, typename TSuperClass> class __CSingletonFactoryImp : public TSuperClass, public IFactory {
-        SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass)
-            SIMPLEWORK_INTERFACE_ENTRY(IFactory)
-        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass)
-
-    public://IFactory
-        Object createObject() {
-            return __CObjectImp<TObject>::createObjectWithPtr(true).spObject;
-        }
     };
 };
 

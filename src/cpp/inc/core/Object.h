@@ -30,7 +30,7 @@ public:
         return TModule::createFactory(szClassKey);
     }
     template<typename TObject, typename TFactory=Factory, typename TModule=Module> static Object createObject() {
-        static TFactory s_factory =  TModule::createFactory(TObject::getClassKey());
+        static TFactory s_factory = TModule::createFactory(TObject::getClassKey());
         return s_factory->createObject();
     }
     static const Object& getNullObject() {

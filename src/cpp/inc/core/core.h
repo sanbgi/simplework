@@ -168,14 +168,14 @@
 
 #ifdef SIMPLEWORK_WITHOUTAPI
     #include "__CModule.h"
-    #define SIMPLEWORK_MODULE_REGISTER(moduleKey) \
-    SIMPLEWORK_MODULE_EXPORT Module& getSimpleWork() { \
+    #define SIMPLEWORK_MODULE_REGISTER \
+    __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::Module& __getSimpleWork(int nCompatibleVer) { \
         static Module s_spModule = \
             SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::__CModule>(); \
         return s_spModule; \
     }
 #else//SIMPLEWORK_WITHOUTAPI
-    #define SIMPLEWORK_MODULE_REGISTER(moduleKey)
+    #define SIMPLEWORK_MODULE_REGISTER
 #endif//SIMPLEWORK_WITHOUTAPI
 
 #endif//__SimpleWork_Core_h__

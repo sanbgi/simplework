@@ -29,9 +29,9 @@ class CLibrary : public CObject, ILibrary, IModule {
 
 public:
     int getSimpleWorkCompatibleVer() 
-        { return _spModule ? _spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
+        { return m_spModule ? m_spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
     int initModule(const char* szModuleKey, const Module& pCaller) 
-        { return _spModule ? _spModule->initModule(szModuleKey, pCaller) : Error::ERRORTYPE_SUCCESS; }
+        { return m_spModule ? m_spModule->initModule(szModuleKey, pCaller) : Error::ERRORTYPE_SUCCESS; }
     int registerFactory(const char* szClassKey, const Factory& pFactory) 
         { return Error::ERRORTYPE_FAILURE; }
     Object createObject(const char* szClassKey) 
@@ -44,17 +44,17 @@ public:
     }
     
 private:
-    HMODULE _hDLL;
-    Module _spModule;
+    HMODULE m_hDLL;
+    Module m_spModule;
 
 public:
     CLibrary() {
-        _hDLL = NULL;
+        m_hDLL = NULL;
     }
     ~CLibrary() {
-        if( _hDLL != NULL ) {
-            FreeLibrary(_hDLL);
-            _hDLL = NULL;
+        if( m_hDLL != NULL ) {
+            FreeLibrary(m_hDLL);
+            m_hDLL = NULL;
         }
     }
 
@@ -63,23 +63,25 @@ private:
         //
         // 释放已经加载的模块
         //
-        if( _hDLL != NULL ) {
-            _spModule = Module();
-            FreeLibrary(_hDLL);
-            _hDLL = NULL;
+        if( m_hDLL != NULL ) {
+            m_spModule = Module();
+            FreeLibrary(m_hDLL);
+            m_hDLL = NULL;
         }
 
-        string strLibrary = "lib"+strModuleKey+".dll";
+        string strLibrary = "lib";
+        strLibrary += strModuleKey;
+        strLibrary += ".dll";
         HMODULE hDLL = LoadLibrary(strLibrary.c_str());
         if (hDLL)
         {
-            _hDLL = hDLL;
+            m_hDLL = hDLL;
 
-            typedef SIMPLEWORK_CORE_NAMESPACE::Module& (*FUNCTION)();
-            FUNCTION fun = (FUNCTION)GetProcAddress(hDLL, "getSimpleWork");
+            typedef SIMPLEWORK_CORE_NAMESPACE::Module& (*FUNCTION)(int);
+            FUNCTION fun = (FUNCTION)GetProcAddress(hDLL, "__getSimpleWork");
             if (fun)
             { 
-                _spModule = (*fun)();
+                m_spModule = (*fun)(IModule::getInterfaceVer());
             }
             return Module::wrapPtr(this);
         }

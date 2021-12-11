@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_IO_h__
 #define __SimpleWork_IO_h__
 
+#define SIMPLEWORK_WITHOUTAPI
+
 #include "../core/core.h"
 #include "../math/math.h"
 

@@ -15,7 +15,11 @@ __SimpleWork_Core_Namespace_Leave__
             #define __SimpleWork_API__ extern "C" 
         #endif
     #else//SIMPLEWORK_WITHOUTAPI
-        #define __SimpleWork_API__ extern "C" 
+        #if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
+            #define __SimpleWork_API__ extern "C" __declspec(dllexport)
+        #else
+            #define __SimpleWork_API__ extern "C" 
+        #endif
     #endif//SIMPLEWORK_WITHOUTAPI
 #endif//__SimpleWork_API__
 

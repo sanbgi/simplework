@@ -33,6 +33,7 @@ public:
             break;
 
         case AV_PIX_FMT_RGB24:
+        case AV_PIX_FMT_BGR24:
             m_nPixBytes = 3;
             break;
         
@@ -144,12 +145,12 @@ Tensor CAvFrame::getVideoImage(AvFrame::AvFrameImageType eType) {
     switch(eType) {
     case AvFrame::AVFRAMEIMAGETYPE_RGB:
         ePixFormat = AV_PIX_FMT_RGB24;
-        strPixFormatName = "AV_PIX_FMT_RGB";
+        strPixFormatName = "AVFRAMEIMAGETYPE_RGB";
         break;
 
     case AvFrame::AVFRAMEIMAGETYPE_RGBA:
         ePixFormat = AV_PIX_FMT_RGBA;
-        strPixFormatName = "AV_PIX_FMT_RGBA";
+        strPixFormatName = "AVFRAMEIMAGETYPE_RGBA";
         break;
 
     default:
@@ -178,7 +179,7 @@ void CAvFrame::attachAvFrame(AVFrame* pAvFrame) {
 
 CAvFrame::CAvFrame() {
     m_pAvFrame = nullptr;
-    m_eAvFrameType = AvFrame::AVFRAMETYPE_UNKNOWN;
+    m_eAvFrameType = AvStreaming::AVSTREAMTYPE_UNKNOWN;
 }
 
 CAvFrame::~CAvFrame() {
