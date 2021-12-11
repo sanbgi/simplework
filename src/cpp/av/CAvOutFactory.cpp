@@ -1,6 +1,7 @@
 
 #include "av.h"
-#include "CAvOut_SDLWindow.hpp"
+#include "CAvOut_SDLWindow.h"
+#include "CAvOut_SDLSpeaker.h"
 
 class CAvOutFactory : public CObject, public AvOut::IAvOutFactory{
 

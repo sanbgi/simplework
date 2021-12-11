@@ -1,6 +1,6 @@
 
 #include "av.h"
-#include "CAvIn_ffmpeg.hpp"
+#include "CAvIn_ffmpeg.h"
 
 class CAvInFactory : public CObject, public AvIn::IAvInFactory{
 
