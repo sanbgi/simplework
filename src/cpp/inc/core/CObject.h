@@ -52,12 +52,12 @@ public:
     //
     // 创建对象
     //
-    template<typename TObject> static TObject* createObject(Object& rObject, bool bSingleton=false) {
-        return __CObjectImp<TObject>::createObject(rObject, bSingleton);
+    template<typename TObject> static TObject* createObject(Object& rObject) {
+        return __CObjectImp<TObject>::__createObject(rObject);
     }
-    template<typename TObject> static Object createObject(bool bSingleton=false) {
+    template<typename TObject> static Object createObject() {
         Object spObject;
-        __CObjectImp<TObject>::createObject(spObject, bSingleton);
+        __CObjectImp<TObject>::__createObject(spObject);
         return spObject;
     }
 
@@ -73,7 +73,7 @@ public:
 
         public://IFactory
             int createObject(Object& rObject) const {
-                return __CObjectImp<TObject>::createObject(rObject, false) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+                return __CObjectImp<TObject>::__createObject(rObject) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
             }
         };
 
@@ -84,14 +84,17 @@ public:
 
         public://IFactory
             int createObject(Object& rObject) const {
-                return __CObjectImp<TObject>::createObject(rObject, true) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+                static Object g_spObject;
+                static TObject* g_pObject = __CObjectImp<TObject>::__createObject(g_spObject);
+                rObject = g_spObject;
+                return Error::ERRORTYPE_SUCCESS;
             }
         };
 
         if(bSingletonFactory) {
-            return __CObjectImp<__CSingletonFactoryImp>::createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+            return __CObjectImp<__CSingletonFactoryImp>::__createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
         }else{
-            return __CObjectImp<__CFactoryImp>::createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+            return __CObjectImp<__CFactoryImp>::__createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
         }
     }
     template<typename TObject> static Object createFactory(bool bSingleton=false) {
@@ -108,14 +111,7 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static TObject* createObject(Object& rObject, bool bSingleton=false) {
-            if(bSingleton) {
-                static Object g_spObject;
-                static TObject* g_pObject = createObject(g_spObject, false);
-                rObject = g_spObject;
-                return g_pObject;
-            }
-
+        static TObject* __createObject(Object& rObject) {
             __CObjectImp* pNewObj = new __CObjectImp();
             rObject.setPtr((__IObjectImp*)pNewObj);
             return pNewObj;
