@@ -38,7 +38,6 @@ int CAvFrame::createAvFrame(CFFMpegPointer<AVFrame>& rAvFrame, CAvStreaming* pSt
 
 CAvFrame::CAvFrame() {
     m_pAvFrame = nullptr;
-    m_eAvFrameType = AvFrame::AVSTREAMTYPE_UNKNOWN;
 }
 
 CAvFrame::~CAvFrame() {

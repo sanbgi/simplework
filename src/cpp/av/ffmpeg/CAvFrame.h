@@ -24,7 +24,6 @@ public:
 
 public:
     AVFrame* m_pAvFrame;
-    AvFrame::AvFrameType m_eAvFrameType;
     AvStreaming m_spAvStream;
     CAvStreaming* m_pStreaming;
 };
