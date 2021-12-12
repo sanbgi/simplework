@@ -16,6 +16,7 @@
 #include "Error.h"
 
 
+
 //
 //
 //  Part2. 核心接口定义，包括：
@@ -83,19 +84,14 @@
             const static inline char* getInterfaceKey() { return interfaceKey; }\
             static inline int getInterfaceVer() { return interfaceVer; }
 
-#define SIMPLEWORK_INTERFACE_ENTER0(interfaceKey, interfaceVer) \
-    public:\
-        struct IFace {\
-            const static inline char* getInterfaceKey() { return interfaceKey; }\
-            static inline int getInterfaceVer() { return interfaceVer; }
-
 #define SIMPLEWORK_INTERFACE_LEAVE\
         };\
 
 #include "__CPointer.h"
+#include "IObject.h"
+#include "Module.h"
 #include "Object.h"
 #include "Factory.h"
-#include "Module.h"
 #include "NamedMap.h"
 
 //
@@ -161,7 +157,7 @@
     public: \
         __C##className##Register() { \
             Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true); \
-            SIMPLEWORK_CORE_NAMESPACE::Module::getSimpleWork()->registerFactory(classKey, spFactory); \
+            __getSimpleWork(SIMPLEWORK_CORE_NAMESPACE::IModule::getInterfaceVer())->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 

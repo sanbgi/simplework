@@ -7,11 +7,11 @@
 FFMPEG_NAMESPACE_ENTER
 
 int CAvIn::getStreamingCount() {
-    return m_vecStreamings.size();
+    return m_vecAvStreamings.size();
 }
 
 AvStreaming CAvIn::getStreaming(int iStreamingIndex) {
-    return m_vecStreamings[iStreamingIndex].spObject;
+    return m_vecAvStreamings[iStreamingIndex];
 }
 
 int CAvIn::getWidth() {
@@ -27,7 +27,7 @@ int CAvIn::getFrame(AvFrame& frame) {
     // 如果上次流成功读取了数据，则还需要继续读取
     //
     if(m_pContinueReadingStreaming) {
-        CObject::ObjectWithPtr<CAvStreaming>* pStreaming = m_pContinueReadingStreaming;
+        CAvStreaming* pStreaming = m_pContinueReadingStreaming;
         m_pContinueReadingStreaming = nullptr;
         return receiveFrame(frame, pStreaming);
     }
@@ -62,11 +62,13 @@ int CAvIn::initVideoFile(const char* szFileName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
-        CObject::ObjectWithPtr<CAvStreaming> spStream = CObject::createObjectWithPtr<CAvStreaming>();
-        if( spStream.pObject->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+        Object spObject;
+        CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
+        if( pCAvStreaming->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
         }
-        m_vecStreamings.push_back(spStream);
+        m_vecCAvStreamings.push_back(pCAvStreaming);
+        m_vecAvStreamings.push_back(spObject);
     }
     return Error::ERRORTYPE_SUCCESS;
 }
@@ -103,20 +105,22 @@ int CAvIn::initVideoCapture(const char* szName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
-        CObject::ObjectWithPtr<CAvStreaming> spStream = CObject::createObjectWithPtr<CAvStreaming>();
-        if( spStream.pObject->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+        Object spObject;
+        CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
+        if( pCAvStreaming->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
         }
-        m_vecStreamings.push_back(spStream);
+        m_vecCAvStreamings.push_back(pCAvStreaming);
+        m_vecAvStreamings.push_back(spObject);
     }
     return Error::ERRORTYPE_SUCCESS;
 }
 
 int CAvIn::sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
 
-    CObject::ObjectWithPtr<CAvStreaming>* pStreaming = &m_vecStreamings[pPackage->stream_index];
+    CAvStreaming* pStreaming = m_vecCAvStreamings[pPackage->stream_index];
 
-    AVCodecContext* pCodecCtx = pStreaming->pObject->m_pCodecCtx;
+    AVCodecContext* pCodecCtx = pStreaming->m_pCodecCtx;
     int ret = avcodec_send_packet(pCodecCtx, pPackage);
 /*
 * @return 0 on success, otherwise negative error code:
@@ -151,8 +155,8 @@ int CAvIn::sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
     return receiveFrame(frame, pStreaming);
 }
 
-int CAvIn::receiveFrame(AvFrame& frame, CObject::ObjectWithPtr<CAvStreaming>* pStreaming) {
-    AVCodecContext* pCodecCtx = pStreaming->pObject->m_pCodecCtx;
+int CAvIn::receiveFrame(AvFrame& frame, CAvStreaming* pStreaming) {
+    AVCodecContext* pCodecCtx = pStreaming->m_pCodecCtx;
     CFFMpegPointer<AVFrame> avFrame(av_frame_alloc(), av_frame_free);
     int ret = avcodec_receive_frame(pCodecCtx, avFrame);
 /*
@@ -181,11 +185,12 @@ int CAvIn::receiveFrame(AvFrame& frame, CObject::ObjectWithPtr<CAvStreaming>* pS
         return Error::ERRORTYPE_FAILURE;
     }
 
-    CObject::ObjectWithPtr<CAvFrame> spAvFrame = CObject::createObjectWithPtr<CAvFrame>();
-    spAvFrame.pObject->m_pAvFrame = avFrame.detach();
-    spAvFrame.pObject->m_spAvStream = pStreaming->spObject;
-    spAvFrame.pObject->m_pStreaming = pStreaming->pObject;
-    frame.setPtr(spAvFrame.pObject);
+    Object spObject;
+    CAvFrame* pAvFrame = CObject::createObject<CAvFrame>(spObject);
+    pAvFrame->m_pAvFrame = avFrame.detach();
+    pAvFrame->m_spAvStream.setPtr((IAvStreaming*)pStreaming);
+    pAvFrame->m_pStreaming = pStreaming;
+    frame.setPtr(pAvFrame);
 
     //如果读取成功，则下次继续读取
     m_pContinueReadingStreaming = pStreaming;
@@ -196,7 +201,6 @@ CAvIn::CAvIn() {
     m_bOpenedFormatCtx = false;
     m_pFormatCtx = nullptr;
     m_pContinueReadingStreaming = nullptr;
-    m_mapCtx = NamedMap::createMap();
 }
 
 CAvIn::~CAvIn() {
@@ -204,7 +208,8 @@ CAvIn::~CAvIn() {
 }
 
 void CAvIn::release() {
-    m_vecStreamings.clear();
+    m_vecAvStreamings.clear();
+    m_vecCAvStreamings.clear();
     if(m_pFormatCtx) {
         if( m_bOpenedFormatCtx ) {
             avformat_close_input(&m_pFormatCtx);

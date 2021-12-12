@@ -39,6 +39,7 @@ public:
         {
             return Error::ERRORTYPE_FAILURE;
         }
+        SDL_PauseAudioDevice(m_iDeviceID, 0);
         return Error::ERRORTYPE_SUCCESS;
     }
 
@@ -48,8 +49,9 @@ public:
         }
 
         Tensor tensor = frame->getFrameAudioSamples( AvFrame::AVFRAMESAMPLETYPE_S16, m_specAudio.freq, m_specAudio.channels);
+        int ret = tensor->getDataSize();
         if( tensor ) {
-            SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
+            ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
         }
         return Error::ERRORTYPE_SUCCESS;
     }

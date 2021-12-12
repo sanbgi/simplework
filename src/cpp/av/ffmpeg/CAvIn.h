@@ -23,7 +23,7 @@ public:
     int initVideoFile(const char* szFileName);
     int initVideoCapture(const char* szName);
     int sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage);
-    int receiveFrame(AvFrame& frame, CObject::ObjectWithPtr<CAvStreaming>* pStreaming);
+    int receiveFrame(AvFrame& frame, CAvStreaming* pStreaming);
 
 public:
     CAvIn();
@@ -33,9 +33,9 @@ public:
 private:
     bool m_bOpenedFormatCtx;
     AVFormatContext* m_pFormatCtx;
-    CObject::ObjectWithPtr<CAvStreaming>* m_pContinueReadingStreaming;
-    std::vector<CObject::ObjectWithPtr<CAvStreaming>> m_vecStreamings;
-    NamedMap m_mapCtx;
+    CAvStreaming* m_pContinueReadingStreaming;
+    std::vector<CAvStreaming*> m_vecCAvStreamings;
+    std::vector<AvStreaming> m_vecAvStreamings;
 };
 
 FFMPEG_NAMESPACE_LEAVE

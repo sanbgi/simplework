@@ -69,12 +69,14 @@ int main(int argc, char *argv[]){
     }
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
 
+    /*
     MyObject myObject = Object::createObject<MyObject>();
     if( myObject ) {
         myObject.sayHi();
     }else {
         std::cout << "??？ What happen?";
     }
+    */
 
     return 0;
 }

@@ -135,54 +135,55 @@ class CTensorFactory : public CObject, Tensor::ITensorFactory {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://ITensor
-    template<typename TType> ObjectWithPtr<CPlaceTensor> createTensor() {
-        ObjectWithPtr<CTensor<TType>> spObj = CObject::createObjectWithPtr<CTensor<TType>>();
-        ObjectWithPtr<CPlaceTensor> spRet = { spObj.pObject, spObj.spObject};
-        return spRet;
+    template<typename TType> CPlaceTensor* createTensor(Object& rObject) {
+        CPlaceTensor* pTensor = CObject::createObject<CTensor<TType>>(rObject);
+        return pTensor;
     }
     
-    ObjectWithPtr<CPlaceTensor> createTensor(Data::DataType eElementType) {
+    CPlaceTensor* createTensor(Data::DataType eElementType, Object& rObject) {
         switch(eElementType) {
             case Data::DATATYPE_BOOL:
-                return createTensor<bool>();
+                return createTensor<bool>(rObject);
             case Data::DATATYPE_CHAR:
-                return createTensor<char>();
+                return createTensor<char>(rObject);
             case Data::DATATYPE_UCHAR:
-                return createTensor<unsigned char>();
+                return createTensor<unsigned char>(rObject);
             case Data::DATATYPE_SHORT:
-                return createTensor<short>();
+                return createTensor<short>(rObject);
             case Data::DATATYPE_INT:
-                return createTensor<int>();
+                return createTensor<int>(rObject);
             case Data::DATATYPE_LONG:
-                return createTensor<long>();
+                return createTensor<long>(rObject);
             case Data::DATATYPE_FLOAT:
-                return createTensor<float>();
+                return createTensor<float>(rObject);
             case Data::DATATYPE_DOUBLE:
-                return createTensor<double>();
+                return createTensor<double>(rObject);
             case Data::DATATYPE_OBJECT:
-                return createTensor<Object>();
+                return createTensor<Object>(rObject);
         }
-        return ObjectWithPtr<CPlaceTensor>();
+        return nullptr;
     }
 
     Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData) {
-        ObjectWithPtr<CPlaceTensor> spWrapTensor = createTensor(eElementType);
-        if(spWrapTensor.spObject) {
-            if( spWrapTensor.pObject->initVector(eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
-                return Tensor::wrapPtr((ITensor*)spWrapTensor.pObject);
+        Object spObject;
+        CPlaceTensor* pTensor = createTensor(eElementType, spObject);
+        if(pTensor) {
+            if( pTensor->initVector(eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
+                return Tensor::wrapPtr((ITensor*)pTensor);
             return Tensor();
         }
-        return spWrapTensor.spObject;
+        return Tensor();
     }
 
     Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData){
-        ObjectWithPtr<CPlaceTensor> spWrapTensor = createTensor(eElementType);
-        if(spWrapTensor.spObject) {
-            if( spWrapTensor.pObject->initTensor(spDimVector, eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
-                return Tensor::wrapPtr((ITensor*)spWrapTensor.pObject);
+        Object spObject;
+        CPlaceTensor* pTensor = createTensor(eElementType, spObject);
+        if(pTensor) {
+            if( pTensor->initTensor(spDimVector, eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
+                return Tensor::wrapPtr((ITensor*)pTensor);
             return Tensor();
         }
-        return spWrapTensor.spObject;
+        return Tensor();
     }
 };
 

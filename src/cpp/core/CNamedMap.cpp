@@ -24,7 +24,7 @@ private://INamedMap
         if(it != m_map.end()) {
             return it->second;
         }else{
-            return Object::getNullObject();
+            return Object();
         }
     }
 

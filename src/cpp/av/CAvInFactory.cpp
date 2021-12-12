@@ -10,19 +10,21 @@ class CAvInFactory : public CObject, public AvIn::IAvInFactory{
 
 public:
     AvIn openVideoFile(const char* szFileName) {
-        ObjectWithPtr<ffmpeg::CAvIn> wrapAvOut = CObject::createObjectWithPtr<ffmpeg::CAvIn>();
-        if( wrapAvOut.pObject->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
+        Object spAvIn;
+        ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
+        if( pAvIn->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
             return AvIn();
         }
-        return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
+        return AvIn::wrapPtr((IAvIn*)pAvIn);
     }
 
     AvIn openVideoCapture(const char* szName) {
-        ObjectWithPtr<ffmpeg::CAvIn> wrapAvOut = CObject::createObjectWithPtr<ffmpeg::CAvIn>();
-        if( wrapAvOut.pObject->initVideoCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
+        Object spAvIn;
+        ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
+        if( pAvIn->initVideoCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
             return AvIn();
         }
-        return AvIn::wrapPtr((IAvIn*)wrapAvOut.pObject);
+        return AvIn::wrapPtr((IAvIn*)pAvIn);
     }
 };
 SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvInFactory, AvIn::AvInFactory::getClassKey())

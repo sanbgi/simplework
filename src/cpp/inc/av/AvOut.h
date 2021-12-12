@@ -31,7 +31,7 @@ public:
 
 private:
     static AvOutFactory& getFactory() {
-        static AvOutFactory g_factory = Object::createObject(AvOutFactory::getClassKey());
+        static AvOutFactory g_factory = Object::createObject<AvOutFactory>();
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvOut)

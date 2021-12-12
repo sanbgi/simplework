@@ -35,7 +35,7 @@ public:
 
 private:
     static NamedMap& getFactory() {
-        static NamedMap g_factory = Object::createObject(NamedMap::getClassKey());
+        static NamedMap g_factory = Object::createObject<NamedMap>();
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(NamedMap)

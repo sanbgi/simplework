@@ -32,7 +32,7 @@ public:
 
 private:
     static AvInFactory& getFactory() {
-        static AvInFactory g_factory = Object::createObject(AvInFactory::getClassKey());
+        static AvInFactory g_factory = Object::createObject<AvInFactory>();
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvIn)

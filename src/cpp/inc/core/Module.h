@@ -1,11 +1,10 @@
 #ifndef __SimpleWork_IModule__h__
 #define __SimpleWork_IModule__h__
 
-#include "Object.h"
-
 __SimpleWork_Core_Namespace_Enter__
 class Module;
 __SimpleWork_Core_Namespace_Leave__
+
 
 #ifndef __SimpleWork_API__
     #ifndef SIMPLEWORK_WITHOUTAPI
@@ -38,7 +37,11 @@ __SimpleWork_Core_Namespace_Leave__
 //
 __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::Module& __getSimpleWork(int nCompatibleVer);
 
+
 __SimpleWork_Core_Namespace_Enter__
+
+class Object;
+class Factory;
 
 //
 // 模块对象
@@ -66,24 +69,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Module)
         // 根据类名和接口名，创建对象
         // @szClassKey 类名，类似: "sw.Vector", "sw.Video", "sw.Camera"
         //
-        virtual Object createObject(const char* szClassKey) = 0;
-
-        //
-        // 根据类名和接口名，创建工厂
-        // @szClassKey 类名，类似: "sw.Vector", "sw.Video", "sw.Camera"
-        //
-        virtual Object createFactory(const char* szClassKey) = 0;
+        virtual int createObject(const char* szClassKey, Object& rObject) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-
 public:
-    static inline Object createObject(const char* szClassKey) {
-        return __getSimpleWork(IFace::getInterfaceVer())->createObject(szClassKey);
-    }
-    static inline Object createFactory(const char* szClassKey) {
-        return __getSimpleWork(IFace::getInterfaceVer())->createFactory(szClassKey);
-    }
     static inline Module& getSimpleWork() {
         return __getSimpleWork(IFace::getInterfaceVer());
     }
@@ -91,5 +81,6 @@ public:
 SIMPLEWORK_INTERFACECLASS_LEAVE(Module)
 
 __SimpleWork_Core_Namespace_Leave__
+
 
 #endif//__SimpleWork_IModule__h__

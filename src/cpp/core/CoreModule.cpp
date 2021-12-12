@@ -24,20 +24,20 @@ private:
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    Object createObject(const char* szClassKey) {
+    int createObject(const char* szClassKey, Object& spObject) {
         const Factory& spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
-            return Object();
+            return Error::ERRORTYPE_FAILURE;
         }
-        return spFactory->createObject();
+        return spFactory->createObject(spObject);
     }
 
     //
     // 根据类名和接口名，创建工厂
     //
-    Object createFactory(const char* szClassKey) {
-        return getRegisteredFactory(szClassKey);
-    }
+    //Object createFactory(const char* szClassKey) {
+    //    return getRegisteredFactory(szClassKey);
+    //}
 
     int registerFactory(const char* szClassKey,  const Factory& pFactory) {
         m_mapFactories[szClassKey] = pFactory;

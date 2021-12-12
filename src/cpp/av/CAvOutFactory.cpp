@@ -11,19 +11,21 @@ class CAvOutFactory : public CObject, public AvOut::IAvOutFactory{
 
 public:
     AvOut openWindow(const char* szWindowName, int width, int height) {
-        ObjectWithPtr<CAvOut_SDLWindow> wrapAvOut = CObject::createObjectWithPtr<CAvOut_SDLWindow>();
-        if( wrapAvOut.pObject->initWindow(szWindowName, width, height) != Error::ERRORTYPE_SUCCESS ) {
+        Object spAvOut;
+        CAvOut_SDLWindow* pAvOut = CObject::createObject<CAvOut_SDLWindow>(spAvOut);
+        if( pAvOut->initWindow(szWindowName, width, height) != Error::ERRORTYPE_SUCCESS ) {
             return AvOut();
         }
-        return AvOut::wrapPtr((IAvOut*)wrapAvOut.pObject);
+        return AvOut::wrapPtr((IAvOut*)pAvOut);
     }
 
     AvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
-        ObjectWithPtr<CAvOut_SDLSpeaker> wrapAvOut = CObject::createObjectWithPtr<CAvOut_SDLSpeaker>();
-        if( wrapAvOut.pObject->initSpeaker(szName, sampleRate, nChannels) != Error::ERRORTYPE_SUCCESS ) {
+        Object spAvOut;
+        CAvOut_SDLSpeaker* pAvOut = CObject::createObject<CAvOut_SDLSpeaker>(spAvOut);
+        if( pAvOut->initSpeaker(szName, sampleRate, nChannels) != Error::ERRORTYPE_SUCCESS ) {
             return AvOut();
         }
-        return AvOut::wrapPtr((IAvOut*)wrapAvOut.pObject);
+        return AvOut::wrapPtr((IAvOut*)pAvOut);
     }
 };
 

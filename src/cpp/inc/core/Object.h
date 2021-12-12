@@ -3,9 +3,6 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
-class Module;
-class Factory;
-
 //
 // 对象接口基类，注意：
 //
@@ -14,28 +11,17 @@ class Factory;
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(Object)
 
-    SIMPLEWORK_INTERFACE_ENTER0("sw.IObject", 211202)
-    private:
-        virtual int __swAddRef() = 0;
-        virtual int __swDecRef() = 0;
-        virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, __FunPtrForceSaver funSaver) = 0;
-        template<typename T> friend class __CPointer;
-    SIMPLEWORK_INTERFACE_LEAVE
-
 public:
-    template<typename TModule=Module> static inline Object createObject(const char* szClassKey) {
-        return TModule::createObject(szClassKey);
+    typedef IObject IFace;
+
+    template<typename TObject> static inline Object createObject() {
+        Object spObject;
+        createObject(TObject::getClassKey(), spObject);
+        return spObject;
     }
-    template<typename TModule=Module> static inline Object createFactory(const char* szClassKey) {
-        return TModule::createFactory(szClassKey);
-    }
-    template<typename TObject, typename TFactory=Factory, typename TModule=Module> static Object createObject() {
-        static TFactory s_factory = TModule::createFactory(TObject::getClassKey());
-        return s_factory->createObject();
-    }
-    static const Object& getNullObject() {
-        static Object g_spNullObject;
-        return g_spNullObject;
+
+    static int createObject(const char* szClassKey, Object& rObject) {
+        return Module::getSimpleWork()->createObject(szClassKey, rObject);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Object)

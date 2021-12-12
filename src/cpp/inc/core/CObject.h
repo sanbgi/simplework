@@ -50,27 +50,21 @@ class CObject {
 
 public:
     //
-    // 带对象指针的数据结构，用于创建对象返回的数据可以带上对象指针
-    //
-    template<typename TObject> struct ObjectWithPtr {
-        TObject* pObject;
-        Object spObject;
-    };
-
-    //
     // 创建对象
     //
-    template<typename TObject> static Object createObject(bool bSingleton=false) {
-        return __CObjectImp<TObject>::createObjectWithPtr(bSingleton).spObject;
+    template<typename TObject> static TObject* createObject(Object& rObject, bool bSingleton=false) {
+        return __CObjectImp<TObject>::createObject(rObject, bSingleton);
     }
-    template<typename TObject> static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
-        return __CObjectImp<TObject>::createObjectWithPtr(bSingleton);
+    template<typename TObject> static Object createObject(bool bSingleton=false) {
+        Object spObject;
+        __CObjectImp<TObject>::createObject(spObject, bSingleton);
+        return spObject;
     }
 
     //
     // 创建工厂
     //
-    template<typename TObject> static Object createFactory(bool bSingletonFactory=false) {
+    template<typename TObject> static int createFactory(Object& rFactory, bool bSingletonFactory=false) {
         
         class __CFactoryImp : public IFactory {
             SIMPLEWORK_INTERFACE_ENTRY_ENTER0
@@ -78,8 +72,8 @@ public:
             SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
         public://IFactory
-            Object createObject() const {
-                return __CObjectImp<TObject>::createObjectWithPtr(false).spObject;
+            int createObject(Object& rObject) const {
+                return __CObjectImp<TObject>::createObject(rObject, false) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
             }
         };
 
@@ -89,17 +83,23 @@ public:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
         public://IFactory
-            Object createObject() const {
-                return __CObjectImp<TObject>::createObjectWithPtr(true).spObject;
+            int createObject(Object& rObject) const {
+                return __CObjectImp<TObject>::createObject(rObject, true) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
             }
         };
 
         if(bSingletonFactory) {
-            return __CObjectImp<__CSingletonFactoryImp>::createObjectWithPtr().spObject;
+            return __CObjectImp<__CSingletonFactoryImp>::createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
         }else{
-            return __CObjectImp<__CFactoryImp>::createObjectWithPtr().spObject;
+            return __CObjectImp<__CFactoryImp>::createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
         }
     }
+    template<typename TObject> static Object createFactory(bool bSingleton=false) {
+        Object spFactory;
+        createFactory<TObject>(spFactory, bSingleton);
+        return spFactory;
+    }
+
 
 private:
     struct __IObjectImp : public IObject {};
@@ -108,15 +108,17 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static ObjectWithPtr<TObject> createObjectWithPtr(bool bSingleton=false) {
+        static TObject* createObject(Object& rObject, bool bSingleton=false) {
             if(bSingleton) {
-                static ObjectWithPtr<TObject> g_spObject = createObjectWithPtr(false);
-                return g_spObject;
+                static Object g_spObject;
+                static TObject* g_pObject = createObject(g_spObject, false);
+                rObject = g_spObject;
+                return g_pObject;
             }
 
             __CObjectImp* pNewObj = new __CObjectImp();
-            ObjectWithPtr<TObject> obj = {pNewObj, Object::wrapPtr((__IObjectImp*)pNewObj) };
-            return obj;
+            rObject.setPtr((__IObjectImp*)pNewObj);
+            return pNewObj;
         }
 
     private:

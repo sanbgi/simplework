@@ -61,25 +61,15 @@ protected://IModule
     //
     // 根据对象实现类名，创建对象
     //
-    Object createObject(const char* szClassKey) {
+    int createObject(const char* szClassKey, Object& rObject) {
         if(m_spCoreApi) {
-            return m_spCoreApi->createObject(szClassKey);
+            return m_spCoreApi->createObject(szClassKey, rObject);
         }
         IFactory* pFactory = findFactory(szClassKey);
-        if( pFactory ) {
-            return pFactory->createObject();
+        if(pFactory == nullptr) {
+            return Error::ERRORTYPE_FAILURE;
         }
-        return Object();
-    }
-
-    //
-    // 根据对象实现类名，创建工厂
-    //
-    Object createFactory(const char* szClassKey) {
-        if(m_spCoreApi) {
-            return m_spCoreApi->createFactory(szClassKey);
-        }
-        return Factory::wrapPtr(findFactory(szClassKey));
+        return pFactory->createObject(rObject);
     }
 
     //
