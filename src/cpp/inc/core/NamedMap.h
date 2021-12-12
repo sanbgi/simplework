@@ -1,6 +1,7 @@
 #ifndef __SimpleWork_NamedMap__h__
 #define __SimpleWork_NamedMap__h__
 
+#include "core.h"
 #include "Object.h"
 
 __SimpleWork_Core_Namespace_Enter__

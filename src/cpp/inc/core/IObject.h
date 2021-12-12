@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_IObject_h__
 #define __SimpleWork_IObject_h__
 
+#include "core.h"
+
 __SimpleWork_Core_Namespace_Enter__
 
 struct IObject{

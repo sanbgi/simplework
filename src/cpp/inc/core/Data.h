@@ -2,6 +2,7 @@
 #define __SimpleWork_BasicType_h__
 
 #include <typeinfo>
+#include "core.h"
 
 __SimpleWork_Core_Namespace_Enter__
 

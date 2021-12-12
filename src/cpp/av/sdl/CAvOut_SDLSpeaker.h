@@ -1,10 +1,14 @@
 
-#include "av.h"
-#include <SDL2/SDL.h>
+#ifndef __SimpleWork_av_sdl_CAvOut_SDLSpeaker_h__
+#define __SimpleWork_av_sdl_CAvOut_SDLSpeaker_h__
+
+#include "av_sdl.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_AV_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
+
+SDL_NAMESPACE_ENTER
 
 class CAvOut_SDLSpeaker : public CObject, public IAvOut{
 
@@ -44,11 +48,12 @@ public:
     }
 
     int putFrame(const AvFrame& frame) {
-        if(frame->getFrameType() != AvFrame::AVSTREAMTYPE_AUDIO ) {
+        AudioFrame spAudioFrame = frame;
+        if(!spAudioFrame) {
             return Error::ERRORTYPE_FAILURE;
         }
 
-        Tensor tensor = frame->getFrameAudioSamples( AvFrame::AVFRAMESAMPLETYPE_S16, m_specAudio.freq, m_specAudio.channels);
+        Tensor tensor = spAudioFrame->getFrameAudioSamples(AudioFrame::AVFRAMESAMPLETYPE_S16, m_specAudio.freq, m_specAudio.channels);
         int ret = tensor->getDataSize();
         if( tensor ) {
             ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
@@ -75,3 +80,6 @@ private:
     SDL_AudioDeviceID m_iDeviceID;
     SDL_AudioSpec m_specAudio;
 };
+
+SDL_NAMESPACE_LEAVE
+#endif//__SimpleWork_av_sdl_CAvOut_SDLSpeaker_h__

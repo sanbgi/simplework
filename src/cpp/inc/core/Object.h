@@ -1,6 +1,10 @@
 #ifndef __SimpleWork_Object_h__
 #define __SimpleWork_Object_h__
 
+#include "core.h"
+#include "IObject.h"
+#include "Module.h"
+
 __SimpleWork_Core_Namespace_Enter__
 
 //

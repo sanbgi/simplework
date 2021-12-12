@@ -1,6 +1,7 @@
 #ifndef __SimpleWork_IFactory__h__
 #define __SimpleWork_IFactory__h__
 
+#include "core.h"
 #include "Object.h"
 
 __SimpleWork_Core_Namespace_Enter__

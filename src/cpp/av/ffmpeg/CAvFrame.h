@@ -15,11 +15,8 @@ public://IAvFrame
     AvFrame::AvFrameType getFrameType();
     AvStreaming& getStreaming();
 
-    Tensor getFrameVideoImage(AvFrame::AvFrameImageType eType);
-    Tensor getFrameAudioSamples(AvFrame::AvFrameSampleType eType, int nSampleRate, int nChannels);
-
 public:
-    void attachAvFrame(AVFrame* pAvFrame);
+    static int createAvFrame(CFFMpegPointer<AVFrame>& rAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame); 
 
 public:
     CAvFrame();

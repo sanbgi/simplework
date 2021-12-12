@@ -1,7 +1,8 @@
 
 #include "av_ffmpeg.h"
 #include "CAvIn.h"
-#include "CAvFrame.h"
+#include "CAudioFrame.h"
+#include "CVideoFrame.h"
 #include "CAvStreaming.h"
 
 FFMPEG_NAMESPACE_ENTER
@@ -185,16 +186,9 @@ int CAvIn::receiveFrame(AvFrame& frame, CAvStreaming* pStreaming) {
         return Error::ERRORTYPE_FAILURE;
     }
 
-    Object spObject;
-    CAvFrame* pAvFrame = CObject::createObject<CAvFrame>(spObject);
-    pAvFrame->m_pAvFrame = avFrame.detach();
-    pAvFrame->m_spAvStream.setPtr((IAvStreaming*)pStreaming);
-    pAvFrame->m_pStreaming = pStreaming;
-    frame.setPtr(pAvFrame);
-
     //如果读取成功，则下次继续读取
     m_pContinueReadingStreaming = pStreaming;
-    return Error::ERRORTYPE_SUCCESS;
+    return CAvFrame::createAvFrame(avFrame, pStreaming, frame);
 }
 
 CAvIn::CAvIn() {

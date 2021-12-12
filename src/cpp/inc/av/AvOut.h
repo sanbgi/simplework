@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_AV_AvOut_h__
 #define __SimpleWork_AV_AvOut_h__
 
+#include "av.h"
+
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
 //

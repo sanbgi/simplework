@@ -1,6 +1,9 @@
 #ifndef __SimpleWork_IModule__h__
 #define __SimpleWork_IModule__h__
 
+#include "core.h"
+#include "IObject.h"
+
 __SimpleWork_Core_Namespace_Enter__
 class Module;
 __SimpleWork_Core_Namespace_Leave__

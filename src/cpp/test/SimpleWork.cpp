@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    
     //AvIn avIn = AvIn::openVideoCapture("vfwcap");
     AvOut avVideoOut = AvOut::openWindow("Display Video", 640, 360);
-    AvOut avAudioOut = AvOut::openSpeaker(nullptr, 44000, 2);
+    AvOut avAudioOut = AvOut::openSpeaker(nullptr, 0, 0);
     int nframeVideo = 0;
     int nframeAudio = 0;
     int nframeUnknown = 0;
@@ -83,8 +83,6 @@ int main(int argc, char *argv[]){
 
 
 void say_hello(){
-
-
     /*
     TObject ppo;
     TObject ptr1, ptr0, ptrn(ptr1);

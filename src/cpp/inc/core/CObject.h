@@ -1,6 +1,10 @@
 #ifndef __SimpleWork_CObject__h__
 #define __SimpleWork_CObject__h__
 
+#include "core.h"
+#include "Object.h"
+#include "Factory.h"
+
 __SimpleWork_Core_Namespace_Enter__
 
 //

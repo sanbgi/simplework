@@ -20,7 +20,6 @@ CAvStreaming::~CAvStreaming() {
 void CAvStreaming::release() {
     releaseAudioCtx();
     releaseVideoCtx();
-
     if(m_pCodecCtx) {
         avcodec_free_context(&m_pCodecCtx);
         m_pCodecCtx = nullptr;
@@ -257,6 +256,9 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
     //  回值中的视频，一行的字节数不等于视频宽度*4(RGBA)，则这个时候视频数据有点难处
     //  理，只能暂时将返回图像的宽度扩大(有垃圾数据)或缩小(数据丢失）到返回的实际宽度。
     //  如果想调整为实际视频大小，则需要对每一行的数据做处理，性能太低。
+    //  
+    //  这个地方可以考虑优化，因为所有帧只需要一个统一的Dim即可，无需每次创建，前提是
+    //  width总是相同。
     //
     int width = m_pLinesizes[0]/m_nPixBytes;
     int dimsize[3] = { width, pAvFrame->height, m_nPixBytes };

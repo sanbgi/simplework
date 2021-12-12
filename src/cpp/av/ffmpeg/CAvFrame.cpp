@@ -1,5 +1,7 @@
 #include "CAvFrame.h"
 #include "CAvStreaming.h"
+#include "CAudioFrame.h"
+#include "CVideoFrame.h"
 
 FFMPEG_NAMESPACE_ENTER
 
@@ -11,46 +13,27 @@ AvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
 }
 
-Tensor CAvFrame::getFrameVideoImage(AvFrame::AvFrameImageType eType) {
-    AVPixelFormat ePixFormat;
-    switch(eType) {
-    case AvFrame::AVFRAMEIMAGETYPE_RGB:
-        ePixFormat = AV_PIX_FMT_RGB24;
+int CAvFrame::createAvFrame(CFFMpegPointer<AVFrame>& rAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame) {
+    Object spObject;
+    CAvFrame* pAvFrame;
+    switch(pStreaming->m_pCodecCtx->codec_type) {
+    case AVMEDIA_TYPE_VIDEO:
+        pAvFrame = CObject::createObject<CVideoFrame>(spObject);
         break;
 
-    case AvFrame::AVFRAMEIMAGETYPE_RGBA:
-        ePixFormat = AV_PIX_FMT_RGBA;
-        break;
-
-    default:
-        return Tensor();
-    }
-    return m_pStreaming->convertImage(m_pAvFrame, ePixFormat);
-}
-
-Tensor CAvFrame::getFrameAudioSamples(AvFrame::AvFrameSampleType eType, int sampleRate, int nChannels) {
-    AVSampleFormat eSampleFormat;
-    switch(eType) {
-    case AvFrame::AVFRAMESAMPLETYPE_U8:
-        eSampleFormat = AV_SAMPLE_FMT_U8;
-        break;
-
-    case AvFrame::AVFRAMESAMPLETYPE_S16:
-        eSampleFormat = AV_SAMPLE_FMT_S16;
+    case AVMEDIA_TYPE_AUDIO:
+        pAvFrame = CObject::createObject<CAudioFrame>(spObject);
         break;
 
     default:
-        return Tensor(); 
+        return Error::ERRORTYPE_FAILURE;
     }
-    return m_pStreaming->convertAudio(m_pAvFrame, eSampleFormat, sampleRate, nChannels);
-}
 
-void CAvFrame::attachAvFrame(AVFrame* pAvFrame) {
-    if(m_pAvFrame) {
-        av_frame_free(&m_pAvFrame);
-        m_pAvFrame = nullptr;
-    }
-    m_pAvFrame = pAvFrame;
+    pAvFrame->m_pAvFrame = rAvFrame.detach();
+    pAvFrame->m_spAvStream.setPtr((IAvStreaming*)pStreaming);
+    pAvFrame->m_pStreaming = pStreaming;
+    rFrame.setPtr(pAvFrame);
+    return Error::ERRORTYPE_SUCCESS;
 }
 
 CAvFrame::CAvFrame() {
@@ -59,7 +42,11 @@ CAvFrame::CAvFrame() {
 }
 
 CAvFrame::~CAvFrame() {
-    attachAvFrame(nullptr);
+    if(m_pAvFrame) {
+        av_frame_free(&m_pAvFrame);
+        m_pAvFrame = nullptr;
+    }
+
 }
 
 FFMPEG_NAMESPACE_LEAVE

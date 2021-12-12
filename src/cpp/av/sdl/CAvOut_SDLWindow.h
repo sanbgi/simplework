@@ -1,10 +1,13 @@
+#ifndef __SimpleWork_av_sdl_CAvOut_SDLWindow_h__
+#define __SimpleWork_av_sdl_CAvOut_SDLWindow_h__
 
-#include "av.h"
-#include <SDL2/SDL.h>
+#include "av_sdl.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_AV_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
+
+SDL_NAMESPACE_ENTER
 
 class CAvOut_SDLWindow : public CObject, public IAvOut{
 
@@ -36,12 +39,12 @@ public:
     }
 
     int putFrame(const AvFrame& frame) {
-        
-        if(frame->getFrameType() != AvFrame::AVSTREAMTYPE_VIDEO ) {
+        VideoFrame spVideoFrame = frame;
+        if(!spVideoFrame) {
             return Error::ERRORTYPE_FAILURE;
         }
 
-        Tensor spTensor = frame->getFrameVideoImage(AvFrame::AVFRAMEIMAGETYPE_RGB);
+        Tensor spTensor = spVideoFrame->getFrameVideoImage(VideoFrame::AVFRAMEIMAGETYPE_RGB);
         const Tensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
         int width = pDim[0];
@@ -50,24 +53,6 @@ public:
         int pitch = width*pDim[2];
 
         void *pixels = (void*)spTensor->getDataPtr<unsigned char>();
-        /* 
-        int rmask, gmask, bmask, amask;
-        rmask = 0xFF000000; gmask = 0x00FF0000; bmask = 0x0000FF00; amask = 0x000000FF;	// RGBA8888模式
-        //rmask = 0xFF000000; gmask = 0x00FF0000; bmask = 0x0000FF00; amask = 0x00000000;	// RGB8888模式
-        //创建一个RGB Surface
-
-        CAutoPointer<SDL_Surface> pTmpSurface(
-            SDL_CreateRGBSurfaceFrom(pixels, width, height, depth, pitch, rmask, gmask, bmask, amask), 
-            SDL_FreeSurface );
-        if (nullptr == pTmpSurface) {
-            return Error::ERRORTYPE_FAILURE;
-        }
-
-        //创建Texture
-        CAutoPointer<SDL_Texture> pTexture(SDL_CreateTextureFromSurface(pRenderer, pTmpSurface), SDL_DestroyTexture);
-        if (nullptr == pTexture) {
-            return Error::ERRORTYPE_FAILURE;
-        }*/
         SDL_Renderer* pRenderer = m_pRenderer;
         CAutoPointer<SDL_Texture> pTexture(SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height), SDL_DestroyTexture);
         if (nullptr == pTexture) {
@@ -121,3 +106,7 @@ private:
     int m_nWinWidth;
     int m_nWinHeight;
 };
+
+SDL_NAMESPACE_LEAVE
+
+#endif//__SimpleWork_av_sdl_CAvOut_SDLWindow_h__

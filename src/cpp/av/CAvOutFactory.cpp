@@ -1,7 +1,7 @@
 
 #include "av.h"
-#include "CAvOut_SDLWindow.h"
-#include "CAvOut_SDLSpeaker.h"
+#include "sdl/CAvOut_SDLWindow.h"
+#include "sdl/CAvOut_SDLSpeaker.h"
 
 class CAvOutFactory : public CObject, public AvOut::IAvOutFactory{
 
@@ -12,7 +12,7 @@ class CAvOutFactory : public CObject, public AvOut::IAvOutFactory{
 public:
     AvOut openWindow(const char* szWindowName, int width, int height) {
         Object spAvOut;
-        CAvOut_SDLWindow* pAvOut = CObject::createObject<CAvOut_SDLWindow>(spAvOut);
+        sdl::CAvOut_SDLWindow* pAvOut = CObject::createObject<sdl::CAvOut_SDLWindow>(spAvOut);
         if( pAvOut->initWindow(szWindowName, width, height) != Error::ERRORTYPE_SUCCESS ) {
             return AvOut();
         }
@@ -21,7 +21,7 @@ public:
 
     AvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
         Object spAvOut;
-        CAvOut_SDLSpeaker* pAvOut = CObject::createObject<CAvOut_SDLSpeaker>(spAvOut);
+        sdl::CAvOut_SDLSpeaker* pAvOut = CObject::createObject<sdl::CAvOut_SDLSpeaker>(spAvOut);
         if( pAvOut->initSpeaker(szName, sampleRate, nChannels) != Error::ERRORTYPE_SUCCESS ) {
             return AvOut();
         }

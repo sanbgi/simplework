@@ -4,6 +4,7 @@
 
 #include <map>
 #include <string>
+#include "core.h"
 
 __SimpleWork_Core_Namespace_Enter__
 

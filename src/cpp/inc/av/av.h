@@ -11,6 +11,8 @@
 #define SIMPLEWORK_AV_NAMESPACE_LEAVE }}
 
 #include "AvFrame.h"
+#include "VideoFrame.h"
+#include "AudioFrame.h"
 #include "AvStreaming.h"
 #include "AvIn.h"
 #include "AvOut.h"
