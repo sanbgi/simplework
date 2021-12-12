@@ -12,7 +12,6 @@ class CAvFrame : public CObject, public IAvFrame {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    AvFrame::AvFrameType getFrameType();
     AvStreaming& getStreaming();
 
 public:

@@ -5,10 +5,6 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-AvFrame::AvFrameType CAvFrame::getFrameType() {
-    return m_spAvStream->getFrameType();
-}
-
 AvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
 }
