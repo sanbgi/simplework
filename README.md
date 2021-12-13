@@ -25,7 +25,8 @@
 
     #include "SimpleWork.h" // 目前在src/cpp/inc目录中
     int main() {
-        Tensor tensor = SObject::createObject("sw.math.tensor");
+        int v = 10;
+        STensor tensor = STensor::createVector(1, &v);
         if( tensor ) {
             cout << "Great ! SimpleWork is fine!";
         }else {
@@ -44,7 +45,7 @@
     SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
     int main() {
-        Object myObject = SObject::createObject("TestSimpleWork.MyObject");
+        SObject myObject = SObject::createObject("TestSimpleWork.MyObject");
         if( myObject ) {
             std::cout << "Great ! I have created my first object!";
         }else {
@@ -74,7 +75,7 @@
     SIMPLEWORK_FACTORY_REGISTER(CMyObject, MyObject::getClassKey())
 
     int main() {
-        MyObject spMyObject = SObject::createObject(MyObject::getClassKey());
+        SMyObject spMyObject = SObject::createObject<SMyObject>());
         if( spMyObject ) {
             spMyObject->sayHi();
         }else {
