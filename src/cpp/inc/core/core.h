@@ -67,6 +67,9 @@
         inline operator bool() const {\
             return __autoPtr;\
         }\
+        inline void release() {\
+            __autoPtr.release();\
+        }\
     public:\
         static inline S##className wrapPtr(IFace* pPtr) {\
             S##className object;\

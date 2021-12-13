@@ -68,7 +68,7 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
 }
 
 void CAvStreaming::releaseAudioCtx() {
-    m_spSwrCtx.untake();
+    m_spSwrCtx.release();
 }
 
 STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels) {
@@ -178,7 +178,7 @@ void CAvStreaming::releaseVideoCtx() {
         m_pImagePointers[0] = nullptr;
     }
 
-    m_spSwsContext.untake();
+    m_spSwsContext.release();
 }
 
 STensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {

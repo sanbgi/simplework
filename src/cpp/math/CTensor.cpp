@@ -114,7 +114,7 @@ public:
         release();
     }
     void release() {
-        m_spElementData.untake();
+        m_spElementData.release();
         m_nElementSize = 0;
     }
 

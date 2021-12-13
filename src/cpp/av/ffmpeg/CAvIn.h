@@ -33,8 +33,8 @@ public:
     void release();
 
 private:
-    bool m_bOpenedFormatCtx;
     CTaker<AVFormatContext*> m_spFormatCtx;
+    CTaker<AVFormatContext*> m_spOpenedCtx;
     CAvStreaming* m_pContinueReadingStreaming;
     std::vector<CAvStreaming*> m_vecCAvStreamings;
     std::vector<SAvStreaming> m_vecAvStreamings;

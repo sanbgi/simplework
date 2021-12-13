@@ -4,6 +4,7 @@
 
 #include <string>
 #include "windows.h"
+#include "core.h"
 using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
@@ -51,8 +52,8 @@ private:
         //
         // 释放已经加载的模块
         //
-        m_sModule.untake();
-        m_spModule.setPtr(nullptr);
+        m_sModule.release();
+        m_spModule.release();
 
         string strLibrary = "lib" + strModuleKey + ".dll";
         CTaker<HMODULE> sModule(LoadLibrary(strLibrary.c_str()), [](HMODULE hModule){FreeLibrary(hModule);});

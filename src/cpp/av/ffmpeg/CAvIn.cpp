@@ -44,7 +44,7 @@ int CAvIn::getFrame(SAvFrame& frame) {
 
     CTaker<AVPacket*> spPacket( av_packet_alloc(),
                                 [](AVPacket* pPtr){av_packet_free(&pPtr);});
-    if(av_read_frame(m_spFormatCtx, spPacket)>=0) {
+    if(av_read_frame(m_spOpenedCtx, spPacket)>=0) {
         return sendPackageAndReceiveFrame(frame, spPacket);
     }
 
@@ -62,20 +62,20 @@ int CAvIn::initVideoFile(const char* szFileName) {
         release();
         return Error::ERRORTYPE_FAILURE;
     }
-    m_bOpenedFormatCtx = true;
+    m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
     // 查找视频流中的具体流信息
-    if(avformat_find_stream_info(m_spFormatCtx,NULL)<0){
+    if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
         return Error::ERRORTYPE_FAILURE; 
     }
 
     // 初始化所有流参数
-    for(int i=0; i<m_spFormatCtx->nb_streams; i++) {
+    for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         SObject spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_spFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
         }
         m_vecCAvStreamings.push_back(pCAvStreaming);
@@ -130,20 +130,20 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
         release();
         return Error::ERRORTYPE_FAILURE;
     }
-    m_bOpenedFormatCtx = true;
+    m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
     // 查找视频流中的具体流信息
-    if(avformat_find_stream_info(m_spFormatCtx,NULL)<0){
+    if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
         return Error::ERRORTYPE_FAILURE; 
     }
 
     // 初始化所有流参数
-    for(int i=0; i<m_spFormatCtx->nb_streams; i++) {
+    for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         SObject spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_spFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
         }
         m_vecCAvStreamings.push_back(pCAvStreaming);
@@ -227,7 +227,6 @@ int CAvIn::receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming) {
 }
 
 CAvIn::CAvIn() {
-    m_bOpenedFormatCtx = false;
     m_pContinueReadingStreaming = nullptr;
 }
 
@@ -238,9 +237,8 @@ CAvIn::~CAvIn() {
 void CAvIn::release() {
     m_vecAvStreamings.clear();
     m_vecCAvStreamings.clear();
-    if( m_bOpenedFormatCtx ) {
-        avformat_close_input(&m_spFormatCtx);
-    }
+    m_spOpenedCtx.release();
+    m_spFormatCtx.release();
 }
 
 FFMPEG_NAMESPACE_LEAVE

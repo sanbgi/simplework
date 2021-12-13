@@ -36,12 +36,22 @@ public:
         rRes.m_fUnTake = nullptr;
     }
     void take(T hRes, FUnTake fUnTake) {
-        untake();
+        release();
         m_hRes = hRes;
         m_fUnTake = fUnTake;
     }
-    void untake() {
-        release();
+    T untake() {
+        T ret = m_hRes;
+        m_hRes = nullptr;
+        m_fUnTake = nullptr;
+        return ret;
+    }
+    void release() {
+        if(m_fUnTake && m_hRes != nullptr) {
+            (*m_fUnTake)(m_hRes);
+            m_fUnTake = nullptr;
+            m_hRes = nullptr;
+        }
     }
 
 private:
@@ -68,15 +78,6 @@ public:
     }
     operator bool() {
         return m_hRes != nullptr;
-    }
-
-private:
-    void release() {
-        if(m_fUnTake && m_hRes != nullptr) {
-            (*m_fUnTake)(m_hRes);
-            m_fUnTake = nullptr;
-            m_hRes = nullptr;
-        }
     }
 
 private:

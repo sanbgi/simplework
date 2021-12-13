@@ -64,6 +64,9 @@ public:
     inline operator TInterface*() const {
         return m_ptr;
     }
+    inline void release() {
+        releasePtr();
+    }
 
 //
 // 

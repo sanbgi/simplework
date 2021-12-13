@@ -47,9 +47,9 @@ int main(int argc, char *argv[]){
     }
 
 
-    //SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");    
+    SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");    
     //SAvIn avIn = SAvIn::openVideoDevice("vfwcap");
-    SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
+    //SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
     //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
     SAvOut avVideoOut = SAvOut::openWindow("Display Video", 640, 360);
     SAvOut avAudioOut = SAvOut::openSpeaker(nullptr, 44100, 2);
