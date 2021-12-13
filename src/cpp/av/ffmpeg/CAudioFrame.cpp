@@ -21,7 +21,7 @@ Tensor CAudioFrame::getFrameAudioSamples(AudioFrame::AvFrameSampleType eType, in
     default:
         return Tensor(); 
     }
-    return m_pStreaming->convertAudio(m_pAvFrame, eSampleFormat, sampleRate, nChannels);
+    return m_pStreaming->convertAudio(m_spAvFrame, eSampleFormat, sampleRate, nChannels);
 }
 
 FFMPEG_NAMESPACE_LEAVE

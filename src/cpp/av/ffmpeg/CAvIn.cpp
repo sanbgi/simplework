@@ -33,9 +33,10 @@ int CAvIn::getFrame(AvFrame& frame) {
         return receiveFrame(frame, pStreaming);
     }
 
-    CFFMpegPointer<AVPacket> avPacket(av_packet_alloc(), av_packet_free);
-    if(av_read_frame(m_pFormatCtx, avPacket)>=0) {
-        return sendPackageAndReceiveFrame(frame, avPacket);
+    CTaker<AVPacket*> spPacket( av_packet_alloc(),
+                                [](AVPacket* pPtr){av_packet_free(&pPtr);});
+    if(av_read_frame(m_spFormatCtx, spPacket)>=0) {
+        return sendPackageAndReceiveFrame(frame, spPacket);
     }
 
     return Error::ERRORTYPE_FAILURE;
@@ -46,8 +47,8 @@ int CAvIn::initVideoFile(const char* szFileName) {
     release();
 
     // 打开视频流
-    m_pFormatCtx = avformat_alloc_context();
-    if(avformat_open_input(&m_pFormatCtx,szFileName,NULL,NULL)!=0){
+    m_spFormatCtx.take(avformat_alloc_context(), [](AVFormatContext* pCtx){avformat_free_context(pCtx);});
+    if(avformat_open_input(&m_spFormatCtx,szFileName,NULL,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
         return Error::ERRORTYPE_FAILURE;
@@ -55,17 +56,17 @@ int CAvIn::initVideoFile(const char* szFileName) {
     m_bOpenedFormatCtx = true;
 
     // 查找视频流中的具体流信息
-    if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
+    if(avformat_find_stream_info(m_spFormatCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
         return Error::ERRORTYPE_FAILURE; 
     }
 
     // 初始化所有流参数
-    for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
+    for(int i=0; i<m_spFormatCtx->nb_streams; i++) {
         Object spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+        if( pCAvStreaming->init(m_spFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
         }
         m_vecCAvStreamings.push_back(pCAvStreaming);
@@ -89,8 +90,8 @@ int CAvIn::initVideoCapture(const char* szName) {
     }
 
     // 打开视频流
-    m_pFormatCtx = avformat_alloc_context();
-    if(avformat_open_input(&m_pFormatCtx,0,ifmt,NULL)!=0){
+    m_spFormatCtx.take(avformat_alloc_context(), [](AVFormatContext* pCtx){avformat_free_context(pCtx);});
+    if(avformat_open_input(&m_spFormatCtx,0,ifmt,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
         return Error::ERRORTYPE_FAILURE;
@@ -98,17 +99,17 @@ int CAvIn::initVideoCapture(const char* szName) {
     m_bOpenedFormatCtx = true;
 
     // 查找视频流中的具体流信息
-    if(avformat_find_stream_info(m_pFormatCtx,NULL)<0){
+    if(avformat_find_stream_info(m_spFormatCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
         return Error::ERRORTYPE_FAILURE; 
     }
 
     // 初始化所有流参数
-    for(int i=0; i<m_pFormatCtx->nb_streams; i++) {
+    for(int i=0; i<m_spFormatCtx->nb_streams; i++) {
         Object spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_pFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
+        if( pCAvStreaming->init(m_spFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
         }
         m_vecCAvStreamings.push_back(pCAvStreaming);
@@ -121,7 +122,7 @@ int CAvIn::sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
 
     CAvStreaming* pStreaming = m_vecCAvStreamings[pPackage->stream_index];
 
-    AVCodecContext* pCodecCtx = pStreaming->m_pCodecCtx;
+    AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
     int ret = avcodec_send_packet(pCodecCtx, pPackage);
 /*
 * @return 0 on success, otherwise negative error code:
@@ -157,8 +158,8 @@ int CAvIn::sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
 }
 
 int CAvIn::receiveFrame(AvFrame& frame, CAvStreaming* pStreaming) {
-    AVCodecContext* pCodecCtx = pStreaming->m_pCodecCtx;
-    CFFMpegPointer<AVFrame> avFrame(av_frame_alloc(), av_frame_free);
+    AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
+    CTaker<AVFrame*> avFrame(av_frame_alloc(), [](AVFrame* pFrame){av_frame_free(&pFrame);});
     int ret = avcodec_receive_frame(pCodecCtx, avFrame);
 /*
 *      0:                 success, a frame was returned
@@ -193,7 +194,6 @@ int CAvIn::receiveFrame(AvFrame& frame, CAvStreaming* pStreaming) {
 
 CAvIn::CAvIn() {
     m_bOpenedFormatCtx = false;
-    m_pFormatCtx = nullptr;
     m_pContinueReadingStreaming = nullptr;
 }
 
@@ -204,13 +204,8 @@ CAvIn::~CAvIn() {
 void CAvIn::release() {
     m_vecAvStreamings.clear();
     m_vecCAvStreamings.clear();
-    if(m_pFormatCtx) {
-        if( m_bOpenedFormatCtx ) {
-            avformat_close_input(&m_pFormatCtx);
-        }else{
-            avformat_free_context(m_pFormatCtx);
-        }
-            m_pFormatCtx = nullptr;
+    if( m_bOpenedFormatCtx ) {
+        avformat_close_input(&m_spFormatCtx);
     }
 }
 

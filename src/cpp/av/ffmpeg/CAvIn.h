@@ -32,7 +32,7 @@ public:
 
 private:
     bool m_bOpenedFormatCtx;
-    AVFormatContext* m_pFormatCtx;
+    CTaker<AVFormatContext*> m_spFormatCtx;
     CAvStreaming* m_pContinueReadingStreaming;
     std::vector<CAvStreaming*> m_vecCAvStreamings;
     std::vector<AvStreaming> m_vecAvStreamings;

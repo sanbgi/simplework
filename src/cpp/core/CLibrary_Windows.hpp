@@ -42,45 +42,29 @@ public:
     }
     
 private:
-    HMODULE m_hDLL;
+    CTaker<HMODULE> m_sModule;
+    //HMODULE m_hDLL;
     Module m_spModule;
-
-public:
-    CLibrary() {
-        m_hDLL = NULL;
-    }
-    ~CLibrary() {
-        if( m_hDLL != NULL ) {
-            FreeLibrary(m_hDLL);
-            m_hDLL = NULL;
-        }
-    }
 
 private:
     Module loadLibraryModule(string strModuleKey) {
         //
         // 释放已经加载的模块
         //
-        if( m_hDLL != NULL ) {
-            m_spModule = Module();
-            FreeLibrary(m_hDLL);
-            m_hDLL = NULL;
-        }
+        m_sModule.untake();
+        m_spModule.setPtr(nullptr);
 
-        string strLibrary = "lib";
-        strLibrary += strModuleKey;
-        strLibrary += ".dll";
-        HMODULE hDLL = LoadLibrary(strLibrary.c_str());
-        if (hDLL)
+        string strLibrary = "lib" + strModuleKey + ".dll";
+        CTaker<HMODULE> sModule(LoadLibrary(strLibrary.c_str()), [](HMODULE hModule){FreeLibrary(hModule);});
+        if (sModule)
         {
-            m_hDLL = hDLL;
-
             typedef SIMPLEWORK_CORE_NAMESPACE::Module& (*FUNCTION)(int);
-            FUNCTION fun = (FUNCTION)GetProcAddress(hDLL, "__getSimpleWork");
+            FUNCTION fun = (FUNCTION)GetProcAddress(sModule, "__getSimpleWork");
             if (fun)
             { 
                 m_spModule = (*fun)(IModule::getInterfaceVer());
             }
+            m_sModule.take(sModule);
             return Module::wrapPtr(this);
         }
 

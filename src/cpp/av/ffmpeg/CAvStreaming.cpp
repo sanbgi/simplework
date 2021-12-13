@@ -5,11 +5,8 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvStreaming::CAvStreaming() {
     m_eAvStreamingType = AvFrame::AVSTREAMTYPE_UNKNOWN;
-    m_pCodecCtx = nullptr;
     m_iStreamingIndex = -1;
 
-    m_pSwrCtx = nullptr;
-    m_pSwsContext = nullptr;
     m_pImagePointers[0] = nullptr;
 }
 
@@ -20,15 +17,11 @@ CAvStreaming::~CAvStreaming() {
 void CAvStreaming::release() {
     releaseAudioCtx();
     releaseVideoCtx();
-    if(m_pCodecCtx) {
-        avcodec_free_context(&m_pCodecCtx);
-        m_pCodecCtx = nullptr;
-    }
 }
 
 AvFrame::AvFrameType CAvStreaming::getFrameType() {
-    if(m_pCodecCtx) {
-        switch (m_pCodecCtx->codec_type)
+    if(m_spCodecCtx) {
+        switch (m_spCodecCtx->codec_type)
         {
         case AVMEDIA_TYPE_VIDEO:
             return AvFrame::AVSTREAMTYPE_VIDEO;
@@ -50,7 +43,10 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         return Error::ERRORTYPE_FAILURE;
     }
 
-    CFFMpegPointer<AVCodecContext> pCodecCtx(avcodec_alloc_context3(nullptr), avcodec_free_context);
+    CTaker<AVCodecContext*> pCodecCtx(  avcodec_alloc_context3(nullptr), 
+                                        [](AVCodecContext* pCtx){
+                                            avcodec_free_context(&pCtx);
+                                        });
     if( avcodec_parameters_to_context(pCodecCtx, pCodecParameter) < 0 ) {
         return Error::ERRORTYPE_FAILURE;
     }
@@ -66,16 +62,13 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         return Error::ERRORTYPE_FAILURE;
     }
 
-    m_pCodecCtx = pCodecCtx.detach();
+    m_spCodecCtx.take(pCodecCtx);
     m_iStreamingIndex = iStreamingIndex;
     return Error::ERRORTYPE_SUCCESS;
 }
 
 void CAvStreaming::releaseAudioCtx() {
-    if( m_pSwrCtx ) {
-        swr_free(&m_pSwrCtx);
-        m_pSwrCtx = nullptr;
-    }
+    m_spSwrCtx.untake();
 }
 
 Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels) {
@@ -100,7 +93,7 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
         return Tensor::createVector(nFrameSize, (unsigned char*)pAvFrame->data[0]);
     }
 
-    if( m_pSwrCtx != nullptr ) {
+    if( m_spSwrCtx ) {
         if( nSampleRate != m_nCtxSampleRate || 
             nChannels != m_nCtxChannels ||
             eSampleFormat != m_eCtxSampleFormat ) {
@@ -108,8 +101,8 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
         }
     }
 
-    if( nullptr == m_pSwrCtx  ) {
-        m_pSwrCtx = swr_alloc_set_opts(
+    if( !m_spSwrCtx  ) {
+        m_spSwrCtx.take(swr_alloc_set_opts(
                                     NULL,
                                     nChannelLayout, 
                                     eSampleFormat, 
@@ -118,12 +111,13 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
                                     (AVSampleFormat)pAvFrame->format, 
                                     pAvFrame->sample_rate,
                                     0,
-                                    NULL);
-        if( !m_pSwrCtx ) {
+                                    NULL),
+                        [](SwrContext* pCtx){swr_free(&pCtx);});
+        if( !m_spSwrCtx ) {
             return Tensor();
         }
 
-        if( swr_init(m_pSwrCtx) < 0 ) {
+        if( swr_init(m_spSwrCtx) < 0 ) {
             releaseAudioCtx();
             return Tensor();
         }
@@ -158,7 +152,7 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
     int in_count = pAvFrame->nb_samples;
 
     // 音频重采样：返回值是重采样后得到的音频数据中单个声道的样本数
-    int nb_samples = swr_convert(m_pSwrCtx, out, out_count, in, pAvFrame->nb_samples);
+    int nb_samples = swr_convert(m_spSwrCtx, out, out_count, in, pAvFrame->nb_samples);
     if (nb_samples < 0) {
         printf("swr_convert() failed\n");
         releaseAudioCtx();
@@ -182,19 +176,16 @@ void CAvStreaming::releaseVideoCtx() {
         m_pImagePointers[0] = nullptr;
     }
 
-    if(m_pSwsContext) {
-        sws_freeContext(m_pSwsContext);
-        m_pSwsContext = nullptr;
-    }
+    m_spSwsContext.untake();
 }
 
 Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
     //如果上次用的像素格式与这次不同，则释放上次的转化器，重新创建
-    if( m_pSwsContext && m_ePixFormat != ePixFormat ) {
+    if( m_spSwsContext && m_ePixFormat != ePixFormat ) {
         releaseVideoCtx();
     }
     
-    if( !m_pSwsContext ) {
+    if( !m_spSwsContext ) {
         
         switch(ePixFormat) {
         case AV_PIX_FMT_RGBA:
@@ -210,11 +201,12 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
             return Tensor();
         }
 
-        m_pSwsContext = sws_getContext(
+        //
+        SwsContext* pSwsContext = sws_getContext(
             //源图像的 宽 , 高 , 图像像素格式
-            m_pCodecCtx->width, m_pCodecCtx->height, m_pCodecCtx->pix_fmt,
+            m_spCodecCtx->width, m_spCodecCtx->height, m_spCodecCtx->pix_fmt,
             //目标图像 大小不变 , 不进行缩放操作 , 只将像素格式设置成 RGBA 格式的
-            m_pCodecCtx->width, m_pCodecCtx->height, ePixFormat,
+            m_spCodecCtx->width, m_spCodecCtx->height, ePixFormat,
             //使用的转换算法 , FFMPEG 提供了许多转换算法 , 有快速的 , 有高质量的 , 需要自己测试
             SWS_BILINEAR,
             //源图像滤镜 , 这里传 NULL 即可
@@ -224,12 +216,13 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
             //额外参数 , 这里传 NULL 即可
             0
         );
-        if(m_pSwsContext == nullptr) {
+        if(pSwsContext == nullptr) {
             return Tensor();
         }
 
+        m_spSwsContext.take(pSwsContext, sws_freeContext);
         if( av_image_alloc(m_pImagePointers, m_pLinesizes,
-            m_pCodecCtx->width, m_pCodecCtx->height, ePixFormat, 1) < 0 ){
+            m_spCodecCtx->width, m_spCodecCtx->height, ePixFormat, 1) < 0 ){
             releaseVideoCtx();
             return Tensor();
         }
@@ -238,7 +231,7 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
 
     sws_scale(
         //SwsContext *swsContext 转换上下文
-        m_pSwsContext,
+        m_spSwsContext,
         //要转换的数据内容
         pAvFrame->data,
         //数据中每行的字节长度

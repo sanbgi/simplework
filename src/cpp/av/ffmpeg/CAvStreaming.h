@@ -30,18 +30,18 @@ public:
 
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
-    AVCodecContext* m_pCodecCtx;
+    CTaker<AVCodecContext*> m_spCodecCtx;
     AvFrame::AvFrameType m_eAvStreamingType;
     int m_iStreamingIndex;
 
 public://Audio
-    SwrContext* m_pSwrCtx;
+    CTaker<SwrContext*> m_spSwrCtx;
     int m_nCtxSampleRate;
     int64_t m_nCtxChannels;
     AVSampleFormat m_eCtxSampleFormat;
 
 public://Video
-    SwsContext* m_pSwsContext;
+    CTaker<SwsContext*> m_spSwsContext;
     AVPixelFormat m_ePixFormat;
     uint8_t *m_pImagePointers[4];
     int m_pLinesizes[4];

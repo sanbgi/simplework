@@ -54,8 +54,12 @@ public:
 
         void *pixels = (void*)spTensor->getDataPtr<unsigned char>();
         SDL_Renderer* pRenderer = m_pRenderer;
-        CAutoPointer<SDL_Texture> pTexture(SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height), SDL_DestroyTexture);
-        if (nullptr == pTexture) {
+        CTaker<SDL_Texture*> spTexture(
+                                SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height),
+                                SDL_DestroyTexture
+                            );
+        //CAutoPointer<SDL_Texture> pTexture(SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height), SDL_DestroyTexture);
+        if (!spTexture) {
             return Error::ERRORTYPE_FAILURE;
         }
 
@@ -67,12 +71,12 @@ public:
         dstRect.w = m_nWinWidth;
         dstRect.h = m_nWinHeight;
 
-        SDL_UpdateTexture(pTexture, &srcRect, pixels, pitch);
+        SDL_UpdateTexture(spTexture, &srcRect, pixels, pitch);
 
         //清除Renderer
         SDL_RenderClear(pRenderer);
         //Texture复制到Renderer
-        SDL_RenderCopy(pRenderer, pTexture, &srcRect, &dstRect);
+        SDL_RenderCopy(pRenderer, spTexture, &srcRect, &dstRect);
         //更新Renderer显示
         SDL_RenderPresent(pRenderer);
         

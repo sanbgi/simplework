@@ -9,10 +9,10 @@ AvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
 }
 
-int CAvFrame::createAvFrame(CFFMpegPointer<AVFrame>& rAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame) {
+int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame) {
     Object spObject;
     CAvFrame* pAvFrame;
-    switch(pStreaming->m_pCodecCtx->codec_type) {
+    switch(pStreaming->m_spCodecCtx->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         pAvFrame = CObject::createObject<CVideoFrame>(spObject);
         break;
@@ -25,13 +25,14 @@ int CAvFrame::createAvFrame(CFFMpegPointer<AVFrame>& rAvFrame, CAvStreaming* pSt
         return Error::ERRORTYPE_FAILURE;
     }
 
-    pAvFrame->m_pAvFrame = rAvFrame.detach();
+    pAvFrame->m_spAvFrame.take(spAvFrame);
     pAvFrame->m_spAvStream.setPtr((IAvStreaming*)pStreaming);
     pAvFrame->m_pStreaming = pStreaming;
     rFrame.setPtr(pAvFrame);
     return Error::ERRORTYPE_SUCCESS;
 }
 
+/*
 CAvFrame::CAvFrame() {
     m_pAvFrame = nullptr;
 }
@@ -41,7 +42,7 @@ CAvFrame::~CAvFrame() {
         av_frame_free(&m_pAvFrame);
         m_pAvFrame = nullptr;
     }
-
 }
+*/
 
 FFMPEG_NAMESPACE_LEAVE

@@ -17,6 +17,7 @@
 
 
 
+
 //
 //
 //  Part2. 核心接口定义，包括：
@@ -94,6 +95,7 @@
 #include "Factory.h"
 #include "NamedMap.h"
 
+
 //
 //
 //  Part4. 自定义对象、工厂、模块相关支持，包括：
@@ -143,6 +145,7 @@
     };
 
 #include "CObject.h"
+#include "CTaker.h"
 #define SIMPLEWORK_FACTORY_REGISTER(className, classKey) \
     class __C##className##Register { \
     public: \

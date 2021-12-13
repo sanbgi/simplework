@@ -32,6 +32,8 @@ using namespace sw::math;
     SIMPLEWORK_FACTORY_REGISTER(CMyObject, MyObject::getClassKey())
 
 
+
+
 int main(int argc, char *argv[]){
     
     AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    

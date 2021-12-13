@@ -15,14 +15,10 @@ public://IAvFrame
     AvStreaming& getStreaming();
 
 public:
-    static int createAvFrame(CFFMpegPointer<AVFrame>& rAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame); 
+    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame); 
 
 public:
-    CAvFrame();
-    ~CAvFrame();
-
-public:
-    AVFrame* m_pAvFrame;
+    CTaker<AVFrame*> m_spAvFrame;
     AvStreaming m_spAvStream;
     CAvStreaming* m_pStreaming;
 };

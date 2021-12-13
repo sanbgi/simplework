@@ -21,7 +21,7 @@ Tensor CVideoFrame::getFrameVideoImage(VideoFrame::AvFrameImageType eType) {
     default:
         return Tensor();
     }
-    return m_pStreaming->convertImage(m_pAvFrame, ePixFormat);
+    return m_pStreaming->convertImage(m_spAvFrame, ePixFormat);
 }
 
 FFMPEG_NAMESPACE_LEAVE
