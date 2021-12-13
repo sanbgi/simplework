@@ -5,6 +5,16 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+//
+// 资源占有类
+//
+//    主要负责持有一个资源，资源可以转移，但不可以共同持有，主要为了实现申请资源和释放资源必须成对调用
+// 时，在同时申请资源和定义资源的释放，具体使用方法：
+//      
+//      CTaker<char*> spArray(new char[10], [](char* pPtr) {delete pPtr;});
+//      CTaker<char*> spTaker；
+//      spTaker.take(spArray);  //这个操作后，spArray里面的值被转移到spTaker中了。
+//
 template<typename T> class CTaker {
 public:
     typedef void(*FUnTake)(T);
@@ -35,6 +45,7 @@ public:
     }
 
 private:
+    //不允许使用赋值函数和赋值构造函数
     CTaker(const CTaker& src) {
     }
     const CTaker& operator = (const CTaker& src) {
@@ -49,7 +60,10 @@ public:
         return &m_hRes;
     }
 
-    operator T () {
+    operator T() {
+        return m_hRes;
+    }
+    operator T() const {
         return m_hRes;
     }
     operator bool() {

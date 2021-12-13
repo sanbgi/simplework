@@ -3,7 +3,6 @@
 
 #include "core.h"
 #include "SObject.h"
-#include "SFactory.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -34,7 +33,7 @@ __SimpleWork_Core_Namespace_Enter__
 //          ...
 //      }
 //
-//      class MyObject2 : CMyObject : IMyObject2 {
+//      class CMyObject2 : CMyObject : IMyObject2 {
 //          SIMPLEWORK_INTERFACE_ENTRY_ENTER(CMyObject)
 //              SIMPLEWORK_INTERFACE_ENTRY(IMyObject2)
 //          SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CMyObject)
@@ -45,8 +44,8 @@ __SimpleWork_Core_Namespace_Enter__
 //      注意：这些类对象是强烈不建议直接创建，而是通过CObject::createObject来创建，
 //  这样可以统一管理对象的创建和销毁，避免内存泄漏，具体创建范例：
 //  
-//      Object obj = CObject::createObject<CMyObject>();
-//      Factory fac = CObject::createFactory<CMyObject>()
+//      SObject obj = CObject::createObject<CMyObject>();
+//      SFactory fac = CObject::createFactory<CMyObject>()
 //
 class CObject {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER0

@@ -31,13 +31,14 @@ public://ITensor
         }
 
         release();
-        m_pElementData = new T[nSize];
+
+        m_spElementData.take(new T[nSize], [](T* pPtr){ delete[] pPtr;});
         if(Data::isPuryMemoryType(eDt)) {
-            memcpy(m_pElementData, (T*)pData, nSize*sizeof(T));
+            memcpy((T*)m_spElementData, (T*)pData, nSize*sizeof(T));
         }
         else {
             T* pSrc = (T*)pData;
-            T* pDesc = m_pElementData;
+            T* pDesc = (T*)m_spElementData;
             while(nSize--) {
                 *pSrc = *pDesc;
                 pSrc++, pDesc++;
@@ -98,31 +99,28 @@ public://ITensor
 
     const void* getDataPtr(Data::DataType eElementType, int iPos=0) const {
         if( eElementType == getDataType() ){
-            if( iPos >= 0 && iPos < m_nElementSize )
-                return m_pElementData + iPos;
+            if( iPos >= 0 && iPos < m_nElementSize ) {
+                return (T*)m_spElementData + iPos;
+            }
         }
         return nullptr;
     }
 
 public:
     CTensor() {
-        m_pElementData = nullptr;
         m_nElementSize = 0;
     }
     ~CTensor() {
         release();
     }
     void release() {
-        if(m_pElementData) {
-            delete[] m_pElementData;
-            m_pElementData = nullptr;
-        }
+        m_spElementData.untake();
         m_nElementSize = 0;
     }
 
 private:
     int m_nElementSize;
-    T* m_pElementData;
+    CTaker<T*> m_spElementData;
     STensor m_spDimVector;
 };
 
