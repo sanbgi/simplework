@@ -16,7 +16,7 @@ public:
         //
         // 获取流数据类型
         //
-        virtual AvFrame::AvFrameType getFrameType() = 0;
+        virtual SAvFrame::AvFrameType getFrameType() = 0;
 
         //
         //  获取流的序号

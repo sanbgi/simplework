@@ -11,13 +11,13 @@ class CAvStreaming : public CObject, IAvStreaming {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    AvFrame::AvFrameType getFrameType();
+    SAvFrame::AvFrameType getFrameType();
     int getStreamingIndex();
 
 public:
     int init(AVStream* pAvStream, int iStreamingIndex);
-    Tensor convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels);
-    Tensor convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat);
+    STensor convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels);
+    STensor convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat);
 
 public:
     CAvStreaming();
@@ -31,7 +31,7 @@ public:
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     CTaker<AVCodecContext*> m_spCodecCtx;
-    AvFrame::AvFrameType m_eAvStreamingType;
+    SAvFrame::AvFrameType m_eAvStreamingType;
     int m_iStreamingIndex;
 
 public://Audio

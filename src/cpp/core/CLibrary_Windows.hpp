@@ -10,7 +10,7 @@ __SimpleWork_Core_Namespace_Enter__
 
 SIMPLEWORK_INTERFACECLASS_ENTER0(Library)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ILibrary", 011130)
-        virtual Module loadLibraryModule(string strModuleKey) = 0;
+        virtual SModule loadLibraryModule(string strModuleKey) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 SIMPLEWORK_INTERFACECLASS_LEAVE(Library)
 
@@ -30,24 +30,24 @@ class CLibrary : public CObject, ILibrary, IModule {
 public:
     int getSimpleWorkCompatibleVer() 
         { return m_spModule ? m_spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
-    int initModule(const char* szModuleKey, const Module& pCaller) 
+    int initModule(const char* szModuleKey, const SModule& pCaller) 
         { return m_spModule ? m_spModule->initModule(szModuleKey, pCaller) : Error::ERRORTYPE_SUCCESS; }
-    int registerFactory(const char* szClassKey, const Factory& pFactory) 
+    int registerFactory(const char* szClassKey, const SFactory& pFactory) 
         { return Error::ERRORTYPE_FAILURE; }
-    int createObject(const char* szClassKey, Object& rObject) 
+    int createObject(const char* szClassKey, SObject& rObject) 
         { return Error::ERRORTYPE_FAILURE; }
-    static Module loadModule(string strModuleKey) {
-        Library spLibrary = CObject::createObject<CLibrary>();
+    static SModule loadModule(string strModuleKey) {
+        SLibrary spLibrary = CObject::createObject<CLibrary>();
         return spLibrary->loadLibraryModule(strModuleKey);
     }
     
 private:
     CTaker<HMODULE> m_sModule;
     //HMODULE m_hDLL;
-    Module m_spModule;
+    SModule m_spModule;
 
 private:
-    Module loadLibraryModule(string strModuleKey) {
+    SModule loadLibraryModule(string strModuleKey) {
         //
         // 释放已经加载的模块
         //
@@ -58,17 +58,17 @@ private:
         CTaker<HMODULE> sModule(LoadLibrary(strLibrary.c_str()), [](HMODULE hModule){FreeLibrary(hModule);});
         if (sModule)
         {
-            typedef SIMPLEWORK_CORE_NAMESPACE::Module& (*FUNCTION)(int);
+            typedef SIMPLEWORK_CORE_NAMESPACE::SModule& (*FUNCTION)(int);
             FUNCTION fun = (FUNCTION)GetProcAddress(sModule, "__getSimpleWork");
             if (fun)
             { 
                 m_spModule = (*fun)(IModule::getInterfaceVer());
             }
             m_sModule.take(sModule);
-            return Module::wrapPtr(this);
+            return SModule::wrapPtr(this);
         }
 
-        return Module();
+        return SModule();
     }
 };
 

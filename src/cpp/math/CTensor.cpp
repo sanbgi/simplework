@@ -15,7 +15,7 @@ class CPlaceTensor : public CObject, ITensor {
 
 public:
     virtual int initVector( Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
-    virtual int initTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
 };
 
 //
@@ -47,7 +47,7 @@ public://ITensor
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
+    int initTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
 
         if( eElementType != getDataType() ) {
             return Error::ERRORTYPE_FAILURE;
@@ -79,9 +79,9 @@ public://ITensor
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    const Tensor& getDimVector() {
+    const STensor& getDimVector() {
         if(!m_spDimVector && m_nElementSize > 0) {
-            m_spDimVector = Tensor::createVector(1, &m_nElementSize);
+            m_spDimVector = STensor::createVector(1, &m_nElementSize);
         }
         return m_spDimVector;
     }
@@ -123,24 +123,24 @@ public:
 private:
     int m_nElementSize;
     T* m_pElementData;
-    Tensor m_spDimVector;
+    STensor m_spDimVector;
 };
 
 //
 // 定义一个张量工厂类
 //
-class CTensorFactory : public CObject, Tensor::ITensorFactory {
+class CTensorFactory : public CObject, STensor::ITensorFactory {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(Tensor::ITensorFactory)
+        SIMPLEWORK_INTERFACE_ENTRY(STensor::ITensorFactory)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://ITensor
-    template<typename TType> CPlaceTensor* createTensor(Object& rObject) {
+    template<typename TType> CPlaceTensor* createTensor(SObject& rObject) {
         CPlaceTensor* pTensor = CObject::createObject<CTensor<TType>>(rObject);
         return pTensor;
     }
     
-    CPlaceTensor* createTensor(Data::DataType eElementType, Object& rObject) {
+    CPlaceTensor* createTensor(Data::DataType eElementType, SObject& rObject) {
         switch(eElementType) {
             case Data::DATATYPE_BOOL:
                 return createTensor<bool>(rObject);
@@ -159,34 +159,34 @@ public://ITensor
             case Data::DATATYPE_DOUBLE:
                 return createTensor<double>(rObject);
             case Data::DATATYPE_OBJECT:
-                return createTensor<Object>(rObject);
+                return createTensor<SObject>(rObject);
         }
         return nullptr;
     }
 
-    Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData) {
-        Object spObject;
+    STensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData) {
+        SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {
             if( pTensor->initVector(eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
-                return Tensor::wrapPtr((ITensor*)pTensor);
-            return Tensor();
+                return STensor::wrapPtr((ITensor*)pTensor);
+            return STensor();
         }
-        return Tensor();
+        return STensor();
     }
 
-    Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData){
-        Object spObject;
+    STensor createTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData){
+        SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {
             if( pTensor->initTensor(spDimVector, eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
-                return Tensor::wrapPtr((ITensor*)pTensor);
-            return Tensor();
+                return STensor::wrapPtr((ITensor*)pTensor);
+            return STensor();
         }
-        return Tensor();
+        return STensor();
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CTensorFactory, Tensor::TensorFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CTensorFactory, STensor::STensorFactory::getClassKey())
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

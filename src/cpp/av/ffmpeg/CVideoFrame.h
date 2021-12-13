@@ -12,10 +12,10 @@ class CVideoFrame : public CAvFrame, public IVideoFrame {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CAvFrame)
 
 public://IAvFrame
-    AvFrame::AvFrameType getFrameType();
+    SAvFrame::AvFrameType getFrameType();
 
 public://IVideoFrame
-    Tensor getFrameVideoImage(VideoFrame::AvFrameImageType eType);
+    STensor getFrameVideoImage(SVideoFrame::AvFrameImageType eType);
 };
 
 FFMPEG_NAMESPACE_LEAVE

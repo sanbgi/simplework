@@ -12,10 +12,10 @@ class CAudioFrame : public CAvFrame, public IAudioFrame {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CAvFrame)
 
 public://IAvFrame
-    AvFrame::AvFrameType getFrameType();
+    SAvFrame::AvFrameType getFrameType();
 
 public://IAudioFrame
-    Tensor getFrameAudioSamples(AudioFrame::AvFrameSampleType eType, int nSampleRate, int nChannels);
+    STensor getFrameAudioSamples(SAudioFrame::AvFrameSampleType eType, int nSampleRate, int nChannels);
 };
 
 FFMPEG_NAMESPACE_LEAVE

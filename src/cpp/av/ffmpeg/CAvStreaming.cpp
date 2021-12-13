@@ -4,7 +4,7 @@
 FFMPEG_NAMESPACE_ENTER
 
 CAvStreaming::CAvStreaming() {
-    m_eAvStreamingType = AvFrame::AVSTREAMTYPE_UNKNOWN;
+    m_eAvStreamingType = SAvFrame::AVSTREAMTYPE_UNKNOWN;
     m_iStreamingIndex = -1;
 
     m_pImagePointers[0] = nullptr;
@@ -19,18 +19,18 @@ void CAvStreaming::release() {
     releaseVideoCtx();
 }
 
-AvFrame::AvFrameType CAvStreaming::getFrameType() {
+SAvFrame::AvFrameType CAvStreaming::getFrameType() {
     if(m_spCodecCtx) {
         switch (m_spCodecCtx->codec_type)
         {
         case AVMEDIA_TYPE_VIDEO:
-            return AvFrame::AVSTREAMTYPE_VIDEO;
+            return SAvFrame::AVSTREAMTYPE_VIDEO;
         
         case AVMEDIA_TYPE_AUDIO:
-            return AvFrame::AVSTREAMTYPE_AUDIO;
+            return SAvFrame::AVSTREAMTYPE_AUDIO;
         }
     }
-    return AvFrame::AVSTREAMTYPE_UNKNOWN;
+    return SAvFrame::AVSTREAMTYPE_UNKNOWN;
 }
 
 int CAvStreaming::getStreamingIndex() {
@@ -71,7 +71,7 @@ void CAvStreaming::releaseAudioCtx() {
     m_spSwrCtx.untake();
 }
 
-Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels) {
+STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels) {
 
     int64_t nChannelLayout = av_get_default_channel_layout(nChannels);
 
@@ -90,7 +90,7 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
                 eSampleFormat,
                 1);
             
-        return Tensor::createVector(nFrameSize, (unsigned char*)pAvFrame->data[0]);
+        return STensor::createVector(nFrameSize, (unsigned char*)pAvFrame->data[0]);
     }
 
     if( m_spSwrCtx ) {
@@ -114,12 +114,12 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
                                     NULL),
                         [](SwrContext* pCtx){swr_free(&pCtx);});
         if( !m_spSwrCtx ) {
-            return Tensor();
+            return STensor();
         }
 
         if( swr_init(m_spSwrCtx) < 0 ) {
             releaseAudioCtx();
-            return Tensor();
+            return STensor();
         }
 
         m_nCtxSampleRate = nSampleRate;
@@ -142,7 +142,7 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
     {
         printf("av_samples_get_buffer_size() failed\n");
         releaseAudioCtx();
-        return Tensor();
+        return STensor();
     }
     av_fast_malloc(&out_buf, &out_buf_size, nBufSize);
 
@@ -156,7 +156,7 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
     if (nb_samples < 0) {
         printf("swr_convert() failed\n");
         releaseAudioCtx();
-        return Tensor();
+        return STensor();
     }
     if (nb_samples == out_count)
     {
@@ -167,7 +167,7 @@ Tensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForma
 
     // 重采样返回的一帧音频数据大小(以字节为单位)
     int nData = nb_samples * nChannels * av_get_bytes_per_sample(eSampleFormat);
-    return Tensor::createVector(nData, (unsigned char*)out_buf);
+    return STensor::createVector(nData, (unsigned char*)out_buf);
 }
 
 void CAvStreaming::releaseVideoCtx() {
@@ -179,7 +179,7 @@ void CAvStreaming::releaseVideoCtx() {
     m_spSwsContext.untake();
 }
 
-Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
+STensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
     //如果上次用的像素格式与这次不同，则释放上次的转化器，重新创建
     if( m_spSwsContext && m_ePixFormat != ePixFormat ) {
         releaseVideoCtx();
@@ -198,7 +198,7 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
             break;
         
         default:
-            return Tensor();
+            return STensor();
         }
 
         //
@@ -217,14 +217,14 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
             0
         );
         if(pSwsContext == nullptr) {
-            return Tensor();
+            return STensor();
         }
 
         m_spSwsContext.take(pSwsContext, sws_freeContext);
         if( av_image_alloc(m_pImagePointers, m_pLinesizes,
             m_spCodecCtx->width, m_spCodecCtx->height, ePixFormat, 1) < 0 ){
             releaseVideoCtx();
-            return Tensor();
+            return STensor();
         }
         m_ePixFormat = ePixFormat;
     }
@@ -255,8 +255,8 @@ Tensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
     //
     int width = m_pLinesizes[0]/m_nPixBytes;
     int dimsize[3] = { width, pAvFrame->height, m_nPixBytes };
-    Tensor spDimTensor = Tensor::createVector(3, dimsize);
-    return Tensor::createTensor(spDimTensor, width*pAvFrame->height*m_nPixBytes, m_pImagePointers[0]);
+    STensor spDimTensor = STensor::createVector(3, dimsize);
+    return STensor::createTensor(spDimTensor, width*pAvFrame->height*m_nPixBytes, m_pImagePointers[0]);
 }
 
 FFMPEG_NAMESPACE_LEAVE

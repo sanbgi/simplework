@@ -12,14 +12,14 @@ class CAvFrame : public CObject, public IAvFrame {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    AvStreaming& getStreaming();
+    SAvStreaming& getStreaming();
 
 public:
-    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame); 
+    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame); 
 
 public:
     CTaker<AVFrame*> m_spAvFrame;
-    AvStreaming m_spAvStream;
+    SAvStreaming m_spAvStream;
     CAvStreaming* m_pStreaming;
 };
 

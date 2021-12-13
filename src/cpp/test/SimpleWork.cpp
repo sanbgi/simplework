@@ -29,32 +29,32 @@ using namespace sw::math;
             std::cout << "Great ! Hi everyone!";
         }
     };
-    SIMPLEWORK_FACTORY_REGISTER(CMyObject, MyObject::getClassKey())
+    SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
 
 
 
 int main(int argc, char *argv[]){
     
-    AvIn avIn = AvIn::openVideoFile("d:/tt.mkv");    
-    //AvIn avIn = AvIn::openVideoCapture("vfwcap");
-    AvOut avVideoOut = AvOut::openWindow("Display Video", 640, 360);
-    AvOut avAudioOut = AvOut::openSpeaker(nullptr, 0, 0);
+    SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");    
+    //AvIn avIn = SAvIn::openVideoCapture("vfwcap");
+    SAvOut avVideoOut = SAvOut::openWindow("Display Video", 640, 360);
+    SAvOut avAudioOut = SAvOut::openSpeaker(nullptr, 0, 0);
     int nframeVideo = 0;
     int nframeAudio = 0;
     int nframeUnknown = 0;
     int nframe = 0;
-    AvFrame frame;
+    SAvFrame frame;
     while(avIn->getFrame(frame) == Error::ERRORTYPE_SUCCESS) {
         switch(frame->getFrameType()){ 
-        case AvFrame::AVSTREAMTYPE_VIDEO:
+        case SAvFrame::AVSTREAMTYPE_VIDEO:
             {
                 avVideoOut->putFrame(frame);
                 nframeVideo++;
             }
             break;
 
-        case AvFrame::AVSTREAMTYPE_AUDIO:
+        case SAvFrame::AVSTREAMTYPE_AUDIO:
             {
                 avAudioOut->putFrame(frame);
                 nframeAudio++;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
 
     /*
-    MyObject myObject = Object::createObject<MyObject>();
+    MyObject myObject = SObject::createObject<MyObject>();
     if( myObject ) {
         myObject.sayHi();
     }else {

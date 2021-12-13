@@ -5,12 +5,12 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-AvStreaming& CAvFrame::getStreaming() {
+SAvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
 }
 
-int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, AvFrame& rFrame) {
-    Object spObject;
+int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame) {
+    SObject spObject;
     CAvFrame* pAvFrame;
     switch(pStreaming->m_spCodecCtx->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
@@ -31,18 +31,5 @@ int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreamin
     rFrame.setPtr(pAvFrame);
     return Error::ERRORTYPE_SUCCESS;
 }
-
-/*
-CAvFrame::CAvFrame() {
-    m_pAvFrame = nullptr;
-}
-
-CAvFrame::~CAvFrame() {
-    if(m_pAvFrame) {
-        av_frame_free(&m_pAvFrame);
-        m_pAvFrame = nullptr;
-    }
-}
-*/
 
 FFMPEG_NAMESPACE_LEAVE

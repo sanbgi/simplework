@@ -11,29 +11,29 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 211206)
-        virtual int putFrame(const AvFrame& frame) = 0;
+        virtual int putFrame(const SAvFrame& frame) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvOutFactory, "sw.av.AvOutFactory")
         SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOutFactory", 211206)
-            virtual AvOut openWindow(const char* szWindowName, int width, int height) = 0;
+            virtual SAvOut openWindow(const char* szWindowName, int width, int height) = 0;
 
-            virtual AvOut openSpeaker(const char* szName, int sampleRate, int nChannels) = 0;
+            virtual SAvOut openSpeaker(const char* szName, int sampleRate, int nChannels) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvOutFactory)
 
 public:
-    static inline AvOut openWindow(const char* szWindowName, int width, int height) {
+    static inline SAvOut openWindow(const char* szWindowName, int width, int height) {
         return getFactory()->openWindow(szWindowName, width, height);
     }
 
-    static inline AvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
+    static inline SAvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
         return getFactory()->openSpeaker(szName, sampleRate, nChannels);
     }
 
 private:
-    static AvOutFactory& getFactory() {
-        static AvOutFactory g_factory = Object::createObject<AvOutFactory>();
+    static SAvOutFactory& getFactory() {
+        static SAvOutFactory g_factory = SObject::createObject<SAvOutFactory>();
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvOut)

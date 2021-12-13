@@ -37,7 +37,7 @@ protected://IModule
     //      sw框架通过唯一输出函数sw::core::getCoreModule，来让其它模块获得系统
     //  核心模块接口(IModule)，而实现就是这个模块。
     //
-    int initModule(const char* szModuleKey, const Module& pCaller ) {
+    int initModule(const char* szModuleKey, const SModule& pCaller ) {
         if( pCaller ){
             //不允许重复初始化无效
             if( m_spCoreApi ) {
@@ -47,7 +47,7 @@ protected://IModule
             //
             // 将已经注册的本地工厂，向上级模块注册，并删除本地注册，后续工作由上级模块带管
             //
-            std::map<std::string,Factory>::iterator it;
+            std::map<std::string, SFactory>::iterator it;
             for(it = m_mapFactories.begin(); it != m_mapFactories.end(); ++it) {
                 pCaller->registerFactory(it->first.c_str(), it->second);
             }
@@ -62,7 +62,7 @@ protected://IModule
     //
     // 根据对象实现类名，创建对象
     //
-    int createObject(const char* szClassKey, Object& rObject) {
+    int createObject(const char* szClassKey, SObject& rObject) {
         if(m_spCoreApi) {
             return m_spCoreApi->createObject(szClassKey, rObject);
         }
@@ -76,7 +76,7 @@ protected://IModule
     //
     // 注册工厂
     //
-    int registerFactory(const char* szClassKey, const Factory& pFactory) {
+    int registerFactory(const char* szClassKey, const SFactory& pFactory) {
         if(m_spCoreApi) {
             return m_spCoreApi->registerFactory(szClassKey, pFactory);
         }
@@ -86,14 +86,14 @@ protected://IModule
 
 protected:
     IFactory* findFactory(const char* szClassKey) {
-        std::map<std::string,Factory>::iterator it = m_mapFactories.find(szClassKey);
+        std::map<std::string,SFactory>::iterator it = m_mapFactories.find(szClassKey);
         return (it != m_mapFactories.end()) ? it->second.getPtr() : nullptr;
     }
 
 protected:
-    Module m_spCoreApi;
+    SModule m_spCoreApi;
     std::string m_strModuleKey;
-    std::map<std::string,Factory> m_mapFactories;
+    std::map<std::string, SFactory> m_mapFactories;
 };
 
 __SimpleWork_Core_Namespace_Leave__

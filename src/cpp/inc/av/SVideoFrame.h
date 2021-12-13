@@ -21,7 +21,7 @@ public:
         //
         // 获取帧视频的图像张量
         //
-        virtual sw::math::Tensor getFrameVideoImage(AvFrameImageType eType = AVFRAMEIMAGETYPE_RGB) = 0;
+        virtual sw::math::STensor getFrameVideoImage(AvFrameImageType eType = AVFRAMEIMAGETYPE_RGB) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -3,23 +3,23 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-AvFrame::AvFrameType CAudioFrame::getFrameType() {
-    return AvFrame::AVSTREAMTYPE_AUDIO;
+SAvFrame::AvFrameType CAudioFrame::getFrameType() {
+    return SAvFrame::AVSTREAMTYPE_AUDIO;
 }
 
-Tensor CAudioFrame::getFrameAudioSamples(AudioFrame::AvFrameSampleType eType, int sampleRate, int nChannels) {
+STensor CAudioFrame::getFrameAudioSamples(SAudioFrame::AvFrameSampleType eType, int sampleRate, int nChannels) {
     AVSampleFormat eSampleFormat;
     switch(eType) {
-    case AudioFrame::AVFRAMESAMPLETYPE_U8:
+    case SAudioFrame::AVFRAMESAMPLETYPE_U8:
         eSampleFormat = AV_SAMPLE_FMT_U8;
         break;
 
-    case AudioFrame::AVFRAMESAMPLETYPE_S16:
+    case SAudioFrame::AVFRAMESAMPLETYPE_S16:
         eSampleFormat = AV_SAMPLE_FMT_S16;
         break;
 
     default:
-        return Tensor(); 
+        return STensor(); 
     }
     return m_pStreaming->convertAudio(m_spAvFrame, eSampleFormat, sampleRate, nChannels);
 }

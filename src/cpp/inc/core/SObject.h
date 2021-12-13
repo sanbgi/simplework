@@ -3,7 +3,7 @@
 
 #include "core.h"
 #include "IObject.h"
-#include "Module.h"
+#include "SModule.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -18,14 +18,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Object)
 public:
     typedef IObject IFace;
 
-    template<typename TObject> static inline Object createObject() {
-        Object spObject;
+    template<typename TObject> static inline SObject createObject() {
+        SObject spObject;
         createObject(TObject::getClassKey(), spObject);
         return spObject;
     }
 
-    static int createObject(const char* szClassKey, Object& rObject) {
-        return Module::getSimpleWork()->createObject(szClassKey, rObject);
+    static int createObject(const char* szClassKey, SObject& rObject) {
+        return SModule::getSimpleWork()->createObject(szClassKey, rObject);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Object)

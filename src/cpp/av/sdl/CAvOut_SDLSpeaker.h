@@ -47,13 +47,13 @@ public:
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    int putFrame(const AvFrame& frame) {
-        AudioFrame spAudioFrame = frame;
+    int putFrame(const SAvFrame& frame) {
+        SAudioFrame spAudioFrame = frame;
         if(!spAudioFrame) {
             return Error::ERRORTYPE_FAILURE;
         }
 
-        Tensor tensor = spAudioFrame->getFrameAudioSamples(AudioFrame::AVFRAMESAMPLETYPE_S16, m_specAudio.freq, m_specAudio.channels);
+        STensor tensor = spAudioFrame->getFrameAudioSamples(SAudioFrame::AVFRAMESAMPLETYPE_S16, m_specAudio.freq, m_specAudio.channels);
         int ret = tensor->getDataSize();
         if( tensor ) {
             ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());

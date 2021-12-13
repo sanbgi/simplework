@@ -29,9 +29,9 @@
 //
 //
 #define SIMPLEWORK_INTERFACECLASS_ENTER0(className) \
-    class className {
+    class S##className {
 #define SIMPLEWORK_INTERFACECLASS_ENTER(className, classKey) \
-    class className {\
+    class S##className {\
     public:\
     const static inline char* getClassKey() { return classKey; }
 
@@ -39,21 +39,21 @@
     private: \
         SIMPLEWORK_CORE_NAMESPACE::__CPointer<IFace> __autoPtr;\
     public: \
-        inline className(){}\
-        inline className(IFace* pFace) { \
+        inline S##className(){}\
+        inline S##className(IFace* pFace) { \
             __autoPtr.setPtr(pFace);\
         }\
-        inline className(const className& src) {\
+        inline S##className(const S##className& src) {\
             __autoPtr.setPtr(src.getPtr());\
         }\
-        inline const className& operator=(const className& src) {\
+        inline const S##className& operator=(const S##className& src) {\
             __autoPtr.setPtr(src.getPtr()); \
             return *this; \
         }\
-        template<typename Q> inline className(const Q& src) {\
+        template<typename Q> inline S##className(const Q& src) {\
             __autoPtr.setPtr(src.getPtr());\
         }\
-        template<typename Q> inline const className& operator=(const Q& src) {\
+        template<typename Q> inline const S##className& operator=(const Q& src) {\
             __autoPtr.setPtr(src.getPtr());\
             return *this;\
         }\
@@ -71,13 +71,13 @@
             return __autoPtr;\
         }\
     public:\
-        static inline className wrapPtr(IFace* pPtr) {\
-            className object;\
+        static inline S##className wrapPtr(IFace* pPtr) {\
+            S##className object;\
             object.setPtr(pPtr);\
             return object;\
         };\
     }; \
-    typedef className::IFace I##className;
+    typedef S##className::IFace I##className;
 
 #define SIMPLEWORK_INTERFACE_ENTER(superInterfaceClass, interfaceKey, interfaceVer) \
     public:\
@@ -90,11 +90,9 @@
 
 #include "__CPointer.h"
 #include "IObject.h"
-#include "Module.h"
-#include "Object.h"
-#include "Factory.h"
-#include "NamedMap.h"
-
+#include "SModule.h"
+#include "SObject.h"
+#include "SFactory.h"
 
 //
 //
@@ -150,8 +148,8 @@
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(); \
-            SIMPLEWORK_CORE_NAMESPACE::Module::getSimpleWork()->registerFactory(classKey, spFactory); \
+            SFactory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(); \
+            SIMPLEWORK_CORE_NAMESPACE::SModule::getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 
@@ -159,7 +157,7 @@
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            Factory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true); \
+            SFactory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true); \
             __getSimpleWork(SIMPLEWORK_CORE_NAMESPACE::IModule::getInterfaceVer())->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
@@ -168,8 +166,8 @@
 #ifdef SIMPLEWORK_WITHOUTAPI
     #include "__CModule.h"
     #define SIMPLEWORK_MODULE_REGISTER \
-    __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::Module& __getSimpleWork(int nCompatibleVer) { \
-        static Module s_spModule = \
+    __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::SModule& __getSimpleWork(int nCompatibleVer) { \
+        static SModule s_spModule = \
             SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::__CModule>(); \
         return s_spModule; \
     }

@@ -11,7 +11,7 @@ int CAvIn::getStreamingCount() {
     return m_vecAvStreamings.size();
 }
 
-AvStreaming CAvIn::getStreaming(int iStreamingIndex) {
+SAvStreaming CAvIn::getStreaming(int iStreamingIndex) {
     return m_vecAvStreamings[iStreamingIndex];
 }
 
@@ -23,7 +23,7 @@ int CAvIn::getHeight() {
     return 0;
 }
 
-int CAvIn::getFrame(AvFrame& frame) {
+int CAvIn::getFrame(SAvFrame& frame) {
     //
     // 如果上次流成功读取了数据，则还需要继续读取
     //
@@ -64,7 +64,7 @@ int CAvIn::initVideoFile(const char* szFileName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_spFormatCtx->nb_streams; i++) {
-        Object spObject;
+        SObject spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
         if( pCAvStreaming->init(m_spFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
@@ -107,7 +107,7 @@ int CAvIn::initVideoCapture(const char* szName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_spFormatCtx->nb_streams; i++) {
-        Object spObject;
+        SObject spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
         if( pCAvStreaming->init(m_spFormatCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
             return Error::ERRORTYPE_FAILURE;
@@ -118,7 +118,7 @@ int CAvIn::initVideoCapture(const char* szName) {
     return Error::ERRORTYPE_SUCCESS;
 }
 
-int CAvIn::sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
+int CAvIn::sendPackageAndReceiveFrame(SAvFrame& frame, AVPacket* pPackage) {
 
     CAvStreaming* pStreaming = m_vecCAvStreamings[pPackage->stream_index];
 
@@ -157,7 +157,7 @@ int CAvIn::sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage) {
     return receiveFrame(frame, pStreaming);
 }
 
-int CAvIn::receiveFrame(AvFrame& frame, CAvStreaming* pStreaming) {
+int CAvIn::receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming) {
     AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
     CTaker<AVFrame*> avFrame(av_frame_alloc(), [](AVFrame* pFrame){av_frame_free(&pFrame);});
     int ret = avcodec_receive_frame(pCodecCtx, avFrame);

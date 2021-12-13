@@ -2,7 +2,7 @@
 #define __SimpleWork_IFactory__h__
 
 #include "core.h"
-#include "Object.h"
+#include "SObject.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -12,7 +12,7 @@ __SimpleWork_Core_Namespace_Enter__
 SIMPLEWORK_INTERFACECLASS_ENTER0(Factory)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IFactory", 211202)
-        virtual int createObject(Object& rObject) const = 0;
+        virtual int createObject(SObject& rObject) const = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Factory)

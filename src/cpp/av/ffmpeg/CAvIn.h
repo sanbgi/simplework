@@ -14,16 +14,16 @@ class CAvIn : public CObject, public IAvIn {
 
 public:
     int getStreamingCount();
-    AvStreaming getStreaming(int iStreamingIndex);
+    SAvStreaming getStreaming(int iStreamingIndex);
     int getWidth();
     int getHeight();
-    int getFrame(AvFrame& frame);
+    int getFrame(SAvFrame& frame);
 
 public:
     int initVideoFile(const char* szFileName);
     int initVideoCapture(const char* szName);
-    int sendPackageAndReceiveFrame(AvFrame& frame, AVPacket* pPackage);
-    int receiveFrame(AvFrame& frame, CAvStreaming* pStreaming);
+    int sendPackageAndReceiveFrame(SAvFrame& frame, AVPacket* pPackage);
+    int receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming);
 
 public:
     CAvIn();
@@ -35,7 +35,7 @@ private:
     CTaker<AVFormatContext*> m_spFormatCtx;
     CAvStreaming* m_pContinueReadingStreaming;
     std::vector<CAvStreaming*> m_vecCAvStreamings;
-    std::vector<AvStreaming> m_vecAvStreamings;
+    std::vector<SAvStreaming> m_vecAvStreamings;
 };
 
 FFMPEG_NAMESPACE_LEAVE

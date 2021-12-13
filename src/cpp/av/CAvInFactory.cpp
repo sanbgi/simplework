@@ -2,29 +2,29 @@
 #include "av.h"
 #include "ffmpeg/CAvIn.h"
 
-class CAvInFactory : public CObject, public AvIn::IAvInFactory{
+class CAvInFactory : public CObject, public SAvIn::IAvInFactory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(AvIn::IAvInFactory)
+        SIMPLEWORK_INTERFACE_ENTRY(SAvIn::IAvInFactory)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    AvIn openVideoFile(const char* szFileName) {
-        Object spAvIn;
+    SAvIn openVideoFile(const char* szFileName) {
+        SObject spAvIn;
         ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
         if( pAvIn->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
-            return AvIn();
+            return SAvIn();
         }
-        return AvIn::wrapPtr((IAvIn*)pAvIn);
+        return SAvIn::wrapPtr((IAvIn*)pAvIn);
     }
 
-    AvIn openVideoCapture(const char* szName) {
-        Object spAvIn;
+    SAvIn openVideoCapture(const char* szName) {
+        SObject spAvIn;
         ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
         if( pAvIn->initVideoCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
-            return AvIn();
+            return SAvIn();
         }
-        return AvIn::wrapPtr((IAvIn*)pAvIn);
+        return SAvIn::wrapPtr((IAvIn*)pAvIn);
     }
 };
-SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvInFactory, AvIn::AvInFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvInFactory, SAvIn::SAvInFactory::getClassKey())

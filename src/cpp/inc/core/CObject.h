@@ -2,8 +2,8 @@
 #define __SimpleWork_CObject__h__
 
 #include "core.h"
-#include "Object.h"
-#include "Factory.h"
+#include "SObject.h"
+#include "SFactory.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -56,11 +56,11 @@ public:
     //
     // 创建对象
     //
-    template<typename TObject> static TObject* createObject(Object& rObject) {
+    template<typename TObject> static TObject* createObject(SObject& rObject) {
         return __CObjectImp<TObject>::__createObject(rObject);
     }
-    template<typename TObject> static Object createObject() {
-        Object spObject;
+    template<typename TObject> static SObject createObject() {
+        SObject spObject;
         __CObjectImp<TObject>::__createObject(spObject);
         return spObject;
     }
@@ -68,7 +68,7 @@ public:
     //
     // 创建工厂
     //
-    template<typename TObject> static int createFactory(Object& rFactory, bool bSingletonFactory=false) {
+    template<typename TObject> static int createFactory(SObject& rFactory, bool bSingletonFactory=false) {
         
         class __CFactoryImp : public IFactory {
             SIMPLEWORK_INTERFACE_ENTRY_ENTER0
@@ -76,7 +76,7 @@ public:
             SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
         public://IFactory
-            int createObject(Object& rObject) const {
+            int createObject(SObject& rObject) const {
                 return __CObjectImp<TObject>::__createObject(rObject) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
             }
         };
@@ -87,8 +87,8 @@ public:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
         public://IFactory
-            int createObject(Object& rObject) const {
-                static Object g_spObject;
+            int createObject(SObject& rObject) const {
+                static SObject g_spObject;
                 static TObject* g_pObject = __CObjectImp<TObject>::__createObject(g_spObject);
                 rObject = g_spObject;
                 return Error::ERRORTYPE_SUCCESS;
@@ -101,8 +101,8 @@ public:
             return __CObjectImp<__CFactoryImp>::__createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
         }
     }
-    template<typename TObject> static Object createFactory(bool bSingleton=false) {
-        Object spFactory;
+    template<typename TObject> static SObject createFactory(bool bSingleton=false) {
+        SObject spFactory;
         createFactory<TObject>(spFactory, bSingleton);
         return spFactory;
     }
@@ -115,7 +115,7 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static TObject* __createObject(Object& rObject) {
+        static TObject* __createObject(SObject& rObject) {
             __CObjectImp* pNewObj = new __CObjectImp();
             rObject.setPtr((__IObjectImp*)pNewObj);
             return pNewObj;

@@ -5,7 +5,7 @@
 #include "IObject.h"
 
 __SimpleWork_Core_Namespace_Enter__
-class Module;
+class SModule;
 __SimpleWork_Core_Namespace_Leave__
 
 
@@ -38,20 +38,20 @@ __SimpleWork_Core_Namespace_Leave__
 //      
 //      当然，你可以直接使用宏SIMPLEWORK_MODULE_REGISTER(szModuleKey)，让系统自动帮你定义这个Api.
 //
-__SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::Module& __getSimpleWork(int nCompatibleVer);
+__SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::SModule& __getSimpleWork(int nCompatibleVer);
 
 
 __SimpleWork_Core_Namespace_Enter__
 
-class Object;
-class Factory;
+class SObject;
+class SFactory;
 
 //
 // 模块对象
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(Module)
     
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IModule", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IModule", 211202)
 
         //
         // 获取系统版本号，如果返回的系统版本号，与系统不同，则会出现兼容问题。这个版本号，定义在全局宏
@@ -61,23 +61,23 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Module)
         //
         // 初始化模块
         //
-        virtual int initModule(const char* szModuleKey, const Module& spCaller) = 0;
+        virtual int initModule(const char* szModuleKey, const SModule& spCaller) = 0;
 
         //
         // 注册工厂
         //
-        virtual int registerFactory(const char* szClassKey, const Factory& spFactory) = 0;
+        virtual int registerFactory(const char* szClassKey, const SFactory& spFactory) = 0;
 
         //
         // 根据类名和接口名，创建对象
         // @szClassKey 类名，类似: "sw.Vector", "sw.Video", "sw.Camera"
         //
-        virtual int createObject(const char* szClassKey, Object& rObject) = 0;
+        virtual int createObject(const char* szClassKey, SObject& rObject) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    static inline Module& getSimpleWork() {
+    static inline SModule& getSimpleWork() {
         return __getSimpleWork(IFace::getInterfaceVer());
     }
 

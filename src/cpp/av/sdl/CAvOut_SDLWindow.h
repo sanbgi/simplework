@@ -38,14 +38,14 @@ public:
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    int putFrame(const AvFrame& frame) {
-        VideoFrame spVideoFrame = frame;
+    int putFrame(const SAvFrame& frame) {
+        SVideoFrame spVideoFrame = frame;
         if(!spVideoFrame) {
             return Error::ERRORTYPE_FAILURE;
         }
 
-        Tensor spTensor = spVideoFrame->getFrameVideoImage(VideoFrame::AVFRAMEIMAGETYPE_RGB);
-        const Tensor& spDimTensor = spTensor->getDimVector();
+        STensor spTensor = spVideoFrame->getFrameVideoImage(SVideoFrame::AVFRAMEIMAGETYPE_RGB);
+        const STensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
         int width = pDim[0];
         int height = pDim[1];

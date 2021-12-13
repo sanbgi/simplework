@@ -20,7 +20,7 @@ public:
         //
         // 获取帧音频的数据张量
         //
-        virtual sw::math::Tensor getFrameAudioSamples(AvFrameSampleType eType, int sampleRate, int nChannels) = 0;
+        virtual sw::math::STensor getFrameAudioSamples(AvFrameSampleType eType, int sampleRate, int nChannels) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -6,7 +6,7 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
-class Object;
+class SObject;
 
 //
 // 基础类型定义
@@ -62,7 +62,7 @@ private:
             return Data::DATATYPE_FLOAT;
         } else if(typeid(T) == typeid(double)) {
             return Data::DATATYPE_DOUBLE;
-        }else if(typeid(T) == typeid(Object)) {
+        }else if(typeid(T) == typeid(SObject)) {
             return Data::DATATYPE_OBJECT;
         }
         return Data::DATATYPE_UNKNOWN;

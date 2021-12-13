@@ -16,7 +16,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取维度
         //
-        virtual const Tensor& getDimVector() = 0;
+        virtual const STensor& getDimVector() = 0;
 
         //
         // 获取元素类型
@@ -102,7 +102,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //      }
         //
         //virtual Tensor transposeTensor(int nTransposeDim, int pTransposeDimArr[][2]) = 0;
-        friend Tensor;
+        friend STensor;
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(TensorFactory, "sw.math.TensorFactory")
@@ -110,8 +110,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
             //
             // 构造全新的张量，私有函数，因为指针没类型，易出错
             //
-            virtual Tensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-            virtual Tensor createTensor( const Tensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+            virtual STensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+            virtual STensor createTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
 
@@ -119,19 +119,19 @@ public:
     //
     // 构造一维张量
     //
-    template<typename Q=void> static Tensor createVector(int nElementSize, Q* pElementData=nullptr) {
+    template<typename Q=void> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
         return getFactory()->createVector(Data::getType<Q>(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
-    template<typename Q=void> static Tensor createTensor(Tensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
+    template<typename Q=void> static STensor createTensor(STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
         return getFactory()->createTensor(spDimVector, Data::getType<Q>(), nElementSize, (void*)pElementData);
     }
 
 private:
-    static TensorFactory& getFactory() {
-        static TensorFactory g_factory = Object::createObject<TensorFactory>();
+    static STensorFactory& getFactory() {
+        static STensorFactory g_factory = SObject::createObject<STensorFactory>();
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)

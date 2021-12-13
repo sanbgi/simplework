@@ -15,30 +15,30 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvIn, "sw.av.AvIn")
         //
         // 获取帧
         //
-        virtual int getFrame(AvFrame& rFrame) = 0;
+        virtual int getFrame(SAvFrame& rFrame) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvInFactory, "sw.av.AvInFactory")
         SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvInFactory", 211206)
             //打开视频文件
-            virtual AvIn openVideoFile(const char* szFileName) = 0;
+            virtual SAvIn openVideoFile(const char* szFileName) = 0;
 
             //打开摄像头
-            virtual AvIn openVideoCapture(const char* szName) = 0;
+            virtual SAvIn openVideoCapture(const char* szName) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvInFactory)
 
 public:
-    static inline AvIn openVideoFile(const char* szFileName) {
+    static inline SAvIn openVideoFile(const char* szFileName) {
         return getFactory()->openVideoFile(szFileName);
     }
-    static inline AvIn openVideoCapture(const char* szName) {
+    static inline SAvIn openVideoCapture(const char* szName) {
         return getFactory()->openVideoCapture(szName);
     }
 
 private:
-    static AvInFactory& getFactory() {
-        static AvInFactory g_factory = Object::createObject<AvInFactory>();
+    static SAvInFactory& getFactory() {
+        static SAvInFactory g_factory = SObject::createObject<SAvInFactory>();
         return g_factory;
     }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvIn)
