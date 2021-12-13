@@ -15,9 +15,6 @@
 #include "Data.h"
 #include "Error.h"
 
-
-
-
 //
 //
 //  Part2. 核心接口定义，包括：
@@ -25,7 +22,7 @@
 //      2.2，核心接口
 //          -- IObject, Object 接口定义基类及对应的智能指针
 //          -- IFactory, Factory 工厂接口及对应的智能指针
-//      2.3, getSimpleWork()获取全局模块对象
+//      2.3, __getSimpleWork()获取全局模块对象
 //
 //
 #define SIMPLEWORK_INTERFACECLASS_ENTER0(className) \
@@ -37,7 +34,7 @@
 
 #define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \
-        SIMPLEWORK_CORE_NAMESPACE::__CPointer<IFace> __autoPtr;\
+        SIMPLEWORK_CORE_NAMESPACE::CPointer<IFace> __autoPtr;\
     public: \
         inline S##className(){}\
         inline S##className(IFace* pFace) { \
@@ -88,8 +85,17 @@
 #define SIMPLEWORK_INTERFACE_LEAVE\
         };\
 
-#include "__CPointer.h"
+#include "CPointer.h"
 #include "IObject.h"
+
+//
+//
+//  Part3. 系统接口类定义：
+//      3.1 SModule 模块
+//      3.2 SObject 对象
+//      3.3 SFactory 工厂
+//
+//
 #include "SModule.h"
 #include "SObject.h"
 #include "SFactory.h"
@@ -142,9 +148,9 @@
         return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, pTarget); \
     };
 
-#include "CObject.h"
 #include "CTaker.h"
 #include "CRefer.h"
+#include "CObject.h"
 #define SIMPLEWORK_FACTORY_REGISTER(className, classKey) \
     class __C##className##Register { \
     public: \
@@ -165,11 +171,11 @@
 
 
 #ifdef SIMPLEWORK_WITHOUTAPI
-    #include "__CModule.h"
+    #include "CModule.h"
     #define SIMPLEWORK_MODULE_REGISTER \
     __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::SModule& __getSimpleWork(int nCompatibleVer) { \
         static SModule s_spModule = \
-            SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::__CModule>(); \
+            SIMPLEWORK_CORE_NAMESPACE::CObject::createObject<SIMPLEWORK_CORE_NAMESPACE::CModule>(); \
         return s_spModule; \
     }
 #else//SIMPLEWORK_WITHOUTAPI

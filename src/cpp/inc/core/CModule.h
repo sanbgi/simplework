@@ -17,7 +17,7 @@ __SimpleWork_Core_Namespace_Enter__
 //      
 //      由于模块依赖于<map><string>，所以，能不引入则尽量不要引入。
 //
-class __CModule : public CObject, public IModule {
+class CModule : public CObject, public IModule {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IModule)

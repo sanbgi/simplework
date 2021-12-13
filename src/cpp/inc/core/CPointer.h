@@ -12,33 +12,33 @@ typedef struct __IPtrForceSaver {
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口，目前建议不要直接使用
 //
-template<typename TInterface> class __CPointer {
+template<typename TInterface> class CPointer {
 
 public:
-    inline __CPointer(){
+    inline CPointer(){
         m_ptr = nullptr;
     }
-    inline __CPointer(const __CPointer& src) : m_ptr(nullptr)  {
+    inline CPointer(const CPointer& src) : m_ptr(nullptr)  {
         initPtr(src.m_ptr);
     }
-    inline __CPointer& operator=(const __CPointer& src) {
+    inline CPointer& operator=(const CPointer& src) {
         assignPtr(src.m_ptr);
         return *this;
     }
-    inline ~__CPointer() {
+    inline ~CPointer() {
         releasePtr();
     }
-    template<typename Q> inline __CPointer(Q* pPtr) : m_ptr(nullptr) {
+    template<typename Q> inline CPointer(Q* pPtr) : m_ptr(nullptr) {
        initPtr(pPtr);
     }
-    template<typename Q> inline __CPointer(const Q& src) : m_ptr(nullptr) {
+    template<typename Q> inline CPointer(const Q& src) : m_ptr(nullptr) {
         initPtr(src.getPtr());
     }
-    template<typename Q> inline const __CPointer& operator=(Q* pSrc) {
+    template<typename Q> inline const CPointer& operator=(Q* pSrc) {
         assignPtr(pSrc);
         return *this;
     }
-    template<typename Q> inline const __CPointer& operator=(const Q& src) {
+    template<typename Q> inline const CPointer& operator=(const Q& src) {
         assignPtr(src.getPtr());
         return *this;
     }
@@ -90,9 +90,9 @@ private:
                 initPtr(pDest);
             }else{
                 struct CForceSetter : public __IPtrForceSaver {
-                    CForceSetter(__CPointer* pAutoPtr) : _pPtr(pAutoPtr){}
+                    CForceSetter(CPointer* pAutoPtr) : _pPtr(pAutoPtr){}
                     int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
-                    __CPointer* _pPtr;
+                    CPointer* _pPtr;
                 }setter(this);
                 pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), &setter);
             }

@@ -2,9 +2,10 @@
 #define __SimpleWork_IFactory__h__
 
 #include "core.h"
-#include "SObject.h"
 
 __SimpleWork_Core_Namespace_Enter__
+
+class SObject;
 
 //
 // 对象工场对象的接口
