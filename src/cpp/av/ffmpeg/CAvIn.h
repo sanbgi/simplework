@@ -13,17 +13,19 @@ class CAvIn : public CObject, public IAvIn {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int getStreamingCount();
-    SAvStreaming getStreaming(int iStreamingIndex);
     int getWidth();
     int getHeight();
-    int getFrame(SAvFrame& frame);
+    int getStreaming(SAvStreaming& rStreaming);
+    int getFrame(SAvFrame& rFrame);
 
 public:
     int initVideoFile(const char* szFileName);
     int initVideoCapture(const char* szName);
+    int initAudioCapture(const char* szName);
     int sendPackageAndReceiveFrame(SAvFrame& frame, AVPacket* pPackage);
     int receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming);
+    int initCapture(AVInputFormat* pInputForamt, const char* szName);
+    static void initDeviceRegistry();
 
 public:
     CAvIn();

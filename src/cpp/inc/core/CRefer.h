@@ -82,6 +82,7 @@ private:
             __BlockData* pBlock = new __BlockData();
             pBlock->m_nRefCnt = 1;
             pBlock->m_spTaker.take(hRes, fUnTake);
+            return pBlock;
         }
         void decRef() {
             if( --m_nRefCnt == 0 ) {

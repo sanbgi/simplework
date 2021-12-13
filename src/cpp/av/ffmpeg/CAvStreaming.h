@@ -12,7 +12,7 @@ class CAvStreaming : public CObject, IAvStreaming {
 
 public://IAvFrame
     SAvFrame::AvFrameType getFrameType();
-    int getStreamingIndex();
+    int getStreamingId();
 
 public:
     int init(AVStream* pAvStream, int iStreamingIndex);

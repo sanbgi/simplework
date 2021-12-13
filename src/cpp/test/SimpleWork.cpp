@@ -36,10 +36,23 @@ using namespace sw::math;
 
 int main(int argc, char *argv[]){
     
-    SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");    
-    //AvIn avIn = SAvIn::openVideoCapture("vfwcap");
+    SVideoDevice sVideoDevice;
+    while(SAvIn::getVideoDevice(sVideoDevice) == Error::ERRORTYPE_SUCCESS) {
+        std::cout << "video device: " << sVideoDevice->getDeviceName() << "\n";
+    }
+
+    SAudioDevice sAudioDevice;
+    while(SAvIn::getAudioDevice(sAudioDevice) == Error::ERRORTYPE_SUCCESS) {
+        std::cout << "audio device: " << sAudioDevice->getDeviceName() << "\n";
+    }
+
+
+    //SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");    
+    //SAvIn avIn = SAvIn::openVideoDevice("vfwcap");
+    SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
+    //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
     SAvOut avVideoOut = SAvOut::openWindow("Display Video", 640, 360);
-    SAvOut avAudioOut = SAvOut::openSpeaker(nullptr, 0, 0);
+    SAvOut avAudioOut = SAvOut::openSpeaker(nullptr, 44100, 2);
     int nframeVideo = 0;
     int nframeAudio = 0;
     int nframeUnknown = 0;
@@ -65,7 +78,7 @@ int main(int argc, char *argv[]){
             nframeUnknown++;
             break;
         }
-        if( nframe++ % 100 == 0) {
+        if( nframe++ % 10 == 0) {
             std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
         }
     }

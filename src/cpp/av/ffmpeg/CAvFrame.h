@@ -13,6 +13,7 @@ class CAvFrame : public CObject, public IAvFrame {
 
 public://IAvFrame
     SAvStreaming& getStreaming();
+    int getStreamingId();
 
 public:
     static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame); 

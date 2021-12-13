@@ -54,9 +54,11 @@ public:
         }
 
         STensor tensor = spAudioFrame->getFrameAudioSamples(SAudioFrame::AVFRAMESAMPLETYPE_S16, m_specAudio.freq, m_specAudio.channels);
-        int ret = tensor->getDataSize();
-        if( tensor ) {
-            ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
+        if(tensor) {
+            int ret = tensor->getDataSize();
+            if( tensor ) {
+                ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
+            }
         }
         return Error::ERRORTYPE_SUCCESS;
     }

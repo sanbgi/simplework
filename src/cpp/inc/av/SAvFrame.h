@@ -23,6 +23,11 @@ public:
         //
         virtual AvFrameType getFrameType() = 0;
 
+        //
+        // 获取流编号
+        //
+        virtual int getStreamingId() = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvFrame)

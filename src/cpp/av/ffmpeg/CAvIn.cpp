@@ -7,20 +7,29 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-int CAvIn::getStreamingCount() {
-    return m_vecAvStreamings.size();
-}
-
-SAvStreaming CAvIn::getStreaming(int iStreamingIndex) {
-    return m_vecAvStreamings[iStreamingIndex];
-}
-
 int CAvIn::getWidth() {
     return 0;
 }
 
 int CAvIn::getHeight() {
     return 0;
+}
+
+int CAvIn::getStreaming(SAvStreaming& rStreaming) {
+    if( m_vecAvStreamings.size() == 0 ) {
+        return Error::ERRORTYPE_FAILURE;
+    }
+
+    if(!rStreaming) {
+        rStreaming = m_vecAvStreamings[0];
+    }else{
+        int iStreaming = rStreaming->getStreamingId() + 1;
+        if( iStreaming >= m_vecAvStreamings.size() ) {
+            return Error::ERRORTYPE_FAILURE;
+        }
+        rStreaming = m_vecAvStreamings[iStreaming];
+    }
+    return Error::ERRORTYPE_SUCCESS;
 }
 
 int CAvIn::getFrame(SAvFrame& frame) {
@@ -75,23 +84,48 @@ int CAvIn::initVideoFile(const char* szFileName) {
     return Error::ERRORTYPE_SUCCESS;
 }
 
-int CAvIn::initVideoCapture(const char* szName) {
+void CAvIn::initDeviceRegistry() {
     static bool g_bInitialized = false;
     if( !g_bInitialized ) {
         avdevice_register_all();
         g_bInitialized = true;
     }
-    
-    // 释放之前使用资源
+}
+
+
+int CAvIn::initVideoCapture(const char* szName) {
     release();
-    AVInputFormat *ifmt=av_find_input_format("vfwcap");
-    if(nullptr == ifmt) {
-        return Error::ERRORTYPE_FAILURE;
-    }
+    initDeviceRegistry();
+    AVInputFormat *ifmt = av_find_input_format("dshow");
+    /*
+    AVInputFormat *ifmt;
+    if(szName != nullptr)
+        ifmt = av_find_input_format(szName);
+    else
+        ifmt = av_input_video_device_next(nullptr);
+    */
+    return initCapture(ifmt, szName);
+}
+
+int CAvIn::initAudioCapture(const char* szName) {
+    release();
+    initDeviceRegistry();
+    AVInputFormat *ifmt = av_find_input_format("dshow");
+    /*
+    AVInputFormat *ifmt;
+    if(szName != nullptr)
+        ifmt = av_find_input_format(szName);
+    else
+        ifmt = av_input_audio_device_next(nullptr);
+    */
+    return initCapture(ifmt, szName);
+}
+
+int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
 
     // 打开视频流
     m_spFormatCtx.take(avformat_alloc_context(), [](AVFormatContext* pCtx){avformat_free_context(pCtx);});
-    if(avformat_open_input(&m_spFormatCtx,0,ifmt,NULL)!=0){
+    if(avformat_open_input(&m_spFormatCtx,szName,pInputForamt,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
         return Error::ERRORTYPE_FAILURE;

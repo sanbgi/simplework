@@ -21,7 +21,7 @@ public:
         //
         //  获取流的序号
         //
-        virtual int getStreamingIndex() = 0;
+        virtual int getStreamingId() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

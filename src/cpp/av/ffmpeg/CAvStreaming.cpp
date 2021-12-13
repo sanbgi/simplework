@@ -33,7 +33,7 @@ SAvFrame::AvFrameType CAvStreaming::getFrameType() {
     return SAvFrame::AVSTREAMTYPE_UNKNOWN;
 }
 
-int CAvStreaming::getStreamingIndex() {
+int CAvStreaming::getStreamingId() {
     return m_iStreamingIndex;
 }
 
@@ -73,13 +73,11 @@ void CAvStreaming::releaseAudioCtx() {
 
 STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels) {
 
-    int64_t nChannelLayout = av_get_default_channel_layout(nChannels);
-
     //
     // 如果格式相同，则直接读取并返回帧数据
     //
     if( pAvFrame->sample_rate == nSampleRate && 
-        pAvFrame->channel_layout == nChannelLayout &&
+        pAvFrame->channels == nChannels &&
         pAvFrame->format == eSampleFormat ) {
 
         // 根据相应音频参数，获得所需缓冲区大小
@@ -102,12 +100,16 @@ STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForm
     }
 
     if( !m_spSwrCtx  ) {
+        
+        int64_t nChannelLayout = av_get_default_channel_layout(nChannels);
+        int64_t nFrameChannelLayout = av_get_default_channel_layout(pAvFrame->channels);
+
         m_spSwrCtx.take(swr_alloc_set_opts(
                                     NULL,
                                     nChannelLayout, 
                                     eSampleFormat, 
                                     nSampleRate,
-                                    pAvFrame->channel_layout,           
+                                    nFrameChannelLayout,           
                                     (AVSampleFormat)pAvFrame->format, 
                                     pAvFrame->sample_rate,
                                     0,

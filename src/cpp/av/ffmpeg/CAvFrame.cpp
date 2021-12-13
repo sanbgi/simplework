@@ -9,6 +9,10 @@ SAvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
 }
 
+int CAvFrame::getStreamingId() {
+    return m_spAvStream->getStreamingId();
+}
+
 int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame) {
     SObject spObject;
     CAvFrame* pAvFrame;
