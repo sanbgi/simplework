@@ -144,6 +144,7 @@
 
 #include "CObject.h"
 #include "CTaker.h"
+#include "CRefer.h"
 #define SIMPLEWORK_FACTORY_REGISTER(className, classKey) \
     class __C##className##Register { \
     public: \

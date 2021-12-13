@@ -70,10 +70,6 @@ public:
         return m_hRes != nullptr;
     }
 
-    T getRes() {
-        return m_hRes;
-    }
-
 private:
     void release() {
         if(m_fUnTake && m_hRes != nullptr) {
