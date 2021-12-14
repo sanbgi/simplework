@@ -57,7 +57,6 @@ public:
         //
         int nAudioChannels;
 
-
         //
         // 视频高度，只针对视频采样有效
         //

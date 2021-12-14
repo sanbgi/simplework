@@ -23,7 +23,7 @@ int CAvIn::getStreaming(SAvStreaming& rStreaming) {
     return Error::ERRORTYPE_SUCCESS;
 }
 
-int CAvIn::setStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta) {
+int CAvIn::changeStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta) {
     if(iStreamingId < 0 || iStreamingId >= m_vecCAvStreamings.size() ) {
         return Error::ERRORTYPE_FAILURE;
     }

@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
                 videoMeta = spStreaming->getSampleMeta();
                 videoMeta.nVideoWidth = 640;
                 videoMeta.nVideoHeight = 360;
-                avIn->setStreamingSampleMeta(iVideoId, videoMeta);
+                avIn->changeStreamingSampleMeta(iVideoId, videoMeta);
             }
             break;
 

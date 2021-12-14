@@ -22,7 +22,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvIn)
         //
         // 修改流采样数据格式
         //
-        virtual int setStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta) = 0;
+        virtual int changeStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta) = 0;
 
         //
         // 获取帧

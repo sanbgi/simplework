@@ -14,7 +14,7 @@ class CAvIn : public CObject, public IAvIn {
 
 public:
     int getStreaming(SAvStreaming& rStreaming);
-    int setStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta);
+    int changeStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta);
     int readFrame(int& iStreamingId, SAvFrame& rFrame);
 
 public:
