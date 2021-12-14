@@ -13,15 +13,16 @@ class CAvFrame : public CObject, public IAvFrame {
 
 public://IAvFrame
     SAvStreaming& getStreaming();
-    int getStreamingId();
+    STensor& getData();
 
 public:
-    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame); 
+    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, int& iStreamingId, SAvFrame& rFrame); 
 
 public:
     CTaker<AVFrame*> m_spAvFrame;
     SAvStreaming m_spAvStream;
     CAvStreaming* m_pStreaming;
+    STensor m_spData;
 };
 
 FFMPEG_NAMESPACE_LEAVE

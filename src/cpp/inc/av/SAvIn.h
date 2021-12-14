@@ -20,9 +20,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvIn)
         virtual int getStreaming(SAvStreaming& rStreaming) = 0;
 
         //
+        // 修改流采样数据格式
+        //
+        virtual int setStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta) = 0;
+
+        //
         // 获取帧
         //
-        virtual int getFrame(SAvFrame& rFrame) = 0;
+        virtual int readFrame(int& iStreamingId, SAvFrame& rFrame) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -10,19 +10,19 @@ class CAvOutFactory : public CObject, public SAvOut::IAvOutFactory{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    SAvOut openWindow(const char* szWindowName, int width, int height) {
+    SAvOut openWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) {
         SObject spAvOut;
         sdl::CAvOut_SDLWindow* pAvOut = CObject::createObject<sdl::CAvOut_SDLWindow>(spAvOut);
-        if( pAvOut->initWindow(szWindowName, width, height) != Error::ERRORTYPE_SUCCESS ) {
+        if( pAvOut->initWindow(szWindowName, sampleMeta) != Error::ERRORTYPE_SUCCESS ) {
             return SAvOut();
         }
         return SAvOut::wrapPtr((IAvOut*)pAvOut);
     }
 
-    SAvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
+    SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) {
         SObject spAvOut;
         sdl::CAvOut_SDLSpeaker* pAvOut = CObject::createObject<sdl::CAvOut_SDLSpeaker>(spAvOut);
-        if( pAvOut->initSpeaker(szName, sampleRate, nChannels) != Error::ERRORTYPE_SUCCESS ) {
+        if( pAvOut->initSpeaker(szName, sampleMeta) != Error::ERRORTYPE_SUCCESS ) {
             return SAvOut();
         }
         return SAvOut::wrapPtr((IAvOut*)pAvOut);

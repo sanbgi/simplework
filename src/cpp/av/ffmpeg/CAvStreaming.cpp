@@ -1,13 +1,15 @@
 #include "av_ffmpeg.h"
 #include "CAvStreaming.h"
+#include "CAvSampleType.h"
 
 FFMPEG_NAMESPACE_ENTER
 
 CAvStreaming::CAvStreaming() {
-    m_eAvStreamingType = SAvFrame::AVSTREAMTYPE_UNKNOWN;
+    m_pAvStream = nullptr;
+    m_eAvStreamingType = EAvStreamingType::AvStreamingType_None;
     m_iStreamingIndex = -1;
-
-    m_pImagePointers[0] = nullptr;
+    m_pData[0] = nullptr;
+    m_lastMeta.eSampleType = EAvSampleType::AvSampleType_None;
 }
 
 CAvStreaming::~CAvStreaming() {
@@ -19,22 +21,63 @@ void CAvStreaming::release() {
     releaseVideoCtx();
 }
 
-SAvFrame::AvFrameType CAvStreaming::getFrameType() {
+EAvStreamingType CAvStreaming::getStreamingType() {
     if(m_spCodecCtx) {
         switch (m_spCodecCtx->codec_type)
         {
         case AVMEDIA_TYPE_VIDEO:
-            return SAvFrame::AVSTREAMTYPE_VIDEO;
+            return EAvStreamingType::AvStreamingType_Video;
         
         case AVMEDIA_TYPE_AUDIO:
-            return SAvFrame::AVSTREAMTYPE_AUDIO;
+            return EAvStreamingType::AvStreamingType_Audio;
         }
     }
-    return SAvFrame::AVSTREAMTYPE_UNKNOWN;
+    return EAvStreamingType::AvStreamingType_None;
 }
 
 int CAvStreaming::getStreamingId() {
     return m_iStreamingIndex;
+}
+
+
+int CAvStreaming::getSampleRate() {
+    return m_spCodecCtx->sample_rate;
+}
+
+EAvSampleType CAvStreaming::getSampleType() {
+    switch(m_spCodecCtx->codec_type) {
+    case AVMEDIA_TYPE_VIDEO:
+        {
+            EAvSampleType eType = CAvSampleType::convert(m_spCodecCtx->pix_fmt);
+            if(eType == EAvSampleType::AvSampleType_None) {
+                eType = EAvSampleType::AvSampleType_Video_RGB;
+            }
+            return eType;
+        }
+        break;
+
+    case AVMEDIA_TYPE_AUDIO:
+        {
+            EAvSampleType eType = CAvSampleType::convert(m_spCodecCtx->sample_fmt);
+            if(eType == EAvSampleType::AvSampleType_None) {
+                eType = EAvSampleType::AvSampleType_Audio_S16;
+            }
+            return eType;
+        }
+        break;
+    }
+    return EAvSampleType::AvSampleType_None;
+}
+
+const CAvSampleMeta& CAvStreaming::getSampleMeta() {
+    return m_sampleMeta;
+}
+
+int CAvStreaming::setSampleMeta(const CAvSampleMeta& sampleMeta) {
+    m_sampleMeta = sampleMeta;
+    releaseAudioCtx();
+    releaseVideoCtx();
+    return Error::ERRORTYPE_SUCCESS;
 }
 
 int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
@@ -64,6 +107,22 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
 
     m_spCodecCtx.take(pCodecCtx);
     m_iStreamingIndex = iStreamingIndex;
+    m_pAvStream = pAvStream;
+    m_sampleMeta.eSampleType = getSampleType();
+    switch(m_spCodecCtx->codec_type) {
+    case AVMEDIA_TYPE_VIDEO:
+        {
+            m_sampleMeta.nVideoWidth = m_spCodecCtx->width;
+            m_sampleMeta.nVideoHeight = m_spCodecCtx->height;
+        }
+        break;
+    case AVMEDIA_TYPE_AUDIO:
+        {
+            m_sampleMeta.nAudioRate = m_spCodecCtx->sample_rate;
+            m_sampleMeta.nAudioChannels = m_spCodecCtx->channels;
+        }
+        break;
+    }
     return Error::ERRORTYPE_SUCCESS;
 }
 
@@ -71,30 +130,48 @@ void CAvStreaming::releaseAudioCtx() {
     m_spSwrCtx.release();
 }
 
-STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels) {
+int CAvStreaming::convertToTensor(STensor& spData, AVFrame* pAvFrame) {
+    if(m_spCodecCtx) {
+        switch (m_spCodecCtx->codec_type)
+        {
+        case AVMEDIA_TYPE_VIDEO:
+            return convertImage(spData, pAvFrame);
+        
+        case AVMEDIA_TYPE_AUDIO:
+            return convertAudio(spData, pAvFrame);
+        }
+    }
+    return Error::ERRORTYPE_FAILURE;
+}
 
+int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
+    CAvSampleMeta& sampleMeta = m_sampleMeta;
+    int nChannels = sampleMeta.nAudioChannels;
+    int nAudioRate = sampleMeta.nAudioRate;
+    AVSampleFormat eSampleFormat = CAvSampleType::toSampleFormat(sampleMeta.eSampleType);
     //
     // 如果格式相同，则直接读取并返回帧数据
     //
-    if( pAvFrame->sample_rate == nSampleRate && 
+    if( pAvFrame->sample_rate == nAudioRate && 
         pAvFrame->channels == nChannels &&
         pAvFrame->format == eSampleFormat ) {
 
         // 根据相应音频参数，获得所需缓冲区大小
         int nFrameSize = av_samples_get_buffer_size(
                 NULL, 
-                pAvFrame->channels,
+                nChannels,
                 pAvFrame->nb_samples,
                 eSampleFormat,
                 1);
-            
-        return STensor::createVector(nFrameSize, (unsigned char*)pAvFrame->data[0]);
+        
+        spTensor = STensor::createVector(pAvFrame->nb_samples, (unsigned char*)pAvFrame->data[0]);
+        return Error::ERRORTYPE_SUCCESS;
     }
 
     if( m_spSwrCtx ) {
-        if( nSampleRate != m_nCtxSampleRate || 
-            nChannels != m_nCtxChannels ||
-            eSampleFormat != m_eCtxSampleFormat ) {
+        if( m_lastMeta.nAudioRate != sampleMeta.nAudioRate || 
+            m_lastMeta.nAudioChannels != sampleMeta.nAudioChannels ||
+            m_lastMeta.eSampleType != sampleMeta.eSampleType ) {
             releaseAudioCtx();
         }
     }
@@ -108,7 +185,7 @@ STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForm
                                     NULL,
                                     nChannelLayout, 
                                     eSampleFormat, 
-                                    nSampleRate,
+                                    nAudioRate,
                                     nFrameChannelLayout,           
                                     (AVSampleFormat)pAvFrame->format, 
                                     pAvFrame->sample_rate,
@@ -121,14 +198,11 @@ STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForm
 
         if( swr_init(m_spSwrCtx) < 0 ) {
             releaseAudioCtx();
-            return STensor();
+            return Error::ERRORTYPE_FAILURE;
         }
 
-        m_nCtxSampleRate = nSampleRate;
-        m_nCtxChannels = nChannels;
-        m_eCtxSampleFormat = eSampleFormat;
+        m_lastMeta = sampleMeta;
     }
-
 
     // 重采样输出参数1：输出音频缓冲区尺寸
     // 重采样输出参数2：输出音频缓冲区
@@ -137,14 +211,14 @@ STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForm
     uint8_t **out = &out_buf;
 
     // 重采样输出参数：输出音频样本数(多加了256个样本)
-    int out_count = (int64_t)pAvFrame->nb_samples * nSampleRate / pAvFrame->sample_rate + 256;
+    int out_count = (int64_t)pAvFrame->nb_samples * nAudioRate / pAvFrame->sample_rate + 256;
     // 重采样输出参数：输出音频缓冲区尺寸(以字节为单位)
-    int nBufSize  = av_samples_get_buffer_size(NULL, nChannels, out_count, m_eCtxSampleFormat, 0);
+    int nBufSize  = av_samples_get_buffer_size(NULL, nChannels, out_count, eSampleFormat, 0);
     if (nBufSize < 0)
     {
         printf("av_samples_get_buffer_size() failed\n");
         releaseAudioCtx();
-        return STensor();
+        return Error::ERRORTYPE_FAILURE;
     }
     av_fast_malloc(&out_buf, &out_buf_size, nBufSize);
 
@@ -163,52 +237,46 @@ STensor CAvStreaming::convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleForm
     if (nb_samples == out_count)
     {
         printf("audio buffer is probably too small\n");
-        //if (swr_init(s_audio_swr_ctx) < 0)
-        //    swr_free(&s_audio_swr_ctx);
     }
 
     // 重采样返回的一帧音频数据大小(以字节为单位)
     int nData = nb_samples * nChannels * av_get_bytes_per_sample(eSampleFormat);
-    return STensor::createVector(nData, (unsigned char*)out_buf);
+    spTensor = STensor::createVector(nData, (unsigned char*)out_buf);
+    return Error::ERRORTYPE_FAILURE;
 }
 
 void CAvStreaming::releaseVideoCtx() {
-    if(m_pImagePointers[0] != nullptr) {
-        av_freep(&m_pImagePointers[0]);
-        m_pImagePointers[0] = nullptr;
+    if(m_pData[0] != nullptr) {
+        av_freep(&m_pData[0]);
+        m_pData[0] = nullptr;
     }
 
     m_spSwsContext.release();
 }
 
-STensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) {
+int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
+    CAvSampleMeta& sampleMeta = m_sampleMeta;
+    int nTargetWidth = sampleMeta.nVideoWidth > 0 ? sampleMeta.nVideoWidth : pAvFrame->width;
+    int nTargetHeight = sampleMeta.nVideoHeight > 0 ? sampleMeta.nVideoHeight : pAvFrame->height;
+    AVPixelFormat eTargetPixelFormat = CAvSampleType::toPixFormat(sampleMeta.eSampleType);
+
     //如果上次用的像素格式与这次不同，则释放上次的转化器，重新创建
-    if( m_spSwsContext && m_ePixFormat != ePixFormat ) {
+    if( m_spSwsContext && (
+            m_lastMeta.eSampleType != sampleMeta.eSampleType ||
+            m_lastMeta.nVideoHeight != nTargetWidth ||
+            m_lastMeta.nVideoWidth != nTargetHeight
+            ) ) {
         releaseVideoCtx();
     }
     
     if( !m_spSwsContext ) {
         
-        switch(ePixFormat) {
-        case AV_PIX_FMT_RGBA:
-            m_nPixBytes = 4;
-            break;
-
-        case AV_PIX_FMT_RGB24:
-        case AV_PIX_FMT_BGR24:
-            m_nPixBytes = 3;
-            break;
-        
-        default:
-            return STensor();
-        }
-
         //
         SwsContext* pSwsContext = sws_getContext(
             //源图像的 宽 , 高 , 图像像素格式
             m_spCodecCtx->width, m_spCodecCtx->height, m_spCodecCtx->pix_fmt,
             //目标图像 大小不变 , 不进行缩放操作 , 只将像素格式设置成 RGBA 格式的
-            m_spCodecCtx->width, m_spCodecCtx->height, ePixFormat,
+            nTargetWidth, nTargetHeight, eTargetPixelFormat,
             //使用的转换算法 , FFMPEG 提供了许多转换算法 , 有快速的 , 有高质量的 , 需要自己测试
             SWS_BILINEAR,
             //源图像滤镜 , 这里传 NULL 即可
@@ -219,19 +287,31 @@ STensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) 
             0
         );
         if(pSwsContext == nullptr) {
-            return STensor();
+            return Error::ERRORTYPE_FAILURE;
         }
 
         m_spSwsContext.take(pSwsContext, sws_freeContext);
-        if( av_image_alloc(m_pImagePointers, m_pLinesizes,
-            m_spCodecCtx->width, m_spCodecCtx->height, ePixFormat, 1) < 0 ){
+        if( av_image_alloc(m_pData, m_pLinesizes,
+            nTargetWidth, nTargetHeight, eTargetPixelFormat, 1) < 0 ){
             releaseVideoCtx();
-            return STensor();
+            return Error::ERRORTYPE_FAILURE;
         }
-        m_ePixFormat = ePixFormat;
+
+        switch(sampleMeta.eSampleType) {
+        case EAvSampleType::AvSampleType_Video_RGBA:
+            m_nPixelBytes = 4;
+            break;
+
+        case EAvSampleType::AvSampleType_Video_RGB:
+            m_nPixelBytes = 3;
+            break;
+        }
+        m_lastMeta = sampleMeta;
+        int dimsize[3] = { nTargetWidth, nTargetHeight, m_nPixelBytes };
+        m_spLastDimTensor = STensor::createVector(3, dimsize);
     }
 
-    sws_scale(
+    int ret_height = sws_scale(
         //SwsContext *swsContext 转换上下文
         m_spSwsContext,
         //要转换的数据内容
@@ -241,24 +321,25 @@ STensor CAvStreaming::convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat) 
         0,
         pAvFrame->height,
         //转换后目标图像数据存放在这里
-        m_pImagePointers,
+        m_pData,
         //转换后的目标图像行数
         m_pLinesizes
     );
 
+    // 如果转化结果尺寸与想要的目标尺寸不一致，则转化失败
+    if( m_pLinesizes[0] / m_nPixelBytes != nTargetWidth ||
+        ret_height != nTargetHeight ) {
+            return Error::ERRORTYPE_FAILURE;
+    }
+
     //
-    //  修正视频宽度。及pAvFrame->width != m_pLinesizes[0]/4时，以后者为准。如果返
+    //  修正视频宽度。及nTargetWidth != m_pLinesizes[0]/4时，以后者为准。如果返
     //  回值中的视频，一行的字节数不等于视频宽度*4(RGBA)，则这个时候视频数据有点难处
     //  理，只能暂时将返回图像的宽度扩大(有垃圾数据)或缩小(数据丢失）到返回的实际宽度。
     //  如果想调整为实际视频大小，则需要对每一行的数据做处理，性能太低。
-    //  
-    //  这个地方可以考虑优化，因为所有帧只需要一个统一的Dim即可，无需每次创建，前提是
-    //  width总是相同。
     //
-    int width = m_pLinesizes[0]/m_nPixBytes;
-    int dimsize[3] = { width, pAvFrame->height, m_nPixBytes };
-    STensor spDimTensor = STensor::createVector(3, dimsize);
-    return STensor::createTensor(spDimTensor, width*pAvFrame->height*m_nPixBytes, m_pImagePointers[0]);
+    spTensor = STensor::createTensor(m_spLastDimTensor, nTargetWidth*nTargetHeight*m_nPixelBytes, m_pData[0]);
+    return Error::ERRORTYPE_SUCCESS;
 }
 
 FFMPEG_NAMESPACE_LEAVE

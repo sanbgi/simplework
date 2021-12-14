@@ -10,13 +10,12 @@
 #define SIMPLEWORK_AV_NAMESPACE_ENTER namespace sw { namespace av {
 #define SIMPLEWORK_AV_NAMESPACE_LEAVE }}
 
+#include "EAvSampleType.h"
+#include "CAvSampleMeta.h"
+#include "EAvStreamingType.h"
 #include "SAvFrame.h"
-#include "SVideoFrame.h"
-#include "SAudioFrame.h"
 #include "SAudioDevice.h"
 #include "SVideoDevice.h"
-#include "SVideoDevice.h"
-#include "SAudioDevice.h"
 #include "SAvStreaming.h"
 #include "SAvIn.h"
 #include "SAvOut.h"

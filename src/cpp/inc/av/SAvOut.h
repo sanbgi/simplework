@@ -11,24 +11,34 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 211206)
-        virtual int putFrame(const SAvFrame& frame) = 0;
+
+        //
+        // 设置非帧信息
+        //
+        virtual int putVariable(const char* szKey, const char* szValue) = 0;
+
+        //
+        // 写入帧
+        //
+        virtual int writeFrame(const SAvFrame& frame) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvOutFactory, "sw.av.AvOutFactory")
         SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOutFactory", 211206)
-            virtual SAvOut openWindow(const char* szWindowName, int width, int height) = 0;
+            virtual SAvOut openWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) = 0;
 
-            virtual SAvOut openSpeaker(const char* szName, int sampleRate, int nChannels) = 0;
+            virtual SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvOutFactory)
 
 public:
-    static inline SAvOut openWindow(const char* szWindowName, int width, int height) {
-        return getFactory()->openWindow(szWindowName, width, height);
+    static inline SAvOut openWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) {
+        return getFactory()->openWindow(szWindowName, sampleMeta);
     }
 
-    static inline SAvOut openSpeaker(const char* szName, int sampleRate, int nChannels) {
-        return getFactory()->openSpeaker(szName, sampleRate, nChannels);
+    static inline SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) {
+        return getFactory()->openSpeaker(szName, sampleMeta);
     }
 
 private:

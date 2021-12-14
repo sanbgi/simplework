@@ -2,6 +2,7 @@
 #define __SimpleWork_av_sdl_CAvOut_SDLWindow_h__
 
 #include "av_sdl.h"
+#include "CAvSampleType.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_AV_NAMESPACE;
@@ -16,7 +17,7 @@ class CAvOut_SDLWindow : public CObject, public IAvOut{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int initWindow(const char* szWindowName, int width, int height) {
+    int initWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) {
         
         release();
 
@@ -24,7 +25,7 @@ public:
             return Error::ERRORTYPE_FAILURE;
 
         //创建窗口
-        m_pWindow = SDL_CreateWindow("example04: for mediaplayer", 0, 0, width, height, 0);
+        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, sampleMeta.nVideoWidth, sampleMeta.nVideoHeight, 0);
         if (nullptr == m_pWindow)
             return Error::ERRORTYPE_FAILURE;
 
@@ -33,18 +34,19 @@ public:
             return Error::ERRORTYPE_FAILURE;
         }
 
-        m_nWinWidth = width;
-        m_nWinHeight = height;
+        m_nWinWidth = sampleMeta.nVideoWidth;
+        m_nWinHeight = sampleMeta.nVideoHeight;
         return Error::ERRORTYPE_SUCCESS;
     }
 
-    int putFrame(const SAvFrame& frame) {
-        SVideoFrame spVideoFrame = frame;
-        if(!spVideoFrame) {
-            return Error::ERRORTYPE_FAILURE;
-        }
+    int putVariable(const char* szKey, const char* szValue) {
+        return Error::ERRORTYPE_FAILURE;
+    }
 
-        STensor spTensor = spVideoFrame->getFrameVideoImage(SVideoFrame::AVFRAMEIMAGETYPE_RGB);
+    int writeFrame(const SAvFrame& frame) {
+        STensor spTensor = frame->getData();
+        CAvSampleMeta sampleMeta = frame->getSampleMeta();
+
         const STensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
         int width = pDim[0];
@@ -52,13 +54,13 @@ public:
         int depth = pDim[2]*8;
         int pitch = width*pDim[2];
 
+        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.eSampleType);
         void *pixels = (void*)spTensor->getDataPtr<unsigned char>();
         SDL_Renderer* pRenderer = m_pRenderer;
         CTaker<SDL_Texture*> spTexture(
-                                SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height),
+                                SDL_CreateTexture(pRenderer, ePixelFormat, SDL_TEXTUREACCESS_STREAMING, width, height),
                                 SDL_DestroyTexture
                             );
-        //CAutoPointer<SDL_Texture> pTexture(SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height), SDL_DestroyTexture);
         if (!spTexture) {
             return Error::ERRORTYPE_FAILURE;
         }

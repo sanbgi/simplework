@@ -14,16 +14,39 @@ public:
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvStreaming", 211206)
 
         //
-        // 获取流数据类型
-        //
-        virtual SAvFrame::AvFrameType getFrameType() = 0;
-
-        //
-        //  获取流的序号
+        // 获取流的序号
         //
         virtual int getStreamingId() = 0;
 
+        //
+        // 获取流数据类型
+        //
+        virtual EAvStreamingType getStreamingType() = 0;
+
+        //
+        // 获取样本元信息，只有在版本冲突情况下，才会返回失败
+        //
+        virtual const CAvSampleMeta& getSampleMeta() = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
+    
+    SIMPLEWORK_INTERFACECLASS_ENTER(AvStreamingFactory, "sw.av.AvStreamingFactory")
+        SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvStreamingFactory", 211214)
+            //
+            // 创建流对象
+            //
+            virtual SAvStreaming createStreaming(
+                                int iStreamingId,
+                                EAvStreamingType eStreamingType, 
+                                const CAvSampleMeta& sampleMeta) = 0;
+
+        SIMPLEWORK_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreamingFactory)
+
+    static SAvStreamingFactory& getFactory() {
+        static SAvStreamingFactory g_factory = SObject::createObject<SAvStreamingFactory>();
+        return g_factory;
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreaming)
 

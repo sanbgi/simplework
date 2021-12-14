@@ -11,13 +11,18 @@ class CAvStreaming : public CObject, IAvStreaming {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    SAvFrame::AvFrameType getFrameType();
+    EAvStreamingType getStreamingType();
     int getStreamingId();
+    int getSampleRate();
+    EAvSampleType getSampleType();
+    const CAvSampleMeta& getSampleMeta();
 
 public:
     int init(AVStream* pAvStream, int iStreamingIndex);
-    STensor convertAudio(AVFrame* pAvFrame, AVSampleFormat eSampleFormat, int nSampleRate, int nChannels);
-    STensor convertImage(AVFrame* pAvFrame, AVPixelFormat ePixFormat);
+    int setSampleMeta(const CAvSampleMeta& sampleMeta);
+    int convertToTensor(STensor& spData, AVFrame* pAvFrame);
+    int convertAudio(STensor& spData, AVFrame* pAvFrame);
+    int convertImage(STensor& spData, AVFrame* pAvFrame);
 
 public:
     CAvStreaming();
@@ -31,21 +36,22 @@ public:
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     CTaker<AVCodecContext*> m_spCodecCtx;
-    SAvFrame::AvFrameType m_eAvStreamingType;
+    EAvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;
 
 public://Audio
     CTaker<SwrContext*> m_spSwrCtx;
-    int m_nCtxSampleRate;
-    int64_t m_nCtxChannels;
-    AVSampleFormat m_eCtxSampleFormat;
 
 public://Video
     CTaker<SwsContext*> m_spSwsContext;
-    AVPixelFormat m_ePixFormat;
-    uint8_t *m_pImagePointers[4];
+    uint8_t *m_pData[4];
     int m_pLinesizes[4];
-    int m_nPixBytes;
+    int m_nPixelBytes;
+
+public:
+    CAvSampleMeta m_sampleMeta;
+    CAvSampleMeta m_lastMeta;
+    STensor m_spLastDimTensor;
 };
 
 FFMPEG_NAMESPACE_LEAVE
