@@ -26,17 +26,23 @@ private:
             return m_spData;
         }
 
+        long getTimeStamp() {
+            return m_nTimeStamp;
+        }
+
     public:
         SAvStreaming m_spStreaming;
+        long m_nTimeStamp;
         STensor m_spData;
     };
 
 public:
-    SAvFrame createFrame(SAvStreaming& rStreaming, STensor& spData) {
+    SAvFrame createFrame(SAvStreaming& rStreaming, long nTimeStamp, STensor& spData) {
         SObject spObject;
         CAvFrame* pFrame = CObject::createObject<CAvFrame>(spObject);
         pFrame->m_spStreaming = rStreaming;
         pFrame->m_spData = spData;
+        pFrame->m_nTimeStamp = nTimeStamp;
         return SAvFrame::wrapPtr(pFrame);
     }
 };

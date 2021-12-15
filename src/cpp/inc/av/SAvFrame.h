@@ -30,6 +30,11 @@ public:
         virtual SAvStreaming& getStreaming() = 0;
 
         //
+        // 获取时间戳，单位是SAvStreaming::getTimeRate对应的时间单位
+        //
+        virtual long getTimeStamp() = 0;
+
+        //
         // 获取当前帧的数据, 张量数据格式为
         //     视频：
         //          张量维度：height(行) * width(列) * bytes (单像素字节数)
@@ -49,6 +54,7 @@ public:
             //
             virtual SAvFrame createFrame(
                                 SAvStreaming& rStreaming,
+                                long nTimeStamp,
                                 sw::math::STensor& spData ) = 0;
 
         SIMPLEWORK_INTERFACE_LEAVE

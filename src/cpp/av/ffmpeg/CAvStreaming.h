@@ -13,6 +13,7 @@ class CAvStreaming : public CObject, IAvStreaming {
 public://IAvFrame
     EAvStreamingType getStreamingType();
     int getStreamingId();
+    int getTimeRate();
     int getSampleRate();
     EAvSampleType getSampleType();
     const CAvSampleMeta& getSampleMeta();

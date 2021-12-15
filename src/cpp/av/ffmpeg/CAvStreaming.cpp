@@ -39,6 +39,10 @@ int CAvStreaming::getStreamingId() {
     return m_iStreamingIndex;
 }
 
+int CAvStreaming::getTimeRate() {
+    AVRational r = m_pAvStream->time_base;
+    return r.den/r.num;
+}
 
 int CAvStreaming::getSampleRate() {
     return m_spCodecCtx->sample_rate;

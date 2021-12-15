@@ -6,6 +6,11 @@ FFMPEG_NAMESPACE_ENTER
 SAvStreaming& CAvFrame::getStreaming() {
     return m_spAvStream;
 }
+
+long CAvFrame::getTimeStamp() {
+    return m_spAvFrame->pts;
+}
+
 STensor& CAvFrame::getData(){
     m_spData.release();
     m_pStreaming->convertToTensor(m_spData, m_spAvFrame);

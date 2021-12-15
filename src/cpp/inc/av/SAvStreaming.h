@@ -20,6 +20,11 @@ public:
         virtual int getStreamingId() = 0;
 
         //
+        // 获取时钟频率
+        //
+        virtual int getTimeRate() = 0;
+
+        //
         // 获取流数据类型
         //
         virtual EAvStreamingType getStreamingType() = 0;
@@ -38,26 +43,27 @@ public:
             //
             virtual SAvStreaming createStreaming(
                                 int iStreamingId,
+                                int nTimeRate,
                                 EAvStreamingType eStreamingType, 
                                 const CAvSampleMeta& sampleMeta) = 0;
 
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreamingFactory)
 
-    SAvStreaming createVideoStream(int iStreamingId, int nWidth, int nHeight) {
+    SAvStreaming createVideoStream(int iStreamingId, int nTimeRate, int nWidth, int nHeight) {
         CAvSampleMeta sampleMeta;
         sampleMeta.eSampleType = EAvSampleType::AvSampleType_Video_RGB;
         sampleMeta.nVideoWidth = nWidth;
         sampleMeta.nVideoHeight = nHeight;
-        return getFactory()->createStreaming(iStreamingId, EAvStreamingType::AvStreamingType_Video, sampleMeta);
+        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvStreamingType::AvStreamingType_Video, sampleMeta);
     }
 
-    SAvStreaming createAudioStream(int iStreamingId, int nSampleRate, int nChannels) {
+    SAvStreaming createAudioStream(int iStreamingId, int nTimeRate, int nSampleRate, int nChannels) {
         CAvSampleMeta sampleMeta;
         sampleMeta.eSampleType = EAvSampleType::AvSampleType_Audio_S16;
         sampleMeta.nAudioRate = nSampleRate;
         sampleMeta.nAudioChannels = nChannels;
-        return getFactory()->createStreaming(iStreamingId, EAvStreamingType::AvStreamingType_Audio, sampleMeta);
+        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvStreamingType::AvStreamingType_Audio, sampleMeta);
     }
 
     static SAvStreamingFactory& getFactory() {

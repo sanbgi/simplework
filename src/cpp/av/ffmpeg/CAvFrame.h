@@ -13,6 +13,7 @@ class CAvFrame : public CObject, public IAvFrame {
 
 public://IAvFrame
     SAvStreaming& getStreaming();
+    long getTimeStamp();
     STensor& getData();
 
 public:
