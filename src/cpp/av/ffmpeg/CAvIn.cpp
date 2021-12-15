@@ -8,7 +8,7 @@ FFMPEG_NAMESPACE_ENTER
 
 int CAvIn::getStreaming(SAvStreaming& rStreaming) {
     if( m_vecAvStreamings.size() == 0 ) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     if(!rStreaming) {
@@ -16,16 +16,16 @@ int CAvIn::getStreaming(SAvStreaming& rStreaming) {
     }else{
         int iStreaming = rStreaming->getStreamingId() + 1;
         if( iStreaming >= m_vecAvStreamings.size() ) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
         rStreaming = m_vecAvStreamings[iStreaming];
     }
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 int CAvIn::changeStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta) {
     if(iStreamingId < 0 || iStreamingId >= m_vecCAvStreamings.size() ) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
     return m_vecCAvStreamings[iStreamingId]->setSampleMeta(sampleMeta);
 }
@@ -47,7 +47,7 @@ int CAvIn::readFrame(int& iStreamingId, SAvFrame& frame) {
         return sendPackageAndReceiveFrame(iStreamingId, frame, spPacket);
     }
 
-    return Error::ERRORTYPE_FAILURE;
+    return SError::ERRORTYPE_FAILURE;
 }
 
 int CAvIn::initVideoFile(const char* szFileName) {
@@ -59,7 +59,7 @@ int CAvIn::initVideoFile(const char* szFileName) {
     if(avformat_open_input(&m_spFormatCtx,szFileName,NULL,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
     m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
@@ -67,20 +67,20 @@ int CAvIn::initVideoFile(const char* szFileName) {
     if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
-        return Error::ERRORTYPE_FAILURE; 
+        return SError::ERRORTYPE_FAILURE; 
     }
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         SObject spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
-            return Error::ERRORTYPE_FAILURE;
+        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
         }
         m_vecCAvStreamings.push_back(pCAvStreaming);
         m_vecAvStreamings.push_back(spObject);
     }
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 void CAvIn::initDeviceRegistry() {
@@ -127,7 +127,7 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     if(avformat_open_input(&m_spFormatCtx,szName,pInputForamt,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
     m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
@@ -135,20 +135,20 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
-        return Error::ERRORTYPE_FAILURE; 
+        return SError::ERRORTYPE_FAILURE; 
     }
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         SObject spObject;
         CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != Error::ERRORTYPE_SUCCESS ) {
-            return Error::ERRORTYPE_FAILURE;
+        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
         }
         m_vecCAvStreamings.push_back(pCAvStreaming);
         m_vecAvStreamings.push_back(spObject);
     }
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 int CAvIn::sendPackageAndReceiveFrame(int& iStreamingId, SAvFrame& frame, AVPacket* pPackage) {
@@ -176,16 +176,16 @@ int CAvIn::sendPackageAndReceiveFrame(int& iStreamingId, SAvFrame& frame, AVPack
 
         case AVERROR(EAGAIN):
             ret = receiveFrame(iStreamingId, frame, pStreaming);
-            if( ret == Error::ERRORTYPE_SUCCESS ) {
+            if( ret == SError::ERRORTYPE_SUCCESS ) {
                 if( (ret = avcodec_send_packet(pCodecCtx, pPackage)) != 0 ) {
                     //按理说，receiveFrame后，应该可以重新发送Package，什么原因造成不能?
-                    return Error::ERRORTYPE_FAILURE;
+                    return SError::ERRORTYPE_FAILURE;
                 }
             }
             return ret;
 
         default:
-            return Error::ERRORTYPE_FAILURE; 
+            return SError::ERRORTYPE_FAILURE; 
     }
     return receiveFrame(iStreamingId, frame, pStreaming);
 }
@@ -211,13 +211,13 @@ int CAvIn::receiveFrame(int& iStreamingId, SAvFrame& frame, CAvStreaming* pStrea
         break;
 
     case AVERROR_EOF:
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
 
     case AVERROR(EAGAIN):
         return readFrame(iStreamingId, frame);
 
     default:
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     //如果读取成功，则下次继续读取

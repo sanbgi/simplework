@@ -34,12 +34,12 @@ SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 int main(int argc, char *argv[]){
     
     SVideoDevice sVideoDevice;
-    while(SAvIn::getVideoDevice(sVideoDevice) == Error::ERRORTYPE_SUCCESS) {
+    while(SAvIn::getVideoDevice(sVideoDevice) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "video device: " << sVideoDevice->getDeviceName() << "\n";
     }
 
     SAudioDevice sAudioDevice;
-    while(SAvIn::getAudioDevice(sAudioDevice) == Error::ERRORTYPE_SUCCESS) {
+    while(SAvIn::getAudioDevice(sAudioDevice) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "audio device: " << sAudioDevice->getDeviceName() << "\n";
     }
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]){
     int iAudioId = -1;
     CAvSampleMeta videoMeta, audioMeta;
     SAvStreaming spStreaming;
-    while(avIn->getStreaming(spStreaming) == Error::ERRORTYPE_SUCCESS) {
+    while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "streaming type: " << spStreaming->getStreamingType() << "\n";
         switch(spStreaming->getStreamingType()) {
         case EAvStreamingType::AvStreamingType_Video:
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]){
     int nframe = 0;
     SAvFrame frame;
     int iStreamingId = 0;
-    while(avIn->readFrame(iStreamingId, frame) == Error::ERRORTYPE_SUCCESS) {
+    while(avIn->readFrame(iStreamingId, frame) == SError::ERRORTYPE_SUCCESS) {
         switch(frame->getStreamingType()){ 
         case EAvStreamingType::AvStreamingType_Video:
             {

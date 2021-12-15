@@ -52,9 +52,9 @@ private:
         int push(IPipeIn::IFluidData* pFluidData) {
             if(pFluidData->getDt() == m_dt) {
                 (*m_ptr) = (Q*)pFluidData->getPtr();
-                return Error::ERRORTYPE_SUCCESS;
+                return SError::ERRORTYPE_SUCCESS;
             }
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
         CFluidAccepterV(Q* ptr){
             m_dt = BasicType::getType<Q>();
@@ -67,7 +67,7 @@ private:
         Q* m_ptr;
         int push(IPipeIn::IFluidData* pFluidData) {
             if(m_dt != 0 && m_dt != pFluidData->getDt()) {
-                return Error::ERRORTYPE_FAILURE;
+                return SError::ERRORTYPE_FAILURE;
             }
             return m_ptr->push(pFluidData);
         }

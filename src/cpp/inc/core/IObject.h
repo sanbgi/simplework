@@ -5,6 +5,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+struct __IPtrForceSaver;
+typedef __IPtrForceSaver* __FunPtrForceSaver;
+
 struct IObject{
 public:
     const static inline char* getInterfaceKey() { return "sw.core.IObject"; }

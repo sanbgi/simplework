@@ -2,6 +2,7 @@
 #define __SimpleWork_IO_AvStreaming_h__
 
 #include "av.h"
+#include "CAvSampleMeta.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
@@ -43,10 +44,27 @@ public:
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreamingFactory)
 
+    SAvStreaming createVideoStream(int iStreamingId, int nWidth, int nHeight) {
+        CAvSampleMeta sampleMeta;
+        sampleMeta.eSampleType = EAvSampleType::AvSampleType_Video_RGB;
+        sampleMeta.nVideoWidth = nWidth;
+        sampleMeta.nVideoHeight = nHeight;
+        return getFactory()->createStreaming(iStreamingId, EAvStreamingType::AvStreamingType_Video, sampleMeta);
+    }
+
+    SAvStreaming createAudioStream(int iStreamingId, int nSampleRate, int nChannels) {
+        CAvSampleMeta sampleMeta;
+        sampleMeta.eSampleType = EAvSampleType::AvSampleType_Audio_S16;
+        sampleMeta.nAudioRate = nSampleRate;
+        sampleMeta.nAudioChannels = nChannels;
+        return getFactory()->createStreaming(iStreamingId, EAvStreamingType::AvStreamingType_Audio, sampleMeta);
+    }
+
     static SAvStreamingFactory& getFactory() {
         static SAvStreamingFactory g_factory = SObject::createObject<SAvStreamingFactory>();
         return g_factory;
     }
+
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreaming)
 

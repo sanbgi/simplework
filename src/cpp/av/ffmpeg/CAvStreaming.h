@@ -52,6 +52,7 @@ public:
     CAvSampleMeta m_sampleMeta;
     CAvSampleMeta m_lastMeta;
     STensor m_spLastDimTensor;
+    int m_nLastSamples;
 };
 
 FFMPEG_NAMESPACE_LEAVE

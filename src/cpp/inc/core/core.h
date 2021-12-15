@@ -5,15 +5,11 @@
 //
 //  Part1. 基础定义，包括
 //      1.1, 命名域需要的宏
-//      1.2, 数据，Data
-//      1.3, 错误码, Error
 //
 //
 #define SIMPLEWORK_CORE_NAMESPACE sw::core
 #define __SimpleWork_Core_Namespace_Enter__ namespace sw { namespace core {
 #define __SimpleWork_Core_Namespace_Leave__ }}
-#include "Data.h"
-#include "Error.h"
 
 //
 //
@@ -21,7 +17,6 @@
 //      2.1，定义接口需要的宏定义
 //      2.2，核心接口
 //          -- IObject, Object 接口定义基类及对应的智能指针
-//          -- IFactory, Factory 工厂接口及对应的智能指针
 //      2.3, __getSimpleWork()获取全局模块对象
 //
 //
@@ -89,18 +84,22 @@
         };\
 
 #include "CPointer.h"
-#include "IObject.h"
 
 //
 //
 //  Part3. 系统接口类定义：
-//      3.1 SModule 模块
-//      3.2 SObject 对象
-//      3.3 SFactory 工厂
+//      3.1 SData 数据
+//      3.2 SError 错误码
+//      3.3 SModule 模块
+//      3.4 SObject 对象
+//      3.5 SFactory 工厂
 //
 //
-#include "SModule.h"
+#include "IObject.h"
 #include "SObject.h"
+#include "SData.h"
+#include "SError.h"
+#include "SModule.h"
 #include "SFactory.h"
 
 //
@@ -127,7 +126,7 @@
     protected: \
         int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
-        return Error::ERRORTYPE_FAILURE; \
+        return SError::ERRORTYPE_FAILURE; \
     };
 
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
@@ -138,14 +137,14 @@
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
                 return pTarget->forceSetPtr((void*)(TInterfaceClass*)this); \
             else \
-                return SIMPLEWORK_CORE_NAMESPACE::Error::ERRORTYPE_FAILURE;\
+                return SIMPLEWORK_CORE_NAMESPACE::SError::ERRORTYPE_FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY1(TInterface, TSuperInterface) \
         if( strcmp(szInterfaceKey, TSuperInterface::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TSuperInterface::getInterfaceVer() ) \
                 return pTarget->forceSetPtr((void*)(TSuperInterface*)(TInterface*)this); \
             else \
-                return SIMPLEWORK_CORE_NAMESPACE::Error::ERRORTYPE_FAILURE;\
+                return SIMPLEWORK_CORE_NAMESPACE::SError::ERRORTYPE_FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
         return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, pTarget); \

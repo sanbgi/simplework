@@ -32,11 +32,11 @@ public:
     int getSimpleWorkCompatibleVer() 
         { return m_spModule ? m_spModule->getSimpleWorkCompatibleVer() : IModule::getInterfaceVer();}
     int initModule(const char* szModuleKey, const SModule& pCaller) 
-        { return m_spModule ? m_spModule->initModule(szModuleKey, pCaller) : Error::ERRORTYPE_SUCCESS; }
+        { return m_spModule ? m_spModule->initModule(szModuleKey, pCaller) : SError::ERRORTYPE_SUCCESS; }
     int registerFactory(const char* szClassKey, const SFactory& pFactory) 
-        { return Error::ERRORTYPE_FAILURE; }
+        { return SError::ERRORTYPE_FAILURE; }
     int createObject(const char* szClassKey, SObject& rObject) 
-        { return Error::ERRORTYPE_FAILURE; }
+        { return SError::ERRORTYPE_FAILURE; }
     static SModule loadModule(string strModuleKey) {
         SLibrary spLibrary = CObject::createObject<CLibrary>();
         return spLibrary->loadLibraryModule(strModuleKey);

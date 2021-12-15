@@ -13,11 +13,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 211206)
 
         //
-        // 设置非帧信息
-        //
-        virtual int putVariable(const char* szKey, const char* szValue) = 0;
-
-        //
         // 写入帧
         //
         virtual int writeFrame(const SAvFrame& frame) = 0;
@@ -29,6 +24,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
             virtual SAvOut openWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) = 0;
 
             virtual SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) = 0;
+
+            virtual SAvOut openAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvOutFactory)
 

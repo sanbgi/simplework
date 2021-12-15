@@ -23,7 +23,7 @@ public:
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
 
         int nTargetRate = sampleMeta.nAudioRate;
         int nTargetChannels = sampleMeta.nAudioChannels;
@@ -46,21 +46,21 @@ public:
         m_iDeviceID = SDL_OpenAudioDevice(szName, false, &wanted_spec, &m_specAudio, 0);
         if(m_iDeviceID == 0)
         {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         if( m_specAudio.channels != sampleMeta.nAudioChannels ||
             m_specAudio.freq != sampleMeta.nAudioRate ||
             m_specAudio.format != CAvSampleType::toAudioFormat(sampleMeta.eSampleType) ) {
-                return Error::ERRORTYPE_FAILURE;
+                return SError::ERRORTYPE_FAILURE;
         }
 
         SDL_PauseAudioDevice(m_iDeviceID, 0);
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     int putVariable(const char* szKey, const char* szValue) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     int writeFrame(const SAvFrame& frame) {
@@ -71,7 +71,7 @@ public:
                 ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
             }
         }
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
 public:

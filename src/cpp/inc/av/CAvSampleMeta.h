@@ -46,9 +46,10 @@ public:
         int nAudioRate;
 
         //
-        // 视频宽度，只针对视频采样有效
+        // 视频高度，只针对视频采样有效
         //
-        int nVideoWidth;
+        int nVideoHeight;
+
     };
 
     union {
@@ -56,11 +57,11 @@ public:
         // 音频通道数
         //
         int nAudioChannels;
-
+        
         //
-        // 视频高度，只针对视频采样有效
+        // 视频宽度，只针对视频采样有效
         //
-        int nVideoHeight;
+        int nVideoWidth;
     };
 };
 

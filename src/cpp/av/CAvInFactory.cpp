@@ -13,7 +13,7 @@ public:
     SAvIn openVideoFile(const char* szFileName) {
         SObject spAvIn;
         ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
-        if( pAvIn->initVideoFile(szFileName) != Error::ERRORTYPE_SUCCESS ) {
+        if( pAvIn->initVideoFile(szFileName) != SError::ERRORTYPE_SUCCESS ) {
             return SAvIn();
         }
         return SAvIn::wrapPtr((IAvIn*)pAvIn);
@@ -22,7 +22,7 @@ public:
     SAvIn openVideoDevice(const char* szName) {
         SObject spAvIn;
         ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
-        if( pAvIn->initVideoCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
+        if( pAvIn->initVideoCapture(szName) != SError::ERRORTYPE_SUCCESS ) {
             return SAvIn();
         }
         return SAvIn::wrapPtr((IAvIn*)pAvIn);
@@ -31,7 +31,7 @@ public:
     SAvIn openAudioDevice(const char* szName) {
         SObject spAvIn;
         ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
-        if( pAvIn->initAudioCapture(szName) != Error::ERRORTYPE_SUCCESS ) {
+        if( pAvIn->initAudioCapture(szName) != SError::ERRORTYPE_SUCCESS ) {
             return SAvIn();
         }
         return SAvIn::wrapPtr((IAvIn*)pAvIn);

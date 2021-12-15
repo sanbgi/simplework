@@ -11,7 +11,7 @@ class SObject;
 //
 // 基础类型定义
 //
-struct Data {
+struct SData {
     enum DataType{
         DATATYPE_UNKNOWN  = 0,
         DATATYPE_BOOL     = 101,
@@ -47,25 +47,25 @@ struct Data {
 private:
     template<typename T> static DataType getRawType() {
         if(typeid(T) == typeid(bool)) {
-            return Data::DATATYPE_BOOL;
+            return SData::DATATYPE_BOOL;
         } else if(typeid(T) == typeid(char)) {
-            return Data::DATATYPE_CHAR;        
+            return SData::DATATYPE_CHAR;        
         } else if(typeid(T) == typeid(unsigned char)) {
-            return Data::DATATYPE_UCHAR;
+            return SData::DATATYPE_UCHAR;
         } else if(typeid(T) == typeid(int)) {
-            return Data::DATATYPE_INT;
+            return SData::DATATYPE_INT;
         } else if(typeid(T) == typeid(short)) {
-            return Data::DATATYPE_SHORT;
+            return SData::DATATYPE_SHORT;
         } else if(typeid(T) == typeid(long)) {
-            return Data::DATATYPE_LONG;
+            return SData::DATATYPE_LONG;
         } else if(typeid(T) == typeid(float)) {
-            return Data::DATATYPE_FLOAT;
+            return SData::DATATYPE_FLOAT;
         } else if(typeid(T) == typeid(double)) {
-            return Data::DATATYPE_DOUBLE;
+            return SData::DATATYPE_DOUBLE;
         }else if(typeid(T) == typeid(SObject)) {
-            return Data::DATATYPE_OBJECT;
+            return SData::DATATYPE_OBJECT;
         }
-        return Data::DATATYPE_UNKNOWN;
+        return SData::DATATYPE_UNKNOWN;
     };
 };
 

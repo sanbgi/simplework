@@ -4,8 +4,13 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-int CAvOut::pubFrame(SAvFrame& rFrame) {
-    return Error::ERRORTYPE_FAILURE;
+int CAvOut::initAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) {
+
+    return 0;
+}
+
+int CAvOut::writeFrame(const SAvFrame& rFrame) {
+    return SError::ERRORTYPE_FAILURE;
 }
 
 CAvOut::CAvOut() {

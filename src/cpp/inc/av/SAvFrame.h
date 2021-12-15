@@ -32,11 +32,11 @@ public:
         //
         // 获取当前帧的数据, 张量数据格式为
         //     视频：
-        //          张量维度：width * height * bytes ()
+        //          张量维度：height(行) * width(列) * bytes (单像素字节数)
         //          张量类型：unsigned char
         //     音频：
-        //          张量维度：样本数量 * 通道数
-        //          张量类型：unsigned char，short
+        //          张量维度：采样次数 * 通道数 * bytes (单采样点字节数)
+        //          张量类型：unsigned char
         //
         virtual sw::math::STensor& getData() = 0;
 

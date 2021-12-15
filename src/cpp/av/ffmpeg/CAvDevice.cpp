@@ -41,7 +41,7 @@ int CAvDevice::s_getNextDevice(SAudioDevice& rDevice) {
 int CAvDevice::s_getNextDevice(SVideoDevice& rDevice, AVInputFormat* pInputFormat) {
     pInputFormat = av_input_video_device_next(pInputFormat);
     if(pInputFormat == nullptr) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     SObject spDevice;
@@ -53,7 +53,7 @@ int CAvDevice::s_getNextDevice(SVideoDevice& rDevice, AVInputFormat* pInputForma
 int CAvDevice::s_getNextDevice(SAudioDevice& rDevice, AVInputFormat* pInputFormat) {
     pInputFormat = av_input_audio_device_next(pInputFormat);
     if(pInputFormat == nullptr) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
     
     SObject spDevice;
@@ -67,7 +67,7 @@ template<typename T> int CAvDevice::processGetNextDevice(T& rDevice) {
         AVDeviceInfoList* pDeviceLists = nullptr;
         int nDevices = avdevice_list_input_sources(m_pInputFormat, nullptr, nullptr, &pDeviceLists);
         if( nDevices < 0 ) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
         m_pDeviceLists.take(pDeviceLists, [](AVDeviceInfoList* pPtr){avdevice_free_list_devices(&pPtr);});
         if(nDevices==0) {
@@ -76,7 +76,7 @@ template<typename T> int CAvDevice::processGetNextDevice(T& rDevice) {
 
         m_iDevice = 0;
         rDevice.setPtr(this);
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     if( m_iDevice < m_pDeviceLists->nb_devices - 1) {

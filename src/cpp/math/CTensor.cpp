@@ -14,8 +14,8 @@ class CPlaceTensor : public CObject, ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    virtual int initVector( Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
-    virtual int initTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initVector( SData::DataType eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData) = 0;
 };
 
 //
@@ -24,16 +24,16 @@ public:
 template<typename T> class CTensor : public CPlaceTensor {
 
 public://ITensor
-    int initVector(Data::DataType eDt, int nSize, void* pData) {
+    int initVector(SData::DataType eDt, int nSize, void* pData) {
 
         if( eDt != getDataType() || pData == nullptr ) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         release();
 
         m_spElementData.take(new T[nSize], [](T* pPtr){ delete[] pPtr;});
-        if(Data::isPuryMemoryType(eDt)) {
+        if(SData::isPuryMemoryType(eDt)) {
             memcpy((T*)m_spElementData, (T*)pData, nSize*sizeof(T));
         }
         else {
@@ -45,18 +45,18 @@ public://ITensor
             }
         }
         m_nElementSize = nSize;
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
+    int initTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
 
         if( eElementType != getDataType() ) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         if( spDimVector ) {
-            if( spDimVector->getDataType() != Data::DATATYPE_INT ) {
-                return Error::ERRORTYPE_FAILURE;
+            if( spDimVector->getDataType() != SData::DATATYPE_INT ) {
+                return SError::ERRORTYPE_FAILURE;
             }
 
             int nDim = spDimVector->getDataSize();
@@ -64,20 +64,20 @@ public://ITensor
             int nSize = 1;
             for( int i=0; i<nDim; i++) {
                 if(pDimSize[i] < 1) {
-                    return Error::ERRORTYPE_FAILURE;
+                    return SError::ERRORTYPE_FAILURE;
                 }
                 nSize *= pDimSize[i];
             }
             if(nSize!= nElementSize) {
-                return Error::ERRORTYPE_FAILURE;
+                return SError::ERRORTYPE_FAILURE;
             }
         }
         
-        if( initVector(eElementType, nElementSize, pElementData) != Error::ERRORTYPE_SUCCESS ) {
-            return Error::ERRORTYPE_FAILURE;
+        if( initVector(eElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
         }
         m_spDimVector = spDimVector;
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     const STensor& getDimVector() {
@@ -89,15 +89,15 @@ public://ITensor
 
 public://ITensor
 
-    Data::DataType getDataType() const {
-        return Data::getType<T>();
+    SData::DataType getDataType() const {
+        return SData::getType<T>();
     }
 
     int getDataSize() const {
         return m_nElementSize;
     }
 
-    const void* getDataPtr(Data::DataType eElementType, int iPos=0) const {
+    const void* getDataPtr(SData::DataType eElementType, int iPos=0) const {
         if( eElementType == getDataType() ){
             if( iPos >= 0 && iPos < m_nElementSize ) {
                 return (T*)m_spElementData + iPos;
@@ -138,46 +138,46 @@ public://ITensor
         return pTensor;
     }
     
-    CPlaceTensor* createTensor(Data::DataType eElementType, SObject& rObject) {
+    CPlaceTensor* createTensor(SData::DataType eElementType, SObject& rObject) {
         switch(eElementType) {
-            case Data::DATATYPE_BOOL:
+            case SData::DATATYPE_BOOL:
                 return createTensor<bool>(rObject);
-            case Data::DATATYPE_CHAR:
+            case SData::DATATYPE_CHAR:
                 return createTensor<char>(rObject);
-            case Data::DATATYPE_UCHAR:
+            case SData::DATATYPE_UCHAR:
                 return createTensor<unsigned char>(rObject);
-            case Data::DATATYPE_SHORT:
+            case SData::DATATYPE_SHORT:
                 return createTensor<short>(rObject);
-            case Data::DATATYPE_INT:
+            case SData::DATATYPE_INT:
                 return createTensor<int>(rObject);
-            case Data::DATATYPE_LONG:
+            case SData::DATATYPE_LONG:
                 return createTensor<long>(rObject);
-            case Data::DATATYPE_FLOAT:
+            case SData::DATATYPE_FLOAT:
                 return createTensor<float>(rObject);
-            case Data::DATATYPE_DOUBLE:
+            case SData::DATATYPE_DOUBLE:
                 return createTensor<double>(rObject);
-            case Data::DATATYPE_OBJECT:
+            case SData::DATATYPE_OBJECT:
                 return createTensor<SObject>(rObject);
         }
         return nullptr;
     }
 
-    STensor createVector( Data::DataType eElementType, int nElementSize, void* pElementData) {
+    STensor createVector( SData::DataType eElementType, int nElementSize, void* pElementData) {
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {
-            if( pTensor->initVector(eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
+            if( pTensor->initVector(eElementType, nElementSize, pElementData) == SError::ERRORTYPE_SUCCESS)
                 return STensor::wrapPtr((ITensor*)pTensor);
             return STensor();
         }
         return STensor();
     }
 
-    STensor createTensor( const STensor& spDimVector, Data::DataType eElementType, int nElementSize, void* pElementData){
+    STensor createTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData){
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {
-            if( pTensor->initTensor(spDimVector, eElementType, nElementSize, pElementData) == Error::ERRORTYPE_SUCCESS)
+            if( pTensor->initTensor(spDimVector, eElementType, nElementSize, pElementData) == SError::ERRORTYPE_SUCCESS)
                 return STensor::wrapPtr((ITensor*)pTensor);
             return STensor();
         }

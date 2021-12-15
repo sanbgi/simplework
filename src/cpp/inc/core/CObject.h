@@ -76,7 +76,7 @@ public:
 
         public://IFactory
             int createObject(SObject& rObject) const {
-                return __CObjectImp<TObject>::__createObject(rObject) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+                return __CObjectImp<TObject>::__createObject(rObject) ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
             }
         };
 
@@ -90,14 +90,14 @@ public:
                 static SObject g_spObject;
                 static TObject* g_pObject = __CObjectImp<TObject>::__createObject(g_spObject);
                 rObject = g_spObject;
-                return Error::ERRORTYPE_SUCCESS;
+                return SError::ERRORTYPE_SUCCESS;
             }
         };
 
         if(bSingletonFactory) {
-            return __CObjectImp<__CSingletonFactoryImp>::__createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+            return __CObjectImp<__CSingletonFactoryImp>::__createObject(rFactory) ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
         }else{
-            return __CObjectImp<__CFactoryImp>::__createObject(rFactory) ? Error::ERRORTYPE_SUCCESS : Error::ERRORTYPE_FAILURE;
+            return __CObjectImp<__CFactoryImp>::__createObject(rFactory) ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
         }
     }
     template<typename TObject> static SObject createFactory(bool bSingleton=false) {

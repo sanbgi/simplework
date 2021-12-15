@@ -2,6 +2,7 @@
 #define __SimpleWork_CPointer__h__
 
 #include "core.h"
+#include "SError.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -112,7 +113,7 @@ private:
             releasePtr();
             initPtr(pPtr);
         }
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 };
 

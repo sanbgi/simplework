@@ -13,7 +13,10 @@ class CAvOut : public CObject, public IAvOut {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int pubFrame(SAvFrame& rFrame);
+    int initAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings);
+
+public:
+    int writeFrame(const SAvFrame& rFrame);
 
 public:
     CAvOut();

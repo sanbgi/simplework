@@ -1,5 +1,5 @@
-#ifndef __SimpleWork_Error_h__
-#define __SimpleWork_Error_h__
+#ifndef __SimpleWork_SError_h__
+#define __SimpleWork_SError_h__
 
 #include "core.h"
 
@@ -8,7 +8,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 错误码定义
 //
-struct Error {
+struct SError {
     enum ErrorType{
         ERRORTYPE_SUCCESS = 0,
         ERRORTYPE_FAILURE = 1,
@@ -17,4 +17,4 @@ struct Error {
 
 __SimpleWork_Core_Namespace_Leave__
 
-#endif//__SimpleWork_Error_h__
+#endif//__SimpleWork_SError_h__

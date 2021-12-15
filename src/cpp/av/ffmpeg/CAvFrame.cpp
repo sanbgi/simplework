@@ -25,7 +25,7 @@ int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreamin
         break;
 
     default:
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     pAvFrame->m_spAvFrame.take(spAvFrame);
@@ -33,7 +33,7 @@ int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreamin
     pAvFrame->m_pStreaming = pStreaming;
     rFrame.setPtr(pAvFrame);
     iStreamingId = pStreaming->m_iStreamingIndex;
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 FFMPEG_NAMESPACE_LEAVE

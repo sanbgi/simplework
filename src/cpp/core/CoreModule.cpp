@@ -21,13 +21,13 @@ private:
     }
 
     int initModule(const char* szModuleKey, const SModule& pCaller) {
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     int createObject(const char* szClassKey, SObject& spObject) {
         const SFactory& spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
         return spFactory->createObject(spObject);
     }
@@ -41,7 +41,7 @@ private:
 
     int registerFactory(const char* szClassKey,  const SFactory& pFactory) {
         m_mapFactories[szClassKey] = pFactory;
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     const SFactory& getRegisteredFactory(const char* szClassKey) {

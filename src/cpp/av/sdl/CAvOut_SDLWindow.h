@@ -22,25 +22,25 @@ public:
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
 
         //创建窗口
         m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, sampleMeta.nVideoWidth, sampleMeta.nVideoHeight, 0);
         if (nullptr == m_pWindow)
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
 
         m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
 	    if (nullptr == m_pRenderer) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         m_nWinWidth = sampleMeta.nVideoWidth;
         m_nWinHeight = sampleMeta.nVideoHeight;
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     int putVariable(const char* szKey, const char* szValue) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     int writeFrame(const SAvFrame& frame) {
@@ -49,8 +49,8 @@ public:
 
         const STensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
-        int width = pDim[0];
-        int height = pDim[1];
+        int height = pDim[0];
+        int width = pDim[1];
         int depth = pDim[2]*8;
         int pitch = width*pDim[2];
 
@@ -62,7 +62,7 @@ public:
                                 SDL_DestroyTexture
                             );
         if (!spTexture) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         SDL_Rect srcRect, dstRect;
@@ -82,7 +82,7 @@ public:
         //更新Renderer显示
         SDL_RenderPresent(pRenderer);
         
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
 public:

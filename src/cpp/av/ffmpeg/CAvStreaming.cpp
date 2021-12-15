@@ -77,13 +77,13 @@ int CAvStreaming::setSampleMeta(const CAvSampleMeta& sampleMeta) {
     m_sampleMeta = sampleMeta;
     releaseAudioCtx();
     releaseVideoCtx();
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
     AVCodecParameters* pCodecParameter = pAvStream->codecpar;
     if(pCodecParameter == nullptr) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     CTaker<AVCodecContext*> pCodecCtx(  avcodec_alloc_context3(nullptr), 
@@ -91,18 +91,18 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
                                             avcodec_free_context(&pCtx);
                                         });
     if( avcodec_parameters_to_context(pCodecCtx, pCodecParameter) < 0 ) {
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     AVCodec* pCodec=avcodec_find_decoder(pCodecParameter->codec_id);
     if(pCodec==NULL){
         printf("Codec not found.\n");
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     if(avcodec_open2(pCodecCtx, pCodec,NULL)<0){
         printf("Could not open codec.\n");
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
 
     m_spCodecCtx.take(pCodecCtx);
@@ -123,7 +123,7 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         }
         break;
     }
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 void CAvStreaming::releaseAudioCtx() {
@@ -141,7 +141,7 @@ int CAvStreaming::convertToTensor(STensor& spData, AVFrame* pAvFrame) {
             return convertAudio(spData, pAvFrame);
         }
     }
-    return Error::ERRORTYPE_FAILURE;
+    return SError::ERRORTYPE_FAILURE;
 }
 
 int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
@@ -165,7 +165,7 @@ int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
                 1);
         
         spTensor = STensor::createVector(pAvFrame->nb_samples, (unsigned char*)pAvFrame->data[0]);
-        return Error::ERRORTYPE_SUCCESS;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
     if( m_spSwrCtx ) {
@@ -198,10 +198,11 @@ int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
 
         if( swr_init(m_spSwrCtx) < 0 ) {
             releaseAudioCtx();
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         m_lastMeta = sampleMeta;
+        m_spLastDimTensor.release();
     }
 
     // 重采样输出参数1：输出音频缓冲区尺寸
@@ -218,7 +219,7 @@ int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
     {
         printf("av_samples_get_buffer_size() failed\n");
         releaseAudioCtx();
-        return Error::ERRORTYPE_FAILURE;
+        return SError::ERRORTYPE_FAILURE;
     }
     av_fast_malloc(&out_buf, &out_buf_size, nBufSize);
 
@@ -239,10 +240,21 @@ int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
         printf("audio buffer is probably too small\n");
     }
 
+    //如果上一次维度的样本数与这次不同，则释放上次的维度，重新创建
+    if(m_spLastDimTensor && nb_samples != m_nLastSamples ) {
+        m_spLastDimTensor.release();
+    } 
+
     // 重采样返回的一帧音频数据大小(以字节为单位)
-    int nData = nb_samples * nChannels * av_get_bytes_per_sample(eSampleFormat);
-    spTensor = STensor::createVector(nData, (unsigned char*)out_buf);
-    return Error::ERRORTYPE_FAILURE;
+    int nBytesPerSample = av_get_bytes_per_sample(eSampleFormat);
+    if( !m_spLastDimTensor ) {
+        int nDimSize[3] = { nb_samples, nChannels, nBytesPerSample };
+        m_spLastDimTensor = STensor::createVector(3, nDimSize);
+    }
+
+    int nData = nb_samples * nChannels * nBytesPerSample;
+    spTensor = STensor::createTensor(m_spLastDimTensor, nData, (unsigned char*)out_buf);
+    return SError::ERRORTYPE_FAILURE;
 }
 
 void CAvStreaming::releaseVideoCtx() {
@@ -287,14 +299,14 @@ int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
             0
         );
         if(pSwsContext == nullptr) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         m_spSwsContext.take(pSwsContext, sws_freeContext);
         if( av_image_alloc(m_pData, m_pLinesizes,
             nTargetWidth, nTargetHeight, eTargetPixelFormat, 1) < 0 ){
             releaseVideoCtx();
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
         }
 
         switch(sampleMeta.eSampleType) {
@@ -307,7 +319,7 @@ int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
             break;
         }
         m_lastMeta = sampleMeta;
-        int dimsize[3] = { nTargetWidth, nTargetHeight, m_nPixelBytes };
+        int dimsize[3] = { nTargetHeight, nTargetWidth, m_nPixelBytes };
         m_spLastDimTensor = STensor::createVector(3, dimsize);
     }
 
@@ -329,7 +341,7 @@ int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
     // 如果转化结果尺寸与想要的目标尺寸不一致，则转化失败
     if( m_pLinesizes[0] / m_nPixelBytes != nTargetWidth ||
         ret_height != nTargetHeight ) {
-            return Error::ERRORTYPE_FAILURE;
+            return SError::ERRORTYPE_FAILURE;
     }
 
     //
@@ -339,7 +351,7 @@ int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
     //  如果想调整为实际视频大小，则需要对每一行的数据做处理，性能太低。
     //
     spTensor = STensor::createTensor(m_spLastDimTensor, nTargetWidth*nTargetHeight*m_nPixelBytes, m_pData[0]);
-    return Error::ERRORTYPE_SUCCESS;
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 FFMPEG_NAMESPACE_LEAVE
