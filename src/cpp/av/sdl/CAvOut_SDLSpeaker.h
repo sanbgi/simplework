@@ -74,6 +74,11 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
+    int close() {
+        release();
+        return SError::ERRORTYPE_SUCCESS;
+    }
+
 public:
     CAvOut_SDLSpeaker() {
         m_iDeviceID = 0;

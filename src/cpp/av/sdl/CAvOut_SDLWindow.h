@@ -85,6 +85,11 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
+    int close() {
+        release();
+        return SError::ERRORTYPE_SUCCESS;
+    }
+
 public:
     CAvOut_SDLWindow() {
         m_pWindow = nullptr;

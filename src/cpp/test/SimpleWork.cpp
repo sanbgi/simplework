@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+
 #include "../inc/SimpleWork.h"
 
 using namespace sw;
@@ -31,8 +33,7 @@ public:
 };
 SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
-int main(int argc, char *argv[]){
-    
+void testPlayFile() {
     SVideoDevice sVideoDevice;
     while(SAvIn::getVideoDevice(sVideoDevice) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "video device: " << sVideoDevice->getDeviceName() << "\n";
@@ -108,6 +109,48 @@ int main(int argc, char *argv[]){
         }
     }
     std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
+
+}
+
+int testWriteFile() {
+
+    SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
+    std::vector<SAvStreaming> vecInStreamings;
+
+    SAvStreaming spStreaming;
+    while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
+        vecInStreamings.push_back(spStreaming);
+    }
+
+    int nframe = 0;
+    SAvOut avOut = SAvOut::openAvFile("d://tt2.mp4", vecInStreamings.size(), vecInStreamings.data() );
+
+    SAvFrame frame;
+    int iStreamingId;
+    while(avIn->readFrame(iStreamingId, frame) == SError::ERRORTYPE_SUCCESS) {
+        if( avOut->writeFrame(frame) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+
+        if( nframe++ % 10 == 0) 
+        {
+            //std::cout << "nframeVideo:" << nframe << "writed\n";
+        }
+        if(frame->getStreamingType() == EAvStreamingType::AvStreamingType_Video) {
+            std::cout << "timestamps:  " << frame->getTimeStamp() << "\n";
+        }
+    }
+
+    if(avOut->writeFrame(SAvFrame()) != SError::ERRORTYPE_SUCCESS ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    return SError::ERRORTYPE_SUCCESS;
+}
+
+int main(int argc, char *argv[]){
+    testWriteFile();
+    //testPlayFile();
     return 0;
 }
 

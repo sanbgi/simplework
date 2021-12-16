@@ -2,6 +2,7 @@
 #define __SimpleWork_Av_CAvStream_h__
 
 #include "av_ffmpeg.h"
+#include "CFrameConverter.h"
 
 FFMPEG_NAMESPACE_ENTER
 
@@ -31,29 +32,23 @@ public:
 
 public:
     void release();
-    void releaseAudioCtx();
-    void releaseVideoCtx();
-
+    
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     CTaker<AVCodecContext*> m_spCodecCtx;
     EAvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;
-
-public://Audio
-    CTaker<SwrContext*> m_spSwrCtx;
-
-public://Video
-    CTaker<SwsContext*> m_spSwsContext;
-    uint8_t *m_pData[4];
-    int m_pLinesizes[4];
-    int m_nPixelBytes;
+    CAvSampleMeta m_sampleMeta;
 
 public:
-    CAvSampleMeta m_sampleMeta;
-    CAvSampleMeta m_lastMeta;
+    CFrameConverter m_converter;
+
+public://Video
+    int m_lastDimsize[3];
     STensor m_spLastDimTensor;
-    int m_nLastSamples;
+    
+public:
+
 };
 
 FFMPEG_NAMESPACE_LEAVE

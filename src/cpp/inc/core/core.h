@@ -29,7 +29,7 @@
 
 #define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \
-        SIMPLEWORK_CORE_NAMESPACE::CPointer<IFace> __autoPtr;\
+        SIMPLEWORK_CORE_NAMESPACE::SPointer<IFace> __autoPtr;\
     public: \
         inline S##className(){}\
         inline S##className(IFace* pFace) { \
@@ -83,7 +83,7 @@
 #define SIMPLEWORK_INTERFACE_LEAVE\
         };\
 
-#include "CPointer.h"
+#include "SPointer.h"
 
 //
 //
@@ -152,6 +152,7 @@
 
 #include "CTaker.h"
 #include "CRefer.h"
+#include "CPointer.h"
 #include "CObject.h"
 #define SIMPLEWORK_FACTORY_REGISTER(className, classKey) \
     class __C##className##Register { \

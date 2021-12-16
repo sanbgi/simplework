@@ -13,7 +13,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 211206)
 
         //
-        // 写入帧
+        // 写入帧，空数据表示关闭流
         //
         virtual int writeFrame(const SAvFrame& frame) = 0;
 
@@ -36,6 +36,10 @@ public:
 
     static inline SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) {
         return getFactory()->openSpeaker(szName, sampleMeta);
+    }
+
+    static inline SAvOut openAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) {
+        return getFactory()->openAvFile(szFileName, nStreamings, pStreamings);
     }
 
 private:

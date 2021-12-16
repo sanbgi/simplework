@@ -18,7 +18,7 @@ private:
         virtual int __swAddRef() = 0;
         virtual int __swDecRef() = 0;
         virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, __FunPtrForceSaver funSaver) = 0;
-        template<typename T> friend class CPointer;
+        template<typename T> friend class SPointer;
 };
 
 __SimpleWork_Core_Namespace_Leave__
