@@ -24,6 +24,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvIn)
         //
         virtual int readFrame(SAvFrame& rFrame) = 0;
 
+        //
+        // 读取帧
+        //
+        virtual int readFrame(PAvFrame::FVisitor visitor) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvInFactory, "sw.av.AvInFactory")

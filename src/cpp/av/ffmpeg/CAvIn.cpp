@@ -30,6 +30,9 @@ int CAvIn::changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMe
     return m_vecCAvStreamings[iStreamingId]->setSampleMeta(sampleMeta);
 }
 
+int CAvIn::readFrame(PAvFrame::FVisitor visitor) {
+    return 0;
+}
 
 int CAvIn::readFrame(SAvFrame& frame) {
     //

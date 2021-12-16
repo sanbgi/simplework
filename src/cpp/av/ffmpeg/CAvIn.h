@@ -16,6 +16,7 @@ public:
     int getStreaming(SAvStreaming& rStreaming);
     int changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMeta);
     int readFrame(SAvFrame& rFrame);
+    int readFrame(PAvFrame::FVisitor visitor);
 
 public:
     int initVideoFile(const char* szFileName);
