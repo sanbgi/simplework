@@ -2,7 +2,7 @@
 #define __SimpleWork_IO_AvStreaming_h__
 
 #include "av.h"
-#include "CAvSampleMeta.h"
+#include "SAvSample.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
