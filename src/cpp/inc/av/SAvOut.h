@@ -21,20 +21,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvOutFactory, "sw.av.AvOutFactory")
         SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOutFactory", 211206)
-            virtual SAvOut openWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) = 0;
+            virtual SAvOut openWindow(const char* szWindowName, SAvSampleMeta& sampleMeta) = 0;
 
-            virtual SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) = 0;
+            virtual SAvOut openSpeaker(const char* szName, SAvSampleMeta& sampleMeta) = 0;
 
             virtual SAvOut openAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvOutFactory)
 
 public:
-    static inline SAvOut openWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) {
+    static inline SAvOut openWindow(const char* szWindowName, SAvSampleMeta& sampleMeta) {
         return getFactory()->openWindow(szWindowName, sampleMeta);
     }
 
-    static inline SAvOut openSpeaker(const char* szName, CAvSampleMeta& sampleMeta) {
+    static inline SAvOut openSpeaker(const char* szName, SAvSampleMeta& sampleMeta) {
         return getFactory()->openSpeaker(szName, sampleMeta);
     }
 

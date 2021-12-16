@@ -51,19 +51,19 @@ void testPlayFile() {
     //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
     int iVideoId = -1;
     int iAudioId = -1;
-    CAvSampleMeta videoMeta, audioMeta;
+    SAvSampleMeta videoMeta, audioMeta;
     SAvStreaming spStreaming;
     while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "streaming type: " << spStreaming->getStreamingType() << "\n";
         switch(spStreaming->getStreamingType()) {
-        case SAvStreaming::AvStreamingType_Video:
+        case EAvStreamingType::AvStreamingType_Video:
             if(iVideoId == -1) {
                 iVideoId = spStreaming->getStreamingId();
                 videoMeta = spStreaming->getSampleMeta();
             }
             break;
 
-        case SAvStreaming::AvStreamingType_Audio:
+        case EAvStreamingType::AvStreamingType_Audio:
             if(iAudioId == -1) {
                 iAudioId = spStreaming->getStreamingId();
                 audioMeta = spStreaming->getSampleMeta();
@@ -81,15 +81,15 @@ void testPlayFile() {
     int nframe = 0;
     SAvFrame frame;
     while(avIn->readFrame(frame) == SError::ERRORTYPE_SUCCESS) {
-        switch(frame->getStreamingType()){ 
-        case SAvStreaming::AvStreamingType_Video:
+        switch(frame->getStreaming()->getStreamingType()){ 
+        case EAvStreamingType::AvStreamingType_Video:
             {
                 avVideoOut->writeFrame(frame);
                 nframeVideo++;
             }
             break;
 
-        case SAvStreaming::AvStreamingType_Audio:
+        case EAvStreamingType::AvStreamingType_Audio:
             {
                 avAudioOut->writeFrame(frame);
                 nframeAudio++;
@@ -131,7 +131,7 @@ int testWriteFile() {
         {
             //std::cout << "nframeVideo:" << nframe << "writed\n";
         }
-        if(frame->getStreamingType() == SAvStreaming::AvStreamingType_Video) {
+        if(frame->getStreaming()->getStreamingType() == EAvStreamingType::AvStreamingType_Video) {
             std::cout << "timestamps:  " << frame->getTimeStamp() << "\n";
         }
     }

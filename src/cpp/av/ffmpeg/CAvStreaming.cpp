@@ -6,7 +6,7 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvStreaming::CAvStreaming() {
     m_pAvStream = nullptr;
-    m_eAvStreamingType = SAvStreaming::AvStreamingType_None;
+    m_eAvStreamingType = EAvStreamingType::AvStreamingType_None;
     m_iStreamingIndex = -1;
 }
 
@@ -17,18 +17,18 @@ CAvStreaming::~CAvStreaming() {
 void CAvStreaming::release() {
 }
 
-SAvStreaming::EAvStreamingType CAvStreaming::getStreamingType() {
+EAvStreamingType CAvStreaming::getStreamingType() {
     if(m_spCodecCtx) {
         switch (m_spCodecCtx->codec_type)
         {
         case AVMEDIA_TYPE_VIDEO:
-            return SAvStreaming::AvStreamingType_Video;
+            return EAvStreamingType::AvStreamingType_Video;
         
         case AVMEDIA_TYPE_AUDIO:
-            return SAvStreaming::AvStreamingType_Audio;
+            return EAvStreamingType::AvStreamingType_Audio;
         }
     }
-    return SAvStreaming::AvStreamingType_None;
+    return EAvStreamingType::AvStreamingType_None;
 }
 
 int CAvStreaming::getStreamingId() {
@@ -69,11 +69,11 @@ EAvSampleType CAvStreaming::getSampleType() {
     return EAvSampleType::AvSampleType_None;
 }
 
-const CAvSampleMeta& CAvStreaming::getSampleMeta() {
+const SAvSampleMeta& CAvStreaming::getSampleMeta() {
     return m_sampleMeta;
 }
 
-int CAvStreaming::setSampleMeta(const CAvSampleMeta& sampleMeta) {
+int CAvStreaming::setSampleMeta(const SAvSampleMeta& sampleMeta) {
     m_sampleMeta = sampleMeta;
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -106,18 +106,18 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
     m_spCodecCtx.take(pCodecCtx);
     m_iStreamingIndex = iStreamingIndex;
     m_pAvStream = pAvStream;
-    m_sampleMeta.eSampleType = getSampleType();
+    m_sampleMeta.sampleType = getSampleType();
     switch(m_spCodecCtx->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         {
-            m_sampleMeta.nVideoWidth = m_spCodecCtx->width;
-            m_sampleMeta.nVideoHeight = m_spCodecCtx->height;
+            m_sampleMeta.videoWidth = m_spCodecCtx->width;
+            m_sampleMeta.videoHeight = m_spCodecCtx->height;
         }
         break;
     case AVMEDIA_TYPE_AUDIO:
         {
-            m_sampleMeta.nAudioRate = m_spCodecCtx->sample_rate;
-            m_sampleMeta.nAudioChannels = m_spCodecCtx->channels;
+            m_sampleMeta.audioRate = m_spCodecCtx->sample_rate;
+            m_sampleMeta.audioChannels = m_spCodecCtx->channels;
         }
         break;
     }
@@ -139,11 +139,11 @@ int CAvStreaming::convertToTensor(STensor& spData, AVFrame* pAvFrame) {
 }
 
 int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
-    CAvSampleMeta& sampleMeta = m_sampleMeta;
-    int nAudioRate = m_sampleMeta.nAudioRate > 0 ? m_sampleMeta.nAudioRate : pAvFrame->sample_rate;
-    int nChannels = m_sampleMeta.nAudioChannels > 0 ? m_sampleMeta.nAudioChannels : pAvFrame->channels;
-    AVSampleFormat eSampleFormat = CAvSampleType::toSampleFormat(sampleMeta.eSampleType);
-    if( m_converter.convert(nAudioRate,nChannels,eSampleFormat, *pAvFrame) != SError::ERRORTYPE_SUCCESS) {
+    SAvSampleMeta& sampleMeta = m_sampleMeta;
+    int audioRate = m_sampleMeta.audioRate > 0 ? m_sampleMeta.audioRate : pAvFrame->sample_rate;
+    int nChannels = m_sampleMeta.audioChannels > 0 ? m_sampleMeta.audioChannels : pAvFrame->channels;
+    AVSampleFormat eSampleFormat = CAvSampleType::toSampleFormat(sampleMeta.sampleType);
+    if( m_converter.convert(audioRate,nChannels,eSampleFormat, *pAvFrame) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
 
@@ -176,15 +176,15 @@ int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
 }
 
 int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
-    AVPixelFormat eTargetPixelFormat = CAvSampleType::toPixFormat(m_sampleMeta.eSampleType);
-    int nTargetWidth = m_sampleMeta.nVideoWidth > 0 ? m_sampleMeta.nVideoWidth : pAvFrame->width;
-    int nTargetHeight = m_sampleMeta.nVideoHeight > 0 ? m_sampleMeta.nVideoHeight : pAvFrame->height;
+    AVPixelFormat eTargetPixelFormat = CAvSampleType::toPixFormat(m_sampleMeta.sampleType);
+    int nTargetWidth = m_sampleMeta.videoWidth > 0 ? m_sampleMeta.videoWidth : pAvFrame->width;
+    int nTargetHeight = m_sampleMeta.videoHeight > 0 ? m_sampleMeta.videoHeight : pAvFrame->height;
     if( m_converter.convert(nTargetWidth, nTargetHeight, eTargetPixelFormat, *pAvFrame) != SError::ERRORTYPE_SUCCESS ) {
         return SError::ERRORTYPE_FAILURE;
     }
     
     int nPixBytes = 0;
-    switch(m_sampleMeta.eSampleType) {
+    switch(m_sampleMeta.sampleType) {
     case EAvSampleType::AvSampleType_Video_RGBA:
         nPixBytes = 4;
         break;

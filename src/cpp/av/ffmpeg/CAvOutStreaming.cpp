@@ -6,7 +6,7 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvOutStreaming::CAvOutStreaming() {
     m_pAvStream = nullptr;
-    m_eStreamingType = SAvStreaming::AvStreamingType_None;
+    m_eStreamingType = EAvStreamingType::AvStreamingType_None;
     m_iStreamingId = -1;
     m_pCodec = nullptr;
     m_nWriteNumber = 0;
@@ -19,7 +19,7 @@ CAvOutStreaming::~CAvOutStreaming() {
 void CAvOutStreaming::release() {
 }
 
-SAvStreaming::EAvStreamingType CAvOutStreaming::getStreamingType() {
+EAvStreamingType CAvOutStreaming::getStreamingType() {
     return m_eStreamingType;
 }
 
@@ -31,16 +31,16 @@ int CAvOutStreaming::getTimeRate() {
     return m_nTimeRate;
 }
 
-const CAvSampleMeta& CAvOutStreaming::getSampleMeta() {
+const SAvSampleMeta& CAvOutStreaming::getSampleMeta() {
     return m_sampleMeta;
 }
 
 int CAvOutStreaming::init(AVFormatContext* pFormatContext, SAvStreaming& src) {
     switch(src->getStreamingType()) {
-    case SAvStreaming::AvStreamingType_Video:
+    case EAvStreamingType::AvStreamingType_Video:
         return initVideo(pFormatContext, src);
 
-    case SAvStreaming::AvStreamingType_Audio:
+    case EAvStreamingType::AvStreamingType_Audio:
         return initAudio(pFormatContext, src);
     }
     return SError::ERRORTYPE_FAILURE;
@@ -82,7 +82,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
     // 设置CodecContext参数
     //
     {
-        CAvSampleMeta sampleMeta = src->getSampleMeta();
+        SAvSampleMeta sampleMeta = src->getSampleMeta();
         pCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
         pCodecContext->codec_id = pOutputFormat->video_codec;
         //pCodecContext->bit_rate = 1600000;
@@ -90,8 +90,8 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
         pCodecContext->qmin = 1;
 
         /* Resolution must be a multiple of two. */
-        pCodecContext->width    = sampleMeta.nVideoWidth;
-        pCodecContext->height   = sampleMeta.nVideoHeight;
+        pCodecContext->width    = sampleMeta.videoWidth;
+        pCodecContext->height   = sampleMeta.videoHeight;
 
         /* timebase: This is the fundamental unit of time (in seconds) in terms
             * of which frame timestamps are represented. For fixed-fps content,
@@ -112,7 +112,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
             pCodecContext->mb_decision = 2;
         }
 
-        pCodecContext->pix_fmt = CAvSampleType::toPixFormat(sampleMeta.eSampleType);
+        pCodecContext->pix_fmt = CAvSampleType::toPixFormat(sampleMeta.sampleType);
         int iFormat = 0;
         while(pCodec->pix_fmts[iFormat] != pCodecContext->pix_fmt && pCodec->pix_fmts[iFormat] != AV_PIX_FMT_NONE) {
             iFormat++;
@@ -171,23 +171,23 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
     // 设置CodecContext参数
     //
     {
-        CAvSampleMeta sampleMeta = src->getSampleMeta();
+        SAvSampleMeta sampleMeta = src->getSampleMeta();
         pCodecContext->codec_type = AVMEDIA_TYPE_AUDIO;
         pCodecContext->codec_id = pCodec->id;
 
         pCodecContext->bit_rate    = 64000;
-        pCodecContext->sample_rate = sampleMeta.nAudioRate;
+        pCodecContext->sample_rate = sampleMeta.audioRate;
         if (pCodec->supported_samplerates) {
             pCodecContext->sample_rate = pCodec->supported_samplerates[0];
             for ( int i = 0; pCodec->supported_samplerates[i]; i++) {
-                if(pCodec->supported_samplerates[i] == sampleMeta.nAudioRate) {
-                    pCodecContext->sample_rate = sampleMeta.nAudioRate;
+                if(pCodec->supported_samplerates[i] == sampleMeta.audioRate) {
+                    pCodecContext->sample_rate = sampleMeta.audioRate;
                     break;
                 }
             }
         }
 
-        int64_t channel_layout = av_get_default_channel_layout(sampleMeta.nAudioChannels);
+        int64_t channel_layout = av_get_default_channel_layout(sampleMeta.audioChannels);
         pCodecContext->channel_layout = channel_layout;
         if (pCodec->channel_layouts) {
             pCodecContext->channel_layout = pCodec->channel_layouts[0];
@@ -198,9 +198,9 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
             }
         }
         pCodecContext->channels = av_get_channel_layout_nb_channels(pCodecContext->channel_layout);
-        pAvStream->time_base = (AVRational){ 1, sampleMeta.nAudioRate };
+        pAvStream->time_base = (AVRational){ 1, sampleMeta.audioRate };
 
-        pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.eSampleType);
+        pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.sampleType);
         //由于特定的编码器只支持特定的数据类型，所以，需要修改目标像素格式为编码器需要的格式
         int iFormat = 0;
         while(pCodec->sample_fmts[iFormat] != pCodecContext->sample_fmt && pCodec->sample_fmts[iFormat] != AV_SAMPLE_FMT_NONE) {
@@ -251,12 +251,13 @@ int CAvOutStreaming::close(AVFormatContext* pFormatContext) {
 
 int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame) {
     if(rFrame) {
-        if(rFrame->getStreamingId() == m_iStreamingId ) {
-            switch(rFrame->getStreamingType()) {
-            case SAvStreaming::AvStreamingType_Video:
+        SAvStreaming& rStreaming = rFrame->getStreaming();
+        if(rStreaming->getStreamingId() == m_iStreamingId ) {
+            switch(rStreaming->getStreamingType()) {
+            case EAvStreamingType::AvStreamingType_Video:
                 return writeVideoFrame(pFormatContext, rFrame);
 
-            case SAvStreaming::AvStreamingType_Audio:
+            case EAvStreamingType::AvStreamingType_Audio:
                 return writeAudioFrame(pFormatContext, rFrame);
             }
         }
@@ -287,14 +288,14 @@ int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const SAvF
     //
     // 准备帧数据对象
     //
-    CAvSampleMeta sampleMeta = rFrame->getSampleMeta();
+    SAvSampleMeta sampleMeta = rFrame->getStreaming()->getSampleMeta();
     AVFrame* pAVFrame = m_pAVFrame;
     pAVFrame->data[0] = (uint8_t*)spTensor->getDataPtr<unsigned char>();
     pAVFrame->linesize[0] = pDims[1]*pDims[2];
     pAVFrame->pts = rFrame->getTimeStamp();
-    pAVFrame->width = sampleMeta.nVideoWidth;
-    pAVFrame->height = sampleMeta.nVideoHeight;
-    pAVFrame->format = CAvSampleType::toPixFormat(rFrame->getSampleMeta().eSampleType);
+    pAVFrame->width = sampleMeta.videoWidth;
+    pAVFrame->height = sampleMeta.videoHeight;
+    pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleType);
     if(m_converter.convert(pCodecContext->width, pCodecContext->height, pCodecContext->pix_fmt, *pAVFrame) != SError::ERRORTYPE_SUCCESS ) {
         return SError::ERRORTYPE_FAILURE;
     }
@@ -332,15 +333,15 @@ int CAvOutStreaming::writeAudioFrame(AVFormatContext* pFormatContext, const SAvF
     //
     // 准备帧数据对象
     //
-    CAvSampleMeta sampleMeta = rFrame->getSampleMeta();
+    SAvSampleMeta sampleMeta = rFrame->getStreaming()->getSampleMeta();
     AVFrame* pAVFrame = m_pAVFrame;
     pAVFrame->data[0] = (uint8_t*)spTensor->getDataPtr<unsigned char>();
     pAVFrame->linesize[0] = pDims[1]*pDims[2];
     pAVFrame->nb_samples = pDims[1];
     pAVFrame->pts = rFrame->getTimeStamp();
-    pAVFrame->sample_rate = sampleMeta.nAudioRate;
-    pAVFrame->channels = sampleMeta.nAudioChannels;
-    pAVFrame->format = CAvSampleType::toSampleFormat(rFrame->getSampleMeta().eSampleType);
+    pAVFrame->sample_rate = sampleMeta.audioRate;
+    pAVFrame->channels = sampleMeta.audioChannels;
+    pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleType);
     pAVFrame->extended_data = &pAVFrame->data[0];
     if(m_converter.convert(pCodecContext->sample_rate, pCodecContext->channels, pCodecContext->sample_fmt, *pAVFrame) != SError::ERRORTYPE_SUCCESS ) {
         return SError::ERRORTYPE_FAILURE;

@@ -12,16 +12,16 @@ class CAvStreaming : public CObject, IAvStreaming {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    SAvStreaming::EAvStreamingType getStreamingType();
+    EAvStreamingType getStreamingType();
     int getStreamingId();
     int getTimeRate();
     int getSampleRate();
     EAvSampleType getSampleType();
-    const CAvSampleMeta& getSampleMeta();
+    const SAvSampleMeta& getSampleMeta();
 
 public:
     int init(AVStream* pAvStream, int iStreamingIndex);
-    int setSampleMeta(const CAvSampleMeta& sampleMeta);
+    int setSampleMeta(const SAvSampleMeta& sampleMeta);
     int convertToTensor(STensor& spData, AVFrame* pAvFrame);
     int convertAudio(STensor& spData, AVFrame* pAvFrame);
     int convertImage(STensor& spData, AVFrame* pAvFrame);
@@ -36,9 +36,9 @@ public:
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     CTaker<AVCodecContext*> m_spCodecCtx;
-    SAvStreaming::EAvStreamingType m_eAvStreamingType;
+    EAvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;
-    CAvSampleMeta m_sampleMeta;
+    SAvSampleMeta m_sampleMeta;
 
 public:
     CFrameConverter m_converter;

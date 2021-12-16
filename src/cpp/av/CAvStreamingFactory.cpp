@@ -19,22 +19,22 @@ private:
     public:
         int getStreamingId() { return m_iStreamingId; }
         int getTimeRate() { return m_nTimeRate; }
-        SAvStreaming::EAvStreamingType getStreamingType() { return m_eStreamingType; }
-        const CAvSampleMeta& getSampleMeta() { return m_sampleMeta; }
+        EAvStreamingType getStreamingType() { return m_eStreamingType; }
+        const SAvSampleMeta& getSampleMeta() { return m_sampleMeta; }
 
     public:
-        SAvStreaming::EAvStreamingType m_eStreamingType;
+        EAvStreamingType m_eStreamingType;
         int m_iStreamingId;
         int m_nTimeRate;
-        CAvSampleMeta m_sampleMeta;
+        SAvSampleMeta m_sampleMeta;
     };
 
 public:
     SAvStreaming createStreaming(  
                             int iStreamingId,
                             int nTimeRate,
-                            SAvStreaming::EAvStreamingType eStreamingType, 
-                            const CAvSampleMeta& sampleMeta ) {
+                            EAvStreamingType eStreamingType, 
+                            const SAvSampleMeta& sampleMeta ) {
         SObject spObject;
         CAvStreaming* pStreaming = CObject::createObject<CAvStreaming>(spObject);
         pStreaming->m_eStreamingType = eStreamingType;

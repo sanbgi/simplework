@@ -17,7 +17,7 @@ class CAvOut_SDLWindow : public CObject, public IAvOut{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int initWindow(const char* szWindowName, CAvSampleMeta& sampleMeta) {
+    int initWindow(const char* szWindowName, SAvSampleMeta& sampleMeta) {
         
         release();
 
@@ -25,7 +25,7 @@ public:
             return SError::ERRORTYPE_FAILURE;
 
         //创建窗口
-        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, sampleMeta.nVideoWidth, sampleMeta.nVideoHeight, 0);
+        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, sampleMeta.videoWidth, sampleMeta.videoHeight, 0);
         if (nullptr == m_pWindow)
             return SError::ERRORTYPE_FAILURE;
 
@@ -34,8 +34,8 @@ public:
             return SError::ERRORTYPE_FAILURE;
         }
 
-        m_nWinWidth = sampleMeta.nVideoWidth;
-        m_nWinHeight = sampleMeta.nVideoHeight;
+        m_nWinWidth = sampleMeta.videoWidth;
+        m_nWinHeight = sampleMeta.videoHeight;
         return SError::ERRORTYPE_SUCCESS;
     }
 
@@ -45,7 +45,7 @@ public:
 
     int writeFrame(const SAvFrame& frame) {
         STensor spTensor = frame->getData();
-        CAvSampleMeta sampleMeta = frame->getSampleMeta();
+        SAvSampleMeta sampleMeta = frame->getStreaming()->getSampleMeta();
 
         const STensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
@@ -54,7 +54,7 @@ public:
         int depth = pDim[2]*8;
         int pitch = width*pDim[2];
 
-        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.eSampleType);
+        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.sampleType);
         void *pixels = (void*)spTensor->getDataPtr<unsigned char>();
         SDL_Renderer* pRenderer = m_pRenderer;
         CTaker<SDL_Texture*> spTexture(

@@ -18,16 +18,16 @@ class CAvOut_SDLSpeaker : public CObject, public IAvOut{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int initSpeaker(const char* szName, CAvSampleMeta& sampleMeta) {
+    int initSpeaker(const char* szName, SAvSampleMeta& sampleMeta) {
         
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
             return SError::ERRORTYPE_FAILURE;
 
-        int nTargetRate = sampleMeta.nAudioRate;
-        int nTargetChannels = sampleMeta.nAudioChannels;
-        SDL_AudioFormat eTargetFormat = CAvSampleType::toAudioFormat(sampleMeta.eSampleType);
+        int nTargetRate = sampleMeta.audioRate;
+        int nTargetChannels = sampleMeta.audioChannels;
+        SDL_AudioFormat eTargetFormat = CAvSampleType::toAudioFormat(sampleMeta.sampleType);
 
         // B2. 打开音频设备并创建音频处理线程
         // B2.1 打开音频设备，获取SDL设备支持的音频参数actual_spec(期望的参数是wanted_spec，实际得到actual_spec)
@@ -49,9 +49,9 @@ public:
             return SError::ERRORTYPE_FAILURE;
         }
 
-        if( m_specAudio.channels != sampleMeta.nAudioChannels ||
-            m_specAudio.freq != sampleMeta.nAudioRate ||
-            m_specAudio.format != CAvSampleType::toAudioFormat(sampleMeta.eSampleType) ) {
+        if( m_specAudio.channels != sampleMeta.audioChannels ||
+            m_specAudio.freq != sampleMeta.audioRate ||
+            m_specAudio.format != CAvSampleType::toAudioFormat(sampleMeta.sampleType) ) {
                 return SError::ERRORTYPE_FAILURE;
         }
 

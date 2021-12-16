@@ -2,7 +2,7 @@
 #define __SimpleWork_IO_AvStreaming_h__
 
 #include "av.h"
-#include "SAvSample.h"
+#include "SAvFrame.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
@@ -11,15 +11,6 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvStreaming)
 public:
-    //
-    // 音视频样本类型
-    //
-    enum EAvStreamingType {
-        AvStreamingType_None,
-        AvStreamingType_Video,
-        AvStreamingType_Audio,
-    };
-
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvStreaming", 211206)
 
@@ -41,7 +32,7 @@ public:
         //
         // 获取样本元信息，只有在版本冲突情况下，才会返回失败
         //
-        virtual const CAvSampleMeta& getSampleMeta() = 0;
+        virtual const SAvSampleMeta& getSampleMeta() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
     
@@ -54,24 +45,24 @@ public:
                                 int iStreamingId,
                                 int nTimeRate,
                                 EAvStreamingType eStreamingType, 
-                                const CAvSampleMeta& sampleMeta) = 0;
+                                const SAvSampleMeta& sampleMeta) = 0;
 
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreamingFactory)
 
     SAvStreaming createVideoStream(int iStreamingId, int nTimeRate, int nWidth, int nHeight) {
-        CAvSampleMeta sampleMeta;
-        sampleMeta.eSampleType = EAvSampleType::AvSampleType_Video_RGB;
-        sampleMeta.nVideoWidth = nWidth;
-        sampleMeta.nVideoHeight = nHeight;
+        SAvSampleMeta sampleMeta;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video_RGB;
+        sampleMeta.videoWidth = nWidth;
+        sampleMeta.videoHeight = nHeight;
         return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvStreamingType::AvStreamingType_Video, sampleMeta);
     }
 
     SAvStreaming createAudioStream(int iStreamingId, int nTimeRate, int nSampleRate, int nChannels) {
-        CAvSampleMeta sampleMeta;
-        sampleMeta.eSampleType = EAvSampleType::AvSampleType_Audio_S16;
-        sampleMeta.nAudioRate = nSampleRate;
-        sampleMeta.nAudioChannels = nChannels;
+        SAvSampleMeta sampleMeta;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio_S16;
+        sampleMeta.audioRate = nSampleRate;
+        sampleMeta.audioChannels = nChannels;
         return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvStreamingType::AvStreamingType_Audio, sampleMeta);
     }
 

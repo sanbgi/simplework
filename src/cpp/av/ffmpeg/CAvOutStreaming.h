@@ -12,10 +12,10 @@ class CAvOutStreaming : public CObject, IAvStreaming {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    SAvStreaming::EAvStreamingType getStreamingType();
+    EAvStreamingType getStreamingType();
     int getStreamingId();
     int getTimeRate();
-    const CAvSampleMeta& getSampleMeta();
+    const SAvSampleMeta& getSampleMeta();
 
 public:
     int init(AVFormatContext* pFormatContext, SAvStreaming& src);
@@ -36,12 +36,12 @@ public:
     void release();
 
 public:
-    SAvStreaming::EAvStreamingType m_eStreamingType;
+    EAvStreamingType m_eStreamingType;
     int m_iStreamingId;
     int m_iStreamingIndex;
     int m_nTimeRate;
     int m_nWriteNumber;
-    CAvSampleMeta m_sampleMeta;
+    SAvSampleMeta m_sampleMeta;
     
     AVStream* m_pAvStream;
     CTaker<AVFrame*> m_pAVFrame;
