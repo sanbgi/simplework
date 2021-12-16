@@ -31,20 +31,20 @@ int CAvIn::changeStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& samp
 }
 
 
-int CAvIn::readFrame(int& iStreamingId, SAvFrame& frame) {
+int CAvIn::readFrame(SAvFrame& frame) {
     //
     // 如果上次流成功读取了数据，则还需要继续读取
     //
     if(m_pContinueReadingStreaming) {
         CAvStreaming* pStreaming = m_pContinueReadingStreaming;
         m_pContinueReadingStreaming = nullptr;
-        return receiveFrame(iStreamingId, frame, pStreaming);
+        return receiveFrame(frame, pStreaming);
     }
 
     CTaker<AVPacket*> spPacket( av_packet_alloc(),
                                 [](AVPacket* pPtr){av_packet_free(&pPtr);});
     if(av_read_frame(m_spOpenedCtx, spPacket)>=0) {
-        return sendPackageAndReceiveFrame(iStreamingId, frame, spPacket);
+        return sendPackageAndReceiveFrame(frame, spPacket);
     }
 
     return SError::ERRORTYPE_FAILURE;
@@ -151,7 +151,7 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvIn::sendPackageAndReceiveFrame(int& iStreamingId, SAvFrame& frame, AVPacket* pPackage) {
+int CAvIn::sendPackageAndReceiveFrame(SAvFrame& frame, AVPacket* pPackage) {
 
     CAvStreaming* pStreaming = m_vecCAvStreamings[pPackage->stream_index];
 
@@ -175,7 +175,7 @@ int CAvIn::sendPackageAndReceiveFrame(int& iStreamingId, SAvFrame& frame, AVPack
             break;
 
         case AVERROR(EAGAIN):
-            ret = receiveFrame(iStreamingId, frame, pStreaming);
+            ret = receiveFrame(frame, pStreaming);
             if( ret == SError::ERRORTYPE_SUCCESS ) {
                 if( (ret = avcodec_send_packet(pCodecCtx, pPackage)) != 0 ) {
                     //按理说，receiveFrame后，应该可以重新发送Package，什么原因造成不能?
@@ -187,10 +187,10 @@ int CAvIn::sendPackageAndReceiveFrame(int& iStreamingId, SAvFrame& frame, AVPack
         default:
             return SError::ERRORTYPE_FAILURE; 
     }
-    return receiveFrame(iStreamingId, frame, pStreaming);
+    return receiveFrame(frame, pStreaming);
 }
 
-int CAvIn::receiveFrame(int& iStreamingId, SAvFrame& frame, CAvStreaming* pStreaming) {
+int CAvIn::receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming) {
     AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
     CTaker<AVFrame*> avFrame(av_frame_alloc(), [](AVFrame* pFrame){av_frame_free(&pFrame);});
     int ret = avcodec_receive_frame(pCodecCtx, avFrame);
@@ -214,7 +214,7 @@ int CAvIn::receiveFrame(int& iStreamingId, SAvFrame& frame, CAvStreaming* pStrea
         return SError::ERRORTYPE_FAILURE;
 
     case AVERROR(EAGAIN):
-        return readFrame(iStreamingId, frame);
+        return readFrame(frame);
 
     default:
         return SError::ERRORTYPE_FAILURE;
@@ -222,7 +222,7 @@ int CAvIn::receiveFrame(int& iStreamingId, SAvFrame& frame, CAvStreaming* pStrea
 
     //如果读取成功，则下次继续读取
     m_pContinueReadingStreaming = pStreaming;
-    return CAvFrame::createAvFrame(avFrame, pStreaming, iStreamingId, frame);
+    return CAvFrame::createAvFrame(avFrame, pStreaming, frame);
 }
 
 CAvIn::CAvIn() {

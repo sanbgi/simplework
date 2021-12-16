@@ -17,7 +17,7 @@ public://IAvFrame
     STensor& getData();
 
 public:
-    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, int& iStreamingId, SAvFrame& rFrame); 
+    static int createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame); 
 
 public:
     CTaker<AVFrame*> m_spAvFrame;

@@ -15,14 +15,14 @@ class CAvIn : public CObject, public IAvIn {
 public:
     int getStreaming(SAvStreaming& rStreaming);
     int changeStreamingSampleMeta(int iStreamingId, const CAvSampleMeta& sampleMeta);
-    int readFrame(int& iStreamingId, SAvFrame& rFrame);
+    int readFrame(SAvFrame& rFrame);
 
 public:
     int initVideoFile(const char* szFileName);
     int initVideoCapture(const char* szName);
     int initAudioCapture(const char* szName);
-    int sendPackageAndReceiveFrame(int& iStreamingId, SAvFrame& frame, AVPacket* pPackage);
-    int receiveFrame(int& iStreamingId, SAvFrame& frame, CAvStreaming* pStreaming);
+    int sendPackageAndReceiveFrame(SAvFrame& frame, AVPacket* pPackage);
+    int receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming);
     int initCapture(AVInputFormat* pInputForamt, const char* szName);
     static void initDeviceRegistry();
 

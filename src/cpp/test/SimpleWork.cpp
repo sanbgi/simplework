@@ -60,9 +60,6 @@ void testPlayFile() {
             if(iVideoId == -1) {
                 iVideoId = spStreaming->getStreamingId();
                 videoMeta = spStreaming->getSampleMeta();
-                videoMeta.nVideoWidth = 640;
-                videoMeta.nVideoHeight = 360;
-                avIn->changeStreamingSampleMeta(iVideoId, videoMeta);
             }
             break;
 
@@ -83,8 +80,7 @@ void testPlayFile() {
     int nframeUnknown = 0;
     int nframe = 0;
     SAvFrame frame;
-    int iStreamingId = 0;
-    while(avIn->readFrame(iStreamingId, frame) == SError::ERRORTYPE_SUCCESS) {
+    while(avIn->readFrame(frame) == SError::ERRORTYPE_SUCCESS) {
         switch(frame->getStreamingType()){ 
         case EAvStreamingType::AvStreamingType_Video:
             {
@@ -126,8 +122,7 @@ int testWriteFile() {
     SAvOut avOut = SAvOut::openAvFile("d://tt2.mp4", vecInStreamings.size(), vecInStreamings.data() );
 
     SAvFrame frame;
-    int iStreamingId;
-    while(avIn->readFrame(iStreamingId, frame) == SError::ERRORTYPE_SUCCESS) {
+    while(avIn->readFrame(frame) == SError::ERRORTYPE_SUCCESS) {
         if( avOut->writeFrame(frame) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }

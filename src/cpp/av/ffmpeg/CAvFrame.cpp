@@ -17,7 +17,7 @@ STensor& CAvFrame::getData(){
     return m_spData;
 }
 
-int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, int& iStreamingId, SAvFrame& rFrame) {
+int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreaming, SAvFrame& rFrame) {
     SObject spObject;
     CAvFrame* pAvFrame;
     switch(pStreaming->m_spCodecCtx->codec_type) {
@@ -37,7 +37,6 @@ int CAvFrame::createAvFrame(CTaker<AVFrame*>& spAvFrame, CAvStreaming* pStreamin
     pAvFrame->m_spAvStream.setPtr((IAvStreaming*)pStreaming);
     pAvFrame->m_pStreaming = pStreaming;
     rFrame.setPtr(pAvFrame);
-    iStreamingId = pStreaming->m_iStreamingIndex;
     return SError::ERRORTYPE_SUCCESS;
 }
 
