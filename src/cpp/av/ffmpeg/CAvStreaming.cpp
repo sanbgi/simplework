@@ -69,11 +69,11 @@ EAvSampleType CAvStreaming::getSampleType() {
     return EAvSampleType::AvSampleType_None;
 }
 
-const SAvSampleMeta& CAvStreaming::getSampleMeta() {
+const PAvSample& CAvStreaming::getSampleMeta() {
     return m_sampleMeta;
 }
 
-int CAvStreaming::setSampleMeta(const SAvSampleMeta& sampleMeta) {
+int CAvStreaming::setSampleMeta(const PAvSample& sampleMeta) {
     m_sampleMeta = sampleMeta;
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -139,7 +139,7 @@ int CAvStreaming::convertToTensor(STensor& spData, AVFrame* pAvFrame) {
 }
 
 int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
-    SAvSampleMeta& sampleMeta = m_sampleMeta;
+    PAvSample& sampleMeta = m_sampleMeta;
     int audioRate = m_sampleMeta.audioRate > 0 ? m_sampleMeta.audioRate : pAvFrame->sample_rate;
     int nChannels = m_sampleMeta.audioChannels > 0 ? m_sampleMeta.audioChannels : pAvFrame->channels;
     AVSampleFormat eSampleFormat = CAvSampleType::toSampleFormat(sampleMeta.sampleType);

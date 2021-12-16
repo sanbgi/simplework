@@ -51,7 +51,7 @@ void testPlayFile() {
     //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
     int iVideoId = -1;
     int iAudioId = -1;
-    SAvSampleMeta videoMeta, audioMeta;
+    PAvSample videoMeta, audioMeta;
     SAvStreaming spStreaming;
     while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "streaming type: " << spStreaming->getStreamingType() << "\n";

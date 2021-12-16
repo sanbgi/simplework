@@ -19,10 +19,10 @@ EAvSampleType CAvSampleType::convert(AVSampleFormat eSampleFormat){
     switch (eSampleFormat)
     {
     case AV_SAMPLE_FMT_U8:
-        return SAvFrameData::AvSampleType_Audio_U8;
+        return EAvSampleType::AvSampleType_Audio_U8;
     
     case AV_SAMPLE_FMT_S16:
-        return SAvFrameData::AvSampleType_Audio_S16;
+        return EAvSampleType::AvSampleType_Audio_S16;
     }
     return EAvSampleType::AvSampleType_None;
 }
@@ -30,20 +30,20 @@ EAvSampleType CAvSampleType::convert(AVSampleFormat eSampleFormat){
 EAvSampleType CAvSampleType::convert(AVPixelFormat ePixelFormat){
     switch(ePixelFormat) {
     case AV_PIX_FMT_RGB24:
-        return SAvFrameData::AvSampleType_Video_RGB;
+        return EAvSampleType::AvSampleType_Video_RGB;
 
     case AV_PIX_FMT_RGBA:
-        return SAvFrameData::AvSampleType_Video_RGBA;
+        return EAvSampleType::AvSampleType_Video_RGBA;
     }
     return EAvSampleType::AvSampleType_None;
 }
 
 AVSampleFormat CAvSampleType::toSampleFormat(EAvSampleType eAvType) {
     switch(eAvType) {
-    case SAvFrameData::AvSampleType_Audio_U8:
+    case EAvSampleType::AvSampleType_Audio_U8:
         return AV_SAMPLE_FMT_U8;
 
-    case SAvFrameData::AvSampleType_Audio_S16:
+    case EAvSampleType::AvSampleType_Audio_S16:
         return AV_SAMPLE_FMT_S16;
     }
     return AVSampleFormat::AV_SAMPLE_FMT_NONE;
@@ -51,10 +51,10 @@ AVSampleFormat CAvSampleType::toSampleFormat(EAvSampleType eAvType) {
 
 AVPixelFormat CAvSampleType::toPixFormat(EAvSampleType eAvType) {
     switch(eAvType) {
-    case SAvFrameData::AvSampleType_Video_RGB:
+    case EAvSampleType::AvSampleType_Video_RGB:
         return AV_PIX_FMT_RGB24;
 
-    case SAvFrameData::AvSampleType_Video_RGBA:
+    case EAvSampleType::AvSampleType_Video_RGBA:
         return AV_PIX_FMT_RGBA;
     }
     return AVPixelFormat::AV_PIX_FMT_NONE;

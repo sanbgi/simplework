@@ -37,12 +37,9 @@ private:
     };
 
 public:
-    SAvFrame createFrame(SAvStreaming& rStreaming, long nTimeStamp, STensor& spData) {
+    SAvFrame createFrame(const PAvFrame& avFrame) {
         SObject spObject;
         CAvFrame* pFrame = CObject::createObject<CAvFrame>(spObject);
-        pFrame->m_spStreaming = rStreaming;
-        pFrame->m_spData = spData;
-        pFrame->m_nTimeStamp = nTimeStamp;
         return SAvFrame::wrapPtr(pFrame);
     }
 };

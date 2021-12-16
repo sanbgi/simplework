@@ -15,7 +15,7 @@ public://IAvFrame
     EAvStreamingType getStreamingType();
     int getStreamingId();
     int getTimeRate();
-    const SAvSampleMeta& getSampleMeta();
+    const PAvSample& getSampleMeta();
 
 public:
     int init(AVFormatContext* pFormatContext, SAvStreaming& src);
@@ -41,7 +41,7 @@ public:
     int m_iStreamingIndex;
     int m_nTimeRate;
     int m_nWriteNumber;
-    SAvSampleMeta m_sampleMeta;
+    PAvSample m_sampleMeta;
     
     AVStream* m_pAvStream;
     CTaker<AVFrame*> m_pAVFrame;

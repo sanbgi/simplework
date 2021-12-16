@@ -31,7 +31,7 @@ int CAvOutStreaming::getTimeRate() {
     return m_nTimeRate;
 }
 
-const SAvSampleMeta& CAvOutStreaming::getSampleMeta() {
+const PAvSample& CAvOutStreaming::getSampleMeta() {
     return m_sampleMeta;
 }
 
@@ -82,7 +82,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
     // 设置CodecContext参数
     //
     {
-        SAvSampleMeta sampleMeta = src->getSampleMeta();
+        PAvSample sampleMeta = src->getSampleMeta();
         pCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
         pCodecContext->codec_id = pOutputFormat->video_codec;
         //pCodecContext->bit_rate = 1600000;
@@ -171,7 +171,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
     // 设置CodecContext参数
     //
     {
-        SAvSampleMeta sampleMeta = src->getSampleMeta();
+        PAvSample sampleMeta = src->getSampleMeta();
         pCodecContext->codec_type = AVMEDIA_TYPE_AUDIO;
         pCodecContext->codec_id = pCodec->id;
 
@@ -288,7 +288,7 @@ int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const SAvF
     //
     // 准备帧数据对象
     //
-    SAvSampleMeta sampleMeta = rFrame->getStreaming()->getSampleMeta();
+    PAvSample sampleMeta = rFrame->getStreaming()->getSampleMeta();
     AVFrame* pAVFrame = m_pAVFrame;
     pAVFrame->data[0] = (uint8_t*)spTensor->getDataPtr<unsigned char>();
     pAVFrame->linesize[0] = pDims[1]*pDims[2];
@@ -333,7 +333,7 @@ int CAvOutStreaming::writeAudioFrame(AVFormatContext* pFormatContext, const SAvF
     //
     // 准备帧数据对象
     //
-    SAvSampleMeta sampleMeta = rFrame->getStreaming()->getSampleMeta();
+    PAvSample sampleMeta = rFrame->getStreaming()->getSampleMeta();
     AVFrame* pAVFrame = m_pAVFrame;
     pAVFrame->data[0] = (uint8_t*)spTensor->getDataPtr<unsigned char>();
     pAVFrame->linesize[0] = pDims[1]*pDims[2];

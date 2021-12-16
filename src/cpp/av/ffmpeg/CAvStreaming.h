@@ -17,11 +17,11 @@ public://IAvFrame
     int getTimeRate();
     int getSampleRate();
     EAvSampleType getSampleType();
-    const SAvSampleMeta& getSampleMeta();
+    const PAvSample& getSampleMeta();
 
 public:
     int init(AVStream* pAvStream, int iStreamingIndex);
-    int setSampleMeta(const SAvSampleMeta& sampleMeta);
+    int setSampleMeta(const PAvSample& sampleMeta);
     int convertToTensor(STensor& spData, AVFrame* pAvFrame);
     int convertAudio(STensor& spData, AVFrame* pAvFrame);
     int convertImage(STensor& spData, AVFrame* pAvFrame);
@@ -38,7 +38,7 @@ public:
     CTaker<AVCodecContext*> m_spCodecCtx;
     EAvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;
-    SAvSampleMeta m_sampleMeta;
+    PAvSample m_sampleMeta;
 
 public:
     CFrameConverter m_converter;

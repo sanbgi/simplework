@@ -17,7 +17,7 @@ class CAvOut_SDLWindow : public CObject, public IAvOut{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int initWindow(const char* szWindowName, SAvSampleMeta& sampleMeta) {
+    int initWindow(const char* szWindowName, PAvSample& sampleMeta) {
         
         release();
 
@@ -45,7 +45,7 @@ public:
 
     int writeFrame(const SAvFrame& frame) {
         STensor spTensor = frame->getData();
-        SAvSampleMeta sampleMeta = frame->getStreaming()->getSampleMeta();
+        PAvSample sampleMeta = frame->getStreaming()->getSampleMeta();
 
         const STensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();

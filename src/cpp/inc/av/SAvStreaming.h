@@ -1,13 +1,12 @@
 #ifndef __SimpleWork_IO_AvStreaming_h__
 #define __SimpleWork_IO_AvStreaming_h__
 
-#include "av.h"
-#include "SAvFrame.h"
+#include "PAvStreaming.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
 //
-// 对象工场对象的接口
+// AV流
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvStreaming)
 public:
@@ -32,7 +31,7 @@ public:
         //
         // 获取样本元信息，只有在版本冲突情况下，才会返回失败
         //
-        virtual const SAvSampleMeta& getSampleMeta() = 0;
+        virtual const PAvSample& getSampleMeta() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
     
@@ -45,13 +44,13 @@ public:
                                 int iStreamingId,
                                 int nTimeRate,
                                 EAvStreamingType eStreamingType, 
-                                const SAvSampleMeta& sampleMeta) = 0;
+                                const PAvSample& sampleMeta) = 0;
 
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreamingFactory)
 
     SAvStreaming createVideoStream(int iStreamingId, int nTimeRate, int nWidth, int nHeight) {
-        SAvSampleMeta sampleMeta;
+        PAvSample sampleMeta;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Video_RGB;
         sampleMeta.videoWidth = nWidth;
         sampleMeta.videoHeight = nHeight;
@@ -59,7 +58,7 @@ public:
     }
 
     SAvStreaming createAudioStream(int iStreamingId, int nTimeRate, int nSampleRate, int nChannels) {
-        SAvSampleMeta sampleMeta;
+        PAvSample sampleMeta;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio_S16;
         sampleMeta.audioRate = nSampleRate;
         sampleMeta.audioChannels = nChannels;

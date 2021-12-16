@@ -18,7 +18,7 @@ class CAvOut_SDLSpeaker : public CObject, public IAvOut{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int initSpeaker(const char* szName, SAvSampleMeta& sampleMeta) {
+    int initSpeaker(const char* szName, PAvSample& sampleMeta) {
         
         release();
 
