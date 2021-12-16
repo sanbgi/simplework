@@ -6,7 +6,7 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvStreaming::CAvStreaming() {
     m_pAvStream = nullptr;
-    m_eAvStreamingType = EAvStreamingType::AvStreamingType_None;
+    m_eAvStreamingType = SAvStreaming::AvStreamingType_None;
     m_iStreamingIndex = -1;
 }
 
@@ -17,18 +17,18 @@ CAvStreaming::~CAvStreaming() {
 void CAvStreaming::release() {
 }
 
-EAvStreamingType CAvStreaming::getStreamingType() {
+SAvStreaming::EAvStreamingType CAvStreaming::getStreamingType() {
     if(m_spCodecCtx) {
         switch (m_spCodecCtx->codec_type)
         {
         case AVMEDIA_TYPE_VIDEO:
-            return EAvStreamingType::AvStreamingType_Video;
+            return SAvStreaming::AvStreamingType_Video;
         
         case AVMEDIA_TYPE_AUDIO:
-            return EAvStreamingType::AvStreamingType_Audio;
+            return SAvStreaming::AvStreamingType_Audio;
         }
     }
-    return EAvStreamingType::AvStreamingType_None;
+    return SAvStreaming::AvStreamingType_None;
 }
 
 int CAvStreaming::getStreamingId() {

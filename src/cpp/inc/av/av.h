@@ -12,7 +12,6 @@
 
 #include "EAvSampleType.h"
 #include "CAvSampleMeta.h"
-#include "EAvStreamingType.h"
 #include "SAvFrame.h"
 #include "SAudioDevice.h"
 #include "SVideoDevice.h"

@@ -12,7 +12,7 @@ class CAvStreaming : public CObject, IAvStreaming {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    EAvStreamingType getStreamingType();
+    SAvStreaming::EAvStreamingType getStreamingType();
     int getStreamingId();
     int getTimeRate();
     int getSampleRate();
@@ -36,7 +36,7 @@ public:
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     CTaker<AVCodecContext*> m_spCodecCtx;
-    EAvStreamingType m_eAvStreamingType;
+    SAvStreaming::EAvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;
     CAvSampleMeta m_sampleMeta;
 

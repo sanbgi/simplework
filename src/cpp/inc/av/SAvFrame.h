@@ -12,7 +12,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvFrame)
 public:
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvFrame", 211206)
-        EAvStreamingType getStreamingType() {
+        SAvStreaming::EAvStreamingType getStreamingType() {
             return getStreaming()->getStreamingType();
         }
 

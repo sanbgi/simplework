@@ -56,14 +56,14 @@ void testPlayFile() {
     while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
         std::cout << "streaming type: " << spStreaming->getStreamingType() << "\n";
         switch(spStreaming->getStreamingType()) {
-        case EAvStreamingType::AvStreamingType_Video:
+        case SAvStreaming::AvStreamingType_Video:
             if(iVideoId == -1) {
                 iVideoId = spStreaming->getStreamingId();
                 videoMeta = spStreaming->getSampleMeta();
             }
             break;
 
-        case EAvStreamingType::AvStreamingType_Audio:
+        case SAvStreaming::AvStreamingType_Audio:
             if(iAudioId == -1) {
                 iAudioId = spStreaming->getStreamingId();
                 audioMeta = spStreaming->getSampleMeta();
@@ -82,14 +82,14 @@ void testPlayFile() {
     SAvFrame frame;
     while(avIn->readFrame(frame) == SError::ERRORTYPE_SUCCESS) {
         switch(frame->getStreamingType()){ 
-        case EAvStreamingType::AvStreamingType_Video:
+        case SAvStreaming::AvStreamingType_Video:
             {
                 avVideoOut->writeFrame(frame);
                 nframeVideo++;
             }
             break;
 
-        case EAvStreamingType::AvStreamingType_Audio:
+        case SAvStreaming::AvStreamingType_Audio:
             {
                 avAudioOut->writeFrame(frame);
                 nframeAudio++;
@@ -131,7 +131,7 @@ int testWriteFile() {
         {
             //std::cout << "nframeVideo:" << nframe << "writed\n";
         }
-        if(frame->getStreamingType() == EAvStreamingType::AvStreamingType_Video) {
+        if(frame->getStreamingType() == SAvStreaming::AvStreamingType_Video) {
             std::cout << "timestamps:  " << frame->getTimeStamp() << "\n";
         }
     }

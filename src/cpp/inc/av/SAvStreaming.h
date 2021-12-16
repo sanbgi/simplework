@@ -11,6 +11,15 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvStreaming)
 public:
+    //
+    // 音视频样本类型
+    //
+    enum EAvStreamingType {
+        AvStreamingType_None,
+        AvStreamingType_Video,
+        AvStreamingType_Audio,
+    };
+
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvStreaming", 211206)
 
@@ -70,7 +79,6 @@ public:
         static SAvStreamingFactory g_factory = SObject::createObject<SAvStreamingFactory>();
         return g_factory;
     }
-
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreaming)
 

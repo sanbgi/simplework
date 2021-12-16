@@ -6,7 +6,7 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvOutStreaming::CAvOutStreaming() {
     m_pAvStream = nullptr;
-    m_eStreamingType = EAvStreamingType::AvStreamingType_None;
+    m_eStreamingType = SAvStreaming::AvStreamingType_None;
     m_iStreamingId = -1;
     m_pCodec = nullptr;
     m_nWriteNumber = 0;
@@ -19,7 +19,7 @@ CAvOutStreaming::~CAvOutStreaming() {
 void CAvOutStreaming::release() {
 }
 
-EAvStreamingType CAvOutStreaming::getStreamingType() {
+SAvStreaming::EAvStreamingType CAvOutStreaming::getStreamingType() {
     return m_eStreamingType;
 }
 
@@ -37,10 +37,10 @@ const CAvSampleMeta& CAvOutStreaming::getSampleMeta() {
 
 int CAvOutStreaming::init(AVFormatContext* pFormatContext, SAvStreaming& src) {
     switch(src->getStreamingType()) {
-    case EAvStreamingType::AvStreamingType_Video:
+    case SAvStreaming::AvStreamingType_Video:
         return initVideo(pFormatContext, src);
 
-    case EAvStreamingType::AvStreamingType_Audio:
+    case SAvStreaming::AvStreamingType_Audio:
         return initAudio(pFormatContext, src);
     }
     return SError::ERRORTYPE_FAILURE;
@@ -253,10 +253,10 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const SAvFrame&
     if(rFrame) {
         if(rFrame->getStreamingId() == m_iStreamingId ) {
             switch(rFrame->getStreamingType()) {
-            case EAvStreamingType::AvStreamingType_Video:
+            case SAvStreaming::AvStreamingType_Video:
                 return writeVideoFrame(pFormatContext, rFrame);
 
-            case EAvStreamingType::AvStreamingType_Audio:
+            case SAvStreaming::AvStreamingType_Audio:
                 return writeAudioFrame(pFormatContext, rFrame);
             }
         }
