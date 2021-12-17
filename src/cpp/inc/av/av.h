@@ -16,6 +16,7 @@
 #include "SAvStreaming.h"
 #include "SAvIn.h"
 #include "SAvOut.h"
+#include "SAvFilter.h"
 #include "SAudioDevice.h"
 #include "SVideoDevice.h"
 

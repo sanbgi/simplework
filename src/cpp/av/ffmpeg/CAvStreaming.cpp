@@ -6,7 +6,6 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvStreaming::CAvStreaming() {
     m_pAvStream = nullptr;
-    m_eAvStreamingType = EAvStreamingType::AvStreamingType_None;
     m_iStreamingIndex = -1;
 }
 
@@ -121,108 +120,36 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         }
         break;
     }
+
+    SObject spFilter;
+    CAvFilter* pAvFilter = CObject::createObject<CAvFilter>(spFilter);
+    if( pAvFilter->initFilter(m_sampleMeta) != SError::ERRORTYPE_SUCCESS) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+    m_spFilter.take(pAvFilter, spFilter);
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvStreaming::convertToTensor(STensor& spData, AVFrame* pAvFrame) {
-    if(m_spCodecCtx) {
-        switch (m_spCodecCtx->codec_type)
-        {
-        case AVMEDIA_TYPE_VIDEO:
-            return convertImage(spData, pAvFrame);
-        
-        case AVMEDIA_TYPE_AUDIO:
-            return convertAudio(spData, pAvFrame);
-        }
+
+int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
+    PAvFrame avFrame;
+    avFrame.sampleMeta = m_sampleMeta;
+    avFrame.planeDatas = pAvFrame->data;
+    avFrame.planeLineSizes = pAvFrame->linesize;
+    avFrame.streamingId = getStreamingId();
+    avFrame.streamingType = getStreamingType();
+    avFrame.samples = pAvFrame->nb_samples;
+    avFrame.timeRate = getTimeRate();
+    avFrame.timeStamp = pAvFrame->pts;
+    switch(avFrame.streamingType) {
+        case EAvStreamingType::AvStreamingType_Video:
+            return m_spFilter->convertVideo((AVPixelFormat)pAvFrame->format, &avFrame, receiver);
+
+        case EAvStreamingType::AvStreamingType_Audio:
+            avFrame.planeDatas = pAvFrame->extended_data;
+            return m_spFilter->convertAudio((AVSampleFormat)pAvFrame->format, &avFrame, receiver);
     }
     return SError::ERRORTYPE_FAILURE;
-}
-
-int CAvStreaming::convertAudio(STensor& spTensor, AVFrame* pAvFrame) {
-    PAvSample& sampleMeta = m_sampleMeta;
-    int audioRate = m_sampleMeta.audioRate > 0 ? m_sampleMeta.audioRate : pAvFrame->sample_rate;
-    int nChannels = m_sampleMeta.audioChannels > 0 ? m_sampleMeta.audioChannels : pAvFrame->channels;
-    AVSampleFormat eSampleFormat = CAvSampleType::toSampleFormat(sampleMeta.sampleType);
-    if( m_converter.convert(audioRate,nChannels,eSampleFormat, *pAvFrame) != SError::ERRORTYPE_SUCCESS) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-
-    // 重采样返回的一帧音频数据大小(以字节为单位)
-    int nBytesPerSample = av_get_bytes_per_sample(eSampleFormat);
-    int dimsize[3] = { nChannels, m_converter.m_nAudioSamples, nBytesPerSample };
-    if( !m_spLastDimTensor ) {
-        m_spLastDimTensor = STensor::createVector(3, dimsize);
-    }
-    if( m_spLastDimTensor ) {
-        if( dimsize[0] != m_lastDimsize[0] ||
-            dimsize[1] != m_lastDimsize[1] ||
-            dimsize[2] != m_lastDimsize[2]) {
-            m_spLastDimTensor.release();
-            m_spLastDimTensor = STensor::createVector(3, dimsize);
-            m_lastDimsize[0] = dimsize[0];
-            m_lastDimsize[1] = dimsize[1];
-            m_lastDimsize[2] = dimsize[2];
-        }
-    }else{
-        m_spLastDimTensor = STensor::createVector(3, dimsize);
-        m_lastDimsize[0] = dimsize[0];
-        m_lastDimsize[1] = dimsize[1];
-        m_lastDimsize[2] = dimsize[2];
-    }
-
-    int nData = nChannels * m_converter.m_nAudioSamples * nBytesPerSample;
-    spTensor = STensor::createTensor(m_spLastDimTensor, nData, m_converter.m_ppAudioData[0]);
-    return SError::ERRORTYPE_FAILURE;
-}
-
-int CAvStreaming::convertImage(STensor& spTensor, AVFrame* pAvFrame) {
-    AVPixelFormat eTargetPixelFormat = CAvSampleType::toPixFormat(m_sampleMeta.sampleType);
-    int nTargetWidth = m_sampleMeta.videoWidth > 0 ? m_sampleMeta.videoWidth : pAvFrame->width;
-    int nTargetHeight = m_sampleMeta.videoHeight > 0 ? m_sampleMeta.videoHeight : pAvFrame->height;
-    if( m_converter.convert(nTargetWidth, nTargetHeight, eTargetPixelFormat, *pAvFrame) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    
-    int nPixBytes = 0;
-    switch(m_sampleMeta.sampleType) {
-    case EAvSampleType::AvSampleType_Video_RGBA:
-        nPixBytes = 4;
-        break;
-
-    case EAvSampleType::AvSampleType_Video_RGB:
-        nPixBytes = 3;
-        break;
-
-    default:
-        return SError::ERRORTYPE_FAILURE;
-    }
-
-    int dimsize[3] = { nTargetHeight, nTargetWidth, nPixBytes };
-    if( m_spLastDimTensor ) {
-        if( dimsize[0] != m_lastDimsize[0] ||
-            dimsize[1] != m_lastDimsize[1] ||
-            dimsize[2] != m_lastDimsize[2]) {
-            m_spLastDimTensor.release();
-            m_spLastDimTensor = STensor::createVector(3, dimsize);
-            m_lastDimsize[0] = dimsize[0];
-            m_lastDimsize[1] = dimsize[1];
-            m_lastDimsize[2] = dimsize[2];
-        }
-    }else{
-        m_spLastDimTensor = STensor::createVector(3, dimsize);
-        m_lastDimsize[0] = dimsize[0];
-        m_lastDimsize[1] = dimsize[1];
-        m_lastDimsize[2] = dimsize[2];
-    }
-    
-    //
-    //  修正视频宽度。及nTargetWidth != m_pVideoLinesizes[0]/4时，以后者为准。如果返
-    //  回值中的视频，一行的字节数不等于视频宽度*4(RGBA)，则这个时候视频数据有点难处
-    //  理，只能暂时将返回图像的宽度扩大(有垃圾数据)或缩小(数据丢失）到返回的实际宽度。
-    //  如果想调整为实际视频大小，则需要对每一行的数据做处理，性能太低。
-    //
-    spTensor = STensor::createTensor(m_spLastDimTensor, nTargetWidth*nTargetHeight*nPixBytes, m_converter.m_pVideoData[0]);
-    return SError::ERRORTYPE_SUCCESS;
 }
 
 FFMPEG_NAMESPACE_LEAVE

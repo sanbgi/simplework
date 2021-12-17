@@ -33,18 +33,9 @@ public:
 };
 SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
+
+
 void testPlayFile() {
-    SVideoDevice sVideoDevice;
-    while(SAvIn::getVideoDevice(sVideoDevice) == SError::ERRORTYPE_SUCCESS) {
-        std::cout << "video device: " << sVideoDevice->getDeviceName() << "\n";
-    }
-
-    SAudioDevice sAudioDevice;
-    while(SAvIn::getAudioDevice(sAudioDevice) == SError::ERRORTYPE_SUCCESS) {
-        std::cout << "audio device: " << sAudioDevice->getDeviceName() << "\n";
-    }
-
-
     SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
     //SAvIn avIn = SAvIn::openVideoDevice("vfwcap");
     //SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
@@ -72,40 +63,32 @@ void testPlayFile() {
         }
     }
 
-
+    videoMeta.videoWidth = 640;
+    videoMeta.videoHeight = 360;
     SAvOut avVideoOut = SAvOut::openWindow("Display Video", videoMeta);
     SAvOut avAudioOut = SAvOut::openSpeaker(nullptr, audioMeta);
+    struct CCtx {
+        SAvOut video;
+        SAvOut audio;
+    };
+    CCtx outCtx;
+    outCtx.video = avVideoOut;
+    outCtx.audio = avAudioOut;
     int nframeVideo = 0;
-    int nframeAudio = 0;
-    int nframeUnknown = 0;
-    int nframe = 0;
-    SAvFrame frame;
-    while(avIn->readFrame(frame) == SError::ERRORTYPE_SUCCESS) {
-        switch(frame->getStreaming()->getStreamingType()){ 
-        case EAvStreamingType::AvStreamingType_Video:
-            {
-                avVideoOut->writeFrame(frame);
-                nframeVideo++;
-            }
-            break;
-
+    while(avIn->readFrame(CPVisitor<CCtx, const PAvFrame*>(outCtx, [](CCtx ctx, const PAvFrame* pFrame) -> int{
+        switch(pFrame->streamingType) {
         case EAvStreamingType::AvStreamingType_Audio:
-            {
-                avAudioOut->writeFrame(frame);
-                nframeAudio++;
-            }
-            break;
+            std::cout << "audioVideo timestamp:" << pFrame->timeStamp << "\n";
+            return ctx.audio->writeFrame(pFrame);
 
-        default:
-            nframeUnknown++;
-            break;
+        case  EAvStreamingType::AvStreamingType_Video:
+            std::cout << "frameVideo timestamp:" << pFrame->timeStamp << "\n";
+            return ctx.video->writeFrame(pFrame);
         }
-        if( nframe++ % 10 == 0) {
-            std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
-        }
+        return SError::ERRORTYPE_FAILURE;
+    })) == SError::ERRORTYPE_SUCCESS ) {
+        nframeVideo++;
     }
-    std::cout << "nframeVideo:" << nframeVideo << ", nframeAudio:" << nframeAudio << ", nframeUnknown:" << nframeUnknown << "\n";
-
 }
 
 int testWriteFile() {
@@ -119,54 +102,45 @@ int testWriteFile() {
     }
 
     int nframe = 0;
-    SAvOut avOut = SAvOut::openAvFile("d://tt2.mp4", vecInStreamings.size(), vecInStreamings.data() );
-
-    SAvFrame frame;
-    while(avIn->readFrame(frame) == SError::ERRORTYPE_SUCCESS) {
-        if( avOut->writeFrame(frame) != SError::ERRORTYPE_SUCCESS ) {
+    SAvOut avOut = SAvOut::openAvFile("d://tt2.mkv", vecInStreamings.size(), vecInStreamings.data() );
+    while(avIn->readFrame(CPVisitor<SAvOut, const PAvFrame*>(avOut, [](SAvOut avOut, const PAvFrame* pFrame) -> int{
+        if(pFrame == nullptr) {
+            //不再继续读取
+            avOut->writeFrame(pFrame);
             return SError::ERRORTYPE_FAILURE;
         }
-
-        if( nframe++ % 10 == 0) 
-        {
-            //std::cout << "nframeVideo:" << nframe << "writed\n";
-        }
-        if(frame->getStreaming()->getStreamingType() == EAvStreamingType::AvStreamingType_Video) {
-            std::cout << "timestamps:  " << frame->getTimeStamp() << "\n";
-        }
+        std::cout << "timestamps:  " << pFrame->timeStamp << "\n";
+        return avOut->writeFrame(pFrame);
+    })) == SError::ERRORTYPE_SUCCESS ) {
+        nframe++;
     }
-
-    if(avOut->writeFrame(SAvFrame()) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int main(int argc, char *argv[]){
-    testWriteFile();
-    //testPlayFile();
-    return 0;
-}
 
-void say_hello(){
+void fun(const CData& data) {
+     if( data.hasData<int>() ) {
+        std::cout << "i get the integer." << data.getData<int>();
+     }
+     if(data.hasData<double>() ) {
+         std::cout << "i get the double." << data.getData<double>();
+     }
+ }
+
+
+int main(int argc, char *argv[]){
+    //testWriteFile();
+    testPlayFile();
+
     /*
-    TObject ppo;
-    TObject ptr1, ptr0, ptrn(ptr1);
-    Vector ppt;
-    Vector ptr2, ptr3(ptr2);
-    //char szV[] = "hi";
-    //swcore::Vector ptrTensor(sizeof(szV)/sizeof(char), szV);
-    //char* ptrChar = ptrTensor.getDataPtr<char>();
-    //swcore::Vector tensor = swcore::Vector::createTensor<char>(1);
-    IFactory* pFactory = nullptr;
-    ITensorPtr ppO;
-    ppO = pFactory;
-    //ptr2 = pFactory;
-    ptr3 = ptr2;
-    ptr2 = ptr1;
-    ptr1 = ptr2;
-    ptr3 = ptr2 = ptr1 = ptr0;
-    ptr3 = ptr2.getPtr();
+    int i=10;
+    CData s(i);
+    CData * pData = new CData(i);
+    fun(s);
+    fun(CData(i));
+    fun(CData(20));
+    const int* pPtr = s.getPtr<int>();
+    //fun(CData(10));
     */
+    return 0;
 }

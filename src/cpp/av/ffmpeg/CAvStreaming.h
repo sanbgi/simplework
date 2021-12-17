@@ -3,6 +3,7 @@
 
 #include "av_ffmpeg.h"
 #include "CFrameConverter.h"
+#include "CAvFilter.h"
 
 FFMPEG_NAMESPACE_ENTER
 
@@ -22,9 +23,7 @@ public://IAvFrame
 public:
     int init(AVStream* pAvStream, int iStreamingIndex);
     int setSampleMeta(const PAvSample& sampleMeta);
-    int convertToTensor(STensor& spData, AVFrame* pAvFrame);
-    int convertAudio(STensor& spData, AVFrame* pAvFrame);
-    int convertImage(STensor& spData, AVFrame* pAvFrame);
+    int receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame);
 
 public:
     CAvStreaming();
@@ -36,12 +35,12 @@ public:
 public:
     AVStream* m_pAvStream;  //CAvIn_ffmpeg::m_pFormatCtx持有，无需释放
     CTaker<AVCodecContext*> m_spCodecCtx;
-    EAvStreamingType m_eAvStreamingType;
     int m_iStreamingIndex;
     PAvSample m_sampleMeta;
 
 public:
     CFrameConverter m_converter;
+    CPointer<CAvFilter> m_spFilter;
 
 public://Video
     int m_lastDimsize[3];

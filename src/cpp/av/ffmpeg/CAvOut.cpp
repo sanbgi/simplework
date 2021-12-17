@@ -63,6 +63,7 @@ int CAvOut::initAvFile(const char* szFileName, int nStreamings, SAvStreaming* pS
 }
 
 int CAvOut::writeFrame(const SAvFrame& rFrame) {
+    /*
     std::vector<CPointer<CAvOutStreaming>>::iterator it = m_arrStreamings.begin();
     while(it != m_arrStreamings.end() ) {
         if((*it)->writeFrame(m_spFormatContext, rFrame) != SError::ERRORTYPE_SUCCESS ) {
@@ -74,7 +75,25 @@ int CAvOut::writeFrame(const SAvFrame& rFrame) {
     //如果写入一个空的帧，则表示要关闭写文件
     if(!rFrame) {
         return close();
+    }*/
+    return SError::ERRORTYPE_FAILURE;
+}
+
+int CAvOut::writeFrame(const PAvFrame* pFrame) {
+    //如果写入一个空的帧，则表示要关闭写文件
+    if(pFrame == nullptr) {
+        close();
+        return SError::ERRORTYPE_FAILURE;
     }
+
+    std::vector<CPointer<CAvOutStreaming>>::iterator it = m_arrStreamings.begin();
+    while(it != m_arrStreamings.end() ) {
+        if((*it)->writeFrame(m_spFormatContext, pFrame) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+        it++;
+    }
+
     return SError::ERRORTYPE_SUCCESS;
 }
 

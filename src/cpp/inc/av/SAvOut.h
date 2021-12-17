@@ -17,6 +17,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
         //
         virtual int writeFrame(const SAvFrame& frame) = 0;
 
+        //
+        //  写入帧数据，没有则表示关闭
+        //
+        virtual int writeFrame(const PAvFrame* pFrame) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvOutFactory, "sw.av.AvOutFactory")

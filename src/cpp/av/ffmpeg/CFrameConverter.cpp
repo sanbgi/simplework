@@ -103,6 +103,11 @@ int CFrameConverter::convert(int nTargetWidth, int nTargetHeight, AVPixelFormat 
         return SError::ERRORTYPE_FAILURE;
     }
 
+    // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
+    for( int i=0; i<AV_NUM_DATA_POINTERS && m_pVideoLinesizes[i]; i++ ) {
+        m_nPlanes = i;
+    }
+
     return SError::ERRORTYPE_SUCCESS;
 }
 
@@ -176,7 +181,12 @@ int CFrameConverter::convert(int nTargetRate, int nTargetChannels, AVSampleForma
     {
         printf("audio buffer is probably too small\n");
     }
+
+    //假设音频的plane只可能是1或者2，对于package audio为1，对于plannar audio为2
+    m_nPlanes = av_sample_fmt_is_planar(eTargetFormat) ? 2 : 1;
     m_nAudioSamples = nb_samples;
+    m_pAudioLinesize[0] = nb_samples * nTargetChannels * av_get_bytes_per_sample(eTargetFormat);
+    m_pAudioLinesize[1] = m_pAudioLinesize[0];
     return SError::ERRORTYPE_SUCCESS;
 }
 

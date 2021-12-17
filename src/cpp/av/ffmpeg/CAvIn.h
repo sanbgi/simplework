@@ -22,8 +22,8 @@ public:
     int initVideoFile(const char* szFileName);
     int initVideoCapture(const char* szName);
     int initAudioCapture(const char* szName);
-    int sendPackageAndReceiveFrame(SAvFrame& frame, AVPacket* pPackage);
-    int receiveFrame(SAvFrame& frame, CAvStreaming* pStreaming);
+    int sendPackageAndReceiveFrame(PAvFrame::FVisitor receiver, AVPacket* pPackage);
+    int receiveFrame(PAvFrame::FVisitor receiver, CAvStreaming* pStreaming);
     int initCapture(AVInputFormat* pInputForamt, const char* szName);
     static void initDeviceRegistry();
 

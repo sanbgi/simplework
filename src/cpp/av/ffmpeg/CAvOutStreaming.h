@@ -23,9 +23,9 @@ public:
     int initAudio(AVFormatContext* pFormatContext, SAvStreaming& src);
     int open(AVFormatContext* pFormatContext);
     int close(AVFormatContext* pFormatContext);
-    int writeFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame);
-    int writeVideoFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame);
-    int writeAudioFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame);
+    int writeFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
+    int writeVideoFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
+    int writeAudioFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeFrame(AVFormatContext* pFormatContext, AVFrame* pFrame);
 
 public:

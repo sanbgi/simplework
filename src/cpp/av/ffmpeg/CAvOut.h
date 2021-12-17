@@ -19,6 +19,7 @@ public:
 
 public:
     int writeFrame(const SAvFrame& rFrame);
+    int writeFrame(const PAvFrame* pFrame);
     int close();
 
 public:

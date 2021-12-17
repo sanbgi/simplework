@@ -47,6 +47,13 @@ struct PAvFrame {
     long timeStamp;
 
     //
+    // 当前帧样本数量
+    //      音频：单声道采样点数
+    //      视频：1
+    //
+    int samples;
+
+    //
     // 样本数据包含多少数据面
     //
     int samplePlanes;
@@ -55,11 +62,14 @@ struct PAvFrame {
     //
     unsigned char** planeDatas;
     //
-    // 数据长度数组，其长度为和samplePlanes一致，单位为字节数
+    // 数据长度数组，其长度为和samplePlanes一致，单位为字节数，取值为：
     //
-    int* planeSizes;
+    //      视频：一行视频所占用字节数
+    //      音频：一个声道数据占用的字节数
+    //
+    int* planeLineSizes;
 
-    typedef int(*FVisitor)(const PAvFrame& frame);
+    typedef IVisitor<const PAvFrame*>* FVisitor;
 };
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE

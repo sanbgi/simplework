@@ -14,7 +14,18 @@ public:
         //
         // 获取流
         //
-        virtual SAvStreaming& getStreaming() = 0;
+        //virtual SAvStreaming& getStreaming() = 0;
+        virtual int getStreamingId() = 0;
+
+        //
+        // 获取流类型
+        //
+        virtual EAvStreamingType getStreamingType() = 0;
+
+        //
+        //
+        //
+        virtual PAvSample getSampleMeta() = 0;
 
         //
         // 获取时间戳，单位是SAvStreaming::getTimeRate对应的时间单位
@@ -32,6 +43,11 @@ public:
         //
         virtual sw::math::STensor& getData() = 0;
 
+        //
+        //
+        //
+        virtual int readPAvFrame(PAvFrame::FVisitor visitor) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(AvFrameFactory, "sw.av.AvFrameFactory")
@@ -44,6 +60,16 @@ public:
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvFrameFactory)
 
+public:
+    static SAvFrame createFrame(const PAvFrame& avFrame)  {
+        return getFactory()->createFrame(avFrame);
+    }
+
+private:
+    static SAvFrameFactory& getFactory() {
+        static SAvFrameFactory g_factory = SObject::createObject<SAvFrameFactory>();
+        return g_factory;
+    }
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvFrame)
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE

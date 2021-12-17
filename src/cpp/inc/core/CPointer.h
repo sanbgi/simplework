@@ -30,7 +30,7 @@ public:
         release();
     }
     void take(T* pPtr, SObject spPtrTaker) {
-        m_pPtr = m_pPtr;
+        m_pPtr = pPtr;
         m_spPtrTaker = spPtrTaker;
     }
     void release() {

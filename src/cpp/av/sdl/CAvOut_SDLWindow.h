@@ -45,7 +45,7 @@ public:
 
     int writeFrame(const SAvFrame& frame) {
         STensor spTensor = frame->getData();
-        PAvSample sampleMeta = frame->getStreaming()->getSampleMeta();
+        PAvSample sampleMeta = frame->getSampleMeta();
 
         const STensor& spDimTensor = spTensor->getDimVector();
         const int* pDim = spDimTensor->getDataPtr<int>();
@@ -73,6 +73,45 @@ public:
         dstRect.w = m_nWinWidth;
         dstRect.h = m_nWinHeight;
 
+        SDL_UpdateTexture(spTexture, &srcRect, pixels, pitch);
+
+        //清除Renderer
+        SDL_RenderClear(pRenderer);
+        //Texture复制到Renderer
+        SDL_RenderCopy(pRenderer, spTexture, &srcRect, &dstRect);
+        //更新Renderer显示
+        SDL_RenderPresent(pRenderer);
+        
+        return SError::ERRORTYPE_SUCCESS;
+    }
+
+    int writeFrame(const PAvFrame* pFrame) {
+        if(pFrame == nullptr) {
+            return close();
+        }
+
+        PAvSample sampleMeta = pFrame->sampleMeta;
+        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.sampleType);
+        int width = sampleMeta.videoWidth;
+        int height = sampleMeta.videoHeight;
+        SDL_Renderer* pRenderer = m_pRenderer;
+        CTaker<SDL_Texture*> spTexture(
+                                SDL_CreateTexture(pRenderer, ePixelFormat, SDL_TEXTUREACCESS_STREAMING, width, height),
+                                SDL_DestroyTexture
+                            );
+        if (!spTexture) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+
+        SDL_Rect srcRect, dstRect;
+        dstRect.x = srcRect.x = 0;
+        dstRect.y = srcRect.y = 0;
+        srcRect.w = width;
+        srcRect.h = height;
+        dstRect.w = m_nWinWidth;
+        dstRect.h = m_nWinHeight;
+        void *pixels = pFrame->planeDatas[0];
+        int pitch = pFrame->planeLineSizes[0];
         SDL_UpdateTexture(spTexture, &srcRect, pixels, pitch);
 
         //清除Renderer

@@ -74,6 +74,28 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
+    int writeFrame(const PAvFrame* pFrame) {
+        if(pFrame == nullptr) {
+            return close();
+        }
+
+        switch(pFrame->sampleMeta.sampleType) {
+        case EAvSampleType::AvSampleType_Audio_U8:
+        case EAvSampleType::AvSampleType_Audio_S16:
+            {
+                int ret = SDL_QueueAudio(
+                            m_iDeviceID, pFrame->planeDatas[0], 
+                            pFrame->planeLineSizes[0]);
+            }
+            break;
+
+        default:
+            return SError::ERRORTYPE_FAILURE;
+        }
+        
+        return SError::ERRORTYPE_SUCCESS;
+    }
+
     int close() {
         release();
         return SError::ERRORTYPE_SUCCESS;

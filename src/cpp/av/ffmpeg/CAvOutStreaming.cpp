@@ -249,50 +249,37 @@ int CAvOutStreaming::close(AVFormatContext* pFormatContext) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame) {
-    if(rFrame) {
-        SAvStreaming& rStreaming = rFrame->getStreaming();
-        if(rStreaming->getStreamingId() == m_iStreamingId ) {
-            switch(rStreaming->getStreamingType()) {
+int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
+    if(pFrame) {
+        if(pFrame->streamingId == m_iStreamingId ) {
+            switch(pFrame->streamingType) {
             case EAvStreamingType::AvStreamingType_Video:
-                return writeVideoFrame(pFormatContext, rFrame);
+                return writeVideoFrame(pFormatContext, pFrame);
 
             case EAvStreamingType::AvStreamingType_Audio:
-                return writeAudioFrame(pFormatContext, rFrame);
+                return writeAudioFrame(pFormatContext, pFrame);
             }
         }
         return SError::ERRORTYPE_SUCCESS;
     }
-    return writeFrame(pFormatContext, nullptr);
+    return writeFrame(pFormatContext, (AVFrame*)nullptr);
 }
 
-int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame) {
+
+int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
 
     AVCodecContext* pCodecContext = m_spCodecCtx;
-    //
-    // 准备数据
-    //
-    STensor spTensor = rFrame->getData();
-    if( !spTensor ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    STensor spDims = spTensor->getDimVector();
-    if( !spDims || spDims->getDataSize() != 3) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    const int* pDims = spDims->getDataPtr<int>();
-    if( pDims[0] != pCodecContext->height || pDims[1] != pCodecContext->width ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
 
     //
     // 准备帧数据对象
     //
-    PAvSample sampleMeta = rFrame->getStreaming()->getSampleMeta();
+    PAvSample sampleMeta = pFrame->sampleMeta;
     AVFrame* pAVFrame = m_pAVFrame;
-    pAVFrame->data[0] = (uint8_t*)spTensor->getDataPtr<unsigned char>();
-    pAVFrame->linesize[0] = pDims[1]*pDims[2];
-    pAVFrame->pts = rFrame->getTimeStamp();
+    for(int i=0; i<pFrame->samplePlanes; i++) {
+        pAVFrame->data[i] = pFrame->planeDatas[i];
+        pAVFrame->linesize[i] = pFrame->planeLineSizes[i];
+    }
+    pAVFrame->pts = pFrame->timeStamp;
     pAVFrame->width = sampleMeta.videoWidth;
     pAVFrame->height = sampleMeta.videoHeight;
     pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleType);
@@ -310,35 +297,21 @@ int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const SAvF
     return writeFrame(pFormatContext, pAVFrame);
 }
 
-int CAvOutStreaming::writeAudioFrame(AVFormatContext* pFormatContext, const SAvFrame& rFrame) {
+int CAvOutStreaming::writeAudioFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
     
     AVCodecContext* pCodecContext = m_spCodecCtx;
-    //
-    // 准备数据
-    //
-    STensor spTensor = rFrame->getData();
-    if( !spTensor ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    STensor spDims = spTensor->getDimVector();
-    if( !spDims || spDims->getDataSize() != 3) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-
-    const int* pDims = spDims->getDataPtr<int>();
-    if( pDims[0] != pCodecContext->channels ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
 
     //
     // 准备帧数据对象
     //
-    PAvSample sampleMeta = rFrame->getStreaming()->getSampleMeta();
+    PAvSample sampleMeta = pFrame->sampleMeta;
     AVFrame* pAVFrame = m_pAVFrame;
-    pAVFrame->data[0] = (uint8_t*)spTensor->getDataPtr<unsigned char>();
-    pAVFrame->linesize[0] = pDims[1]*pDims[2];
-    pAVFrame->nb_samples = pDims[1];
-    pAVFrame->pts = rFrame->getTimeStamp();
+    for(int i=0; i<pFrame->samplePlanes; i++) {
+        pAVFrame->data[i] = pFrame->planeDatas[i];
+        pAVFrame->linesize[i] = pFrame->planeLineSizes[i];
+    }
+    pAVFrame->nb_samples = pFrame->samples;
+    pAVFrame->pts = pFrame->timeStamp;
     pAVFrame->sample_rate = sampleMeta.audioRate;
     pAVFrame->channels = sampleMeta.audioChannels;
     pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleType);

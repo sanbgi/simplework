@@ -1,11 +1,21 @@
-#ifndef __SimpleWork_Av_CImageConverter_h__
-#define __SimpleWork_Av_CImageConverter_h__
+#ifndef __SimpleWork_av_ffmpeg_CAvFilter_h__
+#define __SimpleWork_av_ffmpeg_CAvFilter_h__
 
 #include "av_ffmpeg.h"
 
 FFMPEG_NAMESPACE_ENTER
 
-class CFrameConverter : public CObject {
+class CAvFilter : public CObject, public IAvFilter {
+
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+        //SIMPLEWORK_INTERFACE_ENTRY(IAvIn)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+public://IAvFilter
+    int putFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
+
+public://For factory
+    static int createFilter(const PAvSample& targetSample, SAvFilter& spFilter);
 
 private:
     class CFormat {
@@ -15,18 +25,21 @@ private:
             m_nWidth = nWidth;
             m_nHeight = nHeight;
             m_nFormat = eFormat;
+            m_eType = EAvStreamingType::AvStreamingType_Video;
         }
 
         CFormat(int nRate, int nChannels, AVSampleFormat eFormat) {
             m_nRate = nRate;
             m_nChannels = nChannels;
             m_nFormat = eFormat;
+            m_eType = EAvStreamingType::AvStreamingType_Audio;
         }
 
         bool operator != (const CFormat& src) {
             return  m_nFormat != src.m_nFormat ||
                     m_nWidth != src.m_nWidth ||
-                    m_nHeight != src.m_nHeight;
+                    m_nHeight != src.m_nHeight ||
+                    m_eType != src.m_eType;
         }
 
         union {
@@ -40,10 +53,8 @@ private:
         };
 
         int m_nFormat;
+        EAvStreamingType m_eType;
     };
-
-public:
-    int init(AVPixelFormat eTargetPixFmt);
 
 public://Image
     CTaker<SwsContext*> m_spSwsContext;
@@ -58,22 +69,26 @@ public://Audio
 
 public:
     int m_nPlanes;
-    CFormat m_lastTargetFormat;
+    PAvSample m_targetSample;
+    CFormat m_targetFormat;
     CFormat m_lastSourceFormat;
 
 public:
-    CFrameConverter();
-    ~CFrameConverter();
+    CAvFilter();
+    ~CAvFilter();
+    
+    void release();
     void releaseVideoCtx();
     void releaseAudioCtx();
     void releaseVideoData();
     void releaseAudioData();
 
 public:
-    int convert(int targetWidth, int targetHeight, AVPixelFormat targetFormat, AVFrame& src);
-    int convert(int nTargetRate, int nTargetChannels, AVSampleFormat targetFormat, AVFrame& src);
+    int initFilter(const PAvSample& targetSample);
+    int convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
+    int convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
 };
 
 FFMPEG_NAMESPACE_LEAVE
 
-#endif//__SimpleWork_Av_CImageConverter_h__
+#endif//__SimpleWork_av_ffmpeg_CAvFilter_h__
