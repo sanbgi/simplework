@@ -6,7 +6,7 @@ FFMPEG_NAMESPACE_ENTER
 
 CAvOutStreaming::CAvOutStreaming() {
     m_pAvStream = nullptr;
-    m_eStreamingType = EAvStreamingType::AvStreamingType_None;
+    m_eStreamingType = EAvSampleType::AvSampleType_None;
     m_iStreamingId = -1;
     m_pCodec = nullptr;
     m_nWriteNumber = 0;
@@ -19,7 +19,7 @@ CAvOutStreaming::~CAvOutStreaming() {
 void CAvOutStreaming::release() {
 }
 
-EAvStreamingType CAvOutStreaming::getStreamingType() {
+EAvSampleType CAvOutStreaming::getSampleType() {
     return m_eStreamingType;
 }
 
@@ -36,11 +36,11 @@ const PAvSample& CAvOutStreaming::getSampleMeta() {
 }
 
 int CAvOutStreaming::init(AVFormatContext* pFormatContext, SAvStreaming& src) {
-    switch(src->getStreamingType()) {
-    case EAvStreamingType::AvStreamingType_Video:
+    switch(src->getSampleType()) {
+    case EAvSampleType::AvSampleType_Video:
         return initVideo(pFormatContext, src);
 
-    case EAvStreamingType::AvStreamingType_Audio:
+    case EAvSampleType::AvSampleType_Audio:
         return initAudio(pFormatContext, src);
     }
     return SError::ERRORTYPE_FAILURE;
@@ -112,13 +112,27 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
             pCodecContext->mb_decision = 2;
         }
 
-        pCodecContext->pix_fmt = CAvSampleType::toPixFormat(sampleMeta.sampleType);
+        pCodecContext->pix_fmt = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
         int iFormat = 0;
         while(pCodec->pix_fmts[iFormat] != pCodecContext->pix_fmt && pCodec->pix_fmts[iFormat] != AV_PIX_FMT_NONE) {
             iFormat++;
         }
         if(pCodec->pix_fmts[iFormat] == AV_PIX_FMT_NONE) {
             pCodecContext->pix_fmt = pCodec->pix_fmts[0];
+        }
+    }
+
+    //
+    // 创建符合要求的格式转化器
+    //
+    {
+        PAvSample sampleMeta;
+        sampleMeta.videoWidth = pCodecContext->width;
+        sampleMeta.videoHeight = pCodecContext->height;
+        sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->pix_fmt;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
+        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
         }
     }
 
@@ -200,7 +214,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
         pCodecContext->channels = av_get_channel_layout_nb_channels(pCodecContext->channel_layout);
         pAvStream->time_base = (AVRational){ 1, sampleMeta.audioRate };
 
-        pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.sampleType);
+        pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
         //由于特定的编码器只支持特定的数据类型，所以，需要修改目标像素格式为编码器需要的格式
         int iFormat = 0;
         while(pCodec->sample_fmts[iFormat] != pCodecContext->sample_fmt && pCodec->sample_fmts[iFormat] != AV_SAMPLE_FMT_NONE) {
@@ -210,6 +224,21 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
             pCodecContext->sample_fmt = pCodec->sample_fmts[0];
         }
     }
+
+    //
+    // 创建符合要求的格式转化器
+    //
+    {
+        PAvSample sampleMeta;
+        sampleMeta.audioChannels = pCodecContext->channels;
+        sampleMeta.audioRate = pCodecContext->sample_rate;
+        sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->sample_fmt;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
+        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+    }
+
 
     //
     // 分配AVFrame内存
@@ -252,24 +281,16 @@ int CAvOutStreaming::close(AVFormatContext* pFormatContext) {
 int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
     if(pFrame) {
         if(pFrame->streamingId == m_iStreamingId ) {
-            switch(pFrame->streamingType) {
-            case EAvStreamingType::AvStreamingType_Video:
-                return writeVideoFrame(pFormatContext, pFrame);
-
-            case EAvStreamingType::AvStreamingType_Audio:
-                return writeAudioFrame(pFormatContext, pFrame);
-            }
+            m_pFormatContext = pFormatContext;
+            return m_spFilter->putFrame(pFrame,this);
         }
         return SError::ERRORTYPE_SUCCESS;
+        
     }
     return writeFrame(pFormatContext, (AVFrame*)nullptr);
 }
 
-
-int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
-
-    AVCodecContext* pCodecContext = m_spCodecCtx;
-
+int CAvOutStreaming::visit(const PAvFrame* pFrame) {
     //
     // 准备帧数据对象
     //
@@ -280,54 +301,22 @@ int CAvOutStreaming::writeVideoFrame(AVFormatContext* pFormatContext, const PAvF
         pAVFrame->linesize[i] = pFrame->planeLineSizes[i];
     }
     pAVFrame->pts = pFrame->timeStamp;
+
+    //视频
     pAVFrame->width = sampleMeta.videoWidth;
     pAVFrame->height = sampleMeta.videoHeight;
-    pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleType);
-    if(m_converter.convert(pCodecContext->width, pCodecContext->height, pCodecContext->pix_fmt, *pAVFrame) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-
-    pAVFrame->format = pCodecContext->pix_fmt;
-    pAVFrame->width = pCodecContext->width;
-    pAVFrame->height = pCodecContext->height;
-    for(int i=0; i<AV_NUM_DATA_POINTERS; i++) {
-        pAVFrame->data[i] = m_converter.m_pVideoData[i];
-        pAVFrame->linesize[i] = m_converter.m_pVideoLinesizes[i];
-    }
-    return writeFrame(pFormatContext, pAVFrame);
-}
-
-int CAvOutStreaming::writeAudioFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
-    
-    AVCodecContext* pCodecContext = m_spCodecCtx;
-
-    //
-    // 准备帧数据对象
-    //
-    PAvSample sampleMeta = pFrame->sampleMeta;
-    AVFrame* pAVFrame = m_pAVFrame;
-    for(int i=0; i<pFrame->samplePlanes; i++) {
-        pAVFrame->data[i] = pFrame->planeDatas[i];
-        pAVFrame->linesize[i] = pFrame->planeLineSizes[i];
-    }
+    if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Video)
+        pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
+ 
+    //音频
     pAVFrame->nb_samples = pFrame->samples;
-    pAVFrame->pts = pFrame->timeStamp;
     pAVFrame->sample_rate = sampleMeta.audioRate;
     pAVFrame->channels = sampleMeta.audioChannels;
-    pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleType);
     pAVFrame->extended_data = &pAVFrame->data[0];
-    if(m_converter.convert(pCodecContext->sample_rate, pCodecContext->channels, pCodecContext->sample_fmt, *pAVFrame) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    pAVFrame->format = pCodecContext->sample_fmt;
-    pAVFrame->sample_rate = pCodecContext->sample_rate;
-    pAVFrame->channels = pCodecContext->channels;
-    pAVFrame->channel_layout = pCodecContext->channel_layout;
-    pAVFrame->extended_data = m_converter.m_ppAudioData;
-    //注意这里面只针对非planar audio对pData赋值，如果是plannar audio，pData里面的值是不完整的，只有一个通道的值
-    pAVFrame->data[0] = *m_converter.m_ppAudioData; 
-    pAVFrame->nb_samples = m_converter.m_nAudioSamples;
-    return writeFrame(pFormatContext, pAVFrame);
+    if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio)
+        pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
+
+    return writeFrame(m_pFormatContext, pAVFrame);
 }
 
 int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFrame) {

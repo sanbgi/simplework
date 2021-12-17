@@ -23,8 +23,8 @@ private:
             return m_iStreamingId;
         }
 
-        EAvStreamingType getStreamingType() {
-            return m_streamingType;
+        EAvSampleType getSampleType() {
+            return m_sampleType;
         }
 
         PAvSample getSampleMeta() {
@@ -47,14 +47,13 @@ private:
             PAvFrame frame;
             frame.sampleMeta = m_sampleMeta;
             frame.streamingId = m_iStreamingId;
-            frame.streamingType = m_streamingType;
             frame.timeStamp = m_nTimeStamp;
             frame.planeDatas = data;
             return SError::ERRORTYPE_SUCCESS;
         }
 
     public:
-        EAvStreamingType m_streamingType;
+        EAvSampleType m_sampleType;
         int m_iStreamingId;
         PAvSample m_sampleMeta;
         long m_nTimeStamp;
@@ -65,17 +64,17 @@ public:
     SAvFrame createFrame(const PAvFrame& avFrame) {
 
         STensor spTensor;
-        switch(avFrame.streamingType) {
-        case EAvStreamingType::AvStreamingType_Video:
+        switch(avFrame.sampleMeta.sampleType) {
+        case EAvSampleType::AvSampleType_Video:
             {
                 int nPixBytes = 0;
                 PAvSample sampleMeta = avFrame.sampleMeta;
-                switch(sampleMeta.sampleType) {
-                case EAvSampleType::AvSampleType_Video_RGBA:
+                switch(sampleMeta.sampleFormat) {
+                case EAvSampleFormat::AvSampleFormat_Video_RGBA:
                     nPixBytes = 4;
                     break;
 
-                case EAvSampleType::AvSampleType_Video_RGB:
+                case EAvSampleFormat::AvSampleFormat_Video_RGB:
                     nPixBytes = 3;
                     break;
 
@@ -99,16 +98,16 @@ public:
             }
             break;
 
-        case EAvStreamingType::AvStreamingType_Audio:
+        case EAvSampleType::AvSampleType_Audio:
             {
                 int nBytesPerSample = 0;
                 PAvSample sampleMeta = avFrame.sampleMeta;
-                switch(sampleMeta.sampleType) {
-                case EAvSampleType::AvSampleType_Audio_U8:
+                switch(sampleMeta.sampleFormat) {
+                case EAvSampleFormat::AvSampleFormat_Audio_U8:
                     nBytesPerSample = 1;
                     break;
 
-                case EAvSampleType::AvSampleType_Audio_S16:
+                case EAvSampleFormat::AvSampleFormat_Audio_S16:
                     nBytesPerSample = 2;
                     break;
 
@@ -135,7 +134,6 @@ public:
         pFrame->m_iStreamingId = avFrame.streamingId;
         pFrame->m_nTimeStamp = avFrame.timeStamp;
         pFrame->m_sampleMeta = avFrame.sampleMeta;
-        pFrame->m_streamingType = avFrame.streamingType;
         pFrame->m_spData = spTensor;
         return SAvFrame::wrapPtr(pFrame);
     }

@@ -5,59 +5,60 @@
 FFMPEG_NAMESPACE_ENTER
 
 /*
-static std::map<AVSampleFormat, EAvSampleType> g_mapSampleFormatToAv = {
-    { AV_SAMPLE_FMT_U8, AvSampleType_Audio_U8 },
-    { AV_SAMPLE_FMT_S16, AvSampleType_Audio_S16 },
+static std::map<AVSampleFormat, EAvSampleFormat> g_mapSampleFormatToAv = {
+    { AV_SAMPLE_FMT_U8, AvSampleFormat_Audio_U8 },
+    { AV_SAMPLE_FMT_S16, AvSampleFormat_Audio_S16 },
 };
 
-static std::map<AVPixelFormat, EAvSampleType> g_mapPixelFormatToAv = {
-    { AV_PIX_FMT_RGB24, AvSampleType_Video_RGB },
-    { AV_PIX_FMT_RGBA, AvSampleType_Video_RGBA },
+static std::map<AVPixelFormat, EAvSampleFormat> g_mapPixelFormatToAv = {
+    { AV_PIX_FMT_RGB24, AvSampleFormat_Video_RGB },
+    { AV_PIX_FMT_RGBA, AvSampleFormat_Video_RGBA },
 };*/
 
-EAvSampleType CAvSampleType::convert(AVSampleFormat eSampleFormat){
+EAvSampleFormat CAvSampleType::convert(AVSampleFormat eSampleFormat){
     switch (eSampleFormat)
     {
     case AV_SAMPLE_FMT_U8:
-        return EAvSampleType::AvSampleType_Audio_U8;
+        return EAvSampleFormat::AvSampleFormat_Audio_U8;
     
     case AV_SAMPLE_FMT_S16:
-        return EAvSampleType::AvSampleType_Audio_S16;
+        return EAvSampleFormat::AvSampleFormat_Audio_S16;
     }
-    return EAvSampleType::AvSampleType_None;
+    //return EAvSampleFormat::AvSampleFormat_None;
+    return (EAvSampleFormat)eSampleFormat;
 }
 
-EAvSampleType CAvSampleType::convert(AVPixelFormat ePixelFormat){
+EAvSampleFormat CAvSampleType::convert(AVPixelFormat ePixelFormat){
     switch(ePixelFormat) {
     case AV_PIX_FMT_RGB24:
-        return EAvSampleType::AvSampleType_Video_RGB;
+        return EAvSampleFormat::AvSampleFormat_Video_RGB;
 
     case AV_PIX_FMT_RGBA:
-        return EAvSampleType::AvSampleType_Video_RGBA;
+        return EAvSampleFormat::AvSampleFormat_Video_RGBA;
     }
-    return EAvSampleType::AvSampleType_None;
+    return (EAvSampleFormat)ePixelFormat;
 }
 
-AVSampleFormat CAvSampleType::toSampleFormat(EAvSampleType eAvType) {
+AVSampleFormat CAvSampleType::toSampleFormat(EAvSampleFormat eAvType) {
     switch(eAvType) {
-    case EAvSampleType::AvSampleType_Audio_U8:
+    case EAvSampleFormat::AvSampleFormat_Audio_U8:
         return AV_SAMPLE_FMT_U8;
 
-    case EAvSampleType::AvSampleType_Audio_S16:
+    case EAvSampleFormat::AvSampleFormat_Audio_S16:
         return AV_SAMPLE_FMT_S16;
     }
-    return AVSampleFormat::AV_SAMPLE_FMT_NONE;
+    return (AVSampleFormat)eAvType;
 }
 
-AVPixelFormat CAvSampleType::toPixFormat(EAvSampleType eAvType) {
+AVPixelFormat CAvSampleType::toPixFormat(EAvSampleFormat eAvType) {
     switch(eAvType) {
-    case EAvSampleType::AvSampleType_Video_RGB:
+    case EAvSampleFormat::AvSampleFormat_Video_RGB:
         return AV_PIX_FMT_RGB24;
 
-    case EAvSampleType::AvSampleType_Video_RGBA:
+    case EAvSampleFormat::AvSampleFormat_Video_RGBA:
         return AV_PIX_FMT_RGBA;
     }
-    return AVPixelFormat::AV_PIX_FMT_NONE;
+    return (AVPixelFormat)eAvType;
 }
 
 FFMPEG_NAMESPACE_LEAVE

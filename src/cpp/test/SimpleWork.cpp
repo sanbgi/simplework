@@ -45,16 +45,16 @@ void testPlayFile() {
     PAvSample videoMeta, audioMeta;
     SAvStreaming spStreaming;
     while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
-        std::cout << "streaming type: " << spStreaming->getStreamingType() << "\n";
-        switch(spStreaming->getStreamingType()) {
-        case EAvStreamingType::AvStreamingType_Video:
+        std::cout << "streaming type: " << spStreaming->getSampleType() << "\n";
+        switch(spStreaming->getSampleType()) {
+        case EAvSampleType::AvSampleType_Video:
             if(iVideoId == -1) {
                 iVideoId = spStreaming->getStreamingId();
                 videoMeta = spStreaming->getSampleMeta();
             }
             break;
 
-        case EAvStreamingType::AvStreamingType_Audio:
+        case EAvSampleType::AvSampleType_Audio:
             if(iAudioId == -1) {
                 iAudioId = spStreaming->getStreamingId();
                 audioMeta = spStreaming->getSampleMeta();
@@ -76,12 +76,12 @@ void testPlayFile() {
     outCtx.audio = avAudioOut;
     int nframeVideo = 0;
     while(avIn->readFrame(CPVisitor<CCtx, const PAvFrame*>(outCtx, [](CCtx ctx, const PAvFrame* pFrame) -> int{
-        switch(pFrame->streamingType) {
-        case EAvStreamingType::AvStreamingType_Audio:
+        switch(pFrame->sampleMeta.sampleType) {
+        case EAvSampleType::AvSampleType_Audio:
             std::cout << "audioVideo timestamp:" << pFrame->timeStamp << "\n";
             return ctx.audio->writeFrame(pFrame);
 
-        case  EAvStreamingType::AvStreamingType_Video:
+        case  EAvSampleType::AvSampleType_Video:
             std::cout << "frameVideo timestamp:" << pFrame->timeStamp << "\n";
             return ctx.video->writeFrame(pFrame);
         }
@@ -102,7 +102,7 @@ int testWriteFile() {
     }
 
     int nframe = 0;
-    SAvOut avOut = SAvOut::openAvFile("d://tt2.mkv", vecInStreamings.size(), vecInStreamings.data() );
+    SAvOut avOut = SAvOut::openAvFile("d://tt2.avi", vecInStreamings.size(), vecInStreamings.data() );
     while(avIn->readFrame(CPVisitor<SAvOut, const PAvFrame*>(avOut, [](SAvOut avOut, const PAvFrame* pFrame) -> int{
         if(pFrame == nullptr) {
             //不再继续读取
@@ -114,6 +114,7 @@ int testWriteFile() {
     })) == SError::ERRORTYPE_SUCCESS ) {
         nframe++;
     }
+    avOut->writeFrame(nullptr);
     return SError::ERRORTYPE_SUCCESS;
 }
 
@@ -129,8 +130,8 @@ void fun(const CData& data) {
 
 
 int main(int argc, char *argv[]){
-    //testWriteFile();
-    testPlayFile();
+    testWriteFile();
+    //testPlayFile();
 
     /*
     int i=10;

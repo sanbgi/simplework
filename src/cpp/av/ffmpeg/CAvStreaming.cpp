@@ -16,18 +16,18 @@ CAvStreaming::~CAvStreaming() {
 void CAvStreaming::release() {
 }
 
-EAvStreamingType CAvStreaming::getStreamingType() {
+EAvSampleType CAvStreaming::getSampleType() {
     if(m_spCodecCtx) {
         switch (m_spCodecCtx->codec_type)
         {
         case AVMEDIA_TYPE_VIDEO:
-            return EAvStreamingType::AvStreamingType_Video;
+            return EAvSampleType::AvSampleType_Video;
         
         case AVMEDIA_TYPE_AUDIO:
-            return EAvStreamingType::AvStreamingType_Audio;
+            return EAvSampleType::AvSampleType_Audio;
         }
     }
-    return EAvStreamingType::AvStreamingType_None;
+    return EAvSampleType::AvSampleType_None;
 }
 
 int CAvStreaming::getStreamingId() {
@@ -43,13 +43,13 @@ int CAvStreaming::getSampleRate() {
     return m_spCodecCtx->sample_rate;
 }
 
-EAvSampleType CAvStreaming::getSampleType() {
+EAvSampleFormat CAvStreaming::getSampleFormat() {
     switch(m_spCodecCtx->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         {
-            EAvSampleType eType = CAvSampleType::convert(m_spCodecCtx->pix_fmt);
-            if(eType == EAvSampleType::AvSampleType_None) {
-                eType = EAvSampleType::AvSampleType_Video_RGBA;
+            EAvSampleFormat eType = CAvSampleType::convert(m_spCodecCtx->pix_fmt);
+            if(eType == EAvSampleFormat::AvSampleFormat_None) {
+                eType = EAvSampleFormat::AvSampleFormat_Video_RGBA;
             }
             return eType;
         }
@@ -57,15 +57,15 @@ EAvSampleType CAvStreaming::getSampleType() {
 
     case AVMEDIA_TYPE_AUDIO:
         {
-            EAvSampleType eType = CAvSampleType::convert(m_spCodecCtx->sample_fmt);
-            if(eType == EAvSampleType::AvSampleType_None) {
-                eType = EAvSampleType::AvSampleType_Audio_S16;
+            EAvSampleFormat eType = CAvSampleType::convert(m_spCodecCtx->sample_fmt);
+            if(eType == EAvSampleFormat::AvSampleFormat_None) {
+                eType = EAvSampleFormat::AvSampleFormat_Audio_S16;
             }
             return eType;
         }
         break;
     }
-    return EAvSampleType::AvSampleType_None;
+    return EAvSampleFormat::AvSampleFormat_None;
 }
 
 const PAvSample& CAvStreaming::getSampleMeta() {
@@ -105,28 +105,28 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
     m_spCodecCtx.take(pCodecCtx);
     m_iStreamingIndex = iStreamingIndex;
     m_pAvStream = pAvStream;
-    m_sampleMeta.sampleType = getSampleType();
+    m_sampleMeta.sampleFormat = getSampleFormat();
     switch(m_spCodecCtx->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
         {
             m_sampleMeta.videoWidth = m_spCodecCtx->width;
             m_sampleMeta.videoHeight = m_spCodecCtx->height;
+            m_sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
         }
         break;
     case AVMEDIA_TYPE_AUDIO:
         {
             m_sampleMeta.audioRate = m_spCodecCtx->sample_rate;
             m_sampleMeta.audioChannels = m_spCodecCtx->channels;
+            m_sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
         }
         break;
     }
 
-    SObject spFilter;
-    CAvFilter* pAvFilter = CObject::createObject<CAvFilter>(spFilter);
-    if( pAvFilter->initFilter(m_sampleMeta) != SError::ERRORTYPE_SUCCESS) {
+    if( SAvFilter::createFilter(m_sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
-    m_spFilter.take(pAvFilter, spFilter);
+
     return SError::ERRORTYPE_SUCCESS;
 }
 
@@ -134,22 +134,19 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
 int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
     PAvFrame avFrame;
     avFrame.sampleMeta = m_sampleMeta;
+    // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
+    int nPlanes = 0;
+    for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
+        nPlanes = i+1;
+    }
+    avFrame.samplePlanes = nPlanes;
     avFrame.planeDatas = pAvFrame->data;
     avFrame.planeLineSizes = pAvFrame->linesize;
     avFrame.streamingId = getStreamingId();
-    avFrame.streamingType = getStreamingType();
     avFrame.samples = pAvFrame->nb_samples;
     avFrame.timeRate = getTimeRate();
     avFrame.timeStamp = pAvFrame->pts;
-    switch(avFrame.streamingType) {
-        case EAvStreamingType::AvStreamingType_Video:
-            return m_spFilter->convertVideo((AVPixelFormat)pAvFrame->format, &avFrame, receiver);
-
-        case EAvStreamingType::AvStreamingType_Audio:
-            avFrame.planeDatas = pAvFrame->extended_data;
-            return m_spFilter->convertAudio((AVSampleFormat)pAvFrame->format, &avFrame, receiver);
-    }
-    return SError::ERRORTYPE_FAILURE;
+    return m_spFilter->putFrame(&avFrame, receiver);
 }
 
 FFMPEG_NAMESPACE_LEAVE

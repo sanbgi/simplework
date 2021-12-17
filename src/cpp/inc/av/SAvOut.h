@@ -13,11 +13,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 211206)
 
         //
-        // 写入帧，空数据表示关闭流
-        //
-        virtual int writeFrame(const SAvFrame& frame) = 0;
-
-        //
         //  写入帧数据，没有则表示关闭
         //
         virtual int writeFrame(const PAvFrame* pFrame) = 0;

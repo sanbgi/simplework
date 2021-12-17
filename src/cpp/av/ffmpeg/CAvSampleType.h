@@ -1,5 +1,5 @@
-#ifndef __SimpleWork_Av_CAvSampleType_h__
-#define __SimpleWork_Av_CAvSampleType_h__
+#ifndef __SimpleWork_Av_CAvSampleFormat_h__
+#define __SimpleWork_Av_CAvSampleFormat_h__
 
 #include "av_ffmpeg.h"
 
@@ -7,12 +7,12 @@ FFMPEG_NAMESPACE_ENTER
 
 class CAvSampleType {
 public:
-    static EAvSampleType convert(AVSampleFormat eSampleFormat);
-    static EAvSampleType convert(AVPixelFormat ePixelFormat);
-    static AVSampleFormat toSampleFormat(EAvSampleType eAvType);
-    static AVPixelFormat toPixFormat(EAvSampleType eAvType);
+    static EAvSampleFormat convert(AVSampleFormat eSampleFormat);
+    static EAvSampleFormat convert(AVPixelFormat ePixelFormat);
+    static AVSampleFormat toSampleFormat(EAvSampleFormat eAvType);
+    static AVPixelFormat toPixFormat(EAvSampleFormat eAvType);
 };
 
 FFMPEG_NAMESPACE_LEAVE
 
-#endif//__SimpleWork_Av_CAvSampleType_h__
+#endif//__SimpleWork_Av_CAvSampleFormat_h__

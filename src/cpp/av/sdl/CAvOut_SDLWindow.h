@@ -10,7 +10,7 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLWindow : public CObject, public IAvOut{
+class CAvOut_SDLWindow : public CObject, public IAvOut, IVisitor<const PAvFrame*>{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
@@ -36,62 +36,25 @@ public:
 
         m_nWinWidth = sampleMeta.videoWidth;
         m_nWinHeight = sampleMeta.videoHeight;
-        return SError::ERRORTYPE_SUCCESS;
-    }
-
-    int putVariable(const char* szKey, const char* szValue) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-
-    int writeFrame(const SAvFrame& frame) {
-        STensor spTensor = frame->getData();
-        PAvSample sampleMeta = frame->getSampleMeta();
-
-        const STensor& spDimTensor = spTensor->getDimVector();
-        const int* pDim = spDimTensor->getDataPtr<int>();
-        int height = pDim[0];
-        int width = pDim[1];
-        int depth = pDim[2]*8;
-        int pitch = width*pDim[2];
-
-        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.sampleType);
-        void *pixels = (void*)spTensor->getDataPtr<unsigned char>();
-        SDL_Renderer* pRenderer = m_pRenderer;
-        CTaker<SDL_Texture*> spTexture(
-                                SDL_CreateTexture(pRenderer, ePixelFormat, SDL_TEXTUREACCESS_STREAMING, width, height),
-                                SDL_DestroyTexture
-                            );
-        if (!spTexture) {
+        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
-
-        SDL_Rect srcRect, dstRect;
-        dstRect.x = srcRect.x = 0;
-        dstRect.y = srcRect.y = 0;
-        srcRect.w = width;
-        srcRect.h = height;
-        dstRect.w = m_nWinWidth;
-        dstRect.h = m_nWinHeight;
-
-        SDL_UpdateTexture(spTexture, &srcRect, pixels, pitch);
-
-        //清除Renderer
-        SDL_RenderClear(pRenderer);
-        //Texture复制到Renderer
-        SDL_RenderCopy(pRenderer, spTexture, &srcRect, &dstRect);
-        //更新Renderer显示
-        SDL_RenderPresent(pRenderer);
-        
         return SError::ERRORTYPE_SUCCESS;
     }
+
 
     int writeFrame(const PAvFrame* pFrame) {
         if(pFrame == nullptr) {
             return close();
         }
 
+        return m_spFilter->putFrame(pFrame, this);
+    }
+
+    int visit(const PAvFrame* pFrame) {
+
         PAvSample sampleMeta = pFrame->sampleMeta;
-        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.sampleType);
+        SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.sampleFormat);
         int width = sampleMeta.videoWidth;
         int height = sampleMeta.videoHeight;
         SDL_Renderer* pRenderer = m_pRenderer;
@@ -151,6 +114,7 @@ public:
     }
 
 private:
+    SAvFilter m_spFilter;
     SDL_Window* m_pWindow;
     SDL_Renderer* m_pRenderer;
     int m_nWinWidth;

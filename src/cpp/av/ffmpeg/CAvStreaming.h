@@ -2,7 +2,6 @@
 #define __SimpleWork_Av_CAvStream_h__
 
 #include "av_ffmpeg.h"
-#include "CFrameConverter.h"
 #include "CAvFilter.h"
 
 FFMPEG_NAMESPACE_ENTER
@@ -13,11 +12,11 @@ class CAvStreaming : public CObject, IAvStreaming {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    EAvStreamingType getStreamingType();
+    EAvSampleType getSampleType();
     int getStreamingId();
     int getTimeRate();
     int getSampleRate();
-    EAvSampleType getSampleType();
+    EAvSampleFormat getSampleFormat();
     const PAvSample& getSampleMeta();
 
 public:
@@ -39,8 +38,7 @@ public:
     PAvSample m_sampleMeta;
 
 public:
-    CFrameConverter m_converter;
-    CPointer<CAvFilter> m_spFilter;
+    SAvFilter m_spFilter;
 
 public://Video
     int m_lastDimsize[3];

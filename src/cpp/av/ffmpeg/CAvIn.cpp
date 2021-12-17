@@ -219,7 +219,7 @@ int CAvIn::receiveFrame(PAvFrame::FVisitor receiver, CAvStreaming* pStreaming) {
         break;
 
     case AVERROR_EOF:
-        return receiver->visit(nullptr);
+        return SError::ERRORTYPE_FAILURE;
 
     case AVERROR(EAGAIN):
         return readFrame(receiver);

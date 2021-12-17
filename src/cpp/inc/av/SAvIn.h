@@ -20,11 +20,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvIn)
         virtual int getStreaming(SAvStreaming& rStreaming) = 0;
 
         //
-        // 获取帧
-        //
-        virtual int readFrame(SAvFrame& rFrame) = 0;
-
-        //
         // 读取帧
         //
         virtual int readFrame(PAvFrame::FVisitor visitor) = 0;

@@ -15,11 +15,6 @@ struct PAvStreaming {
     // 所属的流对应的ID和类型
     //
     int streamingId;
-    enum EAvStreamingType {
-        AvStreamingType_None,
-        AvStreamingType_Video,
-        AvStreamingType_Audio,
-    } streamingType;
 
     //
     // 时钟频率
@@ -31,7 +26,6 @@ struct PAvStreaming {
     //
     PAvSample frameMeta;
 };
-typedef PAvStreaming::EAvStreamingType EAvStreamingType;
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE
 

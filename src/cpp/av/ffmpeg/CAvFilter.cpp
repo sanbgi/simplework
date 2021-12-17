@@ -5,11 +5,11 @@
 FFMPEG_NAMESPACE_ENTER
 
 int CAvFilter::putFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
-    switch(m_targetFormat.m_eType) {
-        case EAvStreamingType::AvStreamingType_Audio:
+    switch(m_targetSample.sampleType) {
+        case EAvSampleType::AvSampleType_Audio:
             return convertAudio(AV_SAMPLE_FMT_NONE, pSrc, visitor);
 
-        case EAvStreamingType::AvStreamingType_Video:
+        case EAvSampleType::AvSampleType_Video:
             return convertVideo(AV_PIX_FMT_NONE, pSrc, visitor);
     }
     return SError::ERRORTYPE_FAILURE;
@@ -29,14 +29,12 @@ int CAvFilter::createFilter(const PAvSample& targetSample, SAvFilter& spFilter) 
 int CAvFilter::initFilter(const PAvSample& targetSample) {
     CFormat fmt;
     switch(targetSample.sampleType) {
-        case EAvSampleType::AvSampleType_Video_RGB:
-        case EAvSampleType::AvSampleType_Video_RGBA:
-            fmt = CFormat(targetSample.videoWidth, targetSample.videoHeight, CAvSampleType::toPixFormat(targetSample.sampleType) );
+        case EAvSampleType::AvSampleType_Video:
+            fmt = CFormat(targetSample.videoWidth, targetSample.videoHeight, CAvSampleType::toPixFormat(targetSample.sampleFormat) );
             break;
 
-        case EAvSampleType::AvSampleType_Audio_U8:
-        case EAvSampleType::AvSampleType_Audio_S16:
-            fmt = CFormat(targetSample.audioRate, targetSample.audioChannels, CAvSampleType::toSampleFormat(targetSample.sampleType) );
+        case EAvSampleType::AvSampleType_Audio:
+            fmt = CFormat(targetSample.audioRate, targetSample.audioChannels, CAvSampleType::toSampleFormat(targetSample.sampleFormat) );
             break;
 
         default:
@@ -91,7 +89,7 @@ int CAvFilter::convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PA
     int targetHeight = m_targetFormat.m_nHeight;
 
     if(sourceFormat == AV_PIX_FMT_NONE)
-        sourceFormat = CAvSampleType::toPixFormat(srcMeta.sampleType);
+        sourceFormat = CAvSampleType::toPixFormat(srcMeta.sampleFormat);
     int sourceWidth = srcMeta.videoWidth;
     int sourceHeight = srcMeta.videoHeight;
 
@@ -187,7 +185,7 @@ int CAvFilter::convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, P
     int targetRate = m_targetFormat.m_nRate;
 
     if(sourceFormat == AV_SAMPLE_FMT_NONE)
-        sourceFormat = CAvSampleType::toSampleFormat(srcMeta.sampleType);
+        sourceFormat = CAvSampleType::toSampleFormat(srcMeta.sampleFormat);
     int sourceRate = srcMeta.audioRate;
     int sourceChannels = srcMeta.audioChannels;
 

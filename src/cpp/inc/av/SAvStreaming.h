@@ -26,7 +26,7 @@ public:
         //
         // 获取流数据类型
         //
-        virtual EAvStreamingType getStreamingType() = 0;
+        virtual EAvSampleType getSampleType() = 0;
 
         //
         // 获取样本元信息，只有在版本冲突情况下，才会返回失败
@@ -43,7 +43,7 @@ public:
             virtual SAvStreaming createStreaming(
                                 int iStreamingId,
                                 int nTimeRate,
-                                EAvStreamingType eStreamingType, 
+                                EAvSampleType eStreamingType, 
                                 const PAvSample& sampleMeta) = 0;
 
         SIMPLEWORK_INTERFACE_LEAVE
@@ -51,18 +51,20 @@ public:
 
     SAvStreaming createVideoStream(int iStreamingId, int nTimeRate, int nWidth, int nHeight) {
         PAvSample sampleMeta;
-        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video_RGB;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
+        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
         sampleMeta.videoWidth = nWidth;
         sampleMeta.videoHeight = nHeight;
-        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvStreamingType::AvStreamingType_Video, sampleMeta);
+        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvSampleType::AvSampleType_Video, sampleMeta);
     }
 
     SAvStreaming createAudioStream(int iStreamingId, int nTimeRate, int nSampleRate, int nChannels) {
         PAvSample sampleMeta;
-        sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio_S16;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
+        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
         sampleMeta.audioRate = nSampleRate;
         sampleMeta.audioChannels = nChannels;
-        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvStreamingType::AvStreamingType_Audio, sampleMeta);
+        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvSampleType::AvSampleType_Audio, sampleMeta);
     }
 
     static SAvStreamingFactory& getFactory() {

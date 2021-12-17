@@ -38,7 +38,6 @@ struct PAvFrame {
     // 视频流ID，类型
     //
     int streamingId;
-    EAvStreamingType streamingType;
 
     //
     // 时间戳，对应视频流的时钟频率，比如：时钟频率是1000，时间戳是10，则表示10/1000秒

@@ -27,7 +27,7 @@ public:
 
         int nTargetRate = sampleMeta.audioRate;
         int nTargetChannels = sampleMeta.audioChannels;
-        SDL_AudioFormat eTargetFormat = CAvSampleType::toAudioFormat(sampleMeta.sampleType);
+        SDL_AudioFormat eTargetFormat = CAvSampleType::toAudioFormat(sampleMeta.sampleFormat);
 
         // B2. 打开音频设备并创建音频处理线程
         // B2.1 打开音频设备，获取SDL设备支持的音频参数actual_spec(期望的参数是wanted_spec，实际得到actual_spec)
@@ -52,8 +52,9 @@ public:
         PAvSample specMeta;
         specMeta.audioChannels = m_specAudio.channels;
         specMeta.audioRate = m_specAudio.freq;
-        specMeta.sampleType = CAvSampleType::convert(m_specAudio.format);
-        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        specMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
+        specMeta.sampleType = EAvSampleType::AvSampleType_Audio;
+        if( SAvFilter::createFilter(specMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
 
@@ -61,17 +62,6 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
-
-    int writeFrame(const SAvFrame& frame) {
-        STensor tensor = frame->getData();
-        if(tensor) {
-            int ret = tensor->getDataSize();
-            if( tensor ) {
-                ret = SDL_QueueAudio(m_iDeviceID, tensor->getDataPtr<unsigned char>(), tensor->getDataSize());
-            }
-        }
-        return SError::ERRORTYPE_SUCCESS;
-    }
 
     int writeFrame(const PAvFrame* pFrame) {
         if(pFrame == nullptr) {

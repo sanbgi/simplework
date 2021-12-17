@@ -2,17 +2,16 @@
 #define __SimpleWork_Av_CAvOutStreaming_h__
 
 #include "av_ffmpeg.h"
-#include "CFrameConverter.h"
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvOutStreaming : public CObject, IAvStreaming {
+class CAvOutStreaming : public CObject, IAvStreaming, IVisitor<const PAvFrame*> {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvStreaming)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame
-    EAvStreamingType getStreamingType();
+    EAvSampleType getSampleType();
     int getStreamingId();
     int getTimeRate();
     const PAvSample& getSampleMeta();
@@ -27,6 +26,7 @@ public:
     int writeVideoFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeAudioFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeFrame(AVFormatContext* pFormatContext, AVFrame* pFrame);
+    int visit(const PAvFrame* pFrame);
 
 public:
     CAvOutStreaming();
@@ -36,7 +36,7 @@ public:
     void release();
 
 public:
-    EAvStreamingType m_eStreamingType;
+    EAvSampleType m_eStreamingType;
     int m_iStreamingId;
     int m_iStreamingIndex;
     int m_nTimeRate;
@@ -47,7 +47,8 @@ public:
     CTaker<AVFrame*> m_pAVFrame;
     CTaker<AVCodecContext*> m_spCodecCtx;
     AVCodec* m_pCodec;
-    CFrameConverter m_converter;
+    SAvFilter m_spFilter;
+    AVFormatContext* m_pFormatContext;
 };
 
 FFMPEG_NAMESPACE_LEAVE

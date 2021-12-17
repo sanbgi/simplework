@@ -9,17 +9,22 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 // 样本信息，对应于视频就是帧数据格式信息，音频的采样点格式信息。详细的描述可以参考PAvFrame说明
 //
 struct PAvSample {
+    enum EAvSampleType {
+        AvSampleType_None,
+        AvSampleType_Video,
+        AvSampleType_Audio,
+    } sampleType;
 
     //
     // 样本类型
     //
-    enum EAvSampleType {
-        AvSampleType_None,
-        AvSampleType_Video_RGB,
-        AvSampleType_Video_RGBA,
-        AvSampleType_Audio_U8,
-        AvSampleType_Audio_S16,
-    } sampleType;
+    enum EAvSampleFormat {
+        AvSampleFormat_None         = 0x00F00001,
+        AvSampleFormat_Video_RGB    = 0x00F10001,
+        AvSampleFormat_Video_RGBA   = 0x00F10002,
+        AvSampleFormat_Audio_U8     = 0x00F20001,    
+        AvSampleFormat_Audio_S16    = 0x00F20002,
+    } sampleFormat;
 
     //
     // 音频采样率，每秒样本（采样点）数，常见值：
@@ -43,6 +48,7 @@ struct PAvSample {
     int videoHeight;
     int videoWidth;
 };
+typedef PAvSample::EAvSampleFormat EAvSampleFormat;
 typedef PAvSample::EAvSampleType EAvSampleType;
 
 

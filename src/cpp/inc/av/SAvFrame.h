@@ -20,7 +20,7 @@ public:
         //
         // 获取流类型
         //
-        virtual EAvStreamingType getStreamingType() = 0;
+        virtual EAvSampleType getSampleType() = 0;
 
         //
         //

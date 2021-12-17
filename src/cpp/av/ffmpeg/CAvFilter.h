@@ -25,21 +25,18 @@ private:
             m_nWidth = nWidth;
             m_nHeight = nHeight;
             m_nFormat = eFormat;
-            m_eType = EAvStreamingType::AvStreamingType_Video;
         }
 
         CFormat(int nRate, int nChannels, AVSampleFormat eFormat) {
             m_nRate = nRate;
             m_nChannels = nChannels;
             m_nFormat = eFormat;
-            m_eType = EAvStreamingType::AvStreamingType_Audio;
         }
 
         bool operator != (const CFormat& src) {
             return  m_nFormat != src.m_nFormat ||
                     m_nWidth != src.m_nWidth ||
-                    m_nHeight != src.m_nHeight ||
-                    m_eType != src.m_eType;
+                    m_nHeight != src.m_nHeight;
         }
 
         union {
@@ -53,7 +50,6 @@ private:
         };
 
         int m_nFormat;
-        EAvStreamingType m_eType;
     };
 
 public://Image
