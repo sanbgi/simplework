@@ -96,6 +96,13 @@ int CAvFilter::convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PA
     int sourceHeight = srcMeta.videoHeight;
 
     //
+    //  如果格式相同，则不要转化了，直接用
+    //
+    if(sourceFormat == targetFormat && sourceWidth == targetWidth && sourceHeight == targetHeight) {
+        return visitor->visit(pSrc);
+    }
+
+    //
     // 如果上次数据源格式与当前数据源格式不同，则需要重新创建转化器
     //
     if(m_spSwsContext) {
@@ -184,6 +191,17 @@ int CAvFilter::convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, P
     int sourceRate = srcMeta.audioRate;
     int sourceChannels = srcMeta.audioChannels;
 
+    //
+    //  如果格式相同，则不要转化了，直接用
+    //
+    if(sourceFormat == targetFormat && sourceChannels == targetChannels && sourceRate == targetRate) {
+        return visitor->visit(pSrc);
+    }
+
+    //
+    //  如果上次使用的格式转化器不能用了，则释放它，后面会重新创建，这里
+    //  的作用时在一系列相同转化下，转化器无需反复创建
+    //
     if( m_spSwrCtx ) {
         if( m_lastSourceFormat != CFormat(sourceRate, sourceChannels, sourceFormat) ){
             releaseAudioCtx();

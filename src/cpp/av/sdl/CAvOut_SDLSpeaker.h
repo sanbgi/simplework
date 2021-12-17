@@ -11,7 +11,7 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLSpeaker : public CObject, public IAvOut{
+class CAvOut_SDLSpeaker : public CObject, public IAvOut, IVisitor<const PAvFrame*>{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
@@ -49,19 +49,18 @@ public:
             return SError::ERRORTYPE_FAILURE;
         }
 
-        if( m_specAudio.channels != sampleMeta.audioChannels ||
-            m_specAudio.freq != sampleMeta.audioRate ||
-            m_specAudio.format != CAvSampleType::toAudioFormat(sampleMeta.sampleType) ) {
-                return SError::ERRORTYPE_FAILURE;
+        PAvSample specMeta;
+        specMeta.audioChannels = m_specAudio.channels;
+        specMeta.audioRate = m_specAudio.freq;
+        specMeta.sampleType = CAvSampleType::convert(m_specAudio.format);
+        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
         }
 
         SDL_PauseAudioDevice(m_iDeviceID, 0);
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    int putVariable(const char* szKey, const char* szValue) {
-        return SError::ERRORTYPE_FAILURE;
-    }
 
     int writeFrame(const SAvFrame& frame) {
         STensor tensor = frame->getData();
@@ -79,20 +78,15 @@ public:
             return close();
         }
 
-        switch(pFrame->sampleMeta.sampleType) {
-        case EAvSampleType::AvSampleType_Audio_U8:
-        case EAvSampleType::AvSampleType_Audio_S16:
-            {
-                int ret = SDL_QueueAudio(
+        return m_spFilter->putFrame(pFrame, this);
+    }
+
+    int visit(const PAvFrame* pFrame) {
+        if(pFrame) {
+            int ret = SDL_QueueAudio(
                             m_iDeviceID, pFrame->planeDatas[0], 
                             pFrame->planeLineSizes[0]);
-            }
-            break;
-
-        default:
-            return SError::ERRORTYPE_FAILURE;
         }
-        
         return SError::ERRORTYPE_SUCCESS;
     }
 
@@ -119,6 +113,7 @@ public:
 private:
     SDL_AudioDeviceID m_iDeviceID;
     SDL_AudioSpec m_specAudio;
+    SAvFilter m_spFilter;
 };
 
 SDL_NAMESPACE_LEAVE
