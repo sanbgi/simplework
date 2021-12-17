@@ -5,6 +5,7 @@ using namespace sw::core;
 using namespace sw::av;
 using namespace sw::math;
 
+/*
 class CAvFrameFactory : public CObject, public SAvFrame::IAvFrameFactory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -140,3 +141,4 @@ public:
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvFrameFactory, SAvFrame::SAvFrameFactory::getClassKey())
+*/

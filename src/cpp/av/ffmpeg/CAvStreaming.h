@@ -6,9 +6,9 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvStreaming : public CObject, IAvStreaming {
+class CAvStreaming : public CObject {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IAvStreaming)
+        //SIMPLEWORK_INTERFACE_ENTRY(IAvStreaming)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IAvFrame

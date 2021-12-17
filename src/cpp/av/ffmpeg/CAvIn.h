@@ -13,9 +13,7 @@ class CAvIn : public CObject, public IAvIn {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int getStreaming(SAvStreaming& rStreaming);
     int changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMeta);
-    int readFrame(SAvFrame& rFrame);
     int readFrame(PAvFrame::FVisitor visitor);
     int visitStreamings(PAvStreaming::FVisitor visitor);
 
@@ -37,8 +35,7 @@ private:
     CTaker<AVFormatContext*> m_spFormatCtx;
     CTaker<AVFormatContext*> m_spOpenedCtx;
     CAvStreaming* m_pContinueReadingStreaming;
-    std::vector<CAvStreaming*> m_vecCAvStreamings;
-    std::vector<SAvStreaming> m_vecAvStreamings;
+    std::vector<CPointer<CAvStreaming>> m_vecCAvStreamings;
 };
 
 FFMPEG_NAMESPACE_LEAVE

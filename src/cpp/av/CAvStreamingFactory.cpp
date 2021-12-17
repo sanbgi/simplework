@@ -1,6 +1,6 @@
 
 #include "av.h"
-
+/*
 using namespace sw::core;
 using namespace sw::av;
 
@@ -48,3 +48,5 @@ public:
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CAvStreamingFactory, SAvStreaming::SAvStreamingFactory::getClassKey())
+
+*/

@@ -12,8 +12,6 @@
 
 #include "PAvFrame.h"
 #include "PAvStreaming.h"
-#include "SAvFrame.h"
-#include "SAvStreaming.h"
 #include "SAvIn.h"
 #include "SAvOut.h"
 #include "SAvFilter.h"

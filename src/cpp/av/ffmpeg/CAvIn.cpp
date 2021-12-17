@@ -6,22 +6,6 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-int CAvIn::getStreaming(SAvStreaming& rStreaming) {
-    if( m_vecAvStreamings.size() == 0 ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-
-    if(!rStreaming) {
-        rStreaming = m_vecAvStreamings[0];
-    }else{
-        int iStreaming = rStreaming->getStreamingId() + 1;
-        if( iStreaming >= m_vecAvStreamings.size() ) {
-            return SError::ERRORTYPE_FAILURE;
-        }
-        rStreaming = m_vecAvStreamings[iStreaming];
-    }
-    return SError::ERRORTYPE_SUCCESS;
-}
 
 int CAvIn::changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMeta) {
     if(iStreamingId < 0 || iStreamingId >= m_vecCAvStreamings.size() ) {
@@ -91,17 +75,6 @@ int CAvIn::readFrame(PAvFrame::FVisitor receiver) {
     return SError::ERRORTYPE_FAILURE;
 }
 
-int CAvIn::readFrame(SAvFrame& frame) {
-
-    return readFrame(CPVisitor<SAvFrame*, const PAvFrame*>(&frame, [](SAvFrame* pSAvFrame, const PAvFrame* avFrame) -> int{
-        *pSAvFrame = SAvFrame::createFrame(*avFrame);
-        if( !(*pSAvFrame) ) {
-            return SError::ERRORTYPE_FAILURE;
-        }
-        return SError::ERRORTYPE_SUCCESS;
-    }));
-}
-
 int CAvIn::initVideoFile(const char* szFileName) {
     // 释放之前使用资源
     release();
@@ -129,8 +102,7 @@ int CAvIn::initVideoFile(const char* szFileName) {
         if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
-        m_vecCAvStreamings.push_back(pCAvStreaming);
-        m_vecAvStreamings.push_back(spObject);
+        m_vecCAvStreamings.push_back(CPointer<CAvStreaming>(pCAvStreaming, spObject));
     }
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -197,8 +169,7 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
         if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
-        m_vecCAvStreamings.push_back(pCAvStreaming);
-        m_vecAvStreamings.push_back(spObject);
+        m_vecCAvStreamings.push_back(CPointer<CAvStreaming>(pCAvStreaming, spObject));
     }
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -286,7 +257,6 @@ CAvIn::~CAvIn() {
 }
 
 void CAvIn::release() {
-    m_vecAvStreamings.clear();
     m_vecCAvStreamings.clear();
     m_spOpenedCtx.release();
     m_spFormatCtx.release();
