@@ -15,6 +15,7 @@ public://IAvFrame
     EAvSampleType getSampleType();
     int getStreamingId();
     int getTimeRate();
+    long getDuration();
     int getSampleRate();
     EAvSampleFormat getSampleFormat();
     const PAvSample& getSampleMeta();

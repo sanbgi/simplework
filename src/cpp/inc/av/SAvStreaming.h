@@ -24,6 +24,11 @@ public:
         virtual int getTimeRate() = 0;
 
         //
+        // 获得基于时钟频率的视频时长
+        //
+        virtual long getDuration() = 0;
+
+        //
         // 获取流数据类型
         //
         virtual EAvSampleType getSampleType() = 0;
@@ -48,24 +53,6 @@ public:
 
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvStreamingFactory)
-
-    SAvStreaming createVideoStream(int iStreamingId, int nTimeRate, int nWidth, int nHeight) {
-        PAvSample sampleMeta;
-        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
-        sampleMeta.videoWidth = nWidth;
-        sampleMeta.videoHeight = nHeight;
-        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvSampleType::AvSampleType_Video, sampleMeta);
-    }
-
-    SAvStreaming createAudioStream(int iStreamingId, int nTimeRate, int nSampleRate, int nChannels) {
-        PAvSample sampleMeta;
-        sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
-        sampleMeta.audioRate = nSampleRate;
-        sampleMeta.audioChannels = nChannels;
-        return getFactory()->createStreaming(iStreamingId, nTimeRate, EAvSampleType::AvSampleType_Audio, sampleMeta);
-    }
 
     static SAvStreamingFactory& getFactory() {
         static SAvStreamingFactory g_factory = SObject::createObject<SAvStreamingFactory>();

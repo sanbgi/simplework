@@ -5,7 +5,7 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-int CAvOut::initAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) {
+int CAvOut::initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings) {
     //
     // 格式上下文
     //
@@ -22,10 +22,10 @@ int CAvOut::initAvFile(const char* szFileName, int nStreamings, SAvStreaming* pS
         //
         // 创建并初始化流对象
         //
-        SAvStreaming* pStreaming = pStreamings+i;
+        PAvStreaming* pStreaming = pStreamings+i;
         SObject spTaker;
         CAvOutStreaming* pOutStreaming = CObject::createObject<CAvOutStreaming>(spTaker);
-        if(pOutStreaming->init(pFormatContext, *pStreaming) != SError::ERRORTYPE_SUCCESS) {
+        if(pOutStreaming->init(pFormatContext, pStreaming) != SError::ERRORTYPE_SUCCESS) {
             return SError::ERRORTYPE_FAILURE;
         }
         m_arrStreamings.push_back(CPointer<CAvOutStreaming>(pOutStreaming, spTaker));
@@ -60,23 +60,6 @@ int CAvOut::initAvFile(const char* szFileName, int nStreamings, SAvStreaming* pS
     }
 
     return SError::ERRORTYPE_SUCCESS;
-}
-
-int CAvOut::writeFrame(const SAvFrame& rFrame) {
-    /*
-    std::vector<CPointer<CAvOutStreaming>>::iterator it = m_arrStreamings.begin();
-    while(it != m_arrStreamings.end() ) {
-        if((*it)->writeFrame(m_spFormatContext, rFrame) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
-        }
-        it++;
-    }
-
-    //如果写入一个空的帧，则表示要关闭写文件
-    if(!rFrame) {
-        return close();
-    }*/
-    return SError::ERRORTYPE_FAILURE;
 }
 
 int CAvOut::writeFrame(const PAvFrame* pFrame) {

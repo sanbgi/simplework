@@ -32,7 +32,7 @@ private:
 };
 
 
-template<typename P, typename T> class CPVisitor : IVisitor<T> {
+template<typename P, typename T> class CPVisitor : public IVisitor<T> {
 public:
     typedef int (*FVisitor)(P p, T data);
 

@@ -14,12 +14,13 @@ public://IAvFrame
     EAvSampleType getSampleType();
     int getStreamingId();
     int getTimeRate();
+    long getDuration();
     const PAvSample& getSampleMeta();
 
 public:
-    int init(AVFormatContext* pFormatContext, SAvStreaming& src);
-    int initVideo(AVFormatContext* pFormatContext, SAvStreaming& src);
-    int initAudio(AVFormatContext* pFormatContext, SAvStreaming& src);
+    int init(AVFormatContext* pFormatContext, PAvStreaming* pSrc);
+    int initVideo(AVFormatContext* pFormatContext, PAvStreaming* pSrc);
+    int initAudio(AVFormatContext* pFormatContext, PAvStreaming* pSrc);
     int open(AVFormatContext* pFormatContext);
     int close(AVFormatContext* pFormatContext);
     int writeFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
@@ -40,6 +41,7 @@ public:
     int m_iStreamingId;
     int m_iStreamingIndex;
     int m_nTimeRate;
+    long m_nDuration;
     int m_nWriteNumber;
     PAvSample m_sampleMeta;
     

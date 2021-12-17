@@ -19,6 +19,7 @@ private:
     public:
         int getStreamingId() { return m_iStreamingId; }
         int getTimeRate() { return m_nTimeRate; }
+        long getDuration() { return m_nDuration; }
         EAvSampleType getSampleType() { return m_eStreamingType; }
         const PAvSample& getSampleMeta() { return m_sampleMeta; }
 
@@ -26,6 +27,7 @@ private:
         EAvSampleType m_eStreamingType;
         int m_iStreamingId;
         int m_nTimeRate;
+        long m_nDuration;
         PAvSample m_sampleMeta;
     };
 

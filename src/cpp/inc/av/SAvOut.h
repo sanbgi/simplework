@@ -25,7 +25,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
 
             virtual SAvOut openSpeaker(const char* szName, PAvSample& sampleMeta) = 0;
 
-            virtual SAvOut openAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) = 0;
+            virtual SAvOut openAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvOutFactory)
 
@@ -38,7 +38,7 @@ public:
         return getFactory()->openSpeaker(szName, sampleMeta);
     }
 
-    static inline SAvOut openAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) {
+    static inline SAvOut openAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings) {
         return getFactory()->openAvFile(szFileName, nStreamings, pStreamings);
     }
 

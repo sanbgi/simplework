@@ -43,6 +43,10 @@ int CAvStreaming::getSampleRate() {
     return m_spCodecCtx->sample_rate;
 }
 
+long CAvStreaming::getDuration() {
+    return m_pAvStream->duration;
+}
+
 EAvSampleFormat CAvStreaming::getSampleFormat() {
     switch(m_spCodecCtx->codec_type) {
     case AVMEDIA_TYPE_VIDEO:

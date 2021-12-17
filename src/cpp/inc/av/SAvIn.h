@@ -13,14 +13,13 @@ class SVideoDevice;
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvIn)
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvIn", 211206)
+        //
+        // 访问所有流数据
+        //
+        virtual int visitStreamings(PAvStreaming::FVisitor visitor) = 0;
 
         //
-        // 获取流
-        //
-        virtual int getStreaming(SAvStreaming& rStreaming) = 0;
-
-        //
-        // 读取帧
+        // 读取一帧数据，可能是视频帧，也可能是音频帧
         //
         virtual int readFrame(PAvFrame::FVisitor visitor) = 0;
 

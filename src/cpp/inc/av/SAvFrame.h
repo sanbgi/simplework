@@ -11,6 +11,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvFrame)
 public:
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvFrame", 211206)
+        /*
         //
         // 获取流
         //
@@ -47,6 +48,7 @@ public:
         //
         //
         virtual int readPAvFrame(PAvFrame::FVisitor visitor) = 0;
+        */
 
     SIMPLEWORK_INTERFACE_LEAVE
 

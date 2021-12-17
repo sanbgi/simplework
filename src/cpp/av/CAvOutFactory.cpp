@@ -29,7 +29,7 @@ public:
         return SAvOut::wrapPtr((IAvOut*)pAvOut);
     }
 
-    SAvOut openAvFile(const char* szFileName, int nStreamings, SAvStreaming* pStreamings) {
+    SAvOut openAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings) {
         SObject spAvOut;
         ffmpeg::CAvOut* pAvOut = CObject::createObject<ffmpeg::CAvOut>(spAvOut);
         if( pAvOut->initAvFile(szFileName, nStreamings, pStreamings) != SError::ERRORTYPE_SUCCESS ) {

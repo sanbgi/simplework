@@ -10,6 +10,7 @@ CAvOutStreaming::CAvOutStreaming() {
     m_iStreamingId = -1;
     m_pCodec = nullptr;
     m_nWriteNumber = 0;
+    m_nDuration = 0;
 }
 
 CAvOutStreaming::~CAvOutStreaming() {
@@ -31,23 +32,27 @@ int CAvOutStreaming::getTimeRate() {
     return m_nTimeRate;
 }
 
+long  CAvOutStreaming::getDuration() {
+    return m_nDuration;
+}
+
 const PAvSample& CAvOutStreaming::getSampleMeta() {
     return m_sampleMeta;
 }
 
-int CAvOutStreaming::init(AVFormatContext* pFormatContext, SAvStreaming& src) {
-    switch(src->getSampleType()) {
+int CAvOutStreaming::init(AVFormatContext* pFormatContext, PAvStreaming* pSrc) {
+    switch(pSrc->frameMeta.sampleType) {
     case EAvSampleType::AvSampleType_Video:
-        return initVideo(pFormatContext, src);
+        return initVideo(pFormatContext, pSrc);
 
     case EAvSampleType::AvSampleType_Audio:
-        return initAudio(pFormatContext, src);
+        return initAudio(pFormatContext, pSrc);
     }
     return SError::ERRORTYPE_FAILURE;
 }
 
-int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& src) {
-
+int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, PAvStreaming* pSrc){
+    
     m_nTimeRate = 24;
 
     const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
@@ -66,7 +71,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
     if( pAvStream == nullptr ) {
         return SError::ERRORTYPE_FAILURE;
     }
-    pAvStream->id = src->getStreamingId();
+    pAvStream->id = pSrc->streamingId;
     pAvStream->index = pFormatContext->nb_streams-1;
 
     // 创建编码上下文
@@ -82,7 +87,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
     // 设置CodecContext参数
     //
     {
-        PAvSample sampleMeta = src->getSampleMeta();
+        PAvSample sampleMeta = pSrc->frameMeta;
         pCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
         pCodecContext->codec_id = pOutputFormat->video_codec;
         //pCodecContext->bit_rate = 1600000;
@@ -97,7 +102,8 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
             * of which frame timestamps are represented. For fixed-fps content,
             * timebase should be 1/framerate and timestamp increments should be
             * identical to 1. */
-        pAvStream->time_base = { 1, src->getTimeRate() };
+        pAvStream->time_base = { 1, pSrc->timeRate };
+        pAvStream->duration = pSrc->duration;
         pCodecContext->time_base = pAvStream->time_base;
 
         pCodecContext->gop_size      = 12; /* emit one intra frame every twelve frames at most */
@@ -153,8 +159,8 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, SAvStreaming& sr
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& src) {
-    const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
+int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, PAvStreaming* pSrc) {
+        const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
     if(pOutputFormat == nullptr || pOutputFormat->audio_codec == AV_CODEC_ID_NONE) {
         return SError::ERRORTYPE_FAILURE;
     }
@@ -170,7 +176,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
     if( pAvStream == nullptr ) {
         return SError::ERRORTYPE_FAILURE;
     }
-    pAvStream->id = src->getStreamingId();
+    pAvStream->id = pSrc->streamingId;
 
     // 创建编码上下文
     AVCodecContext* pCodecContext = avcodec_alloc_context3(pCodec);
@@ -185,7 +191,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
     // 设置CodecContext参数
     //
     {
-        PAvSample sampleMeta = src->getSampleMeta();
+        PAvSample sampleMeta = pSrc->frameMeta;
         pCodecContext->codec_type = AVMEDIA_TYPE_AUDIO;
         pCodecContext->codec_id = pCodec->id;
 
@@ -212,7 +218,8 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
             }
         }
         pCodecContext->channels = av_get_channel_layout_nb_channels(pCodecContext->channel_layout);
-        pAvStream->time_base = (AVRational){ 1, sampleMeta.audioRate };
+        pAvStream->time_base = (AVRational){ 1, pSrc->timeRate };
+        pAvStream->duration = pSrc->duration;
 
         pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
         //由于特定的编码器只支持特定的数据类型，所以，需要修改目标像素格式为编码器需要的格式
@@ -256,6 +263,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, SAvStreaming& sr
     m_iStreamingIndex = pAvStream->index;
     return SError::ERRORTYPE_SUCCESS;
 }
+
 
 int CAvOutStreaming::open(AVFormatContext* pFormatContext) {
 

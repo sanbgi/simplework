@@ -35,29 +35,37 @@ SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
 
 
-void testPlayFile() {
+int testPlayFile() {
     SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
     //SAvIn avIn = SAvIn::openVideoDevice("vfwcap");
     //SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
     //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
+    std::vector<PAvStreaming> arrStreamings;
+    CPVisitor<std::vector<PAvStreaming>*, const PAvStreaming*> visitor(&arrStreamings, [](std::vector<PAvStreaming>* pArr, const PAvStreaming* pStreaming)->int{
+        pArr->push_back(*pStreaming);
+        return SError::ERRORTYPE_SUCCESS;
+    });
+    if( avIn->visitStreamings(&visitor) != SError::ERRORTYPE_SUCCESS ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
     int iVideoId = -1;
     int iAudioId = -1;
     PAvSample videoMeta, audioMeta;
-    SAvStreaming spStreaming;
-    while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
-        std::cout << "streaming type: " << spStreaming->getSampleType() << "\n";
-        switch(spStreaming->getSampleType()) {
+    for(int i=0; i<arrStreamings.size(); i++) {
+        PAvStreaming streaming = arrStreamings[i];
+        switch(streaming.frameMeta.sampleType) {
         case EAvSampleType::AvSampleType_Video:
             if(iVideoId == -1) {
-                iVideoId = spStreaming->getStreamingId();
-                videoMeta = spStreaming->getSampleMeta();
+                iVideoId = streaming.streamingId;
+                videoMeta = streaming.frameMeta;
             }
             break;
 
         case EAvSampleType::AvSampleType_Audio:
             if(iAudioId == -1) {
-                iAudioId = spStreaming->getStreamingId();
-                audioMeta = spStreaming->getSampleMeta();
+                iAudioId = streaming.streamingId;
+                audioMeta = streaming.frameMeta;
             }
             break;
         }
@@ -89,20 +97,24 @@ void testPlayFile() {
     })) == SError::ERRORTYPE_SUCCESS ) {
         nframeVideo++;
     }
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 int testWriteFile() {
 
     SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
-    std::vector<SAvStreaming> vecInStreamings;
 
-    SAvStreaming spStreaming;
-    while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
-        vecInStreamings.push_back(spStreaming);
+    std::vector<PAvStreaming> arrStreamings;
+    CPVisitor<std::vector<PAvStreaming>*, const PAvStreaming*> visitor(&arrStreamings, [](std::vector<PAvStreaming>* pArr, const PAvStreaming* pStreaming)->int{
+        pArr->push_back(*pStreaming);
+        return SError::ERRORTYPE_SUCCESS;
+    });
+    if( avIn->visitStreamings(&visitor) != SError::ERRORTYPE_SUCCESS ) {
+        return SError::ERRORTYPE_FAILURE;
     }
 
     int nframe = 0;
-    SAvOut avOut = SAvOut::openAvFile("d://tt2.avi", vecInStreamings.size(), vecInStreamings.data() );
+    SAvOut avOut = SAvOut::openAvFile("d://tt2.mkv", arrStreamings.size(), arrStreamings.data() );
     while(avIn->readFrame(CPVisitor<SAvOut, const PAvFrame*>(avOut, [](SAvOut avOut, const PAvFrame* pFrame) -> int{
         if(pFrame == nullptr) {
             //不再继续读取
@@ -116,6 +128,31 @@ int testWriteFile() {
     }
     avOut->writeFrame(nullptr);
     return SError::ERRORTYPE_SUCCESS;
+
+    /*
+    std::vector<SAvStreaming> vecInStreamings;
+
+    SAvStreaming spStreaming;
+    while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
+        vecInStreamings.push_back(spStreaming);
+    }
+
+    int nframe = 0;
+    SAvOut avOut = SAvOut::openAvFile("d://tt2.mkv", vecInStreamings.size(), vecInStreamings.data() );
+    while(avIn->readFrame(CPVisitor<SAvOut, const PAvFrame*>(avOut, [](SAvOut avOut, const PAvFrame* pFrame) -> int{
+        if(pFrame == nullptr) {
+            //不再继续读取
+            avOut->writeFrame(pFrame);
+            return SError::ERRORTYPE_FAILURE;
+        }
+        std::cout << "timestamps:  " << pFrame->timeStamp << "\n";
+        return avOut->writeFrame(pFrame);
+    })) == SError::ERRORTYPE_SUCCESS ) {
+        nframe++;
+    }
+    avOut->writeFrame(nullptr);
+    return SError::ERRORTYPE_SUCCESS;
+    */
 }
 
 
@@ -130,8 +167,8 @@ void fun(const CData& data) {
 
 
 int main(int argc, char *argv[]){
-    testWriteFile();
-    //testPlayFile();
+    //testWriteFile();
+    testPlayFile();
 
     /*
     int i=10;

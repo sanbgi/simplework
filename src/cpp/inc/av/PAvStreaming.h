@@ -22,9 +22,19 @@ struct PAvStreaming {
     int timeRate;
 
     //
+    // 流的长度，对于编码的时候，0表示不确定视频时长
+    //
+    int duration;
+
+    //
     // 样本描述类型
     //
     PAvSample frameMeta;
+
+    //
+    // 流数据访问接口
+    //
+    typedef IVisitor<const PAvStreaming*>* FVisitor;
 };
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE

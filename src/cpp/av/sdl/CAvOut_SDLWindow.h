@@ -36,6 +36,16 @@ public:
 
         m_nWinWidth = sampleMeta.videoWidth;
         m_nWinHeight = sampleMeta.videoHeight;
+        switch (sampleMeta.sampleFormat)
+        {
+        case EAvSampleFormat::AvSampleFormat_Video_RGB:
+        case EAvSampleFormat::AvSampleFormat_Video_RGBA:
+            break;
+        
+        default:
+            sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
+            break;
+        }
         if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }

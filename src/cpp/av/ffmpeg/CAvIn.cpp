@@ -2,6 +2,7 @@
 #include "av_ffmpeg.h"
 #include "CAvIn.h"
 #include "CAvStreaming.h"
+#include "CAvSampleType.h"
 
 FFMPEG_NAMESPACE_ENTER
 
@@ -27,6 +28,49 @@ int CAvIn::changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMe
         return SError::ERRORTYPE_FAILURE;
     }
     return m_vecCAvStreamings[iStreamingId]->setSampleMeta(sampleMeta);
+}
+
+int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
+    if(!m_spOpenedCtx) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
+        AVStream* pStream = m_spOpenedCtx->streams[i];
+        PAvStreaming avStream;
+        avStream.duration = pStream->duration;
+        avStream.streamingId = pStream->index;
+        avStream.timeRate = pStream->time_base.den/pStream->time_base.num;
+        AVCodecParameters* pCodecContext = pStream->codecpar;
+        switch(pCodecContext->codec_type) {
+            case AVMEDIA_TYPE_AUDIO:
+                {
+                    avStream.frameMeta.sampleType = EAvSampleType::AvSampleType_Audio;
+                    avStream.frameMeta.sampleFormat = CAvSampleType::convert((AVSampleFormat)pCodecContext->format);
+                    avStream.frameMeta.audioChannels = pCodecContext->channels;
+                    avStream.frameMeta.audioRate = pCodecContext->sample_rate;
+                    int errcode = visitor->visit(&avStream);
+                    if( errcode != SError::ERRORTYPE_SUCCESS ) {
+                        return errcode;
+                    }
+                }
+                break;
+            case AVMEDIA_TYPE_VIDEO:
+                {
+                    avStream.frameMeta.sampleType = EAvSampleType::AvSampleType_Video;
+                    avStream.frameMeta.sampleFormat = CAvSampleType::convert((AVPixelFormat)pCodecContext->format);
+                    avStream.frameMeta.videoWidth = pCodecContext->width;
+                    avStream.frameMeta.videoHeight = pCodecContext->height;
+                    int errcode = visitor->visit(&avStream);
+                    if( errcode != SError::ERRORTYPE_SUCCESS ) {
+                        return errcode;
+                    }
+                }
+                break;
+        }
+        SError::ERRORTYPE_SUCCESS;
+    }
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 int CAvIn::readFrame(PAvFrame::FVisitor receiver) {
