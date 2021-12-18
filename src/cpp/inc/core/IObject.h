@@ -2,11 +2,9 @@
 #define __SimpleWork_IObject_h__
 
 #include "core.h"
+#include "IVisitor.h"
 
 __SimpleWork_Core_Namespace_Enter__
-
-struct __IPtrForceSaver;
-typedef __IPtrForceSaver* __FunPtrForceSaver;
 
 struct IObject{
 public:
@@ -17,7 +15,7 @@ private:
     private:
         virtual int __swAddRef() = 0;
         virtual int __swDecRef() = 0;
-        virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, __FunPtrForceSaver funSaver) = 0;
+        virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, IVisitor<void*>& funSaver) = 0;
         template<typename T> friend class SPointer;
 };
 

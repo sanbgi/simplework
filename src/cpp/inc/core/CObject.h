@@ -56,13 +56,13 @@ public:
     //
     // 创建对象
     //
+    template<typename TObject> static int createObject(CPointer<TObject>& spObject) {
+        return __CObjectImp<TObject>::__createObject(spObject);
+    }
     template<typename TObject> static SObject createObject() {
         CPointer<TObject> spObject;
         __CObjectImp<TObject>::__createObject(spObject);
         return spObject;
-    }
-    template<typename TObject> static int createObject(CPointer<TObject>& spObject) {
-        return __CObjectImp<TObject>::__createObject(spObject);
     }
     
 
@@ -124,8 +124,8 @@ private:
 
     public:
         static int __createObject(CPointer<TObject>& spPointer) {
-            __CObjectImp* pNewObj = new __CObjectImp();
-            spPointer.take(pNewObj,(__IObjectImp*)pNewObj);
+            __CObjectImp* pCreateObj = new __CObjectImp();
+            spPointer.take(pCreateObj,(__IObjectImp*)pCreateObj);
             return SError::ERRORTYPE_SUCCESS;
         }
 

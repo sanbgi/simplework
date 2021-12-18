@@ -143,29 +143,10 @@ void fun(const CData& data) {
      }
  }
 
-class AA {
-public:
-    int i;
-};
-
-class BB : public AA {
-
-};
-
-void Fun(const AA& pData) {
-    BB& pBB = (BB&)pData;
-}
-
 int main(int argc, char *argv[]){
 
-    BB bb;
-    Fun(bb);
-
-    int* pa;
-    pa = (int*)&pa;
-
-    testWriteFile();
-    //testPlayFile();
+    //testWriteFile();
+    testPlayFile();
 
     /*
     int i=10;

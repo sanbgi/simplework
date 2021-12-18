@@ -3,12 +3,9 @@
 
 #include "core.h"
 #include "SError.h"
+#include "IVisitor.h"
 
 __SimpleWork_Core_Namespace_Enter__
-
-typedef struct __IPtrForceSaver {
-    virtual int forceSetPtr(void* pPtr) = 0;
-}* __FunPtrForceSaver;
 
 //
 // 对象的智能指针定义，仅适用于从IObject派生的接口，目前建议不要直接使用
@@ -93,12 +90,12 @@ private:
             if(pDest) {
                 initPtr(pDest);
             }else{
-                struct CForceSetter : public __IPtrForceSaver {
+                struct CForceSetter : public IVisitor<void*> {
                     CForceSetter(SPointer* pAutoPtr) : _pPtr(pAutoPtr){}
-                    int forceSetPtr(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
+                    int visit(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
                     SPointer* _pPtr;
                 }setter(this);
-                pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), &setter);
+                pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), setter);
             }
         }
     }

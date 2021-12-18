@@ -29,13 +29,8 @@ public:
     ~CPointer() {
         release();
     }
-    void take(T* pPtr, SObject spPtrTaker) {
-        m_pPtr = pPtr;
-        m_spPtrTaker = spPtrTaker;
-    }
-    void take(T* pPtr, IObject* pTaker) {
-        m_pPtr = pPtr;
-        m_spPtrTaker.setPtr(pTaker);
+    T* getPtr() const {
+        return m_pPtr;
     }
     void release() {
         m_pPtr = nullptr;
@@ -65,8 +60,16 @@ public:
     }
 
 private:
+    void take(T* pPtr, IObject* pTaker) {
+        m_pPtr = pPtr;
+        m_spPtrTaker.setPtr(pTaker);
+    }
+
+private:
     SObject m_spPtrTaker;
     T* m_pPtr;
+
+    friend class CObject;
 };
 
 __SimpleWork_Core_Namespace_Leave__

@@ -124,30 +124,30 @@
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
+        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return SError::ERRORTYPE_FAILURE; \
     };
 
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::__FunPtrForceSaver pTarget) { 
+        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterfaceClass) \
         if( strcmp(szInterfaceKey, TInterfaceClass::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
-                return pTarget->forceSetPtr((void*)(TInterfaceClass*)this); \
+                return visitor.visit((void*)(TInterfaceClass*)this); \
             else \
                 return SIMPLEWORK_CORE_NAMESPACE::SError::ERRORTYPE_FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY1(TInterface, TSuperInterface) \
         if( strcmp(szInterfaceKey, TSuperInterface::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TSuperInterface::getInterfaceVer() ) \
-                return pTarget->forceSetPtr((void*)(TSuperInterface*)(TInterface*)this); \
+                return visitor.visit((void*)(TSuperInterface*)(TInterface*)this); \
             else \
                 return SIMPLEWORK_CORE_NAMESPACE::SError::ERRORTYPE_FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
-        return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, pTarget); \
+        return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, visitor); \
     };
 
 #include "CData.h"
