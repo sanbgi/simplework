@@ -134,8 +134,10 @@ class CTensorFactory : public CObject, STensor::ITensorFactory {
 
 public://ITensor
     template<typename TType> CPlaceTensor* createTensor(SObject& rObject) {
-        CPlaceTensor* pTensor = CObject::createObject<CTensor<TType>>(rObject);
-        return pTensor;
+        CPointer<CTensor<TType>> spTensor;
+        CObject::createObject(spTensor);
+        rObject = spTensor.getObject();
+        return spTensor;
     }
     
     CPlaceTensor* createTensor(SData::DataType eElementType, SObject& rObject) {

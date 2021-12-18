@@ -17,12 +17,12 @@ int CAvFilter::putFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
 
 int CAvFilter::createFilter(const PAvSample& targetSample, SAvFilter& spFilter) {
 
-    SObject spAvFilter;
-    CAvFilter* pAvFilter = CObject::createObject<CAvFilter>(spAvFilter);
-    if( pAvFilter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
+    CPointer<CAvFilter> spAvFilter;
+    CObject::createObject(spAvFilter);
+    if( spAvFilter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
-    spFilter.setPtr((IAvFilter*)pAvFilter);
+    spFilter.setPtr((IAvFilter*)spAvFilter);
     return SError::ERRORTYPE_SUCCESS;
 }
 

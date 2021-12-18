@@ -11,30 +11,30 @@ class CAvInFactory : public CObject, public SAvIn::IAvInFactory{
 
 public:
     SAvIn openVideoFile(const char* szFileName) {
-        SObject spAvIn;
-        ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
-        if( pAvIn->initVideoFile(szFileName) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<ffmpeg::CAvIn> spAvIn;
+        CObject::createObject(spAvIn);
+        if( spAvIn->initVideoFile(szFileName) != SError::ERRORTYPE_SUCCESS ) {
             return SAvIn();
         }
-        return SAvIn::wrapPtr((IAvIn*)pAvIn);
+        return SAvIn::wrapPtr(spAvIn);
     }
 
     SAvIn openVideoDevice(const char* szName) {
-        SObject spAvIn;
-        ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
-        if( pAvIn->initVideoCapture(szName) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<ffmpeg::CAvIn> spAvIn;
+        CObject::createObject(spAvIn);
+        if( spAvIn->initVideoCapture(szName) != SError::ERRORTYPE_SUCCESS ) {
             return SAvIn();
         }
-        return SAvIn::wrapPtr((IAvIn*)pAvIn);
+        return SAvIn::wrapPtr(spAvIn);
     }
 
     SAvIn openAudioDevice(const char* szName) {
-        SObject spAvIn;
-        ffmpeg::CAvIn* pAvIn = CObject::createObject<ffmpeg::CAvIn>(spAvIn);
-        if( pAvIn->initAudioCapture(szName) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<ffmpeg::CAvIn> spAvIn;
+        CObject::createObject(spAvIn);
+        if( spAvIn->initAudioCapture(szName) != SError::ERRORTYPE_SUCCESS ) {
             return SAvIn();
         }
-        return SAvIn::wrapPtr((IAvIn*)pAvIn);
+        return SAvIn::wrapPtr(spAvIn);
     }
 
     int getAudioDevice(SAudioDevice& rDevice) {

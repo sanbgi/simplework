@@ -12,30 +12,30 @@ class CAvOutFactory : public CObject, public SAvOut::IAvOutFactory{
 
 public:
     SAvOut openWindow(const char* szWindowName, PAvSample& sampleMeta) {
-        SObject spAvOut;
-        sdl::CAvOut_SDLWindow* pAvOut = CObject::createObject<sdl::CAvOut_SDLWindow>(spAvOut);
-        if( pAvOut->initWindow(szWindowName, sampleMeta) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<sdl::CAvOut_SDLWindow> spAvOut;
+        CObject::createObject(spAvOut);
+        if( spAvOut->initWindow(szWindowName, sampleMeta) != SError::ERRORTYPE_SUCCESS ) {
             return SAvOut();
         }
-        return SAvOut::wrapPtr((IAvOut*)pAvOut);
+        return SAvOut::wrapPtr(spAvOut);
     }
 
     SAvOut openSpeaker(const char* szName, PAvSample& sampleMeta) {
-        SObject spAvOut;
-        sdl::CAvOut_SDLSpeaker* pAvOut = CObject::createObject<sdl::CAvOut_SDLSpeaker>(spAvOut);
-        if( pAvOut->initSpeaker(szName, sampleMeta) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<sdl::CAvOut_SDLSpeaker> spAvOut;
+        CObject::createObject(spAvOut);
+        if( spAvOut->initSpeaker(szName, sampleMeta) != SError::ERRORTYPE_SUCCESS ) {
             return SAvOut();
         }
-        return SAvOut::wrapPtr((IAvOut*)pAvOut);
+        return SAvOut::wrapPtr(spAvOut);
     }
 
     SAvOut openAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings) {
-        SObject spAvOut;
-        ffmpeg::CAvOut* pAvOut = CObject::createObject<ffmpeg::CAvOut>(spAvOut);
-        if( pAvOut->initAvFile(szFileName, nStreamings, pStreamings) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<ffmpeg::CAvOut> spAvOut;
+        CObject::createObject(spAvOut);
+        if( spAvOut->initAvFile(szFileName, nStreamings, pStreamings) != SError::ERRORTYPE_SUCCESS ) {
             return SAvOut();
         }
-        return SAvOut::wrapPtr((IAvOut*)pAvOut);
+        return SAvOut::wrapPtr(spAvOut);
     }
 };
 

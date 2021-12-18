@@ -3,6 +3,7 @@
 
 #include "core.h"
 #include "SObject.h"
+#include "CPointer.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -55,14 +56,15 @@ public:
     //
     // 创建对象
     //
-    template<typename TObject> static TObject* createObject(SObject& rObject) {
-        return __CObjectImp<TObject>::__createObject(rObject);
-    }
     template<typename TObject> static SObject createObject() {
-        SObject spObject;
+        CPointer<TObject> spObject;
         __CObjectImp<TObject>::__createObject(spObject);
         return spObject;
     }
+    template<typename TObject> static int createObject(CPointer<TObject>& spObject) {
+        return __CObjectImp<TObject>::__createObject(spObject);
+    }
+    
 
     //
     // 创建工厂
@@ -76,7 +78,10 @@ public:
 
         public://IFactory
             int createObject(SObject& rObject) const {
-                return __CObjectImp<TObject>::__createObject(rObject) ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
+                CPointer<TObject> spObject;
+                __CObjectImp<TObject>::__createObject(spObject);
+                rObject = spObject.getObject();
+                return SError::ERRORTYPE_SUCCESS;
             }
         };
 
@@ -87,25 +92,29 @@ public:
 
         public://IFactory
             int createObject(SObject& rObject) const {
-                static SObject g_spObject;
-                static TObject* g_pObject = __CObjectImp<TObject>::__createObject(g_spObject);
-                rObject = g_spObject;
+                static CPointer<TObject> g_spObject;
+                static int r = __CObjectImp<TObject>::__createObject(g_spObject);
+                rObject = g_spObject.getObject();
                 return SError::ERRORTYPE_SUCCESS;
             }
         };
 
         if(bSingletonFactory) {
-            return __CObjectImp<__CSingletonFactoryImp>::__createObject(rFactory) ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
+            CPointer<__CSingletonFactoryImp> spFactory;
+            __CObjectImp<__CSingletonFactoryImp>::__createObject(spFactory);
+            rFactory = spFactory.getObject();
         }else{
-            return __CObjectImp<__CFactoryImp>::__createObject(rFactory) ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
+            CPointer<__CFactoryImp> spFactory;
+            __CObjectImp<__CFactoryImp>::__createObject(spFactory);
+            rFactory = spFactory.getObject();
         }
+        return SError::ERRORTYPE_SUCCESS;
     }
     template<typename TObject> static SObject createFactory(bool bSingleton=false) {
         SObject spFactory;
         createFactory<TObject>(spFactory, bSingleton);
         return spFactory;
     }
-
 
 private:
     struct __IObjectImp : public IObject {};
@@ -114,10 +123,10 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static TObject* __createObject(SObject& rObject) {
+        static int __createObject(CPointer<TObject>& spPointer) {
             __CObjectImp* pNewObj = new __CObjectImp();
-            rObject.setPtr((__IObjectImp*)pNewObj);
-            return pNewObj;
+            spPointer.take(pNewObj,(__IObjectImp*)pNewObj);
+            return SError::ERRORTYPE_SUCCESS;
         }
 
     private:

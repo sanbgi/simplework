@@ -97,12 +97,12 @@ int CAvIn::initVideoFile(const char* szFileName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
-        SObject spObject;
-        CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<CAvStreaming> spStreaming;
+        CObject::createObject(spStreaming);
+        if( spStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
-        m_vecCAvStreamings.push_back(CPointer<CAvStreaming>(pCAvStreaming, spObject));
+        m_vecCAvStreamings.push_back(spStreaming);
     }
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -164,12 +164,12 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
-        SObject spObject;
-        CAvStreaming* pCAvStreaming = CObject::createObject<CAvStreaming>(spObject);
-        if( pCAvStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
+        CPointer<CAvStreaming> spStreaming;
+        CObject::createObject(spStreaming);
+        if( spStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
-        m_vecCAvStreamings.push_back(CPointer<CAvStreaming>(pCAvStreaming, spObject));
+        m_vecCAvStreamings.push_back(spStreaming);
     }
     return SError::ERRORTYPE_SUCCESS;
 }

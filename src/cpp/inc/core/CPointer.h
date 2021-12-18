@@ -6,7 +6,7 @@
 __SimpleWork_Core_Namespace_Enter__
 
 //
-// 资源引用类，使用方法和CPointer基本相同，但允许多个对象共同持有资源(引用计数)
+// CObject类型的指针持有类
 //
 template<typename T> class CPointer {
 public:
@@ -33,6 +33,10 @@ public:
         m_pPtr = pPtr;
         m_spPtrTaker = spPtrTaker;
     }
+    void take(T* pPtr, IObject* pTaker) {
+        m_pPtr = pPtr;
+        m_spPtrTaker.setPtr(pTaker);
+    }
     void release() {
         m_pPtr = nullptr;
         m_spPtrTaker.release();
@@ -50,6 +54,14 @@ public:
     }
     operator bool() {
         return m_pPtr != nullptr;
+    }
+    operator SObject&() {
+        return m_spPtrTaker;
+    }
+
+public:
+    SObject& getObject() {
+        return m_spPtrTaker;
     }
 
 private:

@@ -44,10 +44,10 @@ int CAvDevice::s_getNextDevice(SVideoDevice& rDevice, AVInputFormat* pInputForma
         return SError::ERRORTYPE_FAILURE;
     }
 
-    SObject spDevice;
-    CAvDevice* pDevice = CObject::createObject<CAvDevice>(spDevice);
-    pDevice->m_pInputFormat = pInputFormat;
-    return pDevice->processGetNextDevice(rDevice);
+    CPointer<CAvDevice> spDevice;
+    CObject::createObject(spDevice);
+    spDevice->m_pInputFormat = pInputFormat;
+    return spDevice->processGetNextDevice(rDevice);
 }
 
 int CAvDevice::s_getNextDevice(SAudioDevice& rDevice, AVInputFormat* pInputFormat) {
@@ -56,10 +56,10 @@ int CAvDevice::s_getNextDevice(SAudioDevice& rDevice, AVInputFormat* pInputForma
         return SError::ERRORTYPE_FAILURE;
     }
     
-    SObject spDevice;
-    CAvDevice* pDevice = CObject::createObject<CAvDevice>(spDevice);
-    pDevice->m_pInputFormat = pInputFormat;
-    return pDevice->processGetNextDevice(rDevice);
+    CPointer<CAvDevice> spDevice;
+    CObject::createObject(spDevice);
+    spDevice->m_pInputFormat = pInputFormat;
+    return spDevice->processGetNextDevice(rDevice);
 }
 
 template<typename T> int CAvDevice::processGetNextDevice(T& rDevice) {
@@ -80,12 +80,12 @@ template<typename T> int CAvDevice::processGetNextDevice(T& rDevice) {
     }
 
     if( m_iDevice < m_pDeviceLists->nb_devices - 1) {
-        SObject spDevice;
-        CAvDevice* pDevice = CObject::createObject<CAvDevice>(spDevice);
-        pDevice->m_iDevice = m_iDevice+1;
-        pDevice->m_pDeviceLists = m_pDeviceLists;
-        pDevice->m_pInputFormat = m_pInputFormat;
-        rDevice.setPtr(pDevice);
+
+        CPointer<CAvDevice> spDevice;
+        CObject::createObject(spDevice);
+        spDevice->m_iDevice = m_iDevice+1;
+        spDevice->m_pDeviceLists = m_pDeviceLists;
+        spDevice->m_pInputFormat = m_pInputFormat;
     }
 
     return s_getNextDevice(rDevice, m_pInputFormat);

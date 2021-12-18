@@ -23,12 +23,12 @@ int CAvOut::initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pS
         // 创建并初始化流对象
         //
         PAvStreaming* pStreaming = pStreamings+i;
-        SObject spTaker;
-        CAvOutStreaming* pOutStreaming = CObject::createObject<CAvOutStreaming>(spTaker);
-        if(pOutStreaming->init(pFormatContext, pStreaming) != SError::ERRORTYPE_SUCCESS) {
+        CPointer<CAvOutStreaming> spStreaming;
+        CObject::createObject(spStreaming);
+        if(spStreaming->init(pFormatContext, pStreaming) != SError::ERRORTYPE_SUCCESS) {
             return SError::ERRORTYPE_FAILURE;
         }
-        m_arrStreamings.push_back(CPointer<CAvOutStreaming>(pOutStreaming, spTaker));
+        m_arrStreamings.push_back(spStreaming);
     }
 
     //

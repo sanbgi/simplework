@@ -36,9 +36,9 @@ SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
 
 int testPlayFile() {
-    SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
+    //SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
     //SAvIn avIn = SAvIn::openVideoDevice("vfwcap");
-    //SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
+    SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
     //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
     std::vector<PAvStreaming> arrStreamings;
     CPVisitor<std::vector<PAvStreaming>*, const PAvStreaming*> visitor(&arrStreamings, [](std::vector<PAvStreaming>* pArr, const PAvStreaming* pStreaming)->int{
@@ -73,14 +73,14 @@ int testPlayFile() {
 
     videoMeta.videoWidth = 640;
     videoMeta.videoHeight = 360;
-    SAvOut avVideoOut = SAvOut::openWindow("Display Video", videoMeta);
     SAvOut avAudioOut = SAvOut::openSpeaker(nullptr, audioMeta);
     struct CCtx {
         SAvOut video;
         SAvOut audio;
     };
     CCtx outCtx;
-    outCtx.video = avVideoOut;
+    //outCtx.video = SAvOut::openAvFile("D:\\cap.mkv", arrStreamings.size(), arrStreamings.data());
+    outCtx.video = SAvOut::openWindow("Display Video", videoMeta);
     outCtx.audio = avAudioOut;
     int nframeVideo = 0;
     while(avIn->readFrame(CPVisitor<CCtx, const PAvFrame*>(outCtx, [](CCtx ctx, const PAvFrame* pFrame) -> int{
@@ -96,8 +96,11 @@ int testPlayFile() {
         return SError::ERRORTYPE_FAILURE;
     })) == SError::ERRORTYPE_SUCCESS ) {
         nframeVideo++;
+        if(nframeVideo > 500) {
+            break;
+        }
     }
-    return SError::ERRORTYPE_SUCCESS;
+    return outCtx.video->writeFrame(nullptr);
 }
 
 int testWriteFile() {
@@ -128,31 +131,6 @@ int testWriteFile() {
     }
     avOut->writeFrame(nullptr);
     return SError::ERRORTYPE_SUCCESS;
-
-    /*
-    std::vector<SAvStreaming> vecInStreamings;
-
-    SAvStreaming spStreaming;
-    while(avIn->getStreaming(spStreaming) == SError::ERRORTYPE_SUCCESS) {
-        vecInStreamings.push_back(spStreaming);
-    }
-
-    int nframe = 0;
-    SAvOut avOut = SAvOut::openAvFile("d://tt2.mkv", vecInStreamings.size(), vecInStreamings.data() );
-    while(avIn->readFrame(CPVisitor<SAvOut, const PAvFrame*>(avOut, [](SAvOut avOut, const PAvFrame* pFrame) -> int{
-        if(pFrame == nullptr) {
-            //不再继续读取
-            avOut->writeFrame(pFrame);
-            return SError::ERRORTYPE_FAILURE;
-        }
-        std::cout << "timestamps:  " << pFrame->timeStamp << "\n";
-        return avOut->writeFrame(pFrame);
-    })) == SError::ERRORTYPE_SUCCESS ) {
-        nframe++;
-    }
-    avOut->writeFrame(nullptr);
-    return SError::ERRORTYPE_SUCCESS;
-    */
 }
 
 
@@ -165,10 +143,29 @@ void fun(const CData& data) {
      }
  }
 
+class AA {
+public:
+    int i;
+};
+
+class BB : public AA {
+
+};
+
+void Fun(const AA& pData) {
+    BB& pBB = (BB&)pData;
+}
 
 int main(int argc, char *argv[]){
-    //testWriteFile();
-    testPlayFile();
+
+    BB bb;
+    Fun(bb);
+
+    int* pa;
+    pa = (int*)&pa;
+
+    testWriteFile();
+    //testPlayFile();
 
     /*
     int i=10;
