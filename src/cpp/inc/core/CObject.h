@@ -65,7 +65,6 @@ public:
         return spObject;
     }
     
-
     //
     // 创建工厂
     //

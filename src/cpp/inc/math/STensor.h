@@ -21,7 +21,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取元素类型
         //
-        virtual SData::DataType getDataType() const = 0;
+        virtual SData::tid getDataType() const = 0;
 
         //
         // 获取元素数量
@@ -32,14 +32,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取元素数据指针
         //
-        virtual const void* getDataPtr(SData::DataType eElementType, int iPos=0) const = 0;
+        virtual const void* getDataPtr(SData::tid eElementType, int iPos=0) const = 0;
 
     public:
         //
         // 获取元素数据指针
         //
         template<typename Q> inline const Q* getDataPtr(int iPos=0) const {
-            return (Q*)getDataPtr(SData::getType<Q>(), iPos);
+            return (Q*)getDataPtr(SData::getBasicTypeIdentifier<Q>(), iPos);
         }
 
         //
@@ -110,8 +110,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
             //
             // 构造全新的张量，私有函数，因为指针没类型，易出错
             //
-            virtual STensor createVector( SData::DataType eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-            virtual STensor createTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+            virtual STensor createVector( SData::tid eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+            virtual STensor createTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
 
@@ -120,13 +120,13 @@ public:
     // 构造一维张量
     //
     template<typename Q=void> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createVector(SData::getType<Q>(), nElementSize, (void*)pElementData);
+        return getFactory()->createVector(SData::getBasicTypeIdentifier<Q>(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
     template<typename Q=void> static STensor createTensor(STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createTensor(spDimVector, SData::getType<Q>(), nElementSize, (void*)pElementData);
+        return getFactory()->createTensor(spDimVector, SData::getBasicTypeIdentifier<Q>(), nElementSize, (void*)pElementData);
     }
 
 private:

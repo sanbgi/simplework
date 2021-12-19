@@ -2,89 +2,166 @@
 #define __SimpleWork_Core_CData_h__
 
 #include "core.h"
-#include <typeinfo>
+#include "PData.h"
+#include "SData.h"
+
+#define SIMPLEWORK_PDATAKEY(x) static const char* __getClassKey() { return x; }
 
 __SimpleWork_Core_Namespace_Enter__
 
 //
-// 纯数据参数类，用于传递函数参数，作为带类型的参数垫片
+// 纯数据参数类，用于传递结构类型的函数参数，作为带类型的参数垫片
 //
-// 范例：
-//
-//  void fun(const CData& data) {
-//     if( data.hasData<int>() ) {
-//        std::cout << "i get the integer." << data.getData<int>();
-//     }
-//     if(data.hasData<double>() ) {
-//         std::cout << "i get the double." << data.getData<double>();
-//     }
-//   }
-//
-//   int main(int argc, char *argv[]){
-//      int i=10;
-//      CData s(i);
-//      fun(s);
-//      fun(CData(i));
-//      fun(CData(20));
-//      const int* pPtr = s.getPtr<int>();
-//
-//      return 0;
-//    }
-//
-struct CData {
+template<typename TStructType> class CStructData : public PData {
+public:
+    CStructData(const TStructType& rData){
+        init(&rData);
+    }
+    CStructData(const TStructType* pData){
+        init(pData);
+    }
+    CStructData(const PData& rData){
+        init(rData);
+    }
 
 public:
-    typedef size_t CType;
+    //
+    // 判断当前数据是否是当前类型数据
+    //
+    //  当CStructData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
+    //  当CStructData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
+    //
+    bool isThisType() const {
+        return getType() == m_idType;
+    }
 
-    template<typename TData> CData(const TData* pData) {
-        m_iType = getType<TData>();
-        m_pData = (void*)pData;
+    //
+    // 判断数据是否为空
+    //
+    bool isEmpty() const {
+        return m_pData == nullptr;
     }
-    template<typename TData> CData(const TData& rData) {
-        m_iType = getType<TData>();
-        m_pData = (void*)&rData;
+
+public:
+    //
+    // 获取当前数据类型
+    //
+    static SData::tid getType() {
+        static SData::tid s_idType = SData::getStructTypeIdentifier<TStructType>();
+        return s_idType;
     }
-    template<typename TData> const TData* getPtr() const {
-        if( getType<TData>() != m_iType) {
-            return nullptr;
+
+public:
+    const TStructType* getDataPtr() const {
+        return m_pData;
+    }
+
+    const TStructType& getData() const {
+        return m_pData;
+    }
+
+private:
+    void init(const TStructType* pData) {
+        //
+        // PData两个指针一个指向自己，用于：
+        //      1, 判断当前指针是否是有效的CStructData指针;
+        //      2，读取当前数据的类型;
+        //
+        __pInternalPointer = this;
+        m_idType = getType();
+        m_pData = pData;
+    }
+    void init(const PData& rData) {
+        if(rData.__pInternalPointer == (void*)&rData ) {
+            const CStructData* pSrc = (const CStructData*)&rData;
+            m_idType = pSrc->m_idType;
+            m_pData = getType() == m_idType ? pSrc->m_pData : nullptr;
+        }else{
+            m_idType = 0;
+            m_pData = nullptr;
         }
-        return (TData*)m_pData;
-    }
-    template<typename TData> const TData& getData() const {
-        if( getType<TData>() != m_iType) {
-            return *(TData*)nullptr;
-        }
-        return *(TData*)m_pData;
-    }
-    template<typename TData> bool hasData() const {
-        if( getType<TData>() != m_iType) {
-            return false;
-        }
-        return true;
-    }
-    template<typename TData> static CType getType() {
-        return typeid(TData).hash_code();
-    }
-    CType getType() {
-        return m_iType;
     }
 
 private:
-    //
-    // 禁止缺省构造和拷贝赋值
-    //
-    CData(){}
-    const CData& operator = (const CData& src){ return *this; }
-
-private:
-    //
-    //  目前先用C++的type_info来进行判断（跨编译器不安全），后续切换为系统的更可靠的类型判断
-    //
-    CType m_iType;
-    void* m_pData;
-
+    SData::tid m_idType;
+    const TStructType* m_pData; 
 };
 
+
+template<typename TBasicType> class CBasicData : public PData {
+public:
+    CBasicData(const TBasicType& rData){
+        init(&rData);
+    }
+    CBasicData(const TBasicType* pData){
+        init(pData);
+    }
+    CBasicData(const PData& rData){
+        init(rData);
+    }
+
+public:
+    //
+    // 判断当前数据是否是当前类型数据
+    //
+    //  当CStructData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
+    //  当CStructData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
+    //
+    bool isThisType() const {
+        return getType() == m_idType;
+    }
+
+    //
+    // 判断数据是否为空
+    //
+    bool isEmpty() const {
+        return m_pData == nullptr;
+    }
+
+public:
+    //
+    // 获取当前数据类型
+    //
+    static SData::tid getType() {
+        static SData::tid s_idType = SData::getBasicTypeIdentifier<TBasicType>();
+        return s_idType;
+    }
+
+public:
+    const TBasicType* getDataPtr() const {
+        return m_pData;
+    }
+
+    const TBasicType& getData() const {
+        return m_pData;
+    }
+
+private:
+    void init(const TBasicType* pData) {
+        //
+        // PData两个指针一个指向自己，用于：
+        //      1, 判断当前指针是否是有效的CStructData指针;
+        //      2，读取当前数据的类型;
+        //
+        __pInternalPointer = this;
+        m_idType = getType();
+        m_pData = pData;
+    }
+    void init(const PData& rData) {
+        if(rData.__pInternalPointer == (void*)&rData ) {
+            const CBasicData* pSrc = (const CBasicData*)&rData;
+            m_idType = pSrc->m_idType;
+            m_pData = getType() == m_idType ? pSrc->m_pData : nullptr;
+        }else{
+            m_idType = 0;
+            m_pData = nullptr;
+        }
+    }
+
+private:
+    SData::tid m_idType;
+    const TBasicType* m_pData; 
+};
 __SimpleWork_Core_Namespace_Leave__
 
 #endif//__SimpleWork_Core_CData_h__

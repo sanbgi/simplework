@@ -1,4 +1,5 @@
 #include "../inc/math/math.h"
+#include <map>
 
 using namespace sw::core;
 using namespace sw::math;
@@ -14,8 +15,8 @@ class CPlaceTensor : public CObject, ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    virtual int initVector( SData::DataType eElementType, int nElementSize, void* pElementData) = 0;
-    virtual int initTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initVector( SData::tid eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData) = 0;
 };
 
 //
@@ -24,7 +25,7 @@ public:
 template<typename T> class CTensor : public CPlaceTensor {
 
 public://ITensor
-    int initVector(SData::DataType eDt, int nSize, void* pData) {
+    int initVector(SData::tid eDt, int nSize, void* pData) {
 
         if( eDt != getDataType() || pData == nullptr ) {
             return SError::ERRORTYPE_FAILURE;
@@ -33,7 +34,7 @@ public://ITensor
         release();
 
         m_spElementData.take(new T[nSize], [](T* pPtr){ delete[] pPtr;});
-        if(SData::isPuryMemoryType(eDt)) {
+        if(true) {//SData::isPuryMemoryType(eDt)) {
             memcpy((T*)m_spElementData, (T*)pData, nSize*sizeof(T));
         }
         else {
@@ -48,14 +49,14 @@ public://ITensor
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData = nullptr) {
+    int initTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData = nullptr) {
 
         if( eElementType != getDataType() ) {
             return SError::ERRORTYPE_FAILURE;
         }
 
         if( spDimVector ) {
-            if( spDimVector->getDataType() != SData::DATATYPE_INT ) {
+            if( spDimVector->getDataType() != SData::getBasicTypeIdentifier<int>() ) {
                 return SError::ERRORTYPE_FAILURE;
             }
 
@@ -89,15 +90,15 @@ public://ITensor
 
 public://ITensor
 
-    SData::DataType getDataType() const {
-        return SData::getType<T>();
+    SData::tid getDataType() const {
+        return SData::getBasicTypeIdentifier<T>();
     }
 
     int getDataSize() const {
         return m_nElementSize;
     }
 
-    const void* getDataPtr(SData::DataType eElementType, int iPos=0) const {
+    const void* getDataPtr(SData::tid eElementType, int iPos=0) const {
         if( eElementType == getDataType() ){
             if( iPos >= 0 && iPos < m_nElementSize ) {
                 return (T*)m_spElementData + iPos;
@@ -118,10 +119,31 @@ public:
         m_nElementSize = 0;
     }
 
+public:
+    static CPlaceTensor* createTensor(SObject& rObject) {
+        CPointer<CTensor<T>> spTensor;
+        CObject::createObject(spTensor);
+        rObject = spTensor.getObject();
+        return spTensor;
+    }
+
 private:
     int m_nElementSize;
     CTaker<T*> m_spElementData;
     STensor m_spDimVector;
+};
+
+
+typedef CPlaceTensor* (*FCreateTensor)(SObject& spTensor);
+std::map<SData::tid, FCreateTensor> g_tensorFacotries = {
+    { SData::getBasicTypeIdentifier<bool>(), CTensor<bool>::createTensor },
+    { SData::getBasicTypeIdentifier<char>(), CTensor<char>::createTensor },
+    { SData::getBasicTypeIdentifier<unsigned char>(), CTensor<unsigned char>::createTensor },
+    { SData::getBasicTypeIdentifier<short>(), CTensor<short>::createTensor },
+    { SData::getBasicTypeIdentifier<int>(), CTensor<int>::createTensor },
+    { SData::getBasicTypeIdentifier<long>(), CTensor<long>::createTensor },
+    { SData::getBasicTypeIdentifier<float>(), CTensor<float>::createTensor },
+    { SData::getBasicTypeIdentifier<double>(), CTensor<double>::createTensor },
 };
 
 //
@@ -133,38 +155,16 @@ class CTensorFactory : public CObject, STensor::ITensorFactory {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://ITensor
-    template<typename TType> CPlaceTensor* createTensor(SObject& rObject) {
-        CPointer<CTensor<TType>> spTensor;
-        CObject::createObject(spTensor);
-        rObject = spTensor.getObject();
-        return spTensor;
-    }
-    
-    CPlaceTensor* createTensor(SData::DataType eElementType, SObject& rObject) {
-        switch(eElementType) {
-            case SData::DATATYPE_BOOL:
-                return createTensor<bool>(rObject);
-            case SData::DATATYPE_CHAR:
-                return createTensor<char>(rObject);
-            case SData::DATATYPE_UCHAR:
-                return createTensor<unsigned char>(rObject);
-            case SData::DATATYPE_SHORT:
-                return createTensor<short>(rObject);
-            case SData::DATATYPE_INT:
-                return createTensor<int>(rObject);
-            case SData::DATATYPE_LONG:
-                return createTensor<long>(rObject);
-            case SData::DATATYPE_FLOAT:
-                return createTensor<float>(rObject);
-            case SData::DATATYPE_DOUBLE:
-                return createTensor<double>(rObject);
-            case SData::DATATYPE_OBJECT:
-                return createTensor<SObject>(rObject);
+    CPlaceTensor* createTensor(SData::tid tid, SObject& rObject) {
+        std::map<SData::tid, FCreateTensor>::iterator it = g_tensorFacotries.find(tid);
+        if( it != g_tensorFacotries.end() ) {
+            return (*(it->second))(rObject);
         }
+        
         return nullptr;
     }
 
-    STensor createVector( SData::DataType eElementType, int nElementSize, void* pElementData) {
+    STensor createVector( SData::tid eElementType, int nElementSize, void* pElementData) {
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {
@@ -175,7 +175,7 @@ public://ITensor
         return STensor();
     }
 
-    STensor createTensor( const STensor& spDimVector, SData::DataType eElementType, int nElementSize, void* pElementData){
+    STensor createTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData){
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {

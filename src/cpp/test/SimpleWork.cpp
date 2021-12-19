@@ -134,29 +134,53 @@ int testWriteFile() {
 }
 
 
-void fun(const CData& data) {
-     if( data.hasData<int>() ) {
-        std::cout << "i get the integer." << data.getData<int>();
-     }
-     if(data.hasData<double>() ) {
-         std::cout << "i get the double." << data.getData<double>();
-     }
- }
+struct FAA {
+    SIMPLEWORK_PDATAKEY("FAA")
+
+    int i;
+};
+
+struct FBB {
+    SIMPLEWORK_PDATAKEY(FAA::__getClassKey())
+
+    double i; 
+};
+
+void fun(const PData& r) {
+    CStructData<FAA> ir(r);
+    if(ir.isThisType()) {
+        const FAA* pInt = ir.getDataPtr();
+        std::cout << "int found:  ";
+    }
+    CStructData<FBB> dr(r);
+    if(dr.isThisType()) {
+        const FBB* pDouble = dr.getDataPtr();
+        std::cout << "double found:  ";
+    }
+}
 
 int main(int argc, char *argv[]){
 
+    FAA a = { 10 };
+    FBB b = { 20 };
+    fun(CStructData<FAA>(a));
+    fun(CStructData<FBB>(b));
+    unsigned int la = SData::getBasicTypeIdentifier<int>();
+    //unsigned long lb = SData::getStructTypeIdentifier("aaaaaaaaaaaaaaaafadfasdf");
+    //unsigned long lc = SData::getStructTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
+    //unsigned long ld = SData::getStructTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
     //testWriteFile();
-    testPlayFile();
+    //testPlayFile();
 
     /*
     int i=10;
-    CData s(i);
-    CData * pData = new CData(i);
+    CStructData s(i);
+    CStructData * pData = new CStructData(i);
     fun(s);
-    fun(CData(i));
-    fun(CData(20));
+    fun(CStructData(i));
+    fun(CStructData(20));
     const int* pPtr = s.getPtr<int>();
-    //fun(CData(10));
+    //fun(CStructData(10));
     */
     return 0;
 }

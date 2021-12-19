@@ -9,65 +9,61 @@ __SimpleWork_Core_Namespace_Enter__
 class SObject;
 
 //
-// 基础类型定义
+// 数据类，目前还不成熟，还需要思考
 //
-struct SData {
-    enum DataType{
-        DATATYPE_UNKNOWN  = 0,
-        DATATYPE_BOOL     = 101,
-        DATATYPE_CHAR     = 102,
-        DATATYPE_UCHAR    = 103,
-        DATATYPE_SHORT    = 104,
-        DATATYPE_INT      = 106,
-        DATATYPE_LONG     = 108,
-        DATATYPE_FLOAT    = 201,
-        DATATYPE_DOUBLE   = 202,
-        DATATYPE_OBJECT   = 301,
-    };
+SIMPLEWORK_INTERFACECLASS_ENTER0(Data)
+public:
+    typedef unsigned int tid;
 
-    template<typename T> static DataType getType() {
-        static DataType s_eRawType = getRawType<T>();
-        return s_eRawType;
-    };
-    static bool isPuryMemoryType(DataType eDt) {
-        switch(eDt) {
-            case DATATYPE_BOOL:
-            case DATATYPE_CHAR:
-            case DATATYPE_UCHAR:
-            case DATATYPE_SHORT:
-            case DATATYPE_INT:
-            case DATATYPE_LONG:
-            case DATATYPE_FLOAT:
-            case DATATYPE_DOUBLE:
-                return true;
-        }
-        return false;
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IData", 211219)
+    SIMPLEWORK_INTERFACE_LEAVE
+
+
+    SIMPLEWORK_INTERFACECLASS_ENTER(DataFactory, "sw.core.DataFactory")
+        SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IDataFactory", 211206)
+        
+            //获取指定名字数据类型对应的数据类型ID
+            virtual tid getTypeIdentifier(const char* szDataTypeKey) = 0;
+
+        SIMPLEWORK_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACECLASS_LEAVE(DataFactory)
+
+    template<typename TStructType> static tid getStructTypeIdentifier(){
+        static tid s_tid = getFactory()->getTypeIdentifier(TStructType::__getClassKey());
+        return s_tid;
+    }
+    template<typename TBasicType> static tid getBasicTypeIdentifier(){
+        static tid s_tid = getFactory()->getTypeIdentifier(getBasicTypeKey<TBasicType>());
+        return s_tid;;
     }
 
 private:
-    template<typename T> static DataType getRawType() {
+    template<typename T> static const char* getBasicTypeKey() {
         if(typeid(T) == typeid(bool)) {
-            return SData::DATATYPE_BOOL;
+            return "sw.core.Bool";
         } else if(typeid(T) == typeid(char)) {
-            return SData::DATATYPE_CHAR;        
+            return "sw.core.Char";
         } else if(typeid(T) == typeid(unsigned char)) {
-            return SData::DATATYPE_UCHAR;
+            return "sw.core.UChar";
         } else if(typeid(T) == typeid(int)) {
-            return SData::DATATYPE_INT;
+            return "sw.core.Int";
         } else if(typeid(T) == typeid(short)) {
-            return SData::DATATYPE_SHORT;
+            return "sw.core.Short";
         } else if(typeid(T) == typeid(long)) {
-            return SData::DATATYPE_LONG;
+            return "sw.core.Long";
         } else if(typeid(T) == typeid(float)) {
-            return SData::DATATYPE_FLOAT;
+            return "sw.core.Float";
         } else if(typeid(T) == typeid(double)) {
-            return SData::DATATYPE_DOUBLE;
-        }else if(typeid(T) == typeid(SObject)) {
-            return SData::DATATYPE_OBJECT;
+            return "sw.core.Double";
         }
-        return SData::DATATYPE_UNKNOWN;
-    };
-};
+        return nullptr;
+    }
+
+    static SDataFactory& getFactory() {
+        static SDataFactory g_factory = SObject::createObject<SDataFactory>();
+        return g_factory;
+    }
+SIMPLEWORK_INTERFACECLASS_LEAVE(Data)
 
 __SimpleWork_Core_Namespace_Leave__
 
