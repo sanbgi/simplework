@@ -23,10 +23,10 @@ public:
     int initAudio(AVFormatContext* pFormatContext, PAvStreaming* pSrc);
     int open(AVFormatContext* pFormatContext);
     int close(AVFormatContext* pFormatContext);
-    int writeFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
+    int pushFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeVideoFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeAudioFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
-    int writeFrame(AVFormatContext* pFormatContext, AVFrame* pFrame);
+    int pushFrame(AVFormatContext* pFormatContext, AVFrame* pFrame);
     int visit(const PAvFrame* pFrame);
 
 public:

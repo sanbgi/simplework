@@ -15,7 +15,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvOut, "sw.av.AvOut")
         //
         //  写入帧数据，没有则表示关闭
         //
-        virtual int writeFrame(const PAvFrame* pFrame) = 0;
+        virtual int pushFrame(const PAvFrame* pFrame) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

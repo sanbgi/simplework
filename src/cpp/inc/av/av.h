@@ -11,7 +11,9 @@
 #define SIMPLEWORK_AV_NAMESPACE_LEAVE }}
 
 #include "PAvFrame.h"
+#include "PAvSample.h"
 #include "PAvStreaming.h"
+
 #include "SAvIn.h"
 #include "SAvOut.h"
 #include "SAvFilter.h"

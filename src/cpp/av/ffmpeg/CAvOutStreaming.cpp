@@ -286,7 +286,7 @@ int CAvOutStreaming::close(AVFormatContext* pFormatContext) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
+int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
     if(pFrame) {
         if(pFrame->streamingId == m_iStreamingId ) {
             m_pFormatContext = pFormatContext;
@@ -295,7 +295,7 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const PAvFrame*
         return SError::ERRORTYPE_SUCCESS;
         
     }
-    return writeFrame(pFormatContext, (AVFrame*)nullptr);
+    return pushFrame(pFormatContext, (AVFrame*)nullptr);
 }
 
 int CAvOutStreaming::visit(const PAvFrame* pFrame) {
@@ -324,10 +324,10 @@ int CAvOutStreaming::visit(const PAvFrame* pFrame) {
     if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio)
         pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
 
-    return writeFrame(m_pFormatContext, pAVFrame);
+    return pushFrame(m_pFormatContext, pAVFrame);
 }
 
-int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFrame) {
+int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, AVFrame* pAVFrame) {
     
     //
     // 压缩数据

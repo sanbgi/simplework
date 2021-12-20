@@ -53,7 +53,7 @@ public:
     }
 
 
-    int writeFrame(const PAvFrame* pFrame) {
+    int pushFrame(const PAvFrame* pFrame) {
         if(pFrame == nullptr) {
             return close();
         }

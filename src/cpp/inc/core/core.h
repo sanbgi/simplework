@@ -32,39 +32,14 @@
         SIMPLEWORK_CORE_NAMESPACE::SPointer<IFace> __autoPtr;\
     public: \
         inline S##className(){}\
-        inline S##className(IFace* pFace) { \
-            __autoPtr.setPtr(pFace);\
-        }\
-        inline S##className(const S##className& src) {\
-            __autoPtr.setPtr(src.getPtr());\
-        }\
-        inline const S##className& operator=(const S##className& src) {\
-            __autoPtr.setPtr(src.getPtr()); \
-            return *this; \
-        }\
-        template<typename Q> inline S##className(const Q& src) {\
-            __autoPtr.setPtr(src.getPtr());\
-        }\
-        template<typename Q> inline const S##className& operator=(const Q& src) {\
-            __autoPtr.setPtr(src.getPtr());\
-            return *this;\
-        }\
-    public:\
-        inline IFace* getPtr() const { \
-            return __autoPtr.getPtr(); \
-        }\
-        inline void setPtr(IFace* pPtr) {\
-            __autoPtr.setPtr(pPtr);\
-        }\
-        inline IFace* operator->() const {\
-            return __autoPtr.getPtr(); \
-        }\
-        inline operator bool() const {\
-            return __autoPtr;\
-        }\
-        inline void release() {\
-            __autoPtr.release();\
-        }\
+        inline S##className(IFace* pFace) { __autoPtr.setPtr(pFace); }\
+        template<typename Q> inline S##className(const Q& src) { __autoPtr.setPtr(src.getPtr()); }\
+        template<typename Q> inline const S##className& operator=(const Q& src) { __autoPtr.setPtr(src.getPtr()); return *this; }\
+        inline IFace* getPtr() const { return __autoPtr.getPtr(); }\
+        inline void setPtr(IFace* pPtr) { __autoPtr.setPtr(pPtr); }\
+        inline IFace* operator->() const { return __autoPtr.getPtr(); }\
+        inline operator bool() const { return __autoPtr; }\
+        inline void release() { __autoPtr.release(); }\
     public:\
         static inline S##className wrapPtr(IFace* pPtr) {\
             S##className object;\
@@ -98,6 +73,7 @@
 #include "IObject.h"
 #include "SObject.h"
 #include "SData.h"
+#include "SPipe.h"
 #include "SError.h"
 #include "SModule.h"
 #include "SFactory.h"
@@ -124,14 +100,14 @@
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
+        int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return SError::ERRORTYPE_FAILURE; \
     };
 
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
+        int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterfaceClass) \
         if( strcmp(szInterfaceKey, TInterfaceClass::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
@@ -147,7 +123,7 @@
                 return SIMPLEWORK_CORE_NAMESPACE::SError::ERRORTYPE_FAILURE;\
         }
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TSuperClass) \
-        return TSuperClass::__swConvertTo(szInterfaceKey, nInterfaceVer, visitor); \
+        return TSuperClass::__swGetInterfacePtr(szInterfaceKey, nInterfaceVer, visitor); \
     };
 
 #include "CData.h"

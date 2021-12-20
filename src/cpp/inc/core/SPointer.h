@@ -90,12 +90,12 @@ private:
             if(pDest) {
                 initPtr(pDest);
             }else{
-                struct CForceSetter : public IVisitor<void*> {
-                    CForceSetter(SPointer* pAutoPtr) : _pPtr(pAutoPtr){}
+                struct CPtrVisitor : public IVisitor<void*> {
+                    CPtrVisitor(SPointer* pAutoPtr) : _pPtr(pAutoPtr){}
                     int visit(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
                     SPointer* _pPtr;
-                }setter(this);
-                pPtr->__swConvertTo(TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), setter);
+                }visitor(this);
+                pPtr->__swGetInterfacePtr( TInterface::getInterfaceKey(), TInterface::getInterfaceVer(), visitor);
             }
         }
     }

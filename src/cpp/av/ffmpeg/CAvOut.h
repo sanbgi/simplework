@@ -18,7 +18,7 @@ public:
     int initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings);
 
 public:
-    int writeFrame(const PAvFrame* pFrame);
+    int pushFrame(const PAvFrame* pFrame);
     int close();
 
 public:

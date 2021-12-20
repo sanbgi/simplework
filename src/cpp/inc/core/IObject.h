@@ -12,11 +12,10 @@ public:
     static inline int getInterfaceVer() { return 211212; }
 
 private:
-    private:
-        virtual int __swAddRef() = 0;
-        virtual int __swDecRef() = 0;
-        virtual int __swConvertTo(const char* szInterfaceKey, int nInterfaceVer, IVisitor<void*>& funSaver) = 0;
-        template<typename T> friend class SPointer;
+    virtual int __swAddRef() = 0;
+    virtual int __swDecRef() = 0;
+    virtual int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, IVisitor<void*>& funSaver) = 0;
+    template<typename T> friend class SPointer;
 };
 
 __SimpleWork_Core_Namespace_Leave__

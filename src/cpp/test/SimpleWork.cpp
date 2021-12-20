@@ -87,11 +87,11 @@ int testPlayFile() {
         switch(pFrame->sampleMeta.sampleType) {
         case EAvSampleType::AvSampleType_Audio:
             std::cout << "audioVideo timestamp:" << pFrame->timeStamp << "\n";
-            return ctx.audio->writeFrame(pFrame);
+            return ctx.audio->pushFrame(pFrame);
 
         case  EAvSampleType::AvSampleType_Video:
             std::cout << "frameVideo timestamp:" << pFrame->timeStamp << "\n";
-            return ctx.video->writeFrame(pFrame);
+            return ctx.video->pushFrame(pFrame);
         }
         return SError::ERRORTYPE_FAILURE;
     })) == SError::ERRORTYPE_SUCCESS ) {
@@ -100,7 +100,7 @@ int testPlayFile() {
             break;
         }
     }
-    return outCtx.video->writeFrame(nullptr);
+    return outCtx.video->pushFrame(nullptr);
 }
 
 int testWriteFile() {
@@ -121,15 +121,15 @@ int testWriteFile() {
     while(avIn->readFrame(CPVisitor<SAvOut, const PAvFrame*>(avOut, [](SAvOut avOut, const PAvFrame* pFrame) -> int{
         if(pFrame == nullptr) {
             //不再继续读取
-            avOut->writeFrame(pFrame);
+            avOut->pushFrame(pFrame);
             return SError::ERRORTYPE_FAILURE;
         }
         std::cout << "timestamps:  " << pFrame->timeStamp << "\n";
-        return avOut->writeFrame(pFrame);
+        return avOut->pushFrame(pFrame);
     })) == SError::ERRORTYPE_SUCCESS ) {
         nframe++;
     }
-    avOut->writeFrame(nullptr);
+    avOut->pushFrame(nullptr);
     return SError::ERRORTYPE_SUCCESS;
 }
 

@@ -1,7 +1,6 @@
 #ifndef __SimpleWork_PData_h__
 #define __SimpleWork_PData_h__
 
-#include <typeinfo>
 #include "core.h"
 
 __SimpleWork_Core_Namespace_Enter__
@@ -13,6 +12,7 @@ __SimpleWork_Core_Namespace_Enter__
 //  通过模板类CStructData来使用，具体使用说明，请参考CStructData
 //
 struct PData {
+
 protected:
     void* __pInternalPointer;
 
