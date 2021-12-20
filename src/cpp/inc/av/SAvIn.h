@@ -36,11 +36,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvIn)
             //打开摄像头
             virtual SAvIn openAudioDevice(const char* szName) = 0;
 
-            //获取系统音频输入设备
-            virtual int getAudioDevice(SAudioDevice& rDevice) = 0;
-
-            //获取系统视频输入设备
-            virtual int getVideoDevice(SVideoDevice& rDevice) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(AvInFactory)
 
@@ -53,12 +48,6 @@ public:
     }
     static inline SAvIn openAudioDevice(const char* szDeviceName) {
         return getFactory()->openAudioDevice(szDeviceName);
-    }
-    static inline int getAudioDevice(SAudioDevice& rDevice) {
-        return getFactory()->getAudioDevice(rDevice);
-    }
-    static inline int getVideoDevice(SVideoDevice& rDevice) {
-        return getFactory()->getVideoDevice(rDevice);
     }
 
 private:

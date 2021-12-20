@@ -234,7 +234,7 @@ int CAvFilter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     releaseAudioData();
 
     int nBufSize;
-    int nTargetSamples = (int64_t)pSrc->nSamples * targetRate / sourceRate + 256;
+    int nTargetSamples = (int64_t)pSrc->nWidth * targetRate / sourceRate + 256;
     if( nBufSize = av_samples_alloc_array_and_samples( &m_ppAudioData, nullptr,
                         targetChannels, nTargetSamples, 
                         targetFormat, 0) <0 ){
@@ -250,7 +250,7 @@ int CAvFilter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     const uint8_t **in = (const uint8_t **)pSrc->ppPlanes;
 
     // 音频重采样：返回值是重采样后得到的音频数据中单个声道的样本数
-    int nb_samples = swr_convert(m_spSwrCtx, m_ppAudioData, nTargetSamples, in, pSrc->nSamples);
+    int nb_samples = swr_convert(m_spSwrCtx, m_ppAudioData, nTargetSamples, in, pSrc->nWidth);
     if (nb_samples < 0) {
         printf("swr_convert() failed\n");
         releaseAudioCtx();

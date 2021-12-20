@@ -15,8 +15,5 @@
 #include "SAvIn.h"
 #include "SAvOut.h"
 #include "SAvFilter.h"
-#include "SAudioDevice.h"
-#include "SVideoDevice.h"
-
 
 #endif//__SimpleWork_AV_h__

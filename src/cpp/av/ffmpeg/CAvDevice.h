@@ -2,6 +2,8 @@
 #define __SimpleWork_Av_CAvDevice_h__
 
 #include "av_ffmpeg.h"
+#include "SAudioDevice.h"
+#include "SVideoDevice.h"
 
 FFMPEG_NAMESPACE_ENTER
 

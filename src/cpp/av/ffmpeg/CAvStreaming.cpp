@@ -138,18 +138,51 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
 int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
     PAvFrame avFrame;
     avFrame.sampleMeta = m_sampleMeta;
-    // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
+
+    unsigned char* ppData[AV_NUM_DATA_POINTERS+1];
+    int pLineSize[AV_NUM_DATA_POINTERS+1];
+    avFrame.ppPlanes = ppData;
+    avFrame.pPlaneLineSizes = pLineSize;
+
+    //
+    // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据，这里面要注意，是否存在
+    //  planar audio，并且通道数超过8？如果存在这种情况，则这里的数据是存在丢失的
+    //
     int nPlanes = 0;
     for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
         nPlanes = i+1;
+        ppData[i] = pAvFrame->data[i];
+        pLineSize[i] = m_sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio ? 
+                            pAvFrame->linesize[0] :
+                            pAvFrame->linesize[i];
     }
+    ppData[nPlanes] = nullptr;
+    pLineSize[nPlanes] = 0;
+
     avFrame.nPlanes = nPlanes;
-    avFrame.ppPlanes = pAvFrame->data;
-    avFrame.pPlaneLineSizes = pAvFrame->linesize;
+    avFrame.ppPlanes = ppData;
+    avFrame.pPlaneLineSizes = pLineSize;
     avFrame.streamingId = getStreamingId();
-    avFrame.nSamples = pAvFrame->nb_samples;
     avFrame.timeRate = getTimeRate();
     avFrame.timeStamp = pAvFrame->pts;
+    switch(m_sampleMeta.sampleType) {
+        case EAvSampleType::AvSampleType_Audio:
+        {
+            avFrame.nWidth = pAvFrame->nb_samples;
+            avFrame.nHeight = 1;
+        }
+        break;
+
+        case EAvSampleType::AvSampleType_Video:
+        {
+            avFrame.nWidth = pAvFrame->width;
+            avFrame.nHeight = pAvFrame->height;
+        }
+        break;
+
+        default:
+            return SError::ERRORTYPE_FAILURE;
+    }
     return m_spFilter->putFrame(&avFrame, receiver);
 }
 

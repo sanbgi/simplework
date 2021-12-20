@@ -160,7 +160,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, PAvStreaming* pS
 }
 
 int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, PAvStreaming* pSrc) {
-        const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
+    const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
     if(pOutputFormat == nullptr || pOutputFormat->audio_codec == AV_CODEC_ID_NONE) {
         return SError::ERRORTYPE_FAILURE;
     }
@@ -317,7 +317,7 @@ int CAvOutStreaming::visit(const PAvFrame* pFrame) {
         pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
  
     //音频
-    pAVFrame->nb_samples = pFrame->nSamples;
+    pAVFrame->nb_samples = pFrame->nWidth;
     pAVFrame->sample_rate = sampleMeta.audioRate;
     pAVFrame->channels = sampleMeta.audioChannels;
     pAVFrame->extended_data = &pAVFrame->data[0];

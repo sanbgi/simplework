@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_AV_VideoDevice_h__
 #define __SimpleWork_AV_VideoDevice_h__
 
-#include "av.h"
+#include "av_ffmpeg.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
