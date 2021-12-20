@@ -143,11 +143,11 @@ int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
     for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
         nPlanes = i+1;
     }
-    avFrame.samplePlanes = nPlanes;
-    avFrame.planeDatas = pAvFrame->data;
-    avFrame.planeLineSizes = pAvFrame->linesize;
+    avFrame.nPlanes = nPlanes;
+    avFrame.ppPlanes = pAvFrame->data;
+    avFrame.pPlaneLineSizes = pAvFrame->linesize;
     avFrame.streamingId = getStreamingId();
-    avFrame.samples = pAvFrame->nb_samples;
+    avFrame.nSamples = pAvFrame->nb_samples;
     avFrame.timeRate = getTimeRate();
     avFrame.timeStamp = pAvFrame->pts;
     return m_spFilter->putFrame(&avFrame, receiver);

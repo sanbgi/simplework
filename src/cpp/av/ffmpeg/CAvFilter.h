@@ -52,18 +52,18 @@ private:
         int m_nFormat;
     };
 
-public://Image
+private://Image
     CTaker<SwsContext*> m_spSwsContext;
     uint8_t *m_pVideoData[AV_NUM_DATA_POINTERS];
     int m_pVideoLinesizes[AV_NUM_DATA_POINTERS];
 
-public://Audio
+private://Audio
     CTaker<SwrContext*> m_spSwrCtx;
     uint8_t **m_ppAudioData;
     int m_pAudioLinesize[AV_NUM_DATA_POINTERS];
     int m_nAudioSamples;
 
-public:
+private:
     int m_nPlanes;
     PAvSample m_targetSample;
     CFormat m_targetFormat;
@@ -79,10 +79,12 @@ public:
     void releaseVideoData();
     void releaseAudioData();
 
-public:
+private:
     int initFilter(const PAvSample& targetSample);
-    int convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
-    int convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
+
+private:
+    int convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
+    int convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
 };
 
 FFMPEG_NAMESPACE_LEAVE

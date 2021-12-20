@@ -103,7 +103,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, PAvStreaming* pS
             * timebase should be 1/framerate and timestamp increments should be
             * identical to 1. */
         pAvStream->time_base = { 1, pSrc->timeRate };
-        pAvStream->duration = pSrc->duration;
+        pAvStream->duration = pSrc->timeDuration;
         pCodecContext->time_base = pAvStream->time_base;
 
         pCodecContext->gop_size      = 12; /* emit one intra frame every twelve frames at most */
@@ -219,7 +219,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, PAvStreaming* pS
         }
         pCodecContext->channels = av_get_channel_layout_nb_channels(pCodecContext->channel_layout);
         pAvStream->time_base = (AVRational){ 1, pSrc->timeRate };
-        pAvStream->duration = pSrc->duration;
+        pAvStream->duration = pSrc->timeDuration;
 
         pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
         //由于特定的编码器只支持特定的数据类型，所以，需要修改目标像素格式为编码器需要的格式
@@ -304,9 +304,9 @@ int CAvOutStreaming::visit(const PAvFrame* pFrame) {
     //
     PAvSample sampleMeta = pFrame->sampleMeta;
     AVFrame* pAVFrame = m_pAVFrame;
-    for(int i=0; i<pFrame->samplePlanes; i++) {
-        pAVFrame->data[i] = pFrame->planeDatas[i];
-        pAVFrame->linesize[i] = pFrame->planeLineSizes[i];
+    for(int i=0; i<pFrame->nPlanes; i++) {
+        pAVFrame->data[i] = pFrame->ppPlanes[i];
+        pAVFrame->linesize[i] = pFrame->pPlaneLineSizes[i];
     }
     pAVFrame->pts = pFrame->timeStamp;
 
@@ -317,7 +317,7 @@ int CAvOutStreaming::visit(const PAvFrame* pFrame) {
         pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
  
     //音频
-    pAVFrame->nb_samples = pFrame->samples;
+    pAVFrame->nb_samples = pFrame->nSamples;
     pAVFrame->sample_rate = sampleMeta.audioRate;
     pAVFrame->channels = sampleMeta.audioChannels;
     pAVFrame->extended_data = &pAVFrame->data[0];

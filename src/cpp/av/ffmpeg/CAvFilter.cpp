@@ -7,10 +7,10 @@ FFMPEG_NAMESPACE_ENTER
 int CAvFilter::putFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     switch(m_targetSample.sampleType) {
         case EAvSampleType::AvSampleType_Audio:
-            return convertAudio(AV_SAMPLE_FMT_NONE, pSrc, visitor);
+            return convertAudio(pSrc, visitor);
 
         case EAvSampleType::AvSampleType_Video:
-            return convertVideo(AV_PIX_FMT_NONE, pSrc, visitor);
+            return convertVideo(pSrc, visitor);
     }
     return SError::ERRORTYPE_FAILURE;
 }
@@ -81,15 +81,14 @@ void CAvFilter::releaseAudioData() {
     }
 }
 
-int CAvFilter::convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFilter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     const PAvSample& srcMeta = pSrc->sampleMeta;
 
     AVPixelFormat targetFormat = (AVPixelFormat)m_targetFormat.m_nFormat;
     int targetWidth = m_targetFormat.m_nWidth;
     int targetHeight = m_targetFormat.m_nHeight;
 
-    if(sourceFormat == AV_PIX_FMT_NONE)
-        sourceFormat = CAvSampleType::toPixFormat(srcMeta.sampleFormat);
+    AVPixelFormat sourceFormat = CAvSampleType::toPixFormat(srcMeta.sampleFormat);
     int sourceWidth = srcMeta.videoWidth;
     int sourceHeight = srcMeta.videoHeight;
 
@@ -148,9 +147,9 @@ int CAvFilter::convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PA
         //SwsContext *swsContext 转换上下文
         m_spSwsContext,
         //要转换的数据内容
-        pSrc->planeDatas,
+        pSrc->ppPlanes,
         //数据中每行的字节长度
-        pSrc->planeLineSizes,
+        pSrc->pPlaneLineSizes,
         0,
         sourceHeight,
         //转换后目标图像数据存放在这里
@@ -171,21 +170,20 @@ int CAvFilter::convertVideo(AVPixelFormat sourceFormat, const PAvFrame* pSrc, PA
 
     PAvFrame targetFrame = *pSrc;
     targetFrame.sampleMeta = m_targetSample;
-    targetFrame.samplePlanes = m_nPlanes;
-    targetFrame.planeDatas = m_pVideoData;
-    targetFrame.planeLineSizes = m_pVideoLinesizes;
+    targetFrame.nPlanes = m_nPlanes;
+    targetFrame.ppPlanes = m_pVideoData;
+    targetFrame.pPlaneLineSizes = m_pVideoLinesizes;
     return visitor->visit(&targetFrame);
 }
 
-int CAvFilter::convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFilter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     const PAvSample& srcMeta = pSrc->sampleMeta;
 
     AVSampleFormat targetFormat = (AVSampleFormat)m_targetFormat.m_nFormat;
     int targetChannels = m_targetFormat.m_nChannels;
     int targetRate = m_targetFormat.m_nRate;
 
-    if(sourceFormat == AV_SAMPLE_FMT_NONE)
-        sourceFormat = CAvSampleType::toSampleFormat(srcMeta.sampleFormat);
+    AVSampleFormat sourceFormat = CAvSampleType::toSampleFormat(srcMeta.sampleFormat);
     int sourceRate = srcMeta.audioRate;
     int sourceChannels = srcMeta.audioChannels;
 
@@ -236,7 +234,7 @@ int CAvFilter::convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, P
     releaseAudioData();
 
     int nBufSize;
-    int nTargetSamples = (int64_t)pSrc->samples * targetRate / sourceRate + 256;
+    int nTargetSamples = (int64_t)pSrc->nSamples * targetRate / sourceRate + 256;
     if( nBufSize = av_samples_alloc_array_and_samples( &m_ppAudioData, nullptr,
                         targetChannels, nTargetSamples, 
                         targetFormat, 0) <0 ){
@@ -249,10 +247,10 @@ int CAvFilter::convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, P
     //  对于planar audio，都是指向指针数组的指针，其中数组中每一个指针指向一个channel的数据
     //  对于package audio，同样是指向指针数组额指针，不过，指针数组中，只有第一个指针有效，指向具体数据
     //
-    const uint8_t **in = (const uint8_t **)pSrc->planeDatas;
+    const uint8_t **in = (const uint8_t **)pSrc->ppPlanes;
 
     // 音频重采样：返回值是重采样后得到的音频数据中单个声道的样本数
-    int nb_samples = swr_convert(m_spSwrCtx, m_ppAudioData, nTargetSamples, in, pSrc->samples);
+    int nb_samples = swr_convert(m_spSwrCtx, m_ppAudioData, nTargetSamples, in, pSrc->nSamples);
     if (nb_samples < 0) {
         printf("swr_convert() failed\n");
         releaseAudioCtx();
@@ -271,9 +269,9 @@ int CAvFilter::convertAudio(AVSampleFormat sourceFormat, const PAvFrame* pSrc, P
 
     PAvFrame targetFrame = *pSrc;
     targetFrame.sampleMeta = m_targetSample;
-    targetFrame.samplePlanes = m_nPlanes;
-    targetFrame.planeDatas = m_ppAudioData;
-    targetFrame.planeLineSizes = m_pAudioLinesize;
+    targetFrame.nPlanes = m_nPlanes;
+    targetFrame.ppPlanes = m_ppAudioData;
+    targetFrame.pPlaneLineSizes = m_pAudioLinesize;
     return visitor->visit(&targetFrame);
 }
 

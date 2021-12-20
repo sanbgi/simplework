@@ -74,8 +74,8 @@ public:
     int visit(const PAvFrame* pFrame) {
         if(pFrame) {
             int ret = SDL_QueueAudio(
-                            m_iDeviceID, pFrame->planeDatas[0], 
-                            pFrame->planeLineSizes[0]);
+                            m_iDeviceID, pFrame->ppPlanes[0], 
+                            pFrame->pPlaneLineSizes[0]);
         }
         return SError::ERRORTYPE_SUCCESS;
     }

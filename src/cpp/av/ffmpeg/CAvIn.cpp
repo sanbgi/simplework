@@ -22,7 +22,7 @@ int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         AVStream* pStream = m_spOpenedCtx->streams[i];
         PAvStreaming avStream;
-        avStream.duration = pStream->duration;
+        avStream.timeDuration = pStream->duration;
         avStream.streamingId = pStream->index;
         avStream.timeRate = pStream->time_base.den/pStream->time_base.num;
         AVCodecParameters* pCodecContext = pStream->codecpar;

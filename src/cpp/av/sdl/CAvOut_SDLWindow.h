@@ -83,8 +83,8 @@ public:
         srcRect.h = height;
         dstRect.w = m_nWinWidth;
         dstRect.h = m_nWinHeight;
-        void *pixels = pFrame->planeDatas[0];
-        int pitch = pFrame->planeLineSizes[0];
+        void *pixels = pFrame->ppPlanes[0];
+        int pitch = pFrame->pPlaneLineSizes[0];
         SDL_UpdateTexture(spTexture, &srcRect, pixels, pitch);
 
         //清除Renderer

@@ -36,9 +36,9 @@ SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
 
 int testPlayFile() {
-    //SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
+    SAvIn avIn = SAvIn::openVideoFile("d:/tt.mkv");
     //SAvIn avIn = SAvIn::openVideoDevice("vfwcap");
-    SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
+    //SAvIn avIn = SAvIn::openVideoDevice("video=Integrated Camera");
     //SAvIn avIn = SAvIn::openAudioDevice("audio=麦克风阵列 (Realtek(R) Audio)");
     std::vector<PAvStreaming> arrStreamings;
     CPVisitor<std::vector<PAvStreaming>*, const PAvStreaming*> visitor(&arrStreamings, [](std::vector<PAvStreaming>* pArr, const PAvStreaming* pStreaming)->int{
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]){
     //unsigned long lc = SData::getStructTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
     //unsigned long ld = SData::getStructTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
     //testWriteFile();
-    //testPlayFile();
+    testPlayFile();
 
     /*
     int i=10;

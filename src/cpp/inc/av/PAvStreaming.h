@@ -24,7 +24,7 @@ struct PAvStreaming {
     //
     // 流的长度，对于编码的时候，0表示不确定视频时长
     //
-    int duration;
+    int timeDuration;
 
     //
     // 样本描述类型

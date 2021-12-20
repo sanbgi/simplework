@@ -18,7 +18,7 @@ struct PAvStreaming;
 //
 //  数据格式：
 //      视频数据主要以帧的形式存储，每一帧数据由多个存储平面组成，其平面数据的指针
-//  存储在planeDatas中，对于音视频，如果没有被分解为不同的分量，则一般只有第一个指
+//  存储在ppPlanes中，对于音视频，如果没有被分解为不同的分量，则一般只有第一个指
 //  针有效存储了所有的数据，比如：
 //      1，视频的RGB格式数据，则由一个长度为height*width*3的unsigned char数组组成
 //      2，音频的单声道U8数据，则由一个长度为：样本数*1*1的unsigned char数组组成
@@ -46,27 +46,27 @@ struct PAvFrame {
     long timeStamp;
 
     //
-    // 当前帧样本数量
+    // 当前帧样本数量（及在多少个时刻进行了采样）
     //      音频：单声道采样点数
     //      视频：1
     //
-    int samples;
+    int nSamples;
 
     //
     // 样本数据包含多少数据面
     //
-    int samplePlanes;
+    int nPlanes;
     //
-    // 指针数组，其长度为和samplePlanes一致，其每一项内容为指向数据面的指针
+    // 指针数组，其长度为和nPlanes一致，其每一项内容为指向数据面的指针
     //
-    unsigned char** planeDatas;
+    unsigned char** ppPlanes;
     //
-    // 数据长度数组，其长度为和samplePlanes一致，单位为字节数，取值为：
+    // 数据长度数组，其长度为和nPlanes一致，单位为字节数，取值为：
     //
     //      视频：一行视频所占用字节数
     //      音频：一个声道数据占用的字节数
     //
-    int* planeLineSizes;
+    int* pPlaneLineSizes;
 
     typedef IVisitor<const PAvFrame*>* FVisitor;
 };
