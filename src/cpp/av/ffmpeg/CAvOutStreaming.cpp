@@ -137,7 +137,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
         sampleMeta.videoHeight = pCodecContext->height;
         sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->pix_fmt;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
     }
@@ -241,7 +241,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
         sampleMeta.audioRate = pCodecContext->sample_rate;
         sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->sample_fmt;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
     }

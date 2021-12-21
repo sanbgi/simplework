@@ -127,7 +127,7 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         break;
     }
 
-    if( SAvFilter::createFilter(m_sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS) {
+    if( SAvFrameConverter::createFilter(m_sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
 

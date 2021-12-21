@@ -1,10 +1,10 @@
 
-#include "CAvFilter.h"
+#include "CAvFrameConverter.h"
 #include "CAvSampleType.h"
 
 FFMPEG_NAMESPACE_ENTER
 
-int CAvFilter::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
+int CAvFrameConverter::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
     CData<PAvFrame> avFrame(rData);
     if(avFrame.isThisType()) {
         const PAvFrame* pAvFrame = avFrame.getDataPtr();
@@ -22,7 +22,7 @@ int CAvFilter::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
     return pReceiver->visit(rData);
 }
 
-int CAvFilter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFrameConverter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     switch(m_targetSample.sampleType) {
         case EAvSampleType::AvSampleType_Audio:
             return convertAudio(pSrc, visitor);
@@ -33,28 +33,28 @@ int CAvFilter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     return SError::ERRORTYPE_FAILURE;
 }
 
-int CAvFilter::createFilter(const PAvSample& targetSample, SAvFilter& spFilter) {
+int CAvFrameConverter::createFilter(const PAvSample& targetSample, SAvFrameConverter& spFilter) {
 
-    CPointer<CAvFilter> spAvFilter;
-    CObject::createObject(spAvFilter);
-    if( spAvFilter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
+    CPointer<CAvFrameConverter> spAvFrameConverter;
+    CObject::createObject(spAvFrameConverter);
+    if( spAvFrameConverter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
-    spFilter.setPtr((IAvFilter*)spAvFilter);
+    spFilter.setPtr((IAvFrameConverter*)spAvFrameConverter);
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvFilter::createFilter(const PAvSample& targetSample, SPipe& spFilter) {
-    CPointer<CAvFilter> spAvFilter;
-    CObject::createObject(spAvFilter);
-    if( spAvFilter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
+int CAvFrameConverter::createFilter(const PAvSample& targetSample, SPipe& spFilter) {
+    CPointer<CAvFrameConverter> spAvFrameConverter;
+    CObject::createObject(spAvFrameConverter);
+    if( spAvFrameConverter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
-    spFilter.setPtr((IPipe*)spAvFilter);
+    spFilter.setPtr((IPipe*)spAvFrameConverter);
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvFilter::initFilter(const PAvSample& targetSample) {
+int CAvFrameConverter::initFilter(const PAvSample& targetSample) {
     CFormat fmt;
     switch(targetSample.sampleType) {
         case EAvSampleType::AvSampleType_Video:
@@ -73,43 +73,43 @@ int CAvFilter::initFilter(const PAvSample& targetSample) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-CAvFilter::CAvFilter(){
+CAvFrameConverter::CAvFrameConverter(){
 
     //表示缓存还未初始化
     m_pVideoData[0] = nullptr;
     m_ppAudioData = nullptr;
 }
 
-CAvFilter::~CAvFilter() {
+CAvFrameConverter::~CAvFrameConverter() {
     releaseVideoCtx();
     releaseAudioCtx();
 }
 
-void CAvFilter::releaseVideoCtx() {
+void CAvFrameConverter::releaseVideoCtx() {
     releaseVideoData();
     m_spSwsContext.release();
 }
 
-void CAvFilter::releaseAudioCtx() {
+void CAvFrameConverter::releaseAudioCtx() {
     releaseAudioData();
     m_spSwrCtx.release();
 }
 
-void CAvFilter::releaseVideoData() {
+void CAvFrameConverter::releaseVideoData() {
     if(m_pVideoData[0] != nullptr) {
         av_freep(&m_pVideoData[0]);
         m_pVideoData[0] = nullptr;
     }
 }
 
-void CAvFilter::releaseAudioData() {
+void CAvFrameConverter::releaseAudioData() {
     if(m_ppAudioData) {
         av_freep(m_ppAudioData);
         m_ppAudioData = nullptr;
     }
 }
 
-int CAvFilter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     const PAvSample& srcMeta = pSrc->sampleMeta;
 
     AVPixelFormat targetFormat = (AVPixelFormat)m_targetFormat.m_nFormat;
@@ -204,7 +204,7 @@ int CAvFilter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     return visitor->visit(&targetFrame);
 }
 
-int CAvFilter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     const PAvSample& srcMeta = pSrc->sampleMeta;
 
     AVSampleFormat targetFormat = (AVSampleFormat)m_targetFormat.m_nFormat;

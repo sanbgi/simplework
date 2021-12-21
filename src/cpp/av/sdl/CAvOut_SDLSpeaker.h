@@ -97,7 +97,7 @@ public:
         specMeta.audioRate = m_specAudio.freq;
         specMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
         specMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFilter::createFilter(specMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFrameConverter::createFilter(specMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
 
@@ -155,7 +155,7 @@ private:
     SDL_AudioSpec m_specAudio;
     PAvSample m_targetSample;
     std::string m_strDeviceName;
-    SAvFilter m_spFilter;
+    SAvFrameConverter m_spFilter;
     bool m_bInitialized;
 };
 

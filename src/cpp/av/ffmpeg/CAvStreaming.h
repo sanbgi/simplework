@@ -2,7 +2,7 @@
 #define __SimpleWork_Av_CAvStream_h__
 
 #include "av_ffmpeg.h"
-#include "CAvFilter.h"
+#include "CAvFrameConverter.h"
 
 FFMPEG_NAMESPACE_ENTER
 
@@ -39,7 +39,7 @@ public:
     PAvSample m_sampleMeta;
 
 public:
-    SAvFilter m_spFilter;
+    SAvFrameConverter m_spFilter;
 
 public://Video
     int m_lastDimsize[3];

@@ -1,6 +1,6 @@
 
 #include "av.h"
-#include "ffmpeg/CAvFilter.h"
+#include "ffmpeg/CAvFrameConverter.h"
 #include "ffmpeg/CAvIn.h"
 #include "ffmpeg/CAvOut.h"
 #include "sdl/CAvOut_SDLWindow.h"

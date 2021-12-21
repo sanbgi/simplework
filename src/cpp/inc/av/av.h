@@ -14,7 +14,7 @@
 #include "PAvSample.h"
 #include "PAvStreaming.h"
 
-#include "SAvFilter.h"
+#include "SAvFrameConverter.h"
 #include "SAvFactory.h"
 
 #endif//__SimpleWork_AV_h__

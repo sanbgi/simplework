@@ -48,7 +48,7 @@ public:
     CTaker<AVFrame*> m_pAVFrame;
     CTaker<AVCodecContext*> m_spCodecCtx;
     AVCodec* m_pCodec;
-    SAvFilter m_spFilter;
+    SAvFrameConverter m_spFilter;
     AVFormatContext* m_pFormatContext;
 };
 

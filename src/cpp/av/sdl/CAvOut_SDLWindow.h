@@ -63,7 +63,7 @@ public:
             sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
             break;
         }
-        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
         return SError::ERRORTYPE_SUCCESS;
@@ -93,7 +93,7 @@ public:
         sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
         sampleMeta.videoWidth = nWidth;
         sampleMeta.videoHeight = nHeight;
-        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
         return SError::ERRORTYPE_SUCCESS;
@@ -170,7 +170,7 @@ public:
     }
 
 private:
-    SAvFilter m_spFilter;
+    SAvFrameConverter m_spFilter;
     SDL_Window* m_pWindow;
     SDL_Renderer* m_pRenderer;
     int m_nWinWidth;

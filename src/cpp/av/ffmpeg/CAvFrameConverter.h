@@ -1,25 +1,25 @@
-#ifndef __SimpleWork_av_ffmpeg_CAvFilter_h__
-#define __SimpleWork_av_ffmpeg_CAvFilter_h__
+#ifndef __SimpleWork_av_ffmpeg_CAvFrameConverter_h__
+#define __SimpleWork_av_ffmpeg_CAvFrameConverter_h__
 
 #include "av_ffmpeg.h"
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvFilter : public CObject, public IAvFilter, public IPipe {
+class CAvFrameConverter : public CObject, public IAvFrameConverter, public IPipe {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IAvFilter)
+        SIMPLEWORK_INTERFACE_ENTRY(IAvFrameConverter)
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IPipe
     int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
 
-public://IAvFilter
+public://IAvFrameConverter
     int pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
 
 public://For factory
-    static int createFilter(const PAvSample& targetSample, SAvFilter& spFilter);
+    static int createFilter(const PAvSample& targetSample, SAvFrameConverter& spFilter);
     static int createFilter(const PAvSample& targetSample, SPipe& spFilter);
 
 private:
@@ -75,8 +75,8 @@ private:
     CFormat m_lastSourceFormat;
 
 public:
-    CAvFilter();
-    ~CAvFilter();
+    CAvFrameConverter();
+    ~CAvFrameConverter();
     
     void release();
     void releaseVideoCtx();
@@ -94,4 +94,4 @@ private:
 
 FFMPEG_NAMESPACE_LEAVE
 
-#endif//__SimpleWork_av_ffmpeg_CAvFilter_h__
+#endif//__SimpleWork_av_ffmpeg_CAvFrameConverter_h__
