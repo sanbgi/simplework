@@ -4,8 +4,6 @@
 #include "av.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
-class SAudioDevice;
-class SVideoDevice;
 
 //
 // 对象工场对象的接口

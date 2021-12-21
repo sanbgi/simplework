@@ -6,10 +6,10 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvIn : public CObject, public IAvIn, public IPipe {
+class CAvIn : public CObject, public IPipe {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IAvIn)
+        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://IPipe

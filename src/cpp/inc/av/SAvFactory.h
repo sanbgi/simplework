@@ -12,12 +12,46 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
 
     SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvFactory", 011220)
 
+        //
+        //  创建视频文件读取管道，视频文件读取管道
+        //      输入数据：无论输入什么数据
+        //      输出数据：
+        //          1，如果是第一帧调用，则依次输出所有的PAvStreaming及第一帧音频或视频PAvFrame
+        //          2，如果不是第一帧调用，则输出一帧音频或视频
+        //
         virtual int openAvFileReader(const char* szFileName, SPipe& spPipe) = 0;
+        //
+        //  创建摄像头管道，输入输出同视频文件管道
+        //
         virtual int openVideoCapture(const char* szDeviceName, SPipe& spPipe) = 0;
+        //
+        //  创建音频录制管道，输入输出同视频文件管道
+        //
         virtual int openAudioCapture(const char* szDeviceName, SPipe& spPipe) = 0;
-        virtual int openAvConverter(PAvSample targetSample, SPipe& spPipe) = 0;
+        //
+        //  音视频帧转化器
+        //
+        virtual int openAvFrameConverter(PAvSample targetSample, SPipe& spPipe) = 0;
+        //
+        //  创建windows窗口管道，其管道
+        //      输入管道：PAvFrame
+        //      输出管道：无
+        //
         virtual int openWindow(const char* szWindowName, int nWidth, int nHeight, SPipe& spPipe) = 0;
+        //
+        //  创建音响管道
+        //      输入管道：
+        //          PAvStreaming：初始化音频设备
+        //          PAvFrame：需要播放的音频帧
+        //      输出管道：无
+        //
         virtual int openSpeaker(const char* szDeviceName, SPipe& spPipe) = 0;
+        //
+        //  创建视频文件写入管道
+        //      输入管道：
+        //          PAvStreaming（初始化音视频流信息）和
+        //          PAvFrame 音视频帧，nullptr意味着音视频；
+        //
         virtual int openAvFileWriter(const char* szFileName, SPipe& spPipe) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE

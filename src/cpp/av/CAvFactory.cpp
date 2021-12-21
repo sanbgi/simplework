@@ -43,7 +43,7 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    int openAvConverter(PAvSample targetSample, SPipe& sPipe) {
+    int openAvFrameConverter(PAvSample targetSample, SPipe& sPipe) {
         return SError::ERRORTYPE_FAILURE;
     }
 

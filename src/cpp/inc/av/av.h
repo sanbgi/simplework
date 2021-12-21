@@ -14,8 +14,6 @@
 #include "PAvSample.h"
 #include "PAvStreaming.h"
 
-#include "SAvIn.h"
-#include "SAvOut.h"
 #include "SAvFilter.h"
 #include "SAvFactory.h"
 

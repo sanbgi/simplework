@@ -20,6 +20,7 @@ public://IAvFilter
 
 public://For factory
     static int createFilter(const PAvSample& targetSample, SAvFilter& spFilter);
+    static int createFilter(const PAvSample& targetSample, SPipe& spFilter);
 
 private:
     class CFormat {

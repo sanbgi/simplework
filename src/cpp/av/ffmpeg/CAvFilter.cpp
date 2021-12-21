@@ -44,6 +44,16 @@ int CAvFilter::createFilter(const PAvSample& targetSample, SAvFilter& spFilter) 
     return SError::ERRORTYPE_SUCCESS;
 }
 
+int CAvFilter::createFilter(const PAvSample& targetSample, SPipe& spFilter) {
+    CPointer<CAvFilter> spAvFilter;
+    CObject::createObject(spAvFilter);
+    if( spAvFilter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+    spFilter.setPtr((IPipe*)spAvFilter);
+    return SError::ERRORTYPE_SUCCESS;
+}
+
 int CAvFilter::initFilter(const PAvSample& targetSample) {
     CFormat fmt;
     switch(targetSample.sampleType) {

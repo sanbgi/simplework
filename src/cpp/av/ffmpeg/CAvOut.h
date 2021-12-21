@@ -8,10 +8,9 @@
 FFMPEG_NAMESPACE_ENTER
 
 class CAvOutStreaming;
-class CAvOut : public CObject, public IAvOut, public IPipe {
+class CAvOut : public CObject, public IPipe {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 

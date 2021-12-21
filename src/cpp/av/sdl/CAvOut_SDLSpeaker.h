@@ -11,10 +11,9 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLSpeaker : public CObject, public IAvOut, public IPipe, IVisitor<const PAvFrame*>{
+class CAvOut_SDLSpeaker : public CObject, public IPipe, IVisitor<const PAvFrame*>{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
