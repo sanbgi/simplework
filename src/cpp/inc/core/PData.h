@@ -9,12 +9,22 @@ __SimpleWork_Core_Namespace_Enter__
 // 通用参数数据
 //  
 //  作为参数传递的通用数据定义，仅用于传递函数参数，不允许直接使用，只能
-//  通过模板类CStructData来使用，具体使用说明，请参考CStructData
+//  通过模板类CData来使用，具体使用说明，请参考CData
 //
 struct PData {
 
 protected:
-    void* __pInternalPointer;
+    void* m_pInternalPointer;
+    void* m_pInternalData;
+    unsigned int m_idInternalType;
+
+public:
+    unsigned int getType() const {
+        if(m_pInternalPointer == (void*)this ) {
+            return m_idInternalType;
+        }
+        return 0;
+    }
 
 protected:
     //
@@ -28,7 +38,7 @@ private:
     //
     PData(const PData& src) {}
     const PData& operator = (const PData& src) { return *this; }
-    template<typename TStructType> friend class CStructData;
+    template<typename TType> friend class CData;
     template<typename TBasicType> friend class CBasicData;
 };
 

@@ -40,7 +40,7 @@ const PAvSample& CAvOutStreaming::getSampleMeta() {
     return m_sampleMeta;
 }
 
-int CAvOutStreaming::init(AVFormatContext* pFormatContext, PAvStreaming* pSrc) {
+int CAvOutStreaming::init(AVFormatContext* pFormatContext, const PAvStreaming* pSrc) {
     switch(pSrc->frameMeta.sampleType) {
     case EAvSampleType::AvSampleType_Video:
         return initVideo(pFormatContext, pSrc);
@@ -51,7 +51,7 @@ int CAvOutStreaming::init(AVFormatContext* pFormatContext, PAvStreaming* pSrc) {
     return SError::ERRORTYPE_FAILURE;
 }
 
-int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, PAvStreaming* pSrc){
+int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreaming* pSrc){
     
     m_nTimeRate = 24;
 
@@ -159,7 +159,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, PAvStreaming* pS
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, PAvStreaming* pSrc) {
+int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreaming* pSrc) {
     const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
     if(pOutputFormat == nullptr || pOutputFormat->audio_codec == AV_CODEC_ID_NONE) {
         return SError::ERRORTYPE_FAILURE;
@@ -290,12 +290,12 @@ int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, const PAvFrame* 
     if(pFrame) {
         if(pFrame->streamingId == m_iStreamingId ) {
             m_pFormatContext = pFormatContext;
-            return m_spFilter->putFrame(pFrame,this);
+            return m_spFilter->pushFrame(pFrame,this);
         }
         return SError::ERRORTYPE_SUCCESS;
         
     }
-    return pushFrame(pFormatContext, (AVFrame*)nullptr);
+    return writeFrame(pFormatContext, (AVFrame*)nullptr);
 }
 
 int CAvOutStreaming::visit(const PAvFrame* pFrame) {
@@ -324,10 +324,10 @@ int CAvOutStreaming::visit(const PAvFrame* pFrame) {
     if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio)
         pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
 
-    return pushFrame(m_pFormatContext, pAVFrame);
+    return writeFrame(m_pFormatContext, pAVFrame);
 }
 
-int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, AVFrame* pAVFrame) {
+int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFrame) {
     
     //
     // 压缩数据

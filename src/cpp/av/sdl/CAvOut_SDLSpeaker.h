@@ -11,12 +11,32 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLSpeaker : public CObject, public IAvOut, IVisitor<const PAvFrame*>{
+class CAvOut_SDLSpeaker : public CObject, public IAvOut, public IPipe, IVisitor<const PAvFrame*>{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
+        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+public://IPipe
+    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
+        if(rData.getType() == SData::getStructTypeIdentifier<PAvFrame>()) {
+            const PAvFrame* pAvFrame = CData<PAvFrame>(rData);
+            if(pAvFrame == nullptr) {
+                return close();
+            }
+            if(pAvFrame->sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
+                return pushFrame(pAvFrame);
+            }
+        }else if( rData.getType() == SData::getStructTypeIdentifier<PAvStreaming>()) {
+            const PAvStreaming* pAvStreaming = CData<PAvStreaming>(rData);
+            if(pAvStreaming->frameMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
+                m_targetSample = pAvStreaming->frameMeta;
+                return SError::ERRORTYPE_SUCCESS;
+            }
+        }
+        return SError::ERRORTYPE_SUCCESS;
+    }
 public:
     int initSpeaker(const char* szName, PAvSample& sampleMeta) {
         
@@ -25,6 +45,28 @@ public:
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
             return SError::ERRORTYPE_FAILURE;
 
+        m_targetSample = sampleMeta;
+        if(szName != nullptr) {
+            m_strDeviceName = szName;
+        }
+        return SError::ERRORTYPE_SUCCESS;
+    }
+
+    int initSpeaker(const char* szName) {
+        
+        release();
+
+        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+            return SError::ERRORTYPE_FAILURE;
+
+        if(szName != nullptr) {
+            m_strDeviceName = szName;
+        }
+        return SError::ERRORTYPE_SUCCESS;
+    }
+
+    int init() {
+        PAvSample sampleMeta = m_targetSample;
         int nTargetRate = sampleMeta.audioRate;
         int nTargetChannels = sampleMeta.audioChannels;
         SDL_AudioFormat eTargetFormat = CAvSampleType::toAudioFormat(sampleMeta.sampleFormat);
@@ -43,7 +85,9 @@ public:
         wanted_spec.samples = 1024;              // SDL声音缓冲区尺寸，单位是单声道采样点尺寸x通道数
         wanted_spec.callback = nullptr;          // 回调函数，若为NULL，则应使用SDL_QueueAudio()机制
         //wanted_spec.userdata = p_codec_ctx;    // 提供给回调函数的参数
-        m_iDeviceID = SDL_OpenAudioDevice(szName, false, &wanted_spec, &m_specAudio, 0);
+        m_iDeviceID = SDL_OpenAudioDevice(
+                                m_strDeviceName.length()==0?nullptr:m_strDeviceName.c_str(), 
+                                false, &wanted_spec, &m_specAudio, 0);
         if(m_iDeviceID == 0)
         {
             return SError::ERRORTYPE_FAILURE;
@@ -62,13 +106,19 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
-
     int pushFrame(const PAvFrame* pFrame) {
+        if(!m_bInitialized) {
+            if( init() != SError::ERRORTYPE_SUCCESS ) {
+                return SError::ERRORTYPE_FAILURE;
+            }
+            m_bInitialized = true;
+        }
+
         if(pFrame == nullptr) {
             return close();
         }
 
-        return m_spFilter->putFrame(pFrame, this);
+        return m_spFilter->pushFrame(pFrame, this);
     }
 
     int visit(const PAvFrame* pFrame) {
@@ -88,6 +138,7 @@ public:
 public:
     CAvOut_SDLSpeaker() {
         m_iDeviceID = 0;
+        m_bInitialized = false;
     }
     ~CAvOut_SDLSpeaker() {
         release();
@@ -95,7 +146,7 @@ public:
 
     void release() {
         if( m_iDeviceID ) {
-            //TODO close device
+            SDL_CloseAudioDevice(m_iDeviceID);
             m_iDeviceID = 0;
         }
     }
@@ -103,7 +154,10 @@ public:
 private:
     SDL_AudioDeviceID m_iDeviceID;
     SDL_AudioSpec m_specAudio;
+    PAvSample m_targetSample;
+    std::string m_strDeviceName;
     SAvFilter m_spFilter;
+    bool m_bInitialized;
 };
 
 SDL_NAMESPACE_LEAVE

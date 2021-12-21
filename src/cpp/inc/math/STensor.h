@@ -21,7 +21,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取元素类型
         //
-        virtual SData::tid getDataType() const = 0;
+        virtual int getDataType() const = 0;
 
         //
         // 获取元素数量
@@ -32,7 +32,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取元素数据指针
         //
-        virtual const void* getDataPtr(SData::tid eElementType, int iPos=0) const = 0;
+        virtual const void* getDataPtr(int eElementType, int iPos=0) const = 0;
 
     public:
         //
@@ -110,8 +110,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
             //
             // 构造全新的张量，私有函数，因为指针没类型，易出错
             //
-            virtual STensor createVector( SData::tid eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-            virtual STensor createTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+            virtual STensor createVector( int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+            virtual STensor createTensor( const STensor& spDimVector, int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
 

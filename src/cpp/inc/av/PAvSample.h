@@ -9,6 +9,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 // 样本信息，对应于视频就是帧数据格式信息，音频的采样点格式信息。详细的描述可以参考PAvFrame说明
 //
 struct PAvSample {
+
     enum EAvSampleType {
         AvSampleType_None,
         AvSampleType_Video,

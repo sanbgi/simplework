@@ -20,9 +20,31 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Pipe)
         //
         // 推入数据，并且通过pReceiver获得返回结果
         //
-        virtual int pusData( const PData& rData, IVisitor<const PData&>* pReceiver ) = 0; 
+        virtual int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) = 0; 
 
     SIMPLEWORK_INTERFACE_LEAVE
+    
+    SIMPLEWORK_INTERFACECLASS_ENTER(PipeFactory, "sw.core.PipeFactory")
+        SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.core.IPipeFactory", 211220)
+        
+            //
+            // 将多个管道串行成也给新管道
+            //
+            virtual int createSequencePipe(int nPipe, SPipe pPipes[], SPipe& spPipe) = 0;
+
+            //
+            // 创建多个管道并行的管道
+            //
+            virtual int createParallelPipe(int nPipe, SPipe pPipes[], SPipe& spPipe) = 0;
+
+        SIMPLEWORK_INTERFACE_LEAVE
+    SIMPLEWORK_INTERFACECLASS_LEAVE(PipeFactory)
+
+public:
+    static SPipeFactory& getFactory() {
+        static SPipeFactory g_factory = SObject::createObject<SPipeFactory>();
+        return g_factory;
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Pipe)
 

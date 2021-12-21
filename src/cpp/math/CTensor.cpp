@@ -15,8 +15,8 @@ class CPlaceTensor : public CObject, ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    virtual int initVector( SData::tid eElementType, int nElementSize, void* pElementData) = 0;
-    virtual int initTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initVector( int eElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initTensor( const STensor& spDimVector, int eElementType, int nElementSize, void* pElementData) = 0;
 };
 
 //
@@ -25,7 +25,7 @@ public:
 template<typename T> class CTensor : public CPlaceTensor {
 
 public://ITensor
-    int initVector(SData::tid eDt, int nSize, void* pData) {
+    int initVector(int eDt, int nSize, void* pData) {
 
         if( eDt != getDataType() || pData == nullptr ) {
             return SError::ERRORTYPE_FAILURE;
@@ -49,7 +49,7 @@ public://ITensor
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData = nullptr) {
+    int initTensor( const STensor& spDimVector, int eElementType, int nElementSize, void* pElementData = nullptr) {
 
         if( eElementType != getDataType() ) {
             return SError::ERRORTYPE_FAILURE;
@@ -90,7 +90,7 @@ public://ITensor
 
 public://ITensor
 
-    SData::tid getDataType() const {
+    int getDataType() const {
         return SData::getBasicTypeIdentifier<T>();
     }
 
@@ -98,7 +98,7 @@ public://ITensor
         return m_nElementSize;
     }
 
-    const void* getDataPtr(SData::tid eElementType, int iPos=0) const {
+    const void* getDataPtr(int eElementType, int iPos=0) const {
         if( eElementType == getDataType() ){
             if( iPos >= 0 && iPos < m_nElementSize ) {
                 return (T*)m_spElementData + iPos;
@@ -135,7 +135,7 @@ private:
 
 
 typedef CPlaceTensor* (*FCreateTensor)(SObject& spTensor);
-std::map<SData::tid, FCreateTensor> g_tensorFacotries = {
+std::map<int, FCreateTensor> g_tensorFacotries = {
     { SData::getBasicTypeIdentifier<bool>(), CTensor<bool>::createTensor },
     { SData::getBasicTypeIdentifier<char>(), CTensor<char>::createTensor },
     { SData::getBasicTypeIdentifier<unsigned char>(), CTensor<unsigned char>::createTensor },
@@ -155,8 +155,8 @@ class CTensorFactory : public CObject, STensor::ITensorFactory {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://ITensor
-    CPlaceTensor* createTensor(SData::tid tid, SObject& rObject) {
-        std::map<SData::tid, FCreateTensor>::iterator it = g_tensorFacotries.find(tid);
+    CPlaceTensor* createTensor(int tid, SObject& rObject) {
+        std::map<int, FCreateTensor>::iterator it = g_tensorFacotries.find(tid);
         if( it != g_tensorFacotries.end() ) {
             return (*(it->second))(rObject);
         }
@@ -164,7 +164,7 @@ public://ITensor
         return nullptr;
     }
 
-    STensor createVector( SData::tid eElementType, int nElementSize, void* pElementData) {
+    STensor createVector( int eElementType, int nElementSize, void* pElementData) {
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {
@@ -175,7 +175,7 @@ public://ITensor
         return STensor();
     }
 
-    STensor createTensor( const STensor& spDimVector, SData::tid eElementType, int nElementSize, void* pElementData){
+    STensor createTensor( const STensor& spDimVector, int eElementType, int nElementSize, void* pElementData){
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(eElementType, spObject);
         if(pTensor) {

@@ -3,10 +3,8 @@
 
 #include "av.h"
 #include "PAvSample.h"
-#include "PAvStreaming.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER 
-struct PAvStreaming;
 
 //
 //
@@ -40,6 +38,7 @@ struct PAvStreaming;
 //
 //
 struct PAvFrame {
+    SIMPLEWORK_PDATAKEY("sw.av.AvFrame")
 
     //
     // 样本信息

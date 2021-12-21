@@ -183,7 +183,7 @@ int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
         default:
             return SError::ERRORTYPE_FAILURE;
     }
-    return m_spFilter->putFrame(&avFrame, receiver);
+    return m_spFilter->pushFrame(&avFrame, receiver);
 }
 
 FFMPEG_NAMESPACE_LEAVE

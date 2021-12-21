@@ -6,16 +6,20 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvIn : public CObject, public IAvIn {
+class CAvIn : public CObject, public IAvIn, public IPipe {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvIn)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public:
+public://IPipe
+    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
+
+public://IAvIn
     int changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMeta);
     int readFrame(PAvFrame::FVisitor visitor);
     int visitStreamings(PAvStreaming::FVisitor visitor);
+
 
 public:
     int initVideoFile(const char* szFileName);
@@ -34,8 +38,9 @@ public:
 private:
     CTaker<AVFormatContext*> m_spFormatCtx;
     CTaker<AVFormatContext*> m_spOpenedCtx;
-    CAvStreaming* m_pContinueReadingStreaming;
-    std::vector<CPointer<CAvStreaming>> m_vecCAvStreamings;
+    std::vector<CAvStreaming*> m_arrNeedReadingStreamings;
+    std::vector<CPointer<CAvStreaming>> m_arrAvStreamings;
+    int m_bHeaderReaded;
 };
 
 FFMPEG_NAMESPACE_LEAVE

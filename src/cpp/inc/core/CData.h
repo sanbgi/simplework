@@ -12,15 +12,15 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 纯数据参数类，用于传递结构类型的函数参数，作为带类型的参数垫片
 //
-template<typename TStructType> class CStructData : public PData {
+template<typename TType> class CData : public PData {
 public:
-    CStructData(const TStructType& rData){
+    CData(const TType& rData){
         init(&rData);
     }
-    CStructData(const TStructType* pData){
+    CData(const TType* pData){
         init(pData);
     }
-    CStructData(const PData& rData){
+    CData(const PData& rData){
         init(rData);
     }
 
@@ -28,63 +28,66 @@ public:
     //
     // 判断当前数据是否是当前类型数据
     //
-    //  当CStructData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
-    //  当CStructData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
+    //  当CData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
+    //  当CData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
     //
     bool isThisType() const {
-        return getType() == m_idType;
+        return getThisType() == m_idInternalType;
     }
 
     //
     // 判断数据是否为空
     //
     bool isEmpty() const {
-        return m_pData == nullptr;
+        return m_pInternalData == nullptr;
     }
 
 public:
+    operator const TType*() {
+        return (const TType*)m_pInternalData;
+    }
+
+public:
+
     //
     // 获取当前数据类型
     //
-    static SData::tid getType() {
-        static SData::tid s_idType = SData::getStructTypeIdentifier<TStructType>();
+    static unsigned int getThisType() {
+        static unsigned int s_idType = SData::getStructTypeIdentifier<TType>();
         return s_idType;
     }
 
 public:
-    const TStructType* getDataPtr() const {
-        return m_pData;
+    const TType* getDataPtr() const {
+        return (const TType*)m_pInternalData;
     }
 
-    const TStructType& getData() const {
-        return m_pData;
+    const TType& getData() const {
+        return *(const TType*)m_pInternalData;
     }
 
 private:
-    void init(const TStructType* pData) {
+    void init(const TType* pData) {
         //
         // PData两个指针一个指向自己，用于：
-        //      1, 判断当前指针是否是有效的CStructData指针;
+        //      1, 判断当前指针是否是有效的CData指针;
         //      2，读取当前数据的类型;
         //
-        __pInternalPointer = this;
-        m_idType = getType();
-        m_pData = pData;
+        m_pInternalPointer = this;
+        m_idInternalType = getThisType();
+        m_pInternalData = (void*)pData;
     }
     void init(const PData& rData) {
-        if(rData.__pInternalPointer == (void*)&rData ) {
-            const CStructData* pSrc = (const CStructData*)&rData;
-            m_idType = pSrc->m_idType;
-            m_pData = getType() == m_idType ? pSrc->m_pData : nullptr;
+        if(rData.m_pInternalPointer == (void*)&rData ) {
+            const CData* pSrc = (const CData*)&rData;
+            m_idInternalType = pSrc->m_idInternalType;
+            m_pInternalData = (getThisType() == m_idInternalType) ? pSrc->m_pInternalData : nullptr;
         }else{
-            m_idType = 0;
-            m_pData = nullptr;
+            m_idInternalType = 0;
+            m_pInternalData = nullptr;
         }
+        m_pInternalPointer = this;
     }
-
-private:
-    SData::tid m_idType;
-    const TStructType* m_pData; 
 };
 
 
@@ -104,63 +107,60 @@ public:
     //
     // 判断当前数据是否是当前类型数据
     //
-    //  当CStructData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
-    //  当CStructData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
+    //  当CData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
+    //  当CData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
     //
     bool isThisType() const {
-        return getType() == m_idType;
+        return getThisType() == m_idInternalType;
     }
 
     //
     // 判断数据是否为空
     //
     bool isEmpty() const {
-        return m_pData == nullptr;
+        return m_pInternalData == nullptr;
     }
 
 public:
     //
     // 获取当前数据类型
     //
-    static SData::tid getType() {
-        static SData::tid s_idType = SData::getBasicTypeIdentifier<TBasicType>();
+    static unsigned int getThisType() {
+        static unsigned int s_idType = SData::getBasicTypeIdentifier<TBasicType>();
         return s_idType;
     }
 
 public:
     const TBasicType* getDataPtr() const {
-        return m_pData;
+        return (const TBasicType*)m_pInternalData;
     }
 
     const TBasicType& getData() const {
-        return m_pData;
+        return *(const TBasicType*)m_pInternalData;
     }
 
 private:
     void init(const TBasicType* pData) {
         //
         // PData两个指针一个指向自己，用于：
-        //      1, 判断当前指针是否是有效的CStructData指针;
+        //      1, 判断当前指针是否是有效的CData指针;
         //      2，读取当前数据的类型;
         //
-        __pInternalPointer = this;
-        m_idType = getType();
-        m_pData = pData;
+        m_pInternalPointer = this;
+        m_idInternalType = getThisType();
+        m_pInternalData = (void*)pData;
     }
     void init(const PData& rData) {
-        if(rData.__pInternalPointer == (void*)&rData ) {
+        if(rData.m_pInternalPointer == (void*)&rData ) {
             const CBasicData* pSrc = (const CBasicData*)&rData;
-            m_idType = pSrc->m_idType;
-            m_pData = getType() == m_idType ? pSrc->m_pData : nullptr;
+            m_idInternalType = pSrc->m_idInternalType;
+            m_pInternalData = (getThisType() == m_idInternalType) ? pSrc->m_pInternalData : nullptr;
         }else{
-            m_idType = 0;
-            m_pData = nullptr;
+            m_idInternalType = 0;
+            m_pInternalData = nullptr;
         }
+        m_pInternalPointer = this;
     }
-
-private:
-    SData::tid m_idType;
-    const TBasicType* m_pData; 
 };
 __SimpleWork_Core_Namespace_Leave__
 

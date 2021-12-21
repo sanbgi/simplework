@@ -10,6 +10,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 // 视频流
 //
 struct PAvStreaming {
+    SIMPLEWORK_PDATAKEY("sw.av.AvStreaming")
 
     //
     // 所属的流对应的ID和类型

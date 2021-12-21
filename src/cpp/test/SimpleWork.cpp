@@ -83,23 +83,32 @@ int testPlayFile() {
     outCtx.video = SAvOut::openWindow("Display Video", videoMeta);
     outCtx.audio = avAudioOut;
     int nframeVideo = 0;
-    while(avIn->readFrame(CPVisitor<CCtx, const PAvFrame*>(outCtx, [](CCtx ctx, const PAvFrame* pFrame) -> int{
+    int ret = 0;
+    while(ret = avIn->readFrame(CPVisitor<CCtx, const PAvFrame*>(outCtx, [](CCtx ctx, const PAvFrame* pFrame) -> int{
         switch(pFrame->sampleMeta.sampleType) {
         case EAvSampleType::AvSampleType_Audio:
-            std::cout << "audioVideo timestamp:" << pFrame->timeStamp << "\n";
-            return ctx.audio->pushFrame(pFrame);
+            {
+                std::cout << "audioVideo timestamp:" << pFrame->timeStamp << "\n";
+                int ret = ctx.audio->pushFrame(pFrame);
+                if(pFrame->timeStamp == 9138)
+                    std::cout << "audioVideo timestamp pushed:" << pFrame->timeStamp << ret << "\n";
+                return ret;
+            }
 
         case  EAvSampleType::AvSampleType_Video:
-            std::cout << "frameVideo timestamp:" << pFrame->timeStamp << "\n";
-            return ctx.video->pushFrame(pFrame);
+            {
+                std::cout << "frameVideo timestamp:" << pFrame->timeStamp << "\n";
+                int ret = ctx.video->pushFrame(pFrame);
+                std::cout << "frameVideo timestamp pushed:" << pFrame->timeStamp << ret  << "\n";
+                return ret;
+            }
         }
         return SError::ERRORTYPE_FAILURE;
     })) == SError::ERRORTYPE_SUCCESS ) {
         nframeVideo++;
-        if(nframeVideo > 500) {
-            break;
-        }
     }
+
+    std::cout << "ret" << ret  << "\n";
     return outCtx.video->pushFrame(nullptr);
 }
 
@@ -147,40 +156,83 @@ struct FBB {
 };
 
 void fun(const PData& r) {
-    CStructData<FAA> ir(r);
+    CData<FAA> ir(r);
     if(ir.isThisType()) {
         const FAA* pInt = ir.getDataPtr();
         std::cout << "int found:  ";
     }
-    CStructData<FBB> dr(r);
+    CData<FBB> dr(r);
     if(dr.isThisType()) {
         const FBB* pDouble = dr.getDataPtr();
         std::cout << "double found:  ";
     }
 }
 
+
+int testPipe() {
+    SPipe avIn;
+    if( SAvFactory::getAvFactory()->openAvFileReader("d:/tt.mkv", avIn) != SError::ERRORTYPE_SUCCESS ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    SPipe avWindows;
+    if( SAvFactory::getAvFactory()->openWindow("DisplayAv", 640, 360, avWindows) != SError::ERRORTYPE_SUCCESS ){
+        return SError::ERRORTYPE_FAILURE;
+    } 
+
+    SPipe avSpeaker;
+    if( SAvFactory::getAvFactory()->openSpeaker(nullptr, avSpeaker) ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    SPipe avFileWriter;
+    if( SAvFactory::getAvFactory()->openAvFileWriter("d:/tt2.mkv", avFileWriter) ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    SPipe pipes[3] = { avWindows, avSpeaker, avFileWriter };
+    SPipe avOut;
+    if( SPipe::getFactory()->createParallelPipe(3, pipes, avOut) != SError::ERRORTYPE_SUCCESS ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    SPipe inPipe[2] = {avIn, avOut};
+    SPipe av;
+    if( SPipe::getFactory()->createSequencePipe(2, inPipe, av) != SError::ERRORTYPE_SUCCESS ) {
+        return SError::ERRORTYPE_FAILURE;
+    }
+
+    int nFrames=0;
+    while(av->pushData(CBasicData<int>(10), nullptr) == SError::ERRORTYPE_SUCCESS) {
+        std::cout << "frames: " << ++nFrames << "processed \n";
+    }
+    
+    return SError::ERRORTYPE_SUCCESS;
+}
+
+
 int main(int argc, char *argv[]){
 
-    FAA a = { 10 };
-    FBB b = { 20 };
-    fun(CStructData<FAA>(a));
-    fun(CStructData<FBB>(b));
-    unsigned int la = SData::getBasicTypeIdentifier<int>();
+    //FAA a = { 10 };
+    //FBB b = { 20 };
+    //fun(CData<FAA>(a));
+    //fun(CData<FBB>(b));
+    //unsigned int la = SData::getBasicTypeIdentifier<int>();
     //unsigned long lb = SData::getStructTypeIdentifier("aaaaaaaaaaaaaaaafadfasdf");
     //unsigned long lc = SData::getStructTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
     //unsigned long ld = SData::getStructTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
     //testWriteFile();
-    testPlayFile();
+    testPipe();
 
     /*
     int i=10;
-    CStructData s(i);
-    CStructData * pData = new CStructData(i);
+    CData s(i);
+    CData * pData = new CData(i);
     fun(s);
-    fun(CStructData(i));
-    fun(CStructData(20));
+    fun(CData(i));
+    fun(CData(20));
     const int* pPtr = s.getPtr<int>();
-    //fun(CStructData(10));
+    //fun(CData(10));
     */
     return 0;
 }

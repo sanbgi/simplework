@@ -16,7 +16,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvFilter)
         //
         // 读取帧
         //
-        virtual int putFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) = 0;
+        virtual int pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

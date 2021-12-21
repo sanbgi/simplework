@@ -10,11 +10,29 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLWindow : public CObject, public IAvOut, IVisitor<const PAvFrame*>{
+class CAvOut_SDLWindow : public CObject, public IAvOut, public IPipe, IVisitor<const PAvFrame*>{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
+        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+public://IPipe
+    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
+
+        CData<PAvFrame> avFrame(rData);
+        if(avFrame.isThisType() ) {
+            const PAvFrame* pAvFrame = avFrame;
+            if(pAvFrame == nullptr) {
+                return close();
+            }
+            if( pAvFrame->sampleMeta.sampleType == EAvSampleType::AvSampleType_Video ) {
+                return pushFrame(avFrame);
+            }
+        }
+
+        return SError::ERRORTYPE_SUCCESS;
+    }
 
 public:
     int initWindow(const char* szWindowName, PAvSample& sampleMeta) {
@@ -52,13 +70,42 @@ public:
         return SError::ERRORTYPE_SUCCESS;
     }
 
+    int initWindow(const char* szWindowName, int nWidth, int nHeight) {
+        
+        release();
+
+        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+            return SError::ERRORTYPE_FAILURE;
+
+        //创建窗口
+        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, nWidth, nHeight, 0);
+        if (nullptr == m_pWindow)
+            return SError::ERRORTYPE_FAILURE;
+
+        m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
+	    if (nullptr == m_pRenderer) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+
+        m_nWinWidth = nWidth;
+        m_nWinHeight = nHeight;
+        PAvSample sampleMeta;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
+        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
+        sampleMeta.videoWidth = nWidth;
+        sampleMeta.videoHeight = nHeight;
+        if( SAvFilter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+        return SError::ERRORTYPE_SUCCESS;
+    }
 
     int pushFrame(const PAvFrame* pFrame) {
         if(pFrame == nullptr) {
             return close();
         }
 
-        return m_spFilter->putFrame(pFrame, this);
+        return m_spFilter->pushFrame(pFrame, this);
     }
 
     int visit(const PAvFrame* pFrame) {

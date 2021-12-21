@@ -4,7 +4,25 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-int CAvFilter::putFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFilter::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
+    CData<PAvFrame> avFrame(rData);
+    if(avFrame.isThisType()) {
+        const PAvFrame* pAvFrame = avFrame.getDataPtr();
+        if(pAvFrame->sampleMeta.sampleType == m_targetSample.sampleType) {
+            struct CInternalVisitor : IVisitor<const PAvFrame*> {
+                int visit(const PAvFrame* pAvFrame) {
+                    return pReceiver->visit(CData<PAvFrame>(pAvFrame));
+                }
+                IVisitor<const PData&>* pReceiver;
+            }visitor;
+            visitor.pReceiver = pReceiver;
+            return pushFrame(pAvFrame, &visitor);
+        }
+    }
+    return pReceiver->visit(rData);
+}
+
+int CAvFilter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
     switch(m_targetSample.sampleType) {
         case EAvSampleType::AvSampleType_Audio:
             return convertAudio(pSrc, visitor);
