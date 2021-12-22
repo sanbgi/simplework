@@ -33,17 +33,6 @@ int CAvFrameConverter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visito
     return SError::ERRORTYPE_FAILURE;
 }
 
-int CAvFrameConverter::createFilter(const PAvSample& targetSample, SAvFrameConverter& spFilter) {
-
-    CPointer<CAvFrameConverter> spAvFrameConverter;
-    CObject::createObject(spAvFrameConverter);
-    if( spAvFrameConverter->initFilter(targetSample) != SError::ERRORTYPE_SUCCESS) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    spFilter.setPtr((IAvFrameConverter*)spAvFrameConverter);
-    return SError::ERRORTYPE_SUCCESS;
-}
-
 int CAvFrameConverter::createFilter(const PAvSample& targetSample, SPipe& spFilter) {
     CPointer<CAvFrameConverter> spAvFrameConverter;
     CObject::createObject(spAvFrameConverter);

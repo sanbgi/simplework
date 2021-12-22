@@ -5,10 +5,9 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvFrameConverter : public CObject, public IAvFrameConverter, public IPipe {
+class CAvFrameConverter : public CObject, public IPipe {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IAvFrameConverter)
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -19,7 +18,6 @@ public://IAvFrameConverter
     int pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
 
 public://For factory
-    static int createFilter(const PAvSample& targetSample, SAvFrameConverter& spFilter);
     static int createFilter(const PAvSample& targetSample, SPipe& spFilter);
 
 private:

@@ -137,7 +137,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
         sampleMeta.videoHeight = pCodecContext->height;
         sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->pix_fmt;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
     }
@@ -241,7 +241,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
         sampleMeta.audioRate = pCodecContext->sample_rate;
         sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->sample_fmt;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
     }
@@ -290,7 +290,15 @@ int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, const PAvFrame* 
     if(pFrame) {
         if(pFrame->streamingId == m_iStreamingId ) {
             m_pFormatContext = pFormatContext;
-            return m_spFilter->pushFrame(pFrame,this);
+
+            struct CInternalReceiver : IVisitor<const PData&> {
+                int visit(const PData& rData) {
+                    return pAvOut->visit( CData<PAvFrame>(rData) );
+                } 
+                CAvOutStreaming* pAvOut;
+            }receiver;
+            receiver.pAvOut = this;
+            return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
         }
         return SError::ERRORTYPE_SUCCESS;
         

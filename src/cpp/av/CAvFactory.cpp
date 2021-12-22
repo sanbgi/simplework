@@ -44,7 +44,7 @@ public:
     }
 
     int openAvFrameConverter(PAvSample targetSample, SPipe& sPipe) {
-        return SError::ERRORTYPE_FAILURE;
+        return ffmpeg::CAvFrameConverter::createFilter(targetSample, sPipe);
     }
 
     int openWindow(const char* szWindowName, int nWidth, int nHeight, SPipe& spPipe) {

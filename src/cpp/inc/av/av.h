@@ -13,8 +13,6 @@
 #include "PAvFrame.h"
 #include "PAvSample.h"
 #include "PAvStreaming.h"
-
-#include "SAvFrameConverter.h"
 #include "SAvFactory.h"
 
 #endif//__SimpleWork_AV_h__

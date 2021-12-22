@@ -33,42 +33,6 @@ public://IPipe
         return SError::ERRORTYPE_SUCCESS;
     }
 
-public:
-    int initWindow(const char* szWindowName, PAvSample& sampleMeta) {
-        
-        release();
-
-        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return SError::ERRORTYPE_FAILURE;
-
-        //创建窗口
-        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, sampleMeta.videoWidth, sampleMeta.videoHeight, 0);
-        if (nullptr == m_pWindow)
-            return SError::ERRORTYPE_FAILURE;
-
-        m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
-	    if (nullptr == m_pRenderer) {
-            return SError::ERRORTYPE_FAILURE;
-        }
-
-        m_nWinWidth = sampleMeta.videoWidth;
-        m_nWinHeight = sampleMeta.videoHeight;
-        switch (sampleMeta.sampleFormat)
-        {
-        case EAvSampleFormat::AvSampleFormat_Video_RGB:
-        case EAvSampleFormat::AvSampleFormat_Video_RGBA:
-            break;
-        
-        default:
-            sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
-            break;
-        }
-        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
-        }
-        return SError::ERRORTYPE_SUCCESS;
-    }
-
     int initWindow(const char* szWindowName, int nWidth, int nHeight) {
         
         release();
@@ -93,7 +57,7 @@ public:
         sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
         sampleMeta.videoWidth = nWidth;
         sampleMeta.videoHeight = nHeight;
-        if( SAvFrameConverter::createFilter(sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
         return SError::ERRORTYPE_SUCCESS;
@@ -104,7 +68,15 @@ public:
             return close();
         }
 
-        return m_spFilter->pushFrame(pFrame, this);
+        struct CInternalReceiver : IVisitor<const PData&> {
+            int visit(const PData& rData) {
+                return pAvOut->visit( CData<PAvFrame>(rData) );
+            } 
+            CAvOut_SDLWindow* pAvOut;
+        }receiver;
+        receiver.pAvOut = this;
+
+        return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
     }
 
     int visit(const PAvFrame* pFrame) {
@@ -170,7 +142,7 @@ public:
     }
 
 private:
-    SAvFrameConverter m_spFilter;
+    SPipe m_spConverter;
     SDL_Window* m_pWindow;
     SDL_Renderer* m_pRenderer;
     int m_nWinWidth;

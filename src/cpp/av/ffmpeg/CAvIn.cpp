@@ -37,13 +37,6 @@ int CAvIn::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
     return readFrame(&visitor);
 }
 
-int CAvIn::changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMeta) {
-    if(iStreamingId < 0 || iStreamingId >= m_arrAvStreamings.size() ) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    return m_arrAvStreamings[iStreamingId]->setSampleMeta(sampleMeta);
-}
-
 int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
     if(!m_spOpenedCtx) {
         return SError::ERRORTYPE_FAILURE;

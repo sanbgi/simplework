@@ -14,7 +14,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
 
         //
         //  创建视频文件读取管道，视频文件读取管道
-        //      输入数据：无论输入什么数据
+        //      输入数据：无论输入什么数据？
         //      输出数据：
         //          1，如果是第一帧调用，则依次输出所有的PAvStreaming及第一帧音频或视频PAvFrame
         //          2，如果不是第一帧调用，则输出一帧音频或视频
@@ -30,6 +30,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         virtual int openAudioCapture(const char* szDeviceName, SPipe& spPipe) = 0;
         //
         //  音视频帧转化器
+        //      输入数据：一帧音视频
+        //      输出数据：输出转化为指定格式后的帧
         //
         virtual int openAvFrameConverter(PAvSample targetSample, SPipe& spPipe) = 0;
         //
@@ -51,6 +53,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //      输入管道：
         //          PAvStreaming（初始化音视频流信息）和
         //          PAvFrame 音视频帧，nullptr意味着音视频；
+        //      输出管道：
+        //          无
         //
         virtual int openAvFileWriter(const char* szFileName, SPipe& spPipe) = 0;
 

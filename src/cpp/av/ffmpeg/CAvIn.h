@@ -16,7 +16,6 @@ public://IPipe
     int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
 
 public://IAvIn
-    int changeStreamingSampleMeta(int iStreamingId, const PAvSample& sampleMeta);
     int readFrame(PAvFrame::FVisitor visitor);
     int visitStreamings(PAvStreaming::FVisitor visitor);
 

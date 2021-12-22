@@ -37,20 +37,6 @@ public://IPipe
         return SError::ERRORTYPE_SUCCESS;
     }
 public:
-    int initSpeaker(const char* szName, PAvSample& sampleMeta) {
-        
-        release();
-
-        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return SError::ERRORTYPE_FAILURE;
-
-        m_targetSample = sampleMeta;
-        if(szName != nullptr) {
-            m_strDeviceName = szName;
-        }
-        return SError::ERRORTYPE_SUCCESS;
-    }
-
     int initSpeaker(const char* szName) {
         
         release();
@@ -97,7 +83,7 @@ public:
         specMeta.audioRate = m_specAudio.freq;
         specMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
         specMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFrameConverter::createFilter(specMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS ) {
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(specMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
 
@@ -117,7 +103,14 @@ public:
             return close();
         }
 
-        return m_spFilter->pushFrame(pFrame, this);
+        struct CInternalReceiver : IVisitor<const PData&> {
+            int visit(const PData& rData) {
+                return pAvOut->visit( CData<PAvFrame>(rData) );
+            } 
+            CAvOut_SDLSpeaker* pAvOut;
+        }receiver;
+        receiver.pAvOut = this;
+        return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
     }
 
     int visit(const PAvFrame* pFrame) {
@@ -155,7 +148,7 @@ private:
     SDL_AudioSpec m_specAudio;
     PAvSample m_targetSample;
     std::string m_strDeviceName;
-    SAvFrameConverter m_spFilter;
+    SPipe m_spConverter;
     bool m_bInitialized;
 };
 

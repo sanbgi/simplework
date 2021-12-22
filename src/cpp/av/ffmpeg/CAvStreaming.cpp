@@ -127,7 +127,7 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         break;
     }
 
-    if( SAvFrameConverter::createFilter(m_sampleMeta, m_spFilter) != SError::ERRORTYPE_SUCCESS) {
+    if( SAvFactory::getAvFactory()->openAvFrameConverter(m_sampleMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
 
@@ -183,7 +183,16 @@ int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
         default:
             return SError::ERRORTYPE_FAILURE;
     }
-    return m_spFilter->pushFrame(&avFrame, receiver);
+
+    struct CInternalReceiver : IVisitor<const PData&> {
+        int visit(const PData& rData) {
+            return receiver->visit( CData<PAvFrame>(rData) );
+        } 
+        PAvFrame::FVisitor receiver;
+    }thisReceiver;
+    thisReceiver.receiver = receiver;
+
+    return m_spConverter->pushData(CData<PAvFrame>(avFrame), &thisReceiver);
 }
 
 FFMPEG_NAMESPACE_LEAVE

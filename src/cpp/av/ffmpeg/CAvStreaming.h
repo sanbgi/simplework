@@ -39,7 +39,8 @@ public:
     PAvSample m_sampleMeta;
 
 public:
-    SAvFrameConverter m_spFilter;
+    //SAvFrameConverter m_spFilter;
+    SPipe m_spConverter;
 
 public://Video
     int m_lastDimsize[3];
