@@ -8,7 +8,7 @@ int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
-    spDense->m_pActivator = CActivator::getLeRU();
+    spDense->m_pActivator = CActivator::getReLU();
     spNetwork.setPtr(spDense.getPtr());
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -27,6 +27,7 @@ int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pO
         double* pBais = m_spBais;
         for(int iOutput=0; iOutput<m_nCells; iOutput++ ) {
             double& dOutout = *(pOutputs+iOutput);
+            dOutout = 0;
             for(int iInput=0; iInput<m_nInputCells; iInput++) {
                 dOutout += pWeights[iOutput*m_nInputCells+iInput] * pInput[iInput];
             }
@@ -63,7 +64,7 @@ int CDenseNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeura
             deltaReceiver.pLearnCtx = this->pLearnCtx;
             deltaReceiver.pOutputTensor = &t;
             deltaReceiver.pInputTensor = this->pInputTensor;
-            return pLearnCtx->getOutputTarget(t, &deltaReceiver);
+            return pLearnCtx->getOutputDelta(t, &deltaReceiver);
         }
 
         CDenseNetwork* pNetwork;
@@ -161,7 +162,8 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
             // 更新权重，权重值的偏导数=输出值偏导数*数入值
             //
             for(int iInput=0; iInput<m_nInputCells; iInput++ ) {
-                int iWeight = iInput*m_nInputCells+iOutput;
+
+                int iWeight = iOutput * m_nInputCells + iInput;
 
                 //
                 // 希望输入的下降值为，数入的偏导数

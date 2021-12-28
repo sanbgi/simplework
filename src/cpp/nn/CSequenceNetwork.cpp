@@ -1,7 +1,13 @@
 #include "CSequenceNetwork.h"
 
 int CSequenceNetwork::getCellNumber() {
-    return 0;
+    int nCell = 0;
+    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
+    while(it != m_arrNetworks.end()) {
+        nCell += (*it)->getCellNumber();
+        it++;
+    }
+    return nCell;
 }
 
 int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
@@ -45,9 +51,9 @@ int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>*
 int CSequenceNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
     class CInteralCtx : public SNeuralNetwork::ILearnCtx {
     public:
-        int getOutputTarget(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver){
+        int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver){
             if(iPipe == pArr->size()) {
-                return pFinalCtx->getOutputTarget(outputTensor, pDeltaReceiver);
+                return pFinalCtx->getOutputDelta(outputTensor, pDeltaReceiver);
             }
 
             CInteralCtx nextCtx;

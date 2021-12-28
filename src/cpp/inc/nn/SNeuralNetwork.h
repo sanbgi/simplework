@@ -9,7 +9,6 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 //
 // 神经网络核心接口定义
 //
-
 SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
 
 public:
@@ -20,7 +19,7 @@ public:
         //
         // 查询输出量与目标量的偏差量
         //
-        virtual int getOutputTarget(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver) = 0;
+        virtual int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver) = 0;
 
         //
         // 返回期望输入量对目标的偏差量
@@ -68,7 +67,7 @@ public:
             //
             //  创建顺序处理神经网络
             //
-            virtual int createConvolution(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) = 0;
+            virtual int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) = 0;
 
 
         SIMPLEWORK_INTERFACE_LEAVE

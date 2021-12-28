@@ -9,11 +9,11 @@ using namespace SIMPLEWORK_NN_NAMESPACE;
 
 class CActivator{
 public:
-    virtual double activate(double v) = 0;
+    virtual double activate(double dOutput) = 0;
     virtual double deactivate(double dOutput, double dDelta) = 0;
 
 public:
-    static CActivator* getLeRU();
+    static CActivator* getReLU();
 };
 
 #endif//__SimpleWork_NN_CActivation_H__

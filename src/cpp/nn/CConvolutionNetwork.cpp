@@ -10,7 +10,7 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeu
     spConvolution->m_nConvWidth = nWidth;
     spConvolution->m_nConvHeight = nHeight;
     spConvolution->m_nConvs = nConvs;
-    spConvolution->m_pActivator = CActivator::getLeRU();
+    spConvolution->m_pActivator = CActivator::getReLU();
     spNetwork.setPtr(spConvolution.getPtr());
     return SError::ERRORTYPE_SUCCESS;
 }
@@ -90,7 +90,7 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, double dInputWeight, 
             deltaReceiver.pLearnCtx = this->pLearnCtx;
             deltaReceiver.pOutputTensor = &t;
             deltaReceiver.pInputTensor = this->pInputTensor;
-            return pLearnCtx->getOutputTarget(t, &deltaReceiver);
+            return pLearnCtx->getOutputDelta(t, &deltaReceiver);
         }
 
         CConvolutionNetwork* pNetwork;

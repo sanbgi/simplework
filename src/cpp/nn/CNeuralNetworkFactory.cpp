@@ -23,7 +23,7 @@ public:
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, spNetwork);
     }
 
-    int createConvolution(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
+    int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
     }
 };

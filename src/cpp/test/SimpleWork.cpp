@@ -149,9 +149,9 @@ void testNN() {
     inputTensor.nDims = 1;
     inputTensor.pDimSizes = dimsize;
     struct LearnCtx : public SNeuralNetwork::ILearnCtx {
-        int getOutputTarget(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
+        int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
 
-            double v = 0.7*(*pV) - 0.3 - outputTensor.pDoubleArray[0];
+            double v = 2*(*pV) - 1 - outputTensor.pDoubleArray[0];
             int dimsize[] = { 1 };
             PTensor targetTensor;
             targetTensor.idType = SData::getBasicTypeIdentifier<double>();
@@ -174,7 +174,7 @@ void testNN() {
     ctx.pV = &v;
 
     for( int i=1; i<1000; i++) {
-        v = i/10.0;
+        v = rand() % 100 / 50.0;
         n->learn(inputTensor, 0, &ctx);
     }
 }
