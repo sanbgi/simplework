@@ -23,8 +23,8 @@ public://Factory
 
 private:
     int initWeights(const PTensor& inputTensor);
-    void activate(int nSize, double arrY[], double arrOutput[]);
-    void deactivate(int nSize, double arrOutput[], double arrDelta[], double arrDeirvatioY[]);
+    double activate(double v);
+    double deactivate(double dOutput, double dDelta);
 
 private:
     int m_nConvWidth;

@@ -12,16 +12,12 @@ int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork& spNetwork) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-void CDenseNetwork::activate(double arrY[], double arrOutput[]) {
-    for(int i=0; i<m_nCells; i++) {
-        arrOutput[i] = arrY[i];
-    }
+double CDenseNetwork::activate(double v) {
+    return v;
 }
 
-void CDenseNetwork::deactivate(double arrOutput[], double arrDelta[], double arrDeirvatioY[]) {
-    for(int i=0; i<m_nCells; i++) {
-        arrDeirvatioY[i] = -arrDelta[i];
-    }
+double CDenseNetwork::deactivate(double dOutput, double dDelta) {
+    return -dDelta;
 }
 
 int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
@@ -31,45 +27,26 @@ int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pO
         }
     }
 
-    PTensor in;
-    in.idType = inputTensor.idType;
-    in.nData = inputTensor.nData;
-    in.pData = inputTensor.pData;
-    in.nDims = 1;
-    in.pDimSizes = &in.nData;
-
-    PTensor in2;
-    in2.idType = SData::getBasicTypeIdentifier<double>();
-    in2.nData = m_nCells*m_nInputCells;
-    in2.pDoubleArray = m_spWeights;
-    in2.nDims = 2;
-    int arrDimSize[] = { m_nInputCells, m_nCells };
-    in2.pDimSizes = arrDimSize;
-
-    struct CInternalReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& t) {
-            double r[t.nData];
-            for(int i=0; i<t.nData; i++) {
-                r[i] = t.pDoubleArray[i] - pBais[i];
+    double pOutputs[m_nCells];
+    {
+        double* pInput = inputTensor.pDoubleArray;
+        double* pWeights = m_spWeights;
+        double* pBais = m_spBais;
+        for(int iOutput=0; iOutput<m_nCells; iOutput++ ) {
+            double& dOutout = *(pOutputs+iOutput);
+            for(int iInput=0; iInput<m_nInputCells; iInput++) {
+                dOutout += pWeights[iOutput*m_nInputCells+iInput] * pInput[iInput];
             }
-            pNetwork->activate(r, r);
-            PTensor rtTensor;
-            rtTensor.idType = t.idType;
-            rtTensor.nData = t.nData;
-            rtTensor.pData = r;
-            rtTensor.nDims = 1;
-            rtTensor.pDimSizes = &rtTensor.nData;
-            return pReceiver->visit(rtTensor);
+            dOutout = activate(dOutout - pBais[iOutput]);
         }
-
-        double* pBais;
-        IVisitor<const PTensor&>* pReceiver;
-        CDenseNetwork* pNetwork;
-    }receiver;
-    receiver.pBais = m_spBais;
-    receiver.pReceiver = pOutputReceiver;
-    receiver.pNetwork = this;
-    return STensorSolver::getSolver()->multiply(in, in2, &receiver);
+    }
+    PTensor tensorOutput;
+    tensorOutput.idType = inputTensor.idType;
+    tensorOutput.nData = m_nCells;
+    tensorOutput.pData = pOutputs;
+    tensorOutput.nDims = 1;
+    tensorOutput.pDimSizes = &tensorOutput.nData;
+    return pOutputReceiver->visit(tensorOutput);
 }
 
 int CDenseNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
@@ -155,7 +132,9 @@ int CDenseNetwork::initWeights(int nInputCells) {
 
 int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
 
-    double expectInputDelta[inputTensor.nData];
+    double pExpectInputDelta[inputTensor.nData];
+    memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
+
     //
     // 将执行体放在括号中，达到节约栈内存目的(因为括号中的内存可以在回调之前释放)
     //
@@ -168,59 +147,50 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
         //
         //  计算目标函数相对于Y值的偏导数
         //
-        double derivationY[outputTensor.nData];
-        deactivate(outputTensor.pDoubleArray, deltaTensor.pDoubleArray, derivationY);
-        
-        //
-        //  计算期望的输入偏差值
-        //
-        for(int iInput = 0; iInput<m_nInputCells; iInput++) {
-
-            //
-            //  数入值的偏导数 = 所有子项的和：Y的偏导数 * Y对数入的偏导数（及权重值m_spWeights[iInput*m_nInputCells+iOutput])
-            //
-            double derivationInput = 0;
-            for(int iOutput=0; iOutput < outputTensor.nData; iOutput++) {
-                derivationInput += derivationY[iOutput] * m_spWeights[iInput*m_nInputCells+iOutput];
-            }
-
-            //
-            // 希望输入的下降值为，数入的偏导数
-            //
-            // 注意：这里是否要乘以学习率？
-            //      如果乘以学习率后，相当于向前传递的不是偏导数，而是偏导数 * 学习率，与现有神经网络BP算法不一致
-            //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
-            //
-            //expectInputDelta[iInput] = -derivationInput * dLearnRate;
-            expectInputDelta[iInput] = -derivationInput;
-        }
+        double* pDeltaArray = deltaTensor.pDoubleArray;
+        double* pOutputArray = outputTensor.pDoubleArray;
+        double* pInputArray = inputTensor.pDoubleArray;
+        double* pWeights = m_spWeights;
+        double* pBais = m_spBais;
 
         //
         //  调整权重
         //
         for(int iOutput=0; iOutput<m_nCells; iOutput++ ) {
+            
+            //
+            // 计算极小化目标函数对输出值的偏导数，极小化目标函数为 ((expectOutput-output) ^ 2) / 2
+            //
+            double drivationY = deactivate(pOutputArray[iOutput], pDeltaArray[iOutput]); 
 
-            //
-            //  极小化目标函数对输出值的偏导数，极小化目标函数为 ((expectOutput-output) ^ 2) / 2
-            //
-            double drivationY = derivationY[iOutput]; 
-
-            //
-            // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
-            //
-            m_spBais[iOutput] = m_spBais[iOutput] - (-drivationY) * dLearnRate;
 
             //
             // 更新权重，权重值的偏导数=输出值偏导数*数入值
             //
             for(int iInput=0; iInput<m_nInputCells; iInput++ ) {
                 int iWeight = iInput*m_nInputCells+iOutput;
-                m_spWeights[iWeight] = m_spWeights[iWeight] - drivationY * inputTensor.pDoubleArray[iInput] * dLearnRate;
+
+                //
+                // 希望输入的下降值为，数入的偏导数
+                //
+                // 注意：这里是否要乘以学习率？
+                //      如果乘以学习率后，相当于向前传递的不是偏导数，而是偏导数 * 学习率，与现有神经网络BP算法不一致
+                //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
+                //
+                //pExpectInputDelta[iInput] -= drivationY * pWeights[iWeight] * dLearnRate;
+                pExpectInputDelta[iInput] -= drivationY * pWeights[iWeight];
+
+                pWeights[iWeight] -= drivationY * pInputArray[iInput] * dLearnRate;
             }
+
+            //
+            // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
+            //
+            pBais[iOutput] -= (-drivationY) * dLearnRate;
         }
     }
 
     PTensor expectInputDeltaTensor = inputTensor;
-    expectInputDeltaTensor.pDoubleArray = expectInputDelta;
+    expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
     return pLearnCtx->pubInputDelta(expectInputDeltaTensor);
 }

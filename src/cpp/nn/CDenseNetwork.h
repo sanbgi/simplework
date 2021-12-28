@@ -23,8 +23,8 @@ public://Factory
 
 private:
     int initWeights(int nInputCells);
-    void activate(double arrY[], double arrOutput[]);
-    void deactivate(double arrOutput[], double arrDelta[], double arrDeirvatioY[]);
+    double activate(double v);
+    double deactivate(double dOutput, double dDelta);
 
 private:
     int m_nCells;
