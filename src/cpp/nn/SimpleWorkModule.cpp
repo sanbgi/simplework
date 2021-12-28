@@ -1,0 +1,3 @@
+#include "nn.h"
+
+SIMPLEWORK_MODULE_REGISTER

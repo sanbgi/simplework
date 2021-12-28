@@ -1,8 +1,6 @@
 #ifndef __SimpleWork_AV_h__
 #define __SimpleWork_AV_h__
 
-#define SIMPLEWORK_WITHOUTAPI
-
 #include "../core/core.h"
 #include "../math/math.h"
 

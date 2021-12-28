@@ -6,6 +6,7 @@
 using namespace sw;
 using namespace sw::av;
 using namespace sw::math;
+using namespace sw::nn;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(MyObject, "TestSimpleWork.MyObject")
 
@@ -56,6 +57,10 @@ void fun(const PData& r) {
         const FBB* pDouble = dr.getDataPtr();
         std::cout << "double found:  ";
     }
+
+    int i=10;
+    int aa[i];
+    aa[0] = i;
 }
 
 
@@ -100,6 +105,79 @@ int testPipe() {
     return SError::ERRORTYPE_SUCCESS;
 }
 
+void testTensor() {
+
+    int dim1[] = {2, 3};
+    double data1[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+    PTensor t1 = {
+        SData::getBasicTypeIdentifier<double>(),
+        2,
+        dim1,
+        6,
+        data1
+    };
+
+    int dim2[] = {3, 1};
+    double data2[] = { 6.0, 7.0, 8.0, 9.0, 10.0, 11.0 };
+    PTensor t2 = {
+        SData::getBasicTypeIdentifier<double>(),
+        1,
+        dim2,
+        3,
+        data2
+    };
+
+    struct CInternalReceiver : public IVisitor<const PTensor&> {
+        int visit(const PTensor& r) {
+            return SError::ERRORTYPE_FAILURE;
+        }
+    }receiver;
+
+    STensorSolver::getSolver()->multiply(t1, t2, &receiver);
+}
+
+void testNN() {
+    SNeuralNetwork n;
+    SNeuralNetwork::getFactory()->createDense(1, n);
+
+    double v = 0.5;
+    int dimsize[] = { 1 };
+    PTensor inputTensor;
+    inputTensor.idType = SData::getBasicTypeIdentifier<double>();
+    inputTensor.nData = 1;
+    inputTensor.pData = &v;
+    inputTensor.nDims = 1;
+    inputTensor.pDimSizes = dimsize;
+    struct LearnCtx : public SNeuralNetwork::ILearnCtx {
+        int getOutputTarget(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
+
+            double v = 0.7*(*pV) - 0.3 - outputTensor.pDoubleArray[0];
+            int dimsize[] = { 1 };
+            PTensor targetTensor;
+            targetTensor.idType = SData::getBasicTypeIdentifier<double>();
+            targetTensor.nData = 1;
+            targetTensor.pData = &v;
+            targetTensor.nDims = 1;
+            targetTensor.pDimSizes = dimsize;
+            return pTargetReceiver->visit(targetTensor);
+        }
+
+        //
+        // 返回期望输入量对目标的偏差量
+        //
+        int pubInputDelta(const PTensor& inputDelta){
+            return SError::ERRORTYPE_SUCCESS;
+        }
+
+        double *pV;
+    }ctx;
+    ctx.pV = &v;
+
+    for( int i=1; i<1000; i++) {
+        v = i/10.0;
+        n->learn(inputTensor, 0, &ctx);
+    }
+}
 
 int main(int argc, char *argv[]){
 
@@ -112,7 +190,9 @@ int main(int argc, char *argv[]){
     //unsigned long lc = SData::getStructTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
     //unsigned long ld = SData::getStructTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
     //testWriteFile();
-    testPipe();
+    //testPipe();
+    //testTensor();
+    testNN();
 
     /*
     int i=10;
