@@ -8,16 +8,9 @@ int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
+    spDense->m_pActivator = CActivator::getLeRU();
     spNetwork.setPtr(spDense.getPtr());
     return SError::ERRORTYPE_SUCCESS;
-}
-
-double CDenseNetwork::activate(double v) {
-    return v;
-}
-
-double CDenseNetwork::deactivate(double dOutput, double dDelta) {
-    return -dDelta;
 }
 
 int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
@@ -37,7 +30,7 @@ int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pO
             for(int iInput=0; iInput<m_nInputCells; iInput++) {
                 dOutout += pWeights[iOutput*m_nInputCells+iInput] * pInput[iInput];
             }
-            dOutout = activate(dOutout - pBais[iOutput]);
+            dOutout = m_pActivator->activate(dOutout - pBais[iOutput]);
         }
     }
     PTensor tensorOutput;
@@ -157,11 +150,11 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
         //  调整权重
         //
         for(int iOutput=0; iOutput<m_nCells; iOutput++ ) {
-            
+
             //
             // 计算极小化目标函数对输出值的偏导数，极小化目标函数为 ((expectOutput-output) ^ 2) / 2
             //
-            double drivationY = deactivate(pOutputArray[iOutput], pDeltaArray[iOutput]); 
+            double derivationOutput = m_pActivator->deactivate(pOutputArray[iOutput], pDeltaArray[iOutput]); 
 
 
             //
@@ -177,16 +170,16 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
                 //      如果乘以学习率后，相当于向前传递的不是偏导数，而是偏导数 * 学习率，与现有神经网络BP算法不一致
                 //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
                 //
-                //pExpectInputDelta[iInput] -= drivationY * pWeights[iWeight] * dLearnRate;
-                pExpectInputDelta[iInput] -= drivationY * pWeights[iWeight];
+                //pExpectInputDelta[iInput] -= derivationOutput * pWeights[iWeight] * dLearnRate;
+                pExpectInputDelta[iInput] -= derivationOutput * pWeights[iWeight];
 
-                pWeights[iWeight] -= drivationY * pInputArray[iInput] * dLearnRate;
+                pWeights[iWeight] -= derivationOutput * pInputArray[iInput] * dLearnRate;
             }
 
             //
             // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
             //
-            pBais[iOutput] -= (-drivationY) * dLearnRate;
+            pBais[iOutput] -= (-derivationOutput) * dLearnRate;
         }
     }
 

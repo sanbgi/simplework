@@ -2,6 +2,7 @@
 #define __SimpleWork_NN_CConvNetwork_H__
 
 #include "nn.h"
+#include "CActivator.h"
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
@@ -23,8 +24,6 @@ public://Factory
 
 private:
     int initWeights(const PTensor& inputTensor);
-    double activate(double v);
-    double deactivate(double dOutput, double dDelta);
 
 private:
     int m_nConvWidth;
@@ -36,6 +35,7 @@ private:
     int m_nInputData;
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
+    CActivator* m_pActivator;
 
 public:
     CConvolutionNetwork() {

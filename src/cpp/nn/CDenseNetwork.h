@@ -2,6 +2,8 @@
 #define __SimpleWork_NN_CDenseNetwork_H__
 
 #include "nn.h"
+#include "CActivator.h"
+
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
@@ -23,14 +25,13 @@ public://Factory
 
 private:
     int initWeights(int nInputCells);
-    double activate(double v);
-    double deactivate(double dOutput, double dDelta);
 
 private:
     int m_nCells;
     int m_nInputCells;
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
+    CActivator* m_pActivator;
 
 public:
     CDenseNetwork() {
