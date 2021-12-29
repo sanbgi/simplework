@@ -87,7 +87,7 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILear
             deltaReceiver.pLearnCtx = this->pLearnCtx;
             deltaReceiver.pOutputTensor = &t;
             deltaReceiver.pInputTensor = this->pInputTensor;
-            return pLearnCtx->getOutputDelta(t, &deltaReceiver);
+            return pLearnCtx->forward(t, &deltaReceiver);
         }
 
         CConvolutionNetwork* pNetwork;
@@ -224,5 +224,31 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
 
     PTensor expectInputDeltaTensor = inputTensor;
     expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
-    return pLearnCtx->setInputDelta(expectInputDeltaTensor);
+    return pLearnCtx->backward(expectInputDeltaTensor);
+}
+
+int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& expectTensor) {
+    struct COutputReceiver : IVisitor<const PTensor&> {
+        int visit(const PTensor& t) {
+            int nData = pExpectTensor->nData;
+            double* pOutputArray = t.pDoubleArray;
+            double* pExpectArray = pExpectTensor->pDoubleArray;
+            double pDeltaArray[nData];
+            for(int i=0; i<nData; i++) {
+                pDeltaArray[i] = pExpectArray[i]-pOutputArray[i];
+            }
+            PTensor deltaTensor = *pExpectTensor;
+            deltaTensor.pDoubleArray = pDeltaArray;
+            return pNetwork->learn(*pInputTensor, t, deltaTensor, nullptr);
+        }
+
+        CConvolutionNetwork* pNetwork;
+        SNeuralNetwork::ILearnCtx* pLearnCtx;
+        const PTensor* pInputTensor;
+        const PTensor* pExpectTensor;
+    }outputReceiver;
+    outputReceiver.pNetwork = this;
+    outputReceiver.pInputTensor = &inputTensor;
+    outputReceiver.pExpectTensor = &expectTensor;
+    return eval(inputTensor, &outputReceiver);
 }

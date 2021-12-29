@@ -17,27 +17,31 @@ public:
     //
     struct ILearnCtx {
         //
-        // 查询输出量与目标量的偏差量
+        // 前向计算，同时查询输出量与目标量的偏差量(注意不是偏导数)
         //
-        virtual int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver) = 0;
+        virtual int forward(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver) = 0;
 
         //
-        // 返回期望输入量对目标的偏差量
+        // 反向梯度，返回期望输入量对目标的偏差量(注意不是偏导数)
         //
-        virtual int setInputDelta(const PTensor& inputDelta) { return SError::ERRORTYPE_SUCCESS; }
+        virtual int backward(const PTensor& inputDelta) { return SError::ERRORTYPE_SUCCESS; }
     };
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INeuralNetwork", 211223)
 
         //
         //  计算
-        //      @inputTensor，输入数据
+        //      @inputTensor，输入张量
         //      @pReceiver，输出数据接收回调接口
         //
         virtual int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) = 0;
 
         //
-        //virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
+        //  学习
+        //      @inputTensor，输入张量
+        //      @expectTensor，期望的输出张量
+        //
+        virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
 
         //
         //  学习(可实现级联)

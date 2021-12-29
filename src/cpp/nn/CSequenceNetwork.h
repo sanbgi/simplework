@@ -16,7 +16,8 @@ class CSequenceNetwork : public CObject, public INeuralNetwork{
 private://INeuralNetwork
     int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
     int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx);
-
+    int learn(const PTensor& inputTensor, const PTensor& expectTensor);
+    
 public://Factory
     static int createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork);
 

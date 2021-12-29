@@ -83,12 +83,12 @@ int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* p
     deltaReceiver.pLearnCtx = pLearnCtx;
     deltaReceiver.pNetwork = this;
     deltaReceiver.pInputTensor = &inputTensor;
-    return pLearnCtx->getOutputDelta(inputTensor, &deltaReceiver); 
+    return pLearnCtx->forward(inputTensor, &deltaReceiver); 
 }
 
 int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& deltaTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
     if(m_isTransparent) {
-        return pLearnCtx->setInputDelta(deltaTensor);
+        return pLearnCtx->backward(deltaTensor);
     }
 
     double pExpectInputDelta[inputTensor.nData];
@@ -130,7 +130,11 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& deltaTensor, 
     }
     PTensor expectInputDeltaTensor = inputTensor;
     expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
-    return pLearnCtx->setInputDelta(expectInputDeltaTensor);
+    return pLearnCtx->backward(expectInputDeltaTensor);
+}
+
+int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& expectTensor) {
+    return SError::ERRORTYPE_SUCCESS;
 }
 
 int CPoolNetwork::initNetwork(const PTensor& inputTensor) {

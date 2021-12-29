@@ -150,7 +150,7 @@ void testNN() {
     inputTensor.nDims = 1;
     inputTensor.pDimSizes = dimsize;
     struct LearnCtx : public SNeuralNetwork::ILearnCtx {
-        int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
+        int forward(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
             double y = 0.7*(*pV) - 0.3;
             double v = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
             int dimsize[] = { 1 };

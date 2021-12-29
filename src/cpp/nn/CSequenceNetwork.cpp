@@ -40,9 +40,9 @@ int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>*
 int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
     class CInteralCtx : public SNeuralNetwork::ILearnCtx {
     public:
-        int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver){
+        int forward(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver){
             if(iPipe == pArr->size()) {
-                return pFinalCtx->getOutputDelta(outputTensor, pDeltaReceiver);
+                return pFinalCtx->forward(outputTensor, pDeltaReceiver);
             }
 
             CInteralCtx nextCtx;
@@ -54,11 +54,11 @@ int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCt
             return (*pArr)[iPipe]->learn(outputTensor, &nextCtx);
         }
 
-        int setInputDelta(const PTensor& inputDelta) {
+        int backward(const PTensor& inputDelta) {
             if(pDeltaReceiver) {
                 return pDeltaReceiver->visit(inputDelta);
             }
-            return pFinalCtx->setInputDelta(inputDelta);
+            return pFinalCtx->backward(inputDelta);
         }
         int iPipe;
         double dInputWeight;
@@ -74,4 +74,29 @@ int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCt
         return SError::ERRORTYPE_FAILURE;
     }
     return m_arrNetworks[0]->learn(inputTensor, &ctx);
+}
+
+int CSequenceNetwork::learn(const PTensor& inputTensor, const PTensor& expectTensor) {
+    class CInteralCtx : public SNeuralNetwork::ILearnCtx {
+    public:
+        int forward(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver){
+            int nData = pExpectTensor->nData;
+            double* pOutputArray = outputTensor.pDoubleArray;
+            double* pExpectArray = pExpectTensor->pDoubleArray;
+            double pDeltaArray[nData];
+            for(int i=0; i<nData; i++) {
+                pDeltaArray[i] = pExpectArray[i]-pOutputArray[i];
+            }
+            PTensor deltaTensor = *pExpectTensor;
+            deltaTensor.pDoubleArray = pDeltaArray;
+            return pDeltaReceiver->visit(deltaTensor);
+        }
+        CSequenceNetwork* pNetwork;
+        const PTensor* pInputTensor;
+        const PTensor* pExpectTensor;
+    }ctx;
+    ctx.pNetwork = this;
+    ctx.pInputTensor = &inputTensor;
+    ctx.pExpectTensor = &expectTensor;
+    return learn(inputTensor, &ctx);
 }

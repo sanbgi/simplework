@@ -17,7 +17,8 @@ private://INeuralNetwork
     int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
     int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx);
     int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTener, SNeuralNetwork::ILearnCtx* pLearnCtx);
-
+    int learn(const PTensor& inputTensor, const PTensor& expectTensor);
+    
 public://Factory
     static int createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork);
 
