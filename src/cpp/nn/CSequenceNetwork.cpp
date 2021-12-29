@@ -1,18 +1,5 @@
 #include "CSequenceNetwork.h"
 
-int CSequenceNetwork::getCellNumber() {
-    /*
-    int nCell = 0;
-    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
-    while(it != m_arrNetworks.end()) {
-        nCell += (*it)->getCellNumber();
-        it++;
-    }
-    return nCell;
-    */
-    return 0;
-}
-
 int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
     CPointer<CSequenceNetwork> spSequence;
     CObject::createObject(spSequence);
@@ -24,7 +11,6 @@ int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SN
 }
 
 int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
-
     class CInteralReceiver : public IVisitor<const PTensor&> {
     public:
         int visit(const PTensor& rData) {
@@ -79,13 +65,13 @@ int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCt
         std::vector<SNeuralNetwork>* pArr;
         SNeuralNetwork::ILearnCtx* pFinalCtx;
         IVisitor<const PTensor&>* pDeltaReceiver;
-    }receiver;
-    receiver.pArr = &m_arrNetworks;
-    receiver.iPipe = 1;
-    receiver.pFinalCtx = pLearnCtx;
-    receiver.pDeltaReceiver = nullptr;
+    }ctx;
+    ctx.pArr = &m_arrNetworks;
+    ctx.iPipe = 1;
+    ctx.pFinalCtx = pLearnCtx;
+    ctx.pDeltaReceiver = nullptr;
     if(m_arrNetworks.size() == 0) {
         return SError::ERRORTYPE_FAILURE;
     }
-    return m_arrNetworks[0]->learn(inputTensor, &receiver);
+    return m_arrNetworks[0]->learn(inputTensor, &ctx);
 }

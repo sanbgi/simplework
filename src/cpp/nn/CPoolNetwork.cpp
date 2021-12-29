@@ -1,9 +1,5 @@
 #include "CPoolNetwork.h"
 
-int CPoolNetwork::getCellNumber() {
-    return 0;
-}
-
 int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
     CPointer<CPoolNetwork> spPool;
     CObject::createObject(spPool);

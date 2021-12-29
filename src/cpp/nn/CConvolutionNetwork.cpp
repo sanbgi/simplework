@@ -1,9 +1,5 @@
 #include "CConvolutionNetwork.h"
 
-int CConvolutionNetwork::getCellNumber() {
-    return m_nConvWidth*m_nConvHeight*m_nConvs;
-}
-
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);

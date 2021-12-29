@@ -14,7 +14,6 @@ class CSequenceNetwork : public CObject, public INeuralNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INeuralNetwork
-    int getCellNumber();
     int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
     int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx);
 

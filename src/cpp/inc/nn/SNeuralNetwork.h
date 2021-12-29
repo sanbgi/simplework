@@ -37,9 +37,11 @@ public:
         virtual int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) = 0;
 
         //
-        //  学习
+        //virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
+
+        //
+        //  学习(可实现级联)
         //      @inputTensor，输入数据
-        //      @dInputWeight，学习过程中，输入张量可调整的权重值，[0-1]，0 - 表示输入张量学习不可调整（一般是原始输入），1 - 表示节点权重调整没有意义，无需调整
         //      @pLearnCtx，计算所需要的上下文
         //
         virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx) = 0;

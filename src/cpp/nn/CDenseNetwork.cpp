@@ -1,9 +1,5 @@
 #include "CDenseNetwork.h"
 
-int CDenseNetwork::getCellNumber() {
-    return m_nCells;
-}
-
 int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
