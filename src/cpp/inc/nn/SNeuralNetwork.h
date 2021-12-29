@@ -17,7 +17,7 @@ public:
     //
     struct ILearnCtx {
         //
-        // 前向计算，同时查询输出量与目标量的偏差量(注意不是偏导数)
+        // 获得输出的偏差量，在前向计算中，Ctx可以在这个回调函数中，将输出作为下一级神经网络的输入，进行学习
         //
         virtual int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) = 0;
     };
