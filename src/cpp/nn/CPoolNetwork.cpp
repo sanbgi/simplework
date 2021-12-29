@@ -70,14 +70,14 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
     return pOutputReceiver->visit(tensorOutput);
 }
 
-int CPoolNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
     if(initNetwork(inputTensor) != SError::ERRORTYPE_SUCCESS) {
         return SError::ERRORTYPE_FAILURE;
     }
     
     struct CDeltaReceiver : IVisitor<const PTensor&> {
         int visit(const PTensor& t) {
-            return pNetwork->learn(*pInputTensor, t, dInputWeight, pLearnCtx);
+            return pNetwork->learn(*pInputTensor, t, pLearnCtx);
         }
         SNeuralNetwork::ILearnCtx* pLearnCtx;
         CPoolNetwork* pNetwork;
@@ -87,13 +87,12 @@ int CPoolNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeural
     deltaReceiver.pLearnCtx = pLearnCtx;
     deltaReceiver.pNetwork = this;
     deltaReceiver.pInputTensor = &inputTensor;
-    deltaReceiver.dInputWeight = dInputWeight;
     return pLearnCtx->getOutputDelta(inputTensor, &deltaReceiver); 
 }
 
-int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& deltaTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& deltaTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
     if(m_isTransparent) {
-        return pLearnCtx->pubInputDelta(deltaTensor);
+        return pLearnCtx->setInputDelta(deltaTensor);
     }
 
     double pExpectInputDelta[inputTensor.nData];
@@ -135,7 +134,7 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& deltaTensor, 
     }
     PTensor expectInputDeltaTensor = inputTensor;
     expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
-    return pLearnCtx->pubInputDelta(expectInputDeltaTensor);
+    return pLearnCtx->setInputDelta(expectInputDeltaTensor);
 }
 
 int CPoolNetwork::initNetwork(const PTensor& inputTensor) {

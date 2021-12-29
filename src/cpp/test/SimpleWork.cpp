@@ -151,7 +151,6 @@ void testNN() {
     inputTensor.pDimSizes = dimsize;
     struct LearnCtx : public SNeuralNetwork::ILearnCtx {
         int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
-
             double y = 0.7*(*pV) - 0.3;
             double v = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
             int dimsize[] = { 1 };
@@ -163,21 +162,13 @@ void testNN() {
             targetTensor.pDimSizes = dimsize;
             return pTargetReceiver->visit(targetTensor);
         }
-
-        //
-        // 返回期望输入量对目标的偏差量
-        //
-        int pubInputDelta(const PTensor& inputDelta){
-            return SError::ERRORTYPE_SUCCESS;
-        }
-
         double *pV;
     }ctx;
     ctx.pV = &v;
 
     for( int i=1; i<1000; i++) {
         v = rand() % 100 / 50.0;
-        n->learn(inputTensor, 0, &ctx);
+        n->learn(inputTensor, &ctx);
     }
 }
 

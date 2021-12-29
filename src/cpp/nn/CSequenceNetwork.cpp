@@ -51,7 +51,7 @@ int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>*
     return receiver.visit(inputTensor);
 }
 
-int CSequenceNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
     class CInteralCtx : public SNeuralNetwork::ILearnCtx {
     public:
         int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver){
@@ -65,14 +65,14 @@ int CSequenceNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNe
             nextCtx.dInputWeight = dInputWeight;
             nextCtx.pFinalCtx = pFinalCtx;
             nextCtx.pDeltaReceiver = pDeltaReceiver;
-            return (*pArr)[iPipe]->learn(outputTensor, dInputWeight, &nextCtx);
+            return (*pArr)[iPipe]->learn(outputTensor, &nextCtx);
         }
 
-        int pubInputDelta(const PTensor& inputDelta) {
+        int setInputDelta(const PTensor& inputDelta) {
             if(pDeltaReceiver) {
                 return pDeltaReceiver->visit(inputDelta);
             }
-            return pFinalCtx->pubInputDelta(inputDelta);
+            return pFinalCtx->setInputDelta(inputDelta);
         }
         int iPipe;
         double dInputWeight;
@@ -82,11 +82,10 @@ int CSequenceNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNe
     }receiver;
     receiver.pArr = &m_arrNetworks;
     receiver.iPipe = 1;
-    receiver.dInputWeight = dInputWeight;
     receiver.pFinalCtx = pLearnCtx;
     receiver.pDeltaReceiver = nullptr;
     if(m_arrNetworks.size() == 0) {
         return SError::ERRORTYPE_FAILURE;
     }
-    return m_arrNetworks[0]->learn(inputTensor, dInputWeight, &receiver);
+    return m_arrNetworks[0]->learn(inputTensor, &receiver);
 }

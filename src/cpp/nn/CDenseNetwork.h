@@ -24,11 +24,9 @@ class CDenseNetwork : public CObject, public INeuralNetwork{
 private://INeuralNetwork
     int getCellNumber();
     int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
-    int learn(const PTensor& inputTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx);
-    int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTener, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx);
-    int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, IVisitor<const PTensor&>* pDeltaReceiver);
-    int learn(const PTensor& inputTensor, const PTensor& expectTensor);
-    
+    int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx);
+    int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTener, SNeuralNetwork::ILearnCtx* pLearnCtx);
+
 public://Factory
     static int createNetwork(int nCells, SNeuralNetwork& spNetwork);
 

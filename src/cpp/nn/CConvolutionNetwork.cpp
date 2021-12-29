@@ -70,14 +70,14 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
     return pOutputReceiver->visit(outTensor);
 }
 
-int CConvolutionNetwork::learn(const PTensor& inputTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
 
     struct COutputReceiver : IVisitor<const PTensor&> {
         int visit(const PTensor& t) {
 
             struct CDeltaReceiver : IVisitor<const PTensor&> {
                 int visit(const PTensor& t) {
-                    return pNetwork->learn(*pInputTensor, *pOutputTensor, t, dInputWeight, pLearnCtx);
+                    return pNetwork->learn(*pInputTensor, *pOutputTensor, t, pLearnCtx);
                 }
 
                 CConvolutionNetwork* pNetwork;
@@ -100,7 +100,6 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, double dInputWeight, 
         const PTensor* pInputTensor;
     }outputReceiver;
     outputReceiver.pNetwork = this;
-    outputReceiver.dInputWeight = dInputWeight;
     outputReceiver.pLearnCtx = pLearnCtx;
     outputReceiver.pInputTensor = &inputTensor;
     return eval(inputTensor, &outputReceiver);
@@ -148,7 +147,7 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, double dInputWeight, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
 
     double pExpectInputDelta[inputTensor.nData];
     memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
@@ -229,5 +228,5 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
 
     PTensor expectInputDeltaTensor = inputTensor;
     expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
-    return pLearnCtx->pubInputDelta(expectInputDeltaTensor);
+    return pLearnCtx->setInputDelta(expectInputDeltaTensor);
 }
