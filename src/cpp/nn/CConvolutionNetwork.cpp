@@ -66,38 +66,31 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
     return pOutputReceiver->visit(outTensor);
 }
 
-int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation) {
 
     struct COutputReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& t) {
+        int visit(const PTensor& outputTensor) {
 
-            struct CDeltaReceiver : IVisitor<const PTensor&> {
-                int visit(const PTensor& t) {
-                    return pNetwork->learn(*pInputTensor, *pOutputTensor, t, pLearnCtx);
-                }
+            int nOutputData = outputTensor.nData;
+            double pOutputDelta[nOutputData];
+            PTensor outputDeviation = outputTensor;
+            outputDeviation.pDoubleArray = pOutputDelta;
+            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != SError::ERRORTYPE_SUCCESS ) {
+                return SError::ERRORTYPE_FAILURE;
+            }
 
-                CConvolutionNetwork* pNetwork;
-                double dInputWeight;
-                SNeuralNetwork::ILearnCtx* pLearnCtx;
-                const PTensor* pOutputTensor;
-                const PTensor* pInputTensor;
-            }deltaReceiver;
-            deltaReceiver.pNetwork = this->pNetwork;
-            deltaReceiver.dInputWeight = this->dInputWeight;
-            deltaReceiver.pLearnCtx = this->pLearnCtx;
-            deltaReceiver.pOutputTensor = &t;
-            deltaReceiver.pInputTensor = this->pInputTensor;
-            return pLearnCtx->forward(t, &deltaReceiver);
+            return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
         }
 
         CConvolutionNetwork* pNetwork;
-        double dInputWeight;
         SNeuralNetwork::ILearnCtx* pLearnCtx;
         const PTensor* pInputTensor;
+        PTensor* pInputDeviation;
     }outputReceiver;
     outputReceiver.pNetwork = this;
     outputReceiver.pLearnCtx = pLearnCtx;
     outputReceiver.pInputTensor = &inputTensor;
+    outputReceiver.pInputDeviation = pInputDeviation;
     return eval(inputTensor, &outputReceiver);
 }
 
@@ -143,112 +136,83 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
 
-    double pExpectInputDelta[inputTensor.nData];
-    memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
-
-    //
-    // 将执行体放在括号中，达到节约栈内存目的(因为括号中的内存可以在回调之前释放)
-    //
-    {
-        //
-        // 学习率先固定
-        //
-        double dLearnRate = 0.1;
-
-        int nConvs = m_nConvs;
-        int nConvSize = m_nConvWidth * m_nConvHeight * m_nInputLayers; 
-        int nConvWidth = m_nConvWidth;
-        int nConvHeight = m_nConvHeight;
-
-        int nInputWidth = m_nInputWidth;
-        int nInputLayers = m_nInputLayers;
-
-        int nOutputWidth = m_nInputWidth - m_nConvWidth + 1;
-        int nOutputHeight = m_nInputHeight - m_nConvHeight + 1;
-        int nOutput = nOutputWidth*nOutputHeight*nConvs;
-
-        double* pInputArray = inputTensor.pDoubleArray;
-        double* pOutputArray = outputTensor.pDoubleArray;
-        double* pDeltaArray = deltaTensor.pDoubleArray;
-        double* pWeights = m_spWeights;
-        double* pBais = m_spBais;
-
-        double pDerivationZ[nOutput];
-        m_pActivator->deactivate(nOutput, pOutputArray, pDeltaArray, pDerivationZ);
-        for( int iOutput=0; iOutput<nOutput; iOutput++) {
-            int iConv = iOutput % nConvs;
-            int iOutputX = iOutput / nConvs;
-            int iOutputY = iOutputX / nOutputWidth;
-            iOutputX = iOutputX % nOutputWidth;
-
-            //
-            //  计算目标函数对当前输出值的偏导数
-            //      X = 输入
-            //      Y = 权重*X-偏置
-            //      F = activation(Y)
-            //      delta = 目标 - F
-            //      E = delta*delta/2 目标函数
-            //      derivationZ = d(E) / d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(y)
-            //      其中：
-            //          d(E)/d(delta) = pDeltaArray[iOutput]
-            //          d(delta)/d(F) = -1
-            //          d(F)/d(y) = deactivate(y)
-            //
-            double derivationZ = pDerivationZ[iOutput];
-
-            //
-            //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
-            //  
-            double* pConvWeights = pWeights + iConv * nConvSize;
-            for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
-                for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
-                    for( int iConvX=0; iConvX<nConvWidth; iConvX++ ) {
-                        int iInputY = iOutputY+iConvY;
-                        int iInputX = iOutputX+iConvX;
-                        int iWeight = (iConvY*nConvWidth+iConvX)*nInputLayers+iInputLayer;
-                        int iInput = (iInputY*nInputWidth+iInputX)*nInputLayers+iInputLayer;
-                        pExpectInputDelta[iInput] -= derivationZ * pConvWeights[iWeight];
-                        pConvWeights[iWeight] -= derivationZ*pInputArray[iInput]*dLearnRate;
-                    }
-                }
-            }
-
-            //
-            //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
-            //
-            pBais[iOutput] -= (-derivationZ) * dLearnRate;
-        }
+    double fakeArray[inputTensor.nData];
+    double* pExpectInputDelta = fakeArray;
+    if(pInputDeviation) {
+        double* pExpectInputDelta = pInputDeviation->pDoubleArray;
+        memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
     }
 
-    PTensor expectInputDeltaTensor = inputTensor;
-    expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
-    return pLearnCtx->backward(expectInputDeltaTensor);
-}
+    //
+    // 学习率先固定
+    //
+    double dLearnRate = 0.1;
 
-int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& expectTensor) {
-    struct COutputReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& t) {
-            int nData = pExpectTensor->nData;
-            double* pOutputArray = t.pDoubleArray;
-            double* pExpectArray = pExpectTensor->pDoubleArray;
-            double pDeltaArray[nData];
-            for(int i=0; i<nData; i++) {
-                pDeltaArray[i] = pExpectArray[i]-pOutputArray[i];
+    int nConvs = m_nConvs;
+    int nConvSize = m_nConvWidth * m_nConvHeight * m_nInputLayers; 
+    int nConvWidth = m_nConvWidth;
+    int nConvHeight = m_nConvHeight;
+
+    int nInputWidth = m_nInputWidth;
+    int nInputLayers = m_nInputLayers;
+
+    int nOutputWidth = m_nInputWidth - m_nConvWidth + 1;
+    int nOutputHeight = m_nInputHeight - m_nConvHeight + 1;
+    int nOutput = nOutputWidth*nOutputHeight*nConvs;
+
+    double* pInputArray = inputTensor.pDoubleArray;
+    double* pOutputArray = outputTensor.pDoubleArray;
+    double* pDeltaArray = outputDeviation.pDoubleArray;
+    double* pWeights = m_spWeights;
+    double* pBais = m_spBais;
+
+    double pDerivationZ[nOutput];
+    m_pActivator->deactivate(nOutput, pOutputArray, pDeltaArray, pDerivationZ);
+    for( int iOutput=0; iOutput<nOutput; iOutput++) {
+        int iConv = iOutput % nConvs;
+        int iOutputX = iOutput / nConvs;
+        int iOutputY = iOutputX / nOutputWidth;
+        iOutputX = iOutputX % nOutputWidth;
+
+        //
+        //  计算目标函数对当前输出值的偏导数
+        //      X = 输入
+        //      Y = 权重*X-偏置
+        //      F = activation(Y)
+        //      delta = 目标 - F
+        //      E = delta*delta/2 目标函数
+        //      derivationZ = d(E) / d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(y)
+        //      其中：
+        //          d(E)/d(delta) = pDeltaArray[iOutput]
+        //          d(delta)/d(F) = -1
+        //          d(F)/d(y) = deactivate(y)
+        //
+        double derivationZ = pDerivationZ[iOutput];
+
+        //
+        //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
+        //  
+        double* pConvWeights = pWeights + iConv * nConvSize;
+        for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
+            for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
+                for( int iConvX=0; iConvX<nConvWidth; iConvX++ ) {
+                    int iInputY = iOutputY+iConvY;
+                    int iInputX = iOutputX+iConvX;
+                    int iWeight = (iConvY*nConvWidth+iConvX)*nInputLayers+iInputLayer;
+                    int iInput = (iInputY*nInputWidth+iInputX)*nInputLayers+iInputLayer;
+                    pExpectInputDelta[iInput] -= derivationZ * pConvWeights[iWeight];
+                    pConvWeights[iWeight] -= derivationZ*pInputArray[iInput]*dLearnRate;
+                }
             }
-            PTensor deltaTensor = *pExpectTensor;
-            deltaTensor.pDoubleArray = pDeltaArray;
-            return pNetwork->learn(*pInputTensor, t, deltaTensor, nullptr);
         }
 
-        CConvolutionNetwork* pNetwork;
-        SNeuralNetwork::ILearnCtx* pLearnCtx;
-        const PTensor* pInputTensor;
-        const PTensor* pExpectTensor;
-    }outputReceiver;
-    outputReceiver.pNetwork = this;
-    outputReceiver.pInputTensor = &inputTensor;
-    outputReceiver.pExpectTensor = &expectTensor;
-    return eval(inputTensor, &outputReceiver);
+        //
+        //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
+        //
+        pBais[iOutput] -= (-derivationZ) * dLearnRate;
+    }
+
+    return SError::ERRORTYPE_SUCCESS;
 }

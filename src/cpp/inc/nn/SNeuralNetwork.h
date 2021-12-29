@@ -19,12 +19,7 @@ public:
         //
         // 前向计算，同时查询输出量与目标量的偏差量(注意不是偏导数)
         //
-        virtual int forward(const PTensor& outputTensor, IVisitor<const PTensor&>* pDeltaReceiver) = 0;
-
-        //
-        // 反向梯度，返回期望输入量对目标的偏差量(注意不是偏导数)
-        //
-        virtual int backward(const PTensor& inputDelta) { return SError::ERRORTYPE_SUCCESS; }
+        virtual int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) = 0;
     };
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INeuralNetwork", 211223)
@@ -41,14 +36,14 @@ public:
         //      @inputTensor，输入张量
         //      @expectTensor，期望的输出张量
         //
-        virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
+        //virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
 
         //
         //  学习(可实现级联)
         //      @inputTensor，输入数据
         //      @pLearnCtx，计算所需要的上下文
         //
-        virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx) = 0;
+        virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx, PTensor* pInputDeviation) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -150,17 +150,10 @@ void testNN() {
     inputTensor.nDims = 1;
     inputTensor.pDimSizes = dimsize;
     struct LearnCtx : public SNeuralNetwork::ILearnCtx {
-        int forward(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
+        int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeivation) {
             double y = 0.7*(*pV) - 0.3;
-            double v = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
-            int dimsize[] = { 1 };
-            PTensor targetTensor;
-            targetTensor.idType = SData::getBasicTypeIdentifier<double>();
-            targetTensor.nData = 1;
-            targetTensor.pData = &v;
-            targetTensor.nDims = 1;
-            targetTensor.pDimSizes = dimsize;
-            return pTargetReceiver->visit(targetTensor);
+            *outputDeivation.pDoubleArray = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
+            return SError::ERRORTYPE_SUCCESS;
         }
         double *pV;
     }ctx;
@@ -168,7 +161,7 @@ void testNN() {
 
     for( int i=1; i<1000; i++) {
         v = rand() % 100 / 50.0;
-        n->learn(inputTensor, &ctx);
+        n->learn(inputTensor, &ctx, nullptr);
     }
 }
 

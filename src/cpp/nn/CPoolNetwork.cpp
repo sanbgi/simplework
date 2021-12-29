@@ -66,74 +66,82 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
     return pOutputReceiver->visit(tensorOutput);
 }
 
-int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
-    if(initNetwork(inputTensor) != SError::ERRORTYPE_SUCCESS) {
-        return SError::ERRORTYPE_FAILURE;
-    }
-    
-    struct CDeltaReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& t) {
-            return pNetwork->learn(*pInputTensor, t, pLearnCtx);
+int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation) {
+
+    struct COutputReceiver : IVisitor<const PTensor&> {
+        int visit(const PTensor& outputTensor) {
+
+            int nOutputData = outputTensor.nData;
+            double pOutputDelta[nOutputData];
+            PTensor outputDeviation = outputTensor;
+            outputDeviation.pDoubleArray = pOutputDelta;
+            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != SError::ERRORTYPE_SUCCESS ) {
+                return SError::ERRORTYPE_FAILURE;
+            }
+
+            return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
         }
-        SNeuralNetwork::ILearnCtx* pLearnCtx;
+
         CPoolNetwork* pNetwork;
+        SNeuralNetwork::ILearnCtx* pLearnCtx;
         const PTensor* pInputTensor;
-        double dInputWeight;
-    }deltaReceiver;
-    deltaReceiver.pLearnCtx = pLearnCtx;
-    deltaReceiver.pNetwork = this;
-    deltaReceiver.pInputTensor = &inputTensor;
-    return pLearnCtx->forward(inputTensor, &deltaReceiver); 
+        PTensor* pInputDeviation;
+    }outputReceiver;
+    outputReceiver.pNetwork = this;
+    outputReceiver.pLearnCtx = pLearnCtx;
+    outputReceiver.pInputTensor = &inputTensor;
+    outputReceiver.pInputDeviation = pInputDeviation;
+    return eval(inputTensor, &outputReceiver);
 }
 
-int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& deltaTensor, SNeuralNetwork::ILearnCtx* pLearnCtx) {
+int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
+    if(pInputDeviation == nullptr) {
+        return SError::ERRORTYPE_SUCCESS;
+    }
+    
     if(m_isTransparent) {
-        return pLearnCtx->backward(deltaTensor);
+        if(pInputDeviation)
+        mempcpy(pInputDeviation->pDoubleArray, outputDeviation.pDoubleArray, sizeof(double)*inputTensor.nData);
+        return SError::ERRORTYPE_SUCCESS;
     }
 
-    double pExpectInputDelta[inputTensor.nData];
+    double* pExpectInputDelta = pInputDeviation->pDoubleArray;
     memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
-    {
-        int nInputWidth = m_nInputWidth;
-        int nInputHeight = m_nInputHeight;
-        int nInputLayer = m_nInputLayer;
-        int nPoolWidth = m_nWidth;
-        int nPoolHeight = m_nHeight;
-        int nOutWidth = (m_nInputWidth - m_nWidth + 1) / m_nStrideWidth;
-        int nOutHeight = (m_nInputHeight - m_nHeight + 1) / m_nStrideHeight;
-        double* pInputArray = inputTensor.pDoubleArray;
-        double* pDeltaArray = deltaTensor.pDoubleArray;
-        for( int iOutHeight = 0; iOutHeight <= nOutHeight; iOutHeight++ ) {
-            for( int iOutWidth = 0; iOutWidth <= nOutWidth; iOutWidth++) {
-                int iInputHeight = iOutHeight*m_nStrideHeight;
-                int iInputWidth = iOutWidth*m_nStrideWidth;
-                for(int iLayer=0; iLayer<nInputLayer; iLayer++) {
-                    double dMax = pInputArray[(iInputHeight*nInputWidth+iInputWidth)*nInputLayer+iLayer];
-                    double* pExpectDelta = nullptr;
-                    for( int iPoolHeight=0; iPoolHeight<nPoolHeight; iPoolHeight++) {
-                        for( int iPoolWidth=0; iPoolWidth<nPoolWidth; iPoolWidth++) {
-                            int iHeight = iInputHeight+iPoolHeight;
-                            int iWidth = iInputWidth+iPoolWidth;
-                            double dValue = pInputArray[(iHeight*nInputWidth+iWidth)*nInputLayer+iLayer];
-                            if( dValue > dMax) {
-                                dMax = dValue;
-                                pExpectDelta = &pExpectInputDelta[(iHeight*nInputWidth+iWidth)*nInputLayer+iLayer];
-                            }
+
+    int nInputWidth = m_nInputWidth;
+    int nInputHeight = m_nInputHeight;
+    int nInputLayer = m_nInputLayer;
+    int nPoolWidth = m_nWidth;
+    int nPoolHeight = m_nHeight;
+    int nOutWidth = (m_nInputWidth - m_nWidth + 1) / m_nStrideWidth;
+    int nOutHeight = (m_nInputHeight - m_nHeight + 1) / m_nStrideHeight;
+    double* pInputArray = inputTensor.pDoubleArray;
+    double* pDeltaArray = outputDeviation.pDoubleArray;
+    for( int iOutHeight = 0; iOutHeight <= nOutHeight; iOutHeight++ ) {
+        for( int iOutWidth = 0; iOutWidth <= nOutWidth; iOutWidth++) {
+            int iInputHeight = iOutHeight*m_nStrideHeight;
+            int iInputWidth = iOutWidth*m_nStrideWidth;
+            for(int iLayer=0; iLayer<nInputLayer; iLayer++) {
+                double dMax = pInputArray[(iInputHeight*nInputWidth+iInputWidth)*nInputLayer+iLayer];
+                double* pExpectDelta = nullptr;
+                for( int iPoolHeight=0; iPoolHeight<nPoolHeight; iPoolHeight++) {
+                    for( int iPoolWidth=0; iPoolWidth<nPoolWidth; iPoolWidth++) {
+                        int iHeight = iInputHeight+iPoolHeight;
+                        int iWidth = iInputWidth+iPoolWidth;
+                        double dValue = pInputArray[(iHeight*nInputWidth+iWidth)*nInputLayer+iLayer];
+                        if( dValue > dMax) {
+                            dMax = dValue;
+                            pExpectDelta = &pExpectInputDelta[(iHeight*nInputWidth+iWidth)*nInputLayer+iLayer];
                         }
                     }
-                    if(pExpectDelta) {
-                        *pExpectDelta = pDeltaArray[(iOutHeight*nOutWidth+iOutWidth)*nInputLayer+iLayer];
-                    }
+                }
+                if(pExpectDelta) {
+                    *pExpectDelta = pDeltaArray[(iOutHeight*nOutWidth+iOutWidth)*nInputLayer+iLayer];
                 }
             }
         }
     }
-    PTensor expectInputDeltaTensor = inputTensor;
-    expectInputDeltaTensor.pDoubleArray = pExpectInputDelta;
-    return pLearnCtx->backward(expectInputDeltaTensor);
-}
 
-int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& expectTensor) {
     return SError::ERRORTYPE_SUCCESS;
 }
 

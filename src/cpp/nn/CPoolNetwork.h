@@ -16,10 +16,9 @@ class CPoolNetwork : public CObject, public INeuralNetwork{
 
 private://INeuralNetwork
     int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
-    int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx);
-    int learn(const PTensor& inputTensor, const PTensor& deltaTensor, SNeuralNetwork::ILearnCtx* pLearnCtx);
-    int learn(const PTensor& inputTensor, const PTensor& expectTensor);
-    
+    int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation);
+    int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, PTensor* pInputDeviation);
+
 public://Factory
     static int createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork);
 
