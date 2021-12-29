@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "../inc/SimpleWork.h"
+#include <math.h>
 
 using namespace sw;
 using namespace sw::av;
@@ -151,7 +152,8 @@ void testNN() {
     struct LearnCtx : public SNeuralNetwork::ILearnCtx {
         int getOutputDelta(const PTensor& outputTensor, IVisitor<const PTensor&>* pTargetReceiver) {
 
-            double v = 2*(*pV) - 1 - outputTensor.pDoubleArray[0];
+            double y = 0.7*(*pV) - 0.3;
+            double v = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
             int dimsize[] = { 1 };
             PTensor targetTensor;
             targetTensor.idType = SData::getBasicTypeIdentifier<double>();

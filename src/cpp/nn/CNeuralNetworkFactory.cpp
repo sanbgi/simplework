@@ -3,6 +3,7 @@
 #include "CDenseNetwork.h"
 #include "CConvolutionNetwork.h"
 #include "CSequenceNetwork.h"
+#include "CPoolNetwork.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
@@ -25,6 +26,10 @@ public:
 
     int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
+    }
+
+    int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
+        return CPoolNetwork::createNetwork(nWidth, nHeight, nStrideWidth, nStrideHeight, spNetwork);
     }
 };
 

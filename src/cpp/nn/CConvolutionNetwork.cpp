@@ -56,8 +56,9 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
                 } 
             }
         }
-        pOutputArray[iOutput] = m_pActivator->activate(dConv - pBais[iConv]);
+        pOutputArray[iOutput] = dConv - pBais[iConv];
     }
+    m_pActivator->activate(nOutput, pOutputArray, pOutputArray);
 
     int dimSize[3] = { nOutputHeight, nOutputWidth, nConvs };
     PTensor outTensor;
@@ -178,6 +179,9 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
         double* pDeltaArray = deltaTensor.pDoubleArray;
         double* pWeights = m_spWeights;
         double* pBais = m_spBais;
+
+        double pDerivationZ[nOutput];
+        m_pActivator->deactivate(nOutput, pOutputArray, pDeltaArray, pDerivationZ);
         for( int iOutput=0; iOutput<nOutput; iOutput++) {
             int iConv = iOutput % nConvs;
             int iOutputX = iOutput / nConvs;
@@ -186,8 +190,18 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
 
             //
             //  计算目标函数对当前输出值的偏导数
+            //      X = 输入
+            //      Y = 权重*X-偏置
+            //      F = activation(Y)
+            //      delta = 目标 - F
+            //      E = delta*delta/2 目标函数
+            //      derivationZ = d(E) / d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(y)
+            //      其中：
+            //          d(E)/d(delta) = pDeltaArray[iOutput]
+            //          d(delta)/d(F) = -1
+            //          d(F)/d(y) = deactivate(y)
             //
-            double derivationOutput = m_pActivator->deactivate(pOutputArray[iOutput], pDeltaArray[iOutput]);
+            double derivationZ = pDerivationZ[iOutput];
 
             //
             //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
@@ -200,16 +214,16 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
                         int iInputX = iOutputX+iConvX;
                         int iWeight = (iConvY*nConvWidth+iConvX)*nInputLayers+iInputLayer;
                         int iInput = (iInputY*nInputWidth+iInputX)*nInputLayers+iInputLayer;
-                        pExpectInputDelta[iInput] -= derivationOutput * pConvWeights[iWeight];
-                        pConvWeights[iWeight] -= derivationOutput*pInputArray[iInput]*dLearnRate;
+                        pExpectInputDelta[iInput] -= derivationZ * pConvWeights[iWeight];
+                        pConvWeights[iWeight] -= derivationZ*pInputArray[iInput]*dLearnRate;
                     }
                 }
             }
 
             //
-            //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationOutput)
+            //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
             //
-            pBais[iOutput] -= (-derivationOutput) * dLearnRate;
+            pBais[iOutput] -= (-derivationZ) * dLearnRate;
         }
     }
 

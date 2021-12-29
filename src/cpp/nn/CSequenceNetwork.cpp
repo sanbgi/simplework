@@ -1,6 +1,7 @@
 #include "CSequenceNetwork.h"
 
 int CSequenceNetwork::getCellNumber() {
+    /*
     int nCell = 0;
     std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
     while(it != m_arrNetworks.end()) {
@@ -8,6 +9,8 @@ int CSequenceNetwork::getCellNumber() {
         it++;
     }
     return nCell;
+    */
+    return 0;
 }
 
 int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
