@@ -13,7 +13,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
 
 public:
     //
-    // 神经网络学习需要的上下文，提供给神经网络学习需要的反馈信息，以及接收神经网络对输入的期待偏量
+    // 神经网络学习需要的上下文，提供给神经网络学习需要的目标偏差值
     //
     struct ILearnCtx {
         //
@@ -32,18 +32,31 @@ public:
         virtual int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) = 0;
 
         //
+        //  学习(可实现级联)
+        //      @inputTensor，输入数据
+        //      @pLearnCtx，计算所需要的上下文
+        //      @pInputDeviation，输入量的偏差量（希望输入能够调整）
+        //
+        virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx, PTensor* pInputDeviation) = 0;
+
+        //
         //  学习
         //      @inputTensor，输入张量
         //      @expectTensor，期望的输出张量
         //
-        //virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
-
-        //
-        //  学习(可实现级联)
-        //      @inputTensor，输入数据
-        //      @pLearnCtx，计算所需要的上下文
-        //
-        virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx, PTensor* pInputDeviation) = 0;
+        int learn(const PTensor& inputTensor, const PTensor& expectTensor) {
+            struct CLearnCtx : ILearnCtx {
+                int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) {
+                    for(int i=0; i<outputTensor.nData; i++) {
+                        outputDeviation.pDoubleArray[i] = pExpectTensor->pDoubleArray[i] - outputTensor.pDoubleArray[i];
+                    }
+                    return SError::ERRORTYPE_SUCCESS;
+                }
+                const PTensor* pExpectTensor;
+            }ctx;
+            ctx.pExpectTensor = &expectTensor;
+            return learn(inputTensor, &ctx, nullptr);
+        }
 
     SIMPLEWORK_INTERFACE_LEAVE
 
