@@ -30,11 +30,6 @@ public:
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INeuralNetwork", 211223)
 
         //
-        // 获得神经元数量
-        //
-        virtual int getCellNumber() = 0;
-
-        //
         //  计算
         //      @pInputData，输入数据
         //      @pReceiver，输出数据接收回调接口
@@ -47,12 +42,23 @@ public:
         //      @dInputWeight，学习过程中，输入张量可调整的权重值，[0-1]，0 - 表示输入张量学习不可调整（一般是原始输入），1 - 表示节点权重调整没有意义，无需调整
         //      @pLearnCtx，计算所需要的上下文
         //
-        virtual int learn(const PTensor& inputTensor, double dInputWeight, ILearnCtx* pLearnCtx) = 0;
+        //virtual int learn(const PTensor& inputTensor, double dInputWeight, ILearnCtx* pLearnCtx) = 0;
+
+        //
+        //  学习
+        //
+        //virtual int learn(const PTensor& inputTensor, const PTensor& expectTensor) = 0;
+        //virtual int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTensor, IVisitor<const PTensor&>* pDeltaReceiver = nullptr) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(NeuralNetworkFactory, "sw.nn.NeuralNetworkFactory")
         SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INeuralNetworkFactory", 211223)
+
+            //
+            //  创建池化神经网络
+            //
+            virtual int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) = 0;
 
             //
             //  创建直连神经网络
