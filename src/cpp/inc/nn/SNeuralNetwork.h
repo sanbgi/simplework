@@ -85,7 +85,10 @@ public:
             //
             virtual int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) = 0;
 
-
+            //
+            //  打开IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
+            //
+            virtual int readIdxFile(const char* szFileName, SData& spData) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetworkFactory)
 

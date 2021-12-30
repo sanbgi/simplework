@@ -165,6 +165,17 @@ void testNN() {
     }
 }
 
+void testIdx() {
+    SData spTensor;
+    SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-images-idx3-ubytejUIsewocHHkkWlvPB_6G4z7q_ueSuEWErsJ29aLbxOY.gz", spTensor);
+    //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-labels-idx1-ubyte965g-S4A7G3r0jpgiMMdvSNx7KP_oN7677JZkkIErsY.gz", spTensor);
+    //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-images-idx3-ubyteRA_Kv3PMVG-iFHXoHqNwJlYF9WviEKQCTSyo8gNSNgk.gz", spTensor);
+    //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-labels-idx1-ubyteNVJTSgpVi77WrtMrMMSVzKI9Vn7FLKyL4aBzDoAQJVw.gz", spTensor);
+
+    const PTensor* pTensor = spTensor.getDataPtr<PTensor>();
+    std::cout << pTensor->nData;
+}
+
 int main(int argc, char *argv[]){
 
     //FAA a = { 10 };
@@ -178,7 +189,8 @@ int main(int argc, char *argv[]){
     //testWriteFile();
     //testPipe();
     //testTensor();
-    testNN();
+    //testNN();
+    testIdx();
 
     /*
     int i=10;

@@ -4,6 +4,7 @@
 #include "CConvolutionNetwork.h"
 #include "CSequenceNetwork.h"
 #include "CPoolNetwork.h"
+#include "CIdxFileReader.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
@@ -30,6 +31,10 @@ public:
 
     int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
         return CPoolNetwork::createNetwork(nWidth, nHeight, nStrideWidth, nStrideHeight, spNetwork);
+    }
+
+    int readIdxFile(const char* szFileName, SData& spData) {
+        return CIdxFileReader::readFile(szFileName, spData);
     }
 };
 

@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_Tensor_h__
 #define __SimpleWork_Tensor_h__
 
+#include "math.h"
+
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER

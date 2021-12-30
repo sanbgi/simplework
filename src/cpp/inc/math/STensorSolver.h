@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_STensorSolver_h__
 #define __SimpleWork_STensorSolver_h__
 
+#include "math.h"
+
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER

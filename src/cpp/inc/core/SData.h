@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include "core.h"
 #include "PData.h"
+#include "SCoreFactory.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -15,27 +16,33 @@ class SObject;
 SIMPLEWORK_INTERFACECLASS_ENTER0(Data)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IData", 211219)
+        //
+        //  获取数据指针
+        //
+        virtual const void* getDataPtr(unsigned int idType) = 0;
+
+        //
+        //  获取数据类型
+        //
+        virtual unsigned int getDataType() = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
-
-    SIMPLEWORK_INTERFACECLASS_ENTER(DataFactory, "sw.core.DataFactory")
-        SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.core.IDataFactory", 211206)
-        
-            //获取指定名字数据类型对应的数据类型ID
-            virtual unsigned int getTypeIdentifier(const char* szDataTypeKey) = 0;
-
-        SIMPLEWORK_INTERFACE_LEAVE
-    SIMPLEWORK_INTERFACECLASS_LEAVE(DataFactory)
-
     template<typename TType> static unsigned int getStructTypeIdentifier(){
-        static unsigned int s_tid = getFactory()->getTypeIdentifier(TType::__getClassKey());
+        static unsigned int s_tid = SCoreFactory::getFactory()->getTypeIdentifier(TType::__getClassKey());
         return s_tid;
     }
-    template<typename TBasicType> static int getBasicTypeIdentifier(){
-        static unsigned int s_tid = getFactory()->getTypeIdentifier(getBasicTypeKey<TBasicType>());
+    template<typename TBasicType> static unsigned int getBasicTypeIdentifier(){
+        static unsigned int s_tid = SCoreFactory::getFactory()->getTypeIdentifier(getBasicTypeKey<TBasicType>());
         return s_tid;;
     }
 
+    template<typename Q> const Q* getDataPtr() {
+        if( !(*this) ) {
+            return nullptr;
+        }
+        return (const Q*)(*this)->getDataPtr(getStructTypeIdentifier<Q>());
+    }
 private:
     template<typename T> static const char* getBasicTypeKey() {
         if(typeid(T) == typeid(bool)) {
@@ -58,10 +65,7 @@ private:
         return nullptr;
     }
 
-    static SDataFactory& getFactory() {
-        static SDataFactory g_factory = SObject::createObject<SDataFactory>();
-        return g_factory;
-    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(Data)
 
 __SimpleWork_Core_Namespace_Leave__
