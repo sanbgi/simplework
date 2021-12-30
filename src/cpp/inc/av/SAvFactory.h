@@ -70,6 +70,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //          无
         //
         virtual int openAvFileWriter(const char* szFileName, SPipe& spPipe) = 0;
+        //
+        // 将多个管道串行成也给新管道
+        //
+        virtual int createSequencePipe(int nPipe, SPipe pPipes[], SPipe& spPipe) = 0;
+        //
+        // 创建多个管道并行的管道
+        //
+        virtual int createParallelPipe(int nPipe, SPipe pPipes[], SPipe& spPipe) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -2,6 +2,7 @@
 #define __SimpleWork_SCtx_h__
 
 #include "core.h"
+#include "SError.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -34,15 +35,22 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Ctx)
     SCtx(const char* szModule) {
         getFactory()->createCtx(szModule, *this);
     }
-    int Warn(const char* szWarn) {
+    void Warn(const char* szWarn) {
         (*this)->logWarning(szWarn);
-        return Success();
     }
-    int Error(int code = 1, const char* szError = nullptr) {
+    void Message(const char* szMessage) {
+        (*this)->logMessage(szMessage);
+    }
+    int Error(int code, const char* szError = nullptr) {
+        (*this)->logError(szError);
         return code;
     }
+    int Error(const char* szError = nullptr) {
+        (*this)->logError(szError);
+        return SError::ERRORTYPE_FAILURE;
+    }
     int Success() {
-        return 0;
+        return SError::ERRORTYPE_SUCCESS;
     }
 
 private:

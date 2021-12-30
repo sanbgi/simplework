@@ -5,6 +5,7 @@
 #include "ffmpeg/CAvOut.h"
 #include "sdl/CAvOut_SDLWindow.h"
 #include "sdl/CAvOut_SDLSpeaker.h"
+#include "pipe/CPipe.h"
 
 static SCtx sCtx("CAvFactory");
 class CAvFactory : public CObject, public IAvFactory{
@@ -76,6 +77,13 @@ public:
         }
         spPipe.setPtr(spAvOut.getPtr());
         return sCtx.Success();
+    }
+
+    int createSequencePipe(int nPipe, SPipe pPipes[], SPipe& spPipe) {
+        return CPipe::createPipe(PipeMode_Sequence, nPipe, pPipes, spPipe);
+    }
+    int createParallelPipe(int nPipe, SPipe pPipes[], SPipe& spPipe) {
+        return CPipe::createPipe(PipeMode_Parallel, nPipe, pPipes, spPipe);
     }
 };
 

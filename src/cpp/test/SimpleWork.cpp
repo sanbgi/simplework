@@ -88,13 +88,13 @@ int testPipe() {
 
     SPipe pipes[3] = { avWindows, avSpeaker, avFileWriter };
     SPipe avOut;
-    if( SPipe::getFactory()->createParallelPipe(3, pipes, avOut) != sCtx.Success() ) {
+    if( SAvFactory::getAvFactory()->createParallelPipe(3, pipes, avOut) != sCtx.Success() ) {
         return sCtx.Error();
     }
 
     SPipe inPipe[2] = {avIn, avOut};
     SPipe av;
-    if( SPipe::getFactory()->createSequencePipe(2, inPipe, av) != sCtx.Success() ) {
+    if( SAvFactory::getAvFactory()->createSequencePipe(2, inPipe, av) != sCtx.Success() ) {
         return sCtx.Error();
     }
 
