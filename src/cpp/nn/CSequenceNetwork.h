@@ -22,6 +22,7 @@ public://Factory
 
 public:
     std::vector<SNeuralNetwork> m_arrNetworks;
+    static SCtx sCtx;
 };
 
 #endif//__SimpleWork_NN_CSequenceNetwork_H__

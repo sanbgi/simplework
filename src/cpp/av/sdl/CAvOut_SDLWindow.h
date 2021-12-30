@@ -16,6 +16,9 @@ class CAvOut_SDLWindow : public CObject, public IPipe, IVisitor<const PAvFrame*>
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+private:
+    static SCtx sCtx;
+
 public://IPipe
     int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
 
@@ -30,7 +33,7 @@ public://IPipe
             }
         }
 
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int initWindow(const char* szWindowName, int nWidth, int nHeight) {
@@ -38,16 +41,16 @@ public://IPipe
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
 
         //创建窗口
         m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, nWidth, nHeight, 0);
         if (nullptr == m_pWindow)
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
 
         m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
 	    if (nullptr == m_pRenderer) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
 
         m_nWinWidth = nWidth;
@@ -57,10 +60,10 @@ public://IPipe
         sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
         sampleMeta.videoWidth = nWidth;
         sampleMeta.videoHeight = nHeight;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.Success() ) {
+            return sCtx.Error();
         }
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int pushFrame(const PAvFrame* pFrame) {
@@ -91,7 +94,7 @@ public://IPipe
                                 SDL_DestroyTexture
                             );
         if (!spTexture) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
 
         SDL_Rect srcRect, dstRect;
@@ -112,12 +115,12 @@ public://IPipe
         //更新Renderer显示
         SDL_RenderPresent(pRenderer);
         
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int close() {
         release();
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
 public:
@@ -148,6 +151,7 @@ private:
     int m_nWinWidth;
     int m_nWinHeight;
 };
+SCtx CAvOut_SDLWindow::sCtx("CAvOut_SDLWindow");
 
 SDL_NAMESPACE_LEAVE
 

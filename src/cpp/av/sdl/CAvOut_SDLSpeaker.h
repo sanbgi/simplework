@@ -17,6 +17,9 @@ class CAvOut_SDLSpeaker : public CObject, public IPipe, IVisitor<const PAvFrame*
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+private:
+    static SCtx sCtx;
+
 public://IPipe
     int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
         if(rData.getType() == SData::getStructTypeIdentifier<PAvFrame>()) {
@@ -31,10 +34,10 @@ public://IPipe
             const PAvStreaming* pAvStreaming = CData<PAvStreaming>(rData);
             if(pAvStreaming->frameMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
                 m_targetSample = pAvStreaming->frameMeta;
-                return SError::ERRORTYPE_SUCCESS;
+                return sCtx.Success();
             }
         }
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 public:
     int initSpeaker(const char* szName) {
@@ -42,12 +45,12 @@ public:
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
 
         if(szName != nullptr) {
             m_strDeviceName = szName;
         }
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int init() {
@@ -75,7 +78,7 @@ public:
                                 false, &wanted_spec, &m_specAudio, 0);
         if(m_iDeviceID == 0)
         {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
 
         PAvSample specMeta;
@@ -83,18 +86,18 @@ public:
         specMeta.audioRate = m_specAudio.freq;
         specMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
         specMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(specMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(specMeta, m_spConverter) != sCtx.Success() ) {
+            return sCtx.Error();
         }
 
         SDL_PauseAudioDevice(m_iDeviceID, 0);
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int pushFrame(const PAvFrame* pFrame) {
         if(!m_bInitialized) {
-            if( init() != SError::ERRORTYPE_SUCCESS ) {
-                return SError::ERRORTYPE_FAILURE;
+            if( init() != sCtx.Success() ) {
+                return sCtx.Error();
             }
             m_bInitialized = true;
         }
@@ -119,12 +122,12 @@ public:
                             m_iDeviceID, pFrame->ppPlanes[0], 
                             pFrame->pPlaneLineSizes[0]);
         }
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int close() {
         release();
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
 public:
@@ -151,6 +154,7 @@ private:
     SPipe m_spConverter;
     bool m_bInitialized;
 };
+SCtx CAvOut_SDLSpeaker::sCtx("CAvOut_SDLSpeaker");
 
 SDL_NAMESPACE_LEAVE
 #endif//__SimpleWork_av_sdl_CAvOut_SDLSpeaker_h__

@@ -6,6 +6,8 @@
 
 FFMPEG_NAMESPACE_ENTER
 
+static SCtx sCtx("CAvIn");
+
 int CAvIn::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
     //
     // 如果还没有读取HEADER，则先读取HEADER
@@ -18,8 +20,8 @@ int CAvIn::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
             IVisitor<const PData&>* pReceiver;
         }visitor;
         visitor.pReceiver = pReceiver;
-        if( visitStreamings(&visitor) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( visitStreamings(&visitor) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         m_bHeaderReaded = true;
     }
@@ -39,7 +41,7 @@ int CAvIn::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
 
 int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
     if(!m_spOpenedCtx) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
@@ -57,7 +59,7 @@ int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
                     avStream.frameMeta.audioChannels = pCodecContext->channels;
                     avStream.frameMeta.audioRate = pCodecContext->sample_rate;
                     int errcode = visitor->visit(&avStream);
-                    if( errcode != SError::ERRORTYPE_SUCCESS ) {
+                    if( errcode != sCtx.Success() ) {
                         return errcode;
                     }
                 }
@@ -69,15 +71,15 @@ int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
                     avStream.frameMeta.videoWidth = pCodecContext->width;
                     avStream.frameMeta.videoHeight = pCodecContext->height;
                     int errcode = visitor->visit(&avStream);
-                    if( errcode != SError::ERRORTYPE_SUCCESS ) {
+                    if( errcode != sCtx.Success() ) {
                         return errcode;
                     }
                 }
                 break;
         }
-        SError::ERRORTYPE_SUCCESS;
+        sCtx.Success();
     }
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CAvIn::initVideoFile(const char* szFileName) {
@@ -89,7 +91,7 @@ int CAvIn::initVideoFile(const char* szFileName) {
     if(avformat_open_input(&m_spFormatCtx,szFileName,NULL,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
     m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
@@ -97,19 +99,19 @@ int CAvIn::initVideoFile(const char* szFileName) {
     if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
-        return SError::ERRORTYPE_FAILURE; 
+        return sCtx.Error(); 
     }
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         CPointer<CAvStreaming> spStreaming;
         CObject::createObject(spStreaming);
-        if( spStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spStreaming->init(m_spOpenedCtx->streams[i], i) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         m_arrAvStreamings.push_back(spStreaming);
     }
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 void CAvIn::initDeviceRegistry() {
@@ -156,7 +158,7 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     if(avformat_open_input(&m_spFormatCtx,szName,pInputForamt,NULL)!=0){
         printf("Couldn't open input stream.\n");
         release();
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
     m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
@@ -164,19 +166,19 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
         printf("Couldn't find stream information.\n");
         release();
-        return SError::ERRORTYPE_FAILURE; 
+        return sCtx.Error(); 
     }
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         CPointer<CAvStreaming> spStreaming;
         CObject::createObject(spStreaming);
-        if( spStreaming->init(m_spOpenedCtx->streams[i], i) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spStreaming->init(m_spOpenedCtx->streams[i], i) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         m_arrAvStreamings.push_back(spStreaming);
     }
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CAvIn::readFrame(PAvFrame::FVisitor receiver) {
@@ -203,7 +205,7 @@ int CAvIn::readFrame(PAvFrame::FVisitor receiver) {
     //
     // TODO:这个地方是否需要flush所有的codeccontext，并且取出最后的帧？(这部分逻辑还没实现)
     //
-    return SError::ERRORTYPE_FAILURE;
+    return sCtx.Error();
 }
 
 int CAvIn::sendPackageAndReceiveFrame(PAvFrame::FVisitor receiver, AVPacket* pPackage) {
@@ -231,7 +233,7 @@ int CAvIn::sendPackageAndReceiveFrame(PAvFrame::FVisitor receiver, AVPacket* pPa
             break;
 
         default:
-            return SError::ERRORTYPE_FAILURE; 
+            return sCtx.Error(); 
     }
     return receiveFrame(receiver, pStreaming);
 }
@@ -257,13 +259,13 @@ int CAvIn::receiveFrame(PAvFrame::FVisitor receiver, CAvStreaming* pStreaming) {
         break;
 
     case AVERROR_EOF:
-        return receiver ? receiver->visit(nullptr) : SError::ERRORTYPE_FAILURE;
+        return receiver ? receiver->visit(nullptr) : sCtx.Error();
 
     case AVERROR(EAGAIN):
         return readFrame(receiver);
 
     default:
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     //如果读取成功，则下次继续读取

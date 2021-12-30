@@ -1,5 +1,6 @@
 #include "CConvolutionNetwork.h"
 
+SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);
@@ -8,18 +9,18 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeu
     spConvolution->m_nConvs = nConvs;
     spConvolution->m_pActivator = CActivator::getReLU();
     spNetwork.setPtr(spConvolution.getPtr());
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
     if(m_nInputWidth == 0) {
-        if( initWeights(inputTensor) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( initWeights(inputTensor) != sCtx.Success() ) {
+            return sCtx.Error();
         }
     }
 
     if(inputTensor.nData != m_nInputData) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     int nConvs = m_nConvs;
@@ -75,8 +76,8 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILear
             double pOutputDelta[nOutputData];
             PTensor outputDeviation = outputTensor;
             outputDeviation.pDoubleArray = pOutputDelta;
-            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != SError::ERRORTYPE_SUCCESS ) {
-                return SError::ERRORTYPE_FAILURE;
+            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
+                return sCtx.Error();
             }
 
             return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
@@ -99,14 +100,14 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     // 维度小于2的张量，无法进行卷积运算
     //
     if(inputTensor.nDims < 2) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     int nInputHeight = inputTensor.pDimSizes[0];
     int nInputWidth = inputTensor.pDimSizes[1];
     int nInputLayers = inputTensor.nData / nInputHeight / nInputWidth;
     if( nInputHeight < m_nConvWidth || nInputWidth < m_nConvWidth ) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     int nWeight = m_nConvWidth*m_nConvHeight*nInputLayers*m_nConvs;
@@ -133,7 +134,7 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     m_nInputHeight = nInputHeight;
     m_nInputLayers = nInputLayers;
     m_nInputData = inputTensor.nData;
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
@@ -214,5 +215,5 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
         pBais[iOutput] -= (-derivationZ) * dLearnRate;
     }
 
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }

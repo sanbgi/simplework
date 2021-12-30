@@ -1,5 +1,6 @@
 #include "CPoolNetwork.h"
 
+SCtx CPoolNetwork::sCtx("CPoolNetwork");
 int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
     CPointer<CPoolNetwork> spPool;
     CObject::createObject(spPool);
@@ -8,13 +9,13 @@ int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int n
     spPool->m_nStrideWidth = nStrideWidth;
     spPool->m_nStrideHeight = nStrideHeight;
     spNetwork.setPtr(spPool.getPtr());
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
 
-    if(initNetwork(inputTensor) != SError::ERRORTYPE_SUCCESS) {
-        return SError::ERRORTYPE_FAILURE;
+    if(initNetwork(inputTensor) != sCtx.Success()) {
+        return sCtx.Error();
     }
 
     if(m_isTransparent) {
@@ -75,8 +76,8 @@ int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* p
             double pOutputDelta[nOutputData];
             PTensor outputDeviation = outputTensor;
             outputDeviation.pDoubleArray = pOutputDelta;
-            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != SError::ERRORTYPE_SUCCESS ) {
-                return SError::ERRORTYPE_FAILURE;
+            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
+                return sCtx.Error();
             }
 
             return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
@@ -96,13 +97,13 @@ int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* p
 
 int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
     if(pInputDeviation == nullptr) {
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
     
     if(m_isTransparent) {
         if(pInputDeviation)
         mempcpy(pInputDeviation->pDoubleArray, outputDeviation.pDoubleArray, sizeof(double)*inputTensor.nData);
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     double* pExpectInputDelta = pInputDeviation->pDoubleArray;
@@ -142,7 +143,7 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
         }
     }
 
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CPoolNetwork::initNetwork(const PTensor& inputTensor) {
@@ -155,5 +156,5 @@ int CPoolNetwork::initNetwork(const PTensor& inputTensor) {
             m_nInputLayer = inputTensor.nData/m_nInputWidth/m_nInputHeight;
         }
     }
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }

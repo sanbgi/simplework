@@ -1,18 +1,19 @@
 #include "CDenseNetwork.h"
 
+SCtx CDenseNetwork::sCtx("CDenseNetwork");
 int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
     spDense->m_pActivator = CActivator::getSigmod();
     spNetwork.setPtr(spDense.getPtr());
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
     if(m_nInputCells == 0) {
-        if( initWeights(inputTensor.nData) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( initWeights(inputTensor.nData) != sCtx.Success() ) {
+            return sCtx.Error();
         }
     }
 
@@ -49,8 +50,8 @@ int CDenseNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* 
             double pOutputDelta[nOutputData];
             PTensor outputDeviation = outputTensor;
             outputDeviation.pDoubleArray = pOutputDelta;
-            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != SError::ERRORTYPE_SUCCESS ) {
-                return SError::ERRORTYPE_FAILURE;
+            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
+                return sCtx.Error();
             }
 
             return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
@@ -74,7 +75,7 @@ int CDenseNetwork::initWeights(int nInputCells) {
     // 检查细胞数量是否合法
     //
     if( m_nCells <= 0 || nInputCells <= 0 ) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     //
@@ -82,7 +83,7 @@ int CDenseNetwork::initWeights(int nInputCells) {
     //
     if( m_nInputCells >= nInputCells ) {
         m_nInputCells = nInputCells;
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     if(m_nInputCells != 0) {
@@ -111,7 +112,7 @@ int CDenseNetwork::initWeights(int nInputCells) {
     }
 
     m_nInputCells = nInputCells;
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
@@ -184,5 +185,5 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
         pBais[iOutput] -= (-derivationZ) * dLearnRate;
     }
     
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }

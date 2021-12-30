@@ -1,6 +1,8 @@
 #ifndef __SimpleWork_NeuralNetwork_h__
 #define __SimpleWork_NeuralNetwork_h__
 
+#include "nn.h"
+
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 

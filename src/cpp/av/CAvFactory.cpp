@@ -6,6 +6,7 @@
 #include "sdl/CAvOut_SDLWindow.h"
 #include "sdl/CAvOut_SDLSpeaker.h"
 
+static SCtx sCtx("CAvFactory");
 class CAvFactory : public CObject, public IAvFactory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -16,31 +17,31 @@ public:
     int openAvFileReader(const char* szFileName, SPipe& spPipe) {
         CPointer<ffmpeg::CAvIn> spAvIn;
         CObject::createObject(spAvIn);
-        if( spAvIn->initVideoFile(szFileName) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spAvIn->initVideoFile(szFileName) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         spPipe.setPtr(spAvIn.getPtr());
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int openVideoCapture(const char* szDeviceName, SPipe& spPipe) {
         CPointer<ffmpeg::CAvIn> spAvIn;
         CObject::createObject(spAvIn);
-        if( spAvIn->initVideoCapture(szDeviceName) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spAvIn->initVideoCapture(szDeviceName) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         spPipe.setPtr(spAvIn.getPtr());
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int openAudioCapture(const char* szDeviceName, SPipe& spPipe) {
         CPointer<ffmpeg::CAvIn> spAvIn;
         CObject::createObject(spAvIn);
-        if( spAvIn->initAudioCapture(szDeviceName) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spAvIn->initAudioCapture(szDeviceName) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         spPipe.setPtr(spAvIn.getPtr());
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int openAvFrameConverter(PAvSample targetSample, SPipe& sPipe) {
@@ -50,31 +51,31 @@ public:
     int openWindow(const char* szWindowName, int nWidth, int nHeight, SPipe& spPipe) {
         CPointer<sdl::CAvOut_SDLWindow> spAvOut;
         CObject::createObject(spAvOut);
-        if( spAvOut->initWindow(szWindowName, nWidth, nHeight) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spAvOut->initWindow(szWindowName, nWidth, nHeight) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         spPipe.setPtr(spAvOut.getPtr());
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int openSpeaker(const char* szDeviceName, SPipe& spPipe) {
         CPointer<sdl::CAvOut_SDLSpeaker> spAvOut;
         CObject::createObject(spAvOut);
-        if( spAvOut->initSpeaker(szDeviceName) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spAvOut->initSpeaker(szDeviceName) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         spPipe.setPtr(spAvOut.getPtr());
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int openAvFileWriter(const char* szFileName, SPipe& spPipe) {
         CPointer<ffmpeg::CAvOut> spAvOut;
         CObject::createObject(spAvOut);
-        if( spAvOut->initAvFile(szFileName, 0, nullptr) != SError::ERRORTYPE_SUCCESS ) {
-            return SError::ERRORTYPE_FAILURE;
+        if( spAvOut->initAvFile(szFileName, 0, nullptr) != sCtx.Success() ) {
+            return sCtx.Error();
         }
         spPipe.setPtr(spAvOut.getPtr());
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 };
 

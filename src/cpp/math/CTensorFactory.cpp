@@ -6,6 +6,7 @@ using namespace sw::math;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
+
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
@@ -18,15 +19,15 @@ public:
     int multiply( const PTensor& t1, const PTensor& t2, IVisitor<const PTensor&>* pRecerver) {
         static unsigned int s_double_type_id = SData::getBasicTypeIdentifier<double>();
         if( t1.idType != s_double_type_id || t2.idType != s_double_type_id ) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
 
         if(t1.nDims < 1 || t2.nDims < 1 ) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
 
         if(t1.pDimSizes[t1.nDims-1] != t2.pDimSizes[0] ) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
 
         int mlength = t1.pDimSizes[t1.nDims-1];
@@ -63,7 +64,10 @@ public:
         resTensor.pDimSizes = nResDimSizes;
         return pRecerver->visit(resTensor);
     }
+
+    static SCtx sCtx;
 };
+SCtx CTensorSolver::sCtx("CTensorSolver");
 
 SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CTensorSolver, STensorSolver::getClassKey())
 

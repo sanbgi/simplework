@@ -4,6 +4,8 @@
 
 FFMPEG_NAMESPACE_ENTER
 
+static SCtx sCtx("CAvStreaming");
+
 CAvStreaming::CAvStreaming() {
     m_pAvStream = nullptr;
     m_iStreamingIndex = -1;
@@ -78,13 +80,13 @@ const PAvSample& CAvStreaming::getSampleMeta() {
 
 int CAvStreaming::setSampleMeta(const PAvSample& sampleMeta) {
     m_sampleMeta = sampleMeta;
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
     AVCodecParameters* pCodecParameter = pAvStream->codecpar;
     if(pCodecParameter == nullptr) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     CTaker<AVCodecContext*> pCodecCtx(  avcodec_alloc_context3(nullptr), 
@@ -92,18 +94,18 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
                                             avcodec_free_context(&pCtx);
                                         });
     if( avcodec_parameters_to_context(pCodecCtx, pCodecParameter) < 0 ) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     AVCodec* pCodec=avcodec_find_decoder(pCodecParameter->codec_id);
     if(pCodec==NULL){
         printf("Codec not found.\n");
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     if(avcodec_open2(pCodecCtx, pCodec,NULL)<0){
         printf("Could not open codec.\n");
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     m_spCodecCtx.take(pCodecCtx);
@@ -127,11 +129,11 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         break;
     }
 
-    if( SAvFactory::getAvFactory()->openAvFrameConverter(m_sampleMeta, m_spConverter) != SError::ERRORTYPE_SUCCESS) {
-        return SError::ERRORTYPE_FAILURE;
+    if( SAvFactory::getAvFactory()->openAvFrameConverter(m_sampleMeta, m_spConverter) != sCtx.Success()) {
+        return sCtx.Error();
     }
 
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 
@@ -181,7 +183,7 @@ int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
         break;
 
         default:
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
     }
 
     struct CInternalReceiver : IVisitor<const PData&> {

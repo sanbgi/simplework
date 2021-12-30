@@ -1,5 +1,6 @@
 #include "Core.h"
 #include <vector>
+#include "CCtx.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -8,10 +9,13 @@ enum EPipeMode {
     PipeMode_Parallel
 };
 
+static SCtx sCtx = CCtx::createCtx("CPipe");
 class CPipe : public CObject, IPipe {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+public:
 
 public:
     int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
@@ -26,7 +30,7 @@ public:
                             if( pFinalReceiver ) {
                                 return pFinalReceiver->visit(rData);
                             }
-                            return SError::ERRORTYPE_SUCCESS;
+                            return sCtx.Success();
                         }
 
                         CInteralReceiver receiver;
@@ -50,18 +54,18 @@ public:
             {
                 std::vector<SPipe>::iterator it = m_arrPipes.begin();
                 for( ; it != m_arrPipes.end(); it++) {
-                    if( (*it)->pushData(rData, pReceiver) != SError::ERRORTYPE_SUCCESS ) {
-                        return SError::ERRORTYPE_FAILURE;
+                    if( (*it)->pushData(rData, pReceiver) != sCtx.Success() ) {
+                        return sCtx.Error();
                     }
                 }
-                return SError::ERRORTYPE_SUCCESS;
+                return sCtx.Success();
             }
             break;
 
             default:
-                return SError::ERRORTYPE_FAILURE;
+                return sCtx.Error();
         }
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
 public:
@@ -73,7 +77,7 @@ public:
         }
         spPointer->m_eMode = eMode;
         spPipe = spPointer.getObject();
-        return spPipe ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
+        return spPipe ? sCtx.Success() : sCtx.Error();
     }
 
 private:

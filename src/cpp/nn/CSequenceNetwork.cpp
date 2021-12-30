@@ -1,5 +1,6 @@
 #include "CSequenceNetwork.h"
 
+SCtx CSequenceNetwork::sCtx("CSequenceNetwork");
 int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
     CPointer<CSequenceNetwork> spSequence;
     CObject::createObject(spSequence);
@@ -7,7 +8,7 @@ int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SN
         spSequence->m_arrNetworks.push_back( *(pNetworks+i) );
     }
     spNetwork.setPtr(spSequence.getPtr());
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
@@ -18,7 +19,7 @@ int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>*
                 if( pFinalReceiver ) {
                     return pFinalReceiver->visit(rData);
                 }
-                return SError::ERRORTYPE_SUCCESS;
+                return sCtx.Success();
             }
 
             CInteralReceiver receiver;
@@ -59,7 +60,7 @@ int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCt
     ctx.iPipe = 1;
     ctx.pFinalCtx = pLearnCtx;
     if(m_arrNetworks.size() == 0) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
     return m_arrNetworks[0]->learn(inputTensor, &ctx, pInputDeviation );
 }

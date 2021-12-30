@@ -73,6 +73,7 @@
 #include "IObject.h"
 #include "SObject.h"
 #include "SData.h"
+#include "SCtx.h"
 #include "SPipe.h"
 #include "SError.h"
 #include "SModule.h"

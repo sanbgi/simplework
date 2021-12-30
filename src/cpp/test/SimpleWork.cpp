@@ -8,7 +8,7 @@ using namespace sw;
 using namespace sw::av;
 using namespace sw::math;
 using namespace sw::nn;
-
+static SCtx sCtx("TestSimpleWork");
 SIMPLEWORK_INTERFACECLASS_ENTER(MyObject, "TestSimpleWork.MyObject")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.IMyObject", 211202)
@@ -67,43 +67,43 @@ void fun(const PData& r) {
 
 int testPipe() {
     SPipe avIn;
-    if( SAvFactory::getAvFactory()->openAvFileReader("d:/tt.mkv", avIn) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
+    if( SAvFactory::getAvFactory()->openAvFileReader("d:/tt.mkv", avIn) != sCtx.Success() ) {
+        return sCtx.Error();
     }
 
     SPipe avWindows;
-    if( SAvFactory::getAvFactory()->openWindow("DisplayAv", 640, 360, avWindows) != SError::ERRORTYPE_SUCCESS ){
-        return SError::ERRORTYPE_FAILURE;
+    if( SAvFactory::getAvFactory()->openWindow("DisplayAv", 640, 360, avWindows) != sCtx.Success() ){
+        return sCtx.Error();
     } 
 
     SPipe avSpeaker;
     if( SAvFactory::getAvFactory()->openSpeaker(nullptr, avSpeaker) ) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     SPipe avFileWriter;
     if( SAvFactory::getAvFactory()->openAvFileWriter("d:/tt2.mkv", avFileWriter) ) {
-        return SError::ERRORTYPE_FAILURE;
+        return sCtx.Error();
     }
 
     SPipe pipes[3] = { avWindows, avSpeaker, avFileWriter };
     SPipe avOut;
-    if( SPipe::getFactory()->createParallelPipe(3, pipes, avOut) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
+    if( SPipe::getFactory()->createParallelPipe(3, pipes, avOut) != sCtx.Success() ) {
+        return sCtx.Error();
     }
 
     SPipe inPipe[2] = {avIn, avOut};
     SPipe av;
-    if( SPipe::getFactory()->createSequencePipe(2, inPipe, av) != SError::ERRORTYPE_SUCCESS ) {
-        return SError::ERRORTYPE_FAILURE;
+    if( SPipe::getFactory()->createSequencePipe(2, inPipe, av) != sCtx.Success() ) {
+        return sCtx.Error();
     }
 
     int nFrames=0;
-    while(av->pushData(CBasicData<int>(10), nullptr) == SError::ERRORTYPE_SUCCESS) {
+    while(av->pushData(CBasicData<int>(10), nullptr) == sCtx.Success()) {
         std::cout << "frames: " << ++nFrames << "processed \n";
     }
 
-    return SError::ERRORTYPE_SUCCESS;
+    return sCtx.Success();
 }
 
 void testTensor() {
@@ -130,7 +130,7 @@ void testTensor() {
 
     struct CInternalReceiver : public IVisitor<const PTensor&> {
         int visit(const PTensor& r) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
     }receiver;
 
@@ -153,7 +153,7 @@ void testNN() {
         int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeivation) {
             double y = 0.7*(*pV) - 0.3;
             *outputDeivation.pDoubleArray = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
-            return SError::ERRORTYPE_SUCCESS;
+            return sCtx.Success();
         }
         double *pV;
     }ctx;

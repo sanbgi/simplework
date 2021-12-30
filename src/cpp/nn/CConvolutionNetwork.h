@@ -36,6 +36,7 @@ private:
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
     CActivator* m_pActivator;
+    static SCtx sCtx;
 
 public:
     CConvolutionNetwork() {

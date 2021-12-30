@@ -33,6 +33,8 @@ private:
     int m_nInputLayer;
     bool m_isTransparent;
 
+    static SCtx sCtx;
+
 protected:
     CPoolNetwork() {
         m_nInputWidth = 0;

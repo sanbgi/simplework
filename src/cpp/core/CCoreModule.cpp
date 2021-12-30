@@ -1,6 +1,7 @@
 #define SIMPLEWORK_WITHOUTAPI
 #include "Core.h"
 #include "CLibrary.hpp"
+#include "CCtx.h"
 
 #include <map>
 #include <string>
@@ -8,6 +9,7 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
+static SCtx sCtx = CCtx::createCtx("CCoreModule");
 class CCoreModule : public CObject, public IModule{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -21,13 +23,13 @@ private:
     }
 
     int initModule(const char* szModuleKey, const SModule& pCaller) {
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     int createObject(const char* szClassKey, SObject& spObject) {
         const SFactory& spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
-            return SError::ERRORTYPE_FAILURE;
+            return sCtx.Error();
         }
         return spFactory->createObject(spObject);
     }
@@ -41,7 +43,7 @@ private:
 
     int registerFactory(const char* szClassKey,  const SFactory& pFactory) {
         m_mapFactories[szClassKey] = pFactory;
-        return SError::ERRORTYPE_SUCCESS;
+        return sCtx.Success();
     }
 
     const SFactory& getRegisteredFactory(const char* szClassKey) {
