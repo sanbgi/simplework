@@ -48,6 +48,11 @@ struct PTensor {
         //  双精度数据地址
         //
         double* pDoubleArray;
+
+        //
+        //  缓冲地址
+        //
+        unsigned char* pByteArray;
     };
 };
 

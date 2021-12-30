@@ -132,7 +132,6 @@
 #include "CPointer.h"
 #include "CObject.h"
 #include "CVisitor.h"
-#include "CCallback.h"
 #define SIMPLEWORK_FACTORY_REGISTER(className, classKey) \
     class __C##className##Register { \
     public: \
