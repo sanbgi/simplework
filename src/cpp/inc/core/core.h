@@ -76,6 +76,7 @@
 #include "SCtx.h"
 #include "SPipe.h"
 #include "SError.h"
+#include "SString.h"
 #include "SModule.h"
 #include "SFactory.h"
 
