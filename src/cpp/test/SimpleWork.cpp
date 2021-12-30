@@ -36,13 +36,13 @@ public:
 SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
 
 struct FAA {
-    SIMPLEWORK_PDATAKEY("FAA")
+    SIMPLEWORK_PDATAKEY(FAA, "FAA")
 
     int i;
 };
 
 struct FBB {
-    SIMPLEWORK_PDATAKEY(FAA::__getClassKey())
+    SIMPLEWORK_PDATAKEY(FBB, FAA::__getClassKey())
 
     double i; 
 };
@@ -99,7 +99,7 @@ int testPipe() {
     }
 
     int nFrames=0;
-    while(av->pushData(CBasicData<int>(10), nullptr) == sCtx.Success()) {
+    while(av->pushData(CData<PAvFrame>(nullptr), nullptr) == sCtx.Success()) {
         std::cout << "frames: " << ++nFrames << "processed \n";
     }
 
@@ -111,7 +111,7 @@ void testTensor() {
     int dim1[] = {2, 3};
     double data1[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
     PTensor t1 = {
-        SData::getBasicTypeIdentifier<double>(),
+        SData::getTypeIdentifier<CBasicType<double>>(),
         2,
         dim1,
         6,
@@ -121,7 +121,7 @@ void testTensor() {
     int dim2[] = {3, 1};
     double data2[] = { 6.0, 7.0, 8.0, 9.0, 10.0, 11.0 };
     PTensor t2 = {
-        SData::getBasicTypeIdentifier<double>(),
+        SData::getTypeIdentifier<CBasicType<double>>(),
         1,
         dim2,
         3,
@@ -144,7 +144,7 @@ void testNN() {
     double v = 0.5;
     int dimsize[] = { 1 };
     PTensor inputTensor;
-    inputTensor.idType = SData::getBasicTypeIdentifier<double>();
+    inputTensor.idType = SData::getTypeIdentifier<CBasicType<double>>();
     inputTensor.nData = 1;
     inputTensor.pData = &v;
     inputTensor.nDims = 1;
@@ -183,9 +183,9 @@ int main(int argc, char *argv[]){
     //fun(CData<FAA>(a));
     //fun(CData<FBB>(b));
     //unsigned int la = SData::getBasicTypeIdentifier<int>();
-    //unsigned long lb = SData::getStructTypeIdentifier("aaaaaaaaaaaaaaaafadfasdf");
-    //unsigned long lc = SData::getStructTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
-    //unsigned long ld = SData::getStructTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
+    //unsigned long lb = SData::getTypeIdentifier("aaaaaaaaaaaaaaaafadfasdf");
+    //unsigned long lc = SData::getTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
+    //unsigned long ld = SData::getTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
     //testWriteFile();
     //testPipe();
     //testTensor();

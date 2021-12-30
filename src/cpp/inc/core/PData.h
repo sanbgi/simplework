@@ -39,7 +39,6 @@ private:
     PData(const PData& src) {}
     const PData& operator = (const PData& src) { return *this; }
     template<typename TType> friend class CData;
-    template<typename TBasicType> friend class CBasicData;
 };
 
 __SimpleWork_Core_Namespace_Leave__

@@ -38,7 +38,8 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 //
 struct PAvFrame {
-    SIMPLEWORK_PDATAKEY("sw.av.AvFrame")
+    SIMPLEWORK_PDATAKEY(PAvFrame, "sw.av.AvFrame")
+
 
     //
     // 样本信息

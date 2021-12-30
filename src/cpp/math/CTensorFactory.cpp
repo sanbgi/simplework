@@ -17,7 +17,7 @@ class CTensorSolver : public CObject, ITensorSolver {
 
 public:
     int multiply( const PTensor& t1, const PTensor& t2, IVisitor<const PTensor&>* pRecerver) {
-        static unsigned int s_double_type_id = SData::getBasicTypeIdentifier<double>();
+        static unsigned int s_double_type_id = SData::getTypeIdentifier<CBasicType<double>>();
         if( t1.idType != s_double_type_id || t2.idType != s_double_type_id ) {
             return sCtx.Error();
         }

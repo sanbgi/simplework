@@ -22,7 +22,7 @@ private:
 
 public://IPipe
     int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
-        if(rData.getType() == SData::getStructTypeIdentifier<PAvFrame>()) {
+        if(rData.getType() == SData::getTypeIdentifier<PAvFrame>()) {
             const PAvFrame* pAvFrame = CData<PAvFrame>(rData);
             if(pAvFrame == nullptr) {
                 return close();
@@ -30,7 +30,7 @@ public://IPipe
             if(pAvFrame->sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
                 return pushFrame(pAvFrame);
             }
-        }else if( rData.getType() == SData::getStructTypeIdentifier<PAvStreaming>()) {
+        }else if( rData.getType() == SData::getTypeIdentifier<PAvStreaming>()) {
             const PAvStreaming* pAvStreaming = CData<PAvStreaming>(rData);
             if(pAvStreaming->frameMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
                 m_targetSample = pAvStreaming->frameMeta;

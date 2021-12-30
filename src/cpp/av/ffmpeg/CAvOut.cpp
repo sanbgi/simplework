@@ -7,7 +7,7 @@ FFMPEG_NAMESPACE_ENTER
 static SCtx sCtx("CAvOut");
 int CAvOut::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {  
     int idType =rData.getType();
-    if(idType == SData::getStructTypeIdentifier<PAvStreaming>() ) {
+    if(idType == SData::getTypeIdentifier<PAvStreaming>() ) {
         const PAvStreaming* pStreaming = CData<PAvStreaming>(rData);
         CPointer<CAvOutStreaming> spStreaming;
         CObject::createObject(spStreaming);
@@ -16,7 +16,7 @@ int CAvOut::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
         }
         m_arrStreamings.push_back(spStreaming);
         return sCtx.Success();
-    }else if(idType == SData::getStructTypeIdentifier<PAvFrame>() ) {
+    }else if(idType == SData::getTypeIdentifier<PAvFrame>() ) {
         return pushFrame(CData<PAvFrame>(rData));
     }
     return sCtx.Success();

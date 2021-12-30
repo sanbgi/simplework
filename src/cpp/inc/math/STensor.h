@@ -41,7 +41,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         // 获取元素数据指针
         //
         template<typename Q> inline const Q* getDataPtr(int iPos=0) const {
-            return (Q*)getDataPtr(SData::getBasicTypeIdentifier<Q>(), iPos);
+            return (Q*)getDataPtr(SData::getTypeIdentifier<CBasicType<Q>>(), iPos);
         }
 
         //
@@ -122,13 +122,13 @@ public:
     // 构造一维张量
     //
     template<typename Q=void> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createVector(SData::getBasicTypeIdentifier<Q>(), nElementSize, (void*)pElementData);
+        return getFactory()->createVector(SData::getTypeIdentifier<CBasicType<Q>>(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
     template<typename Q=void> static STensor createTensor(STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createTensor(spDimVector, SData::getBasicTypeIdentifier<Q>(), nElementSize, (void*)pElementData);
+        return getFactory()->createTensor(spDimVector, SData::getTypeIdentifier<CBasicType<Q>>(), nElementSize, (void*)pElementData);
     }
 
 private:

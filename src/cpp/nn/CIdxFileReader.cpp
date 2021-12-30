@@ -8,14 +8,14 @@ using namespace std;
 static SCtx sCtx("CIdxFileReader");
 
 const void* CIdxFileReader::getDataPtr(unsigned int idType) {
-    if(idType != SData::getStructTypeIdentifier<PTensor>()) {
+    if(idType != SData::getTypeIdentifier<PTensor>()) {
         return nullptr;
     }
     return &m_tensor;
 }
 
 unsigned int CIdxFileReader::getDataType() {
-    return SData::getStructTypeIdentifier<PTensor>();
+    return SData::getTypeIdentifier<PTensor>();
 }
 
 void CIdxFileReader::highEndianToCPU(int nData, int nDataByte, unsigned char* pData) {
@@ -60,32 +60,32 @@ int CIdxFileReader::readFile(const char* szFileName, SData& spData) {
     unsigned int idType = 0;
     switch(headerArray[2]) {
         case 0x08:  // unsigned byte
-            idType = SData::getBasicTypeIdentifier<unsigned char>();
+            idType = SData::getTypeIdentifier<CBasicType<unsigned char>>();
             nEleByte = 1;
             break;
 
         case 0x09:  //signed byte
-            idType = SData::getBasicTypeIdentifier<char>();
+            idType = SData::getTypeIdentifier<CBasicType<char>>();
             nEleByte = 1;
             break;
 
         case 0x0B:  //short (2 bytes)
-            idType = SData::getBasicTypeIdentifier<short>();
+            idType = SData::getTypeIdentifier<CBasicType<short>>();
             nEleByte = 2;
             break;
 
         case 0x0C:  //int (4 bytes)
-            idType = SData::getBasicTypeIdentifier<int>();
+            idType = SData::getTypeIdentifier<CBasicType<int>>();
             nEleByte = 4;
             break;
 
         case 0x0D:  //float (4 bytes)
-            idType = SData::getBasicTypeIdentifier<float>();
+            idType = SData::getTypeIdentifier<CBasicType<float>>();
             nEleByte = 4;
             break;
 
         case 0x0E:  //double (8 bytes)
-            idType = SData::getBasicTypeIdentifier<double>();
+            idType = SData::getTypeIdentifier<CBasicType<double>>();
             nEleByte = 8;
             break;
 

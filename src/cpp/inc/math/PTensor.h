@@ -6,7 +6,7 @@
 SIMPLEWORK_MATH_NAMESPACE_ENTER 
 
 struct PTensor {
-    SIMPLEWORK_PDATAKEY("sw.math.Tensor")
+    SIMPLEWORK_PDATAKEY(PTensor, "sw.math.Tensor")
 
     //
     //  张量数据类型
