@@ -1,4 +1,4 @@
-#define SIMPLEWORK_WITHOUTAPI
+
 #include "Core.h"
 #include "CLibrary.hpp"
 #include "CCtx.h"
@@ -9,8 +9,8 @@ using namespace std;
 
 __SimpleWork_Core_Namespace_Enter__
 
-static SCtx sCtx = CCtx::createCtx("CCoreModule");
-class CCoreModule : public CObject, public IModule{
+static SCtx sCtx = CCtx::createCtx("CModule");
+class CModule : public CObject, public IModule{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IModule)
@@ -108,7 +108,7 @@ protected:
 //
 __SimpleWork_API__ SModule& __getSimpleWork(int nCompatibleVer) {
     if(nCompatibleVer <= IModule::getInterfaceVer() ) {
-        static SModule s_spCoreModule = CObject::createObject<CCoreModule>();
+        static SModule s_spCoreModule = CObject::createObject<CModule>();
         return s_spCoreModule;
     }else{
         static SModule s_coreapiNullpointer = SModule();
