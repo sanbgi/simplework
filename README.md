@@ -42,7 +42,7 @@
     class CMyObject : public IObject {
 
     }
-    SIMPLEWORK_FACTORY_REGISTER(CMyObject, "TestSimpleWork.MyObject")
+    SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, "TestSimpleWork.MyObject")
 
     int main() {
         SObject myObject = SObject::createObject("TestSimpleWork.MyObject");
@@ -72,7 +72,7 @@
             std::cout << "Great ! Hi everyone!";
         }
     };
-    SIMPLEWORK_FACTORY_REGISTER(CMyObject, MyObject::getClassKey())
+    SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, MyObject::getClassKey())
 
     int main() {
         SMyObject spMyObject = SObject::createObject<SMyObject>());

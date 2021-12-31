@@ -38,4 +38,4 @@ public:
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CNeuralNetworkFactory, SNeuralNetwork::SNeuralNetworkFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNeuralNetworkFactory, SNeuralNetwork::SNeuralNetworkFactory::getClassKey())

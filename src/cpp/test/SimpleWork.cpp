@@ -33,7 +33,7 @@ public:
         std::cout << "Great ! Hi everyone!";
     }
 };
-SIMPLEWORK_FACTORY_REGISTER(CMyObject, SMyObject::getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, SMyObject::getClassKey())
 
 struct FAA {
     SIMPLEWORK_PDATAKEY(FAA, "FAA")

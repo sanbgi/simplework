@@ -69,6 +69,6 @@ public:
 };
 SCtx CTensorSolver::sCtx("CTensorSolver");
 
-SIMPLEWORK_SINGLETON_FACTORY_REGISTER(CTensorSolver, STensorSolver::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSolver, STensorSolver::getClassKey())
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

@@ -11,8 +11,7 @@ __SimpleWork_Core_Namespace_Enter__
 //  对象基类：建议对象都要从这个基类派生。具体提供如下能力：
 //
 //      1，提供对象创建能力，参照：CObject::createObject<TObject>
-//      2，提供创建对象的工厂创建能力，参照：CObject::createFactory<TObject>
-//      3, 所有对象基类
+//      2, 所有对象基类
 //
 //  其中，符合要求具体包括：
 //
@@ -46,7 +45,6 @@ __SimpleWork_Core_Namespace_Enter__
 //  这样可以统一管理对象的创建和销毁，避免内存泄漏，具体创建范例：
 //  
 //      SObject obj = CObject::createObject<CMyObject>();
-//      SFactory fac = CObject::createFactory<CMyObject>()
 //
 class CObject {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER0
@@ -63,56 +61,6 @@ public:
         CPointer<TObject> spObject;
         __CObjectImp<TObject>::__createObject(spObject);
         return spObject;
-    }
-    
-    //
-    // 创建工厂
-    //
-    template<typename TObject> static int createFactory(SObject& rFactory, bool bSingletonFactory=false) {
-        
-        class __CFactoryImp : public IFactory {
-            SIMPLEWORK_INTERFACE_ENTRY_ENTER0
-                SIMPLEWORK_INTERFACE_ENTRY(IFactory)
-            SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
-
-        public://IFactory
-            int createObject(SObject& rObject) const {
-                CPointer<TObject> spObject;
-                __CObjectImp<TObject>::__createObject(spObject);
-                rObject = spObject.getObject();
-                return SError::ERRORTYPE_SUCCESS;
-            }
-        };
-
-        class __CSingletonFactoryImp : public IFactory {
-        SIMPLEWORK_INTERFACE_ENTRY_ENTER0
-            SIMPLEWORK_INTERFACE_ENTRY(IFactory)
-        SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
-
-        public://IFactory
-            int createObject(SObject& rObject) const {
-                static CPointer<TObject> g_spObject;
-                static int r = __CObjectImp<TObject>::__createObject(g_spObject);
-                rObject = g_spObject.getObject();
-                return SError::ERRORTYPE_SUCCESS;
-            }
-        };
-
-        if(bSingletonFactory) {
-            CPointer<__CSingletonFactoryImp> spFactory;
-            __CObjectImp<__CSingletonFactoryImp>::__createObject(spFactory);
-            rFactory = spFactory.getObject();
-        }else{
-            CPointer<__CFactoryImp> spFactory;
-            __CObjectImp<__CFactoryImp>::__createObject(spFactory);
-            rFactory = spFactory.getObject();
-        }
-        return SError::ERRORTYPE_SUCCESS;
-    }
-    template<typename TObject> static SObject createFactory(bool bSingleton=false) {
-        SObject spFactory;
-        createFactory<TObject>(spFactory, bSingleton);
-        return spFactory;
     }
 
 private:

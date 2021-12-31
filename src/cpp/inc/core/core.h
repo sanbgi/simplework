@@ -90,7 +90,7 @@
 //              SIMPLEWORK_INTERFACE_ENTRY(interface)
 //          SIMPLEWORK_INTERFACE_ENTRY_LEAVE(superClass)
 //      4.2 注册类工厂宏 
-//              普通工厂SIMPLEWORK_FACTORY_REGISTER(classType, szClassKey)
+//              普通工厂SIMPLEWORK_FACTORY_AUTO_REGISTER(classType, szClassKey)
 //              单例工厂SIMPLEWORK_SINGLETONFACTORY_REGISTER(classType, szClassKey)
 //      4.3 注册模块宏 SIMPLEWORK_MODULE_REGISTER(szModuleKey)
 //      4.4 对象类基类定义，CObject
@@ -135,24 +135,26 @@
 #include "CRefer.h"
 #include "CPointer.h"
 #include "CObject.h"
+#include "CFactory.h"
 #include "CVisitor.h"
 #define SIMPLEWORK_FACTORY_REGISTER(className, classKey) \
     class __C##className##Register { \
     public: \
         __C##className##Register() { \
-            SFactory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(); \
+            SIMPLEWORK_CORE_NAMESPACE::CPointer<className> spFactoryObj; \
+            SIMPLEWORK_CORE_NAMESPACE::CObject::createObject(spFactoryObj); \
+            SIMPLEWORK_CORE_NAMESPACE::SFactory spFactory = spFactoryObj.getObject(); \
             SIMPLEWORK_CORE_NAMESPACE::SModule::getSimpleWork()->registerFactory(classKey, spFactory); \
         } \
     } __g##className##Register;
 
-#define SIMPLEWORK_SINGLETON_FACTORY_REGISTER(className, classKey) \
-    class __C##className##Register { \
-    public: \
-        __C##className##Register() { \
-            SFactory spFactory = SIMPLEWORK_CORE_NAMESPACE::CObject::createFactory<className>(true); \
-            __getSimpleWork(SIMPLEWORK_CORE_NAMESPACE::IModule::getInterfaceVer())->registerFactory(classKey, spFactory); \
-        } \
-    } __g##className##Register;
+#define SIMPLEWORK_FACTORY_AUTO_REGISTER(className, classKey) \
+    typedef SIMPLEWORK_CORE_NAMESPACE::CFactory<className> __Factory##className; \
+    SIMPLEWORK_FACTORY_REGISTER(__Factory##className, classKey)
+
+#define SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(className, classKey) \
+    typedef SIMPLEWORK_CORE_NAMESPACE::CSingletonFactory<className> __Factory##className; \
+    SIMPLEWORK_FACTORY_REGISTER(__Factory##className, classKey)
 
 
 #ifdef SIMPLEWORK_WITHOUTAPI
