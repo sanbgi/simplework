@@ -24,6 +24,14 @@ public:
         virtual int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) = 0;
     };
 
+    //
+    // 激活函数
+    //
+    enum EACTIVATION {
+        ACTIVATION_ReLU,
+        ACTIVATION_Softmax
+    };
+
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INeuralNetwork", 211223)
 
         //
@@ -73,7 +81,7 @@ public:
             //
             //  创建直连神经网络
             //
-            virtual int createDense(int nCells, SNeuralNetwork& spNetwork) = 0;
+            virtual int createDense(int nCells, EACTIVATION eActivation, SNeuralNetwork& spNetwork) = 0;
 
             //
             //  创建卷积神经网络
@@ -86,9 +94,14 @@ public:
             virtual int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) = 0;
 
             //
-            //  打开IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
+            //  读取整个IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
             //
             virtual int readIdxFile(const char* szFileName, SData& spData) = 0;
+
+            //
+            //  打开IDX格式的文件读取器，格式参考：http://yann.lecun.com/exdb/mnist/
+            //
+            virtual int openIdxFileReader( const char* szFileName, SPipe& spPipe) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetworkFactory)
 
@@ -97,6 +110,37 @@ public:
         static SNeuralNetworkFactory g_factory = SObject::createObject<SNeuralNetworkFactory>();
         return g_factory;
     }
+
+    static SNeuralNetwork createDense(int nCells, EACTIVATION eActivation=ACTIVATION_ReLU) {
+        SNeuralNetwork nn;
+        getFactory()->createDense(nCells,eActivation,nn);
+        return nn;
+    }
+
+    static SNeuralNetwork createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight) {
+        SNeuralNetwork nn;
+        getFactory()->createPool(nWidth, nHeight, nStrideWidth, nStrideHeight, nn);
+        return nn;
+    }
+
+    static SNeuralNetwork createConv(int nWidth, int nHeight, int nConv) {
+        SNeuralNetwork nn;
+        getFactory()->createConvolution(nWidth, nHeight, nConv, nn);
+        return nn;
+    }
+
+    static SNeuralNetwork createSequence(int nNetworks, SNeuralNetwork* pNetworks) {
+        SNeuralNetwork nn;
+        getFactory()->createSequence(nNetworks, pNetworks, nn);
+        return nn;
+    }
+
+    static SData loadIdxFile(const char* szFilename) {
+        SData data;
+        getFactory()->readIdxFile(szFilename, data);
+        return data;
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetwork)
 
 SIMPLEWORK_NN_NAMESPACE_LEAVE

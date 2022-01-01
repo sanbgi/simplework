@@ -35,10 +35,12 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
     int nPoolHeight = m_nHeight;
     int nOutWidth = (m_nInputWidth - m_nWidth + 1) / m_nStrideWidth;
     int nOutHeight = (m_nInputHeight - m_nHeight + 1) / m_nStrideHeight;
+    pDimSizes[0] = nOutHeight;
+    pDimSizes[1] = nOutWidth;
     double* pInputArray = inputTensor.pDoubleArray;
     double pOutputArray[nOutWidth*nOutHeight*nLayer];
-    for( int iOutHeight = 0; iOutHeight <= nOutHeight; iOutHeight++ ) {
-        for( int iOutWidth = 0; iOutWidth <= nOutWidth; iOutWidth++) {
+    for( int iOutHeight = 0; iOutHeight < nOutHeight; iOutHeight++ ) {
+        for( int iOutWidth = 0; iOutWidth < nOutWidth; iOutWidth++) {
             int iInputHeight = iOutHeight*m_nStrideHeight;
             int iInputWidth = iOutWidth*m_nStrideWidth;
             for(int iLayer=0; iLayer<nLayer; iLayer++) {
@@ -118,8 +120,8 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
     int nOutHeight = (m_nInputHeight - m_nHeight + 1) / m_nStrideHeight;
     double* pInputArray = inputTensor.pDoubleArray;
     double* pDeltaArray = outputDeviation.pDoubleArray;
-    for( int iOutHeight = 0; iOutHeight <= nOutHeight; iOutHeight++ ) {
-        for( int iOutWidth = 0; iOutWidth <= nOutWidth; iOutWidth++) {
+    for( int iOutHeight = 0; iOutHeight < nOutHeight; iOutHeight++ ) {
+        for( int iOutWidth = 0; iOutWidth < nOutWidth; iOutWidth++) {
             int iInputHeight = iOutHeight*m_nStrideHeight;
             int iInputWidth = iOutWidth*m_nStrideWidth;
             for(int iLayer=0; iLayer<nInputLayer; iLayer++) {

@@ -1,4 +1,5 @@
 #include "CConvolutionNetwork.h"
+#include "math.h"
 
 SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
@@ -28,7 +29,7 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
     int nConvWidth = m_nConvWidth;
     int nInputWidth = m_nInputWidth;
     int nInputLayers = m_nInputLayers;
-    int nOutputWidth = m_nConvWidth - m_nConvWidth + 1;
+    int nOutputWidth = m_nInputWidth - m_nConvWidth + 1;
     int nOutputHeight = m_nInputHeight - m_nConvHeight + 1;
     int nOutput = nOutputWidth*nOutputHeight*nConvs;
     double pOutputArray[nOutput];
@@ -124,7 +125,7 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
     //
     for(int i=0; i<nWeight; i++) {
-        *pWeights = (i+1)/(double)nWeight;
+        *(pWeights+i) = rand() % 1000 / 2000.0 / nWeight * m_nConvs;
     }
     for(int i=0; i<m_nConvs; i++ ){
         *pBais = 0;
@@ -142,14 +143,14 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
     double fakeArray[inputTensor.nData];
     double* pExpectInputDelta = fakeArray;
     if(pInputDeviation) {
-        double* pExpectInputDelta = pInputDeviation->pDoubleArray;
+        pExpectInputDelta = pInputDeviation->pDoubleArray;
         memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
     }
 
     //
     // 学习率先固定
     //
-    double dLearnRate = 0.1;
+    double dLearnRate = 0.01;
 
     int nConvs = m_nConvs;
     int nConvSize = m_nConvWidth * m_nConvHeight * m_nInputLayers; 
@@ -212,7 +213,7 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
         //
         //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
         //
-        pBais[iOutput] -= (-derivationZ) * dLearnRate;
+        pBais[iConv] -= (-derivationZ) * dLearnRate;
     }
 
     return sCtx.Success();

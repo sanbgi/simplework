@@ -38,20 +38,9 @@ struct PTensor {
         //  数据地址
         //
         void* pData;
-
-        //
-        //  浮点数地址
-        //
+        int* pIntArray;
         float* pFloatArray;
-
-        //
-        //  双精度数据地址
-        //
         double* pDoubleArray;
-
-        //
-        //  缓冲地址
-        //
         unsigned char* pByteArray;
     };
 };

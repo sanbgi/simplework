@@ -1,6 +1,17 @@
 #include "CActivator.h"
 #include "math.h"
 
+CActivator* CActivator::getActivation(SNeuralNetwork::EACTIVATION eActivation) {
+    switch(eActivation) {
+        case SNeuralNetwork::ACTIVATION_ReLU:
+            return getReLU();
+
+        case SNeuralNetwork::ACTIVATION_Softmax:
+            return getSoftmax();
+    }
+    return getReLU();
+}
+
 CActivator* CActivator::getReLU() {
     static class CActivatorImp : public CActivator {
 

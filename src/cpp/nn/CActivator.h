@@ -31,6 +31,9 @@ public:
     virtual double loss(int nData, double* pYArray, double* pYDeltaArray);
 
 public:
+    static CActivator* getActivation(SNeuralNetwork::EACTIVATION eActivation);
+
+public:
     static CActivator* getReLU();
     static CActivator* getLeakyReLU();
     static CActivator* getELU();

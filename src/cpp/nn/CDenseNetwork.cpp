@@ -1,11 +1,12 @@
 #include "CDenseNetwork.h"
+#include <math.h>
 
 SCtx CDenseNetwork::sCtx("CDenseNetwork");
-int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork& spNetwork) {
+int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActivation, SNeuralNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
-    spDense->m_pActivator = CActivator::getSigmod();
+    spDense->m_pActivator = CActivator::getActivation(eActivation);
     spNetwork.setPtr(spDense.getPtr());
     return sCtx.Success();
 }
@@ -28,7 +29,7 @@ int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pO
             for(int iInput=0; iInput<m_nInputCells; iInput++) {
                 dOutout += pWeights[iOutput*m_nInputCells+iInput] * pInput[iInput];
             }
-            dOutout = dOutout - pBais[iOutput];
+            dOutout -= pBais[iOutput];
         }
         m_pActivator->activate(m_nCells, pOutputs, pOutputs);
     }
@@ -105,10 +106,10 @@ int CDenseNetwork::initWeights(int nInputCells) {
     // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
     //
     for(int i=0; i<nWeight; i++) {
-        *pWeight = (i+1)/(double)nWeight;
+        *(pWeight+i) = rand() % 1000 / 1000.0 / nInputCells / 2;
     }
     for(int i=0; i<m_nCells; i++ ){
-        *pBais = 0;
+        *(pBais+i) = 0;
     }
 
     m_nInputCells = nInputCells;
@@ -119,14 +120,14 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
     double fakeArray[inputTensor.nData];
     double* pExpectInputDelta = fakeArray;
     if(pInputDeviation) {
-        double* pExpectInputDelta = pInputDeviation->pDoubleArray;
+        pExpectInputDelta = pInputDeviation->pDoubleArray;
         memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
     }
 
     //
     // 学习率先固定
     //
-    double dLearnRate = 1;
+    double dLearnRate = 0.01;
 
     //
     //  计算目标函数相对于Y值的偏导数

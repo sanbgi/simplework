@@ -3,6 +3,7 @@
 
 #include "../inc/SimpleWork.h"
 #include <math.h>
+#include "CNeuralNetwork.h"
 
 using namespace sw;
 using namespace sw::av;
@@ -139,8 +140,7 @@ void testTensor() {
 
 void testNN() {
     SNeuralNetwork n;
-    SNeuralNetwork::getFactory()->createDense(1, n);
-
+    SNeuralNetwork::getFactory()->createDense(1, SNeuralNetwork::ACTIVATION_ReLU, n);
     double v = 0.5;
     int dimsize[] = { 1 };
     PTensor inputTensor;
@@ -166,14 +166,31 @@ void testNN() {
 }
 
 void testIdx() {
+    //std::string strFilename = "D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-labels-idx1-ubyte965g-S4A7G3r0jpgiMMdvSNx7KP_oN7677JZkkIErsY.gz";
+    std::string strFilename = "D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-images-idx3-ubytejUIsewocHHkkWlvPB_6G4z7q_ueSuEWErsJ29aLbxOY.gz";
     SData spTensor;
-    SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-images-idx3-ubytejUIsewocHHkkWlvPB_6G4z7q_ueSuEWErsJ29aLbxOY.gz", spTensor);
-    //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-labels-idx1-ubyte965g-S4A7G3r0jpgiMMdvSNx7KP_oN7677JZkkIErsY.gz", spTensor);
+    //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-images-idx3-ubytejUIsewocHHkkWlvPB_6G4z7q_ueSuEWErsJ29aLbxOY.gz", spTensor);
+    //SNeuralNetwork::getFactory()->readIdxFile("", spTensor);
     //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-images-idx3-ubyteRA_Kv3PMVG-iFHXoHqNwJlYF9WviEKQCTSyo8gNSNgk.gz", spTensor);
     //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-labels-idx1-ubyteNVJTSgpVi77WrtMrMMSVzKI9Vn7FLKyL4aBzDoAQJVw.gz", spTensor);
+    SPipe spReader;
+    SNeuralNetwork::getFactory()->openIdxFileReader(strFilename.c_str(), spReader);
+    if(spReader) {
+        struct CReceiver : IVisitor<const PData&> {
+            int visit(const PData& rData) {
+                const PTensor* pTensor = CData<PTensor>(rData);
+                if(pTensor == nullptr) {
+                    return sCtx.Error();
+                }
+                return sCtx.Success();
+            }
+        }receiver;
+        while(spReader->pushData(CData<CBasicType<int>>(1),&receiver)==sCtx.Success()){
 
-    const PTensor* pTensor = spTensor.getDataPtr<PTensor>();
-    std::cout << pTensor->nData;
+        }
+    }
+    //const PTensor* pTensor = spTensor.getDataPtr<PTensor>();
+    //std::cout << pTensor->nData;
 }
 
 int main(int argc, char *argv[]){
@@ -190,7 +207,8 @@ int main(int argc, char *argv[]){
     //testPipe();
     //testTensor();
     //testNN();
-    testIdx();
+    //testIdx();
+    CNeuralNetwork::run();
 
     /*
     int i=10;

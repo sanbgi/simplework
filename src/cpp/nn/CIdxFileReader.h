@@ -3,20 +3,20 @@
 
 #include "nn.h"
 #include "CActivator.h"
+#include <fstream> 
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
 
-class CIdxFileReader : public CObject, IData{
+class CIdxFileReader : public CObject, IPipe{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IData)
+        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private://IPipe
-    const void* getDataPtr(unsigned int idType);
-    unsigned int getDataType();
+public:
+    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
 
 public://Factory
     static int createReader(const char* szFileName, SPipe& spPipe);
@@ -28,8 +28,11 @@ protected:
     }
 
 private:
-    CTaker<unsigned char*> m_spBytes;
-    PTensor m_tensor;
+    std::ifstream m_file;
+    CTaker<int*> m_spDims;
+    PTensor m_tensorTemplate;
+    int m_nTensor;
+    int m_nEleByte;
 };
 
 #endif//__SimpleWork_NN_CIdxFileReader_H__
