@@ -73,7 +73,7 @@ void CNeuralNetwork::run() {
                         std::cout << "\r delta: " << delta;
                     }
                     */
-                    if( t++ % 100 == 0) {
+                    if( t++ % 20 == 0) {
                         std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
                     }
                     deltaV = delta;

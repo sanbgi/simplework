@@ -144,43 +144,40 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
     int nOutputTensorSize = outputTensor.nData/outputTensor.pDimSizes[0];
     int nDeltaTensorSize = outputDeviation.nData/outputDeviation.pDimSizes[0];
 
-    {
-        int nInputHstep = m_nInputWidth * nLayer;
-        int nInputWstep = nLayer;
+    int nInputHstep = m_nInputWidth * nLayer;
+    int nInputWstep = nLayer;
 
-        int nInStrideHstep = nInputHstep * m_nStrideHeight;
-        int nInStrideWstep = nInputWstep * m_nStrideWidth;
-        
-        int nOutHstep = nOutWidth * nLayer;
-        int nOutWstep = nLayer;
+    int nInStrideHstep = nInputHstep * m_nStrideHeight;
+    int nInStrideWstep = nInputWstep * m_nStrideWidth;
+    
+    int nOutHstep = nOutWidth * nLayer;
+    int nOutWstep = nLayer;
 
-        double* pInArray = inputTensor.pDoubleArray;
-        double* pOutDeltaArray = outputDeviation.pDoubleArray;
-        double* pInDeltaArray = pDeviationInputArray;
-        for(int iTensor = 0; iTensor < nTensor; iTensor++, pInArray+=nInputTensorSize, pInDeltaArray+=nInputTensorSize, pOutDeltaArray+=nOutputTensorSize ) {
-            for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
-                for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
-                    for(int iLayer=0, iPoolInLAt=iInWAt; iLayer<nLayer; iLayer++, iPoolInLAt++) {
-                        double dMax = DVV(pInArray, iPoolInLAt, nInputTensorSize);
-                        double* pExpectDelta = nullptr;
-                        for( int iPoolH=0, iPoolInHAt=iPoolInLAt; iPoolH<nPoolHeight; iPoolH++, iPoolInHAt+=nInputHstep) {
-                            for( int iPoolW=0, iPoolInWAt=iPoolInHAt; iPoolW<nPoolWidth; iPoolW++, iPoolInWAt+=nInputWstep) {
-                                double dValue = DVV(pInArray, iPoolInWAt, nInputTensorSize);
-                                if( dValue > dMax) {
-                                    dMax = dValue;
-                                    pExpectDelta = &DVV(pInDeltaArray, iPoolInWAt, nInputTensorSize);
-                                }
+    double* pInArray = inputTensor.pDoubleArray;
+    double* pOutDeltaArray = outputDeviation.pDoubleArray;
+    double* pInDeltaArray = pDeviationInputArray;
+    for(int iTensor = 0; iTensor < nTensor; iTensor++, pInArray+=nInputTensorSize, pInDeltaArray+=nInputTensorSize, pOutDeltaArray+=nOutputTensorSize ) {
+        for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
+            for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
+                for(int iLayer=0, iPoolInLAt=iInWAt; iLayer<nLayer; iLayer++, iPoolInLAt++) {
+                    double dMax = DVV(pInArray, iPoolInLAt, nInputTensorSize);
+                    double* pExpectDelta = nullptr;
+                    for( int iPoolH=0, iPoolInHAt=iPoolInLAt; iPoolH<nPoolHeight; iPoolH++, iPoolInHAt+=nInputHstep) {
+                        for( int iPoolW=0, iPoolInWAt=iPoolInHAt; iPoolW<nPoolWidth; iPoolW++, iPoolInWAt+=nInputWstep) {
+                            double dValue = DVV(pInArray, iPoolInWAt, nInputTensorSize);
+                            if( dValue > dMax) {
+                                dMax = dValue;
+                                pExpectDelta = &DVV(pInDeltaArray, iPoolInWAt, nInputTensorSize);
                             }
                         }
-                        if(pExpectDelta) {
-                            *pExpectDelta = DVV(pOutDeltaArray,iOutWAt+iLayer, nOutputTensorSize);
-                        }
+                    }
+                    if(pExpectDelta) {
+                        *pExpectDelta = DVV(pOutDeltaArray,iOutWAt+iLayer, nOutputTensorSize);
                     }
                 }
             }
         }
     }
-
     return sCtx.Success();
 }
 

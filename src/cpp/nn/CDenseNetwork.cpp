@@ -23,24 +23,26 @@ int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pO
     CTaker<double*> spOutputTensorArray(new double[m_nCells * nTensor], [](double* ptr) {
         delete[] ptr;
     });
-    double* pOutputArray = spOutputTensorArray;
     {
         int nWeights = m_nInputCells*m_nCells;
+        int nWWsize = m_nInputCells;
         int nInputTensorSize = inputTensor.nData/nTensor;
+        double* pWeights = m_spWeights;
+        double* pBais = m_spBais;
+        double* pInput = inputTensor.pDoubleArray;
+        double* pOutput = spOutputTensorArray;
         for(int iTensor=0; iTensor<nTensor; iTensor++) {
-            double* pInput = inputTensor.pDoubleArray + iTensor * nInputTensorSize;
-            double* pOutput = pOutputArray + iTensor * m_nCells;
-            double* pWeights = m_spWeights;
-            double* pBais = m_spBais;
-            for(int iOutput=0; iOutput<m_nCells; iOutput++ ) {
+            for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
                 double& dOutout = DVV(pOutput,iOutput,m_nCells);
                 dOutout = 0;
                 for(int iInput=0; iInput<m_nInputCells; iInput++) {
-                    dOutout += DVV(pWeights, iOutput*m_nInputCells+iInput,nWeights) * DVV(pInput, iInput, nInputTensorSize);
+                    dOutout += DVV(pWeights, iWWAt+iInput,nWeights) * DVV(pInput, iInput, nInputTensorSize);
                 }
                 dOutout -= DVV(pBais,iOutput, m_nCells);
             }
             m_pActivator->activate(m_nCells, pOutput, pOutput);
+            pInput+=nInputTensorSize;
+            pOutput+=m_nCells;
         }
     }
     
@@ -48,7 +50,7 @@ int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pO
     PTensor tensorOutput;
     tensorOutput.idType = inputTensor.idType;
     tensorOutput.nData = m_nCells * nTensor;
-    tensorOutput.pData = pOutputArray;
+    tensorOutput.pDoubleArray = spOutputTensorArray;
     tensorOutput.nDims = 2;
     tensorOutput.pDimSizes = pDimSize;
     return pOutputReceiver->visit(tensorOutput);
@@ -153,6 +155,7 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
     }
 
     int nTensor = IVV(inputTensor.pDimSizes,0,inputTensor.nDims);
+    int nWWsize = m_nInputCells;
     int nInputTensorSize = inputTensor.nData/nTensor;
     int nOutputTensorSize = outputTensor.nData/IVV(outputTensor.pDimSizes,0,outputTensor.nDims);
 
@@ -171,23 +174,21 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
     double* pWeightDerivationArray = spWeightDeviationArray;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
 
+    double* pOutputArray = outputTensor.pDoubleArray;
+    double* pOutputDeviationArray = outputDeviation.pDoubleArray;
+    double* pInputArray = inputTensor.pDoubleArray;
+    double* pInputDeviationArray = pAllInputDerivationArray;
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
-
         //
         //  计算目标函数相对于Y值的偏导数
         //
-        double* pOutputArray = outputTensor.pDoubleArray + iTensor * nOutputTensorSize;
-        double* pOutputDeviationArray = outputDeviation.pDoubleArray + iTensor * nOutputTensorSize;
-        double* pInputArray = inputTensor.pDoubleArray + iTensor * nInputTensorSize;
-        double* pInputDeviationArray = pAllInputDerivationArray + iTensor * nInputTensorSize;
-
         double pZDerivationArray[m_nCells];
         m_pActivator->deactivate(m_nCells, pOutputArray, pOutputDeviationArray, pZDerivationArray);
 
         //
         //  调整权重
         //
-        for(int iOutput=0; iOutput<m_nCells; iOutput++ ) {
+        for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
 
             //
             //  计算目标函数对当前输出值的偏导数
@@ -209,7 +210,7 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
             //
             for(int iInput=0; iInput<m_nInputCells; iInput++ ) {
 
-                int iWeight = iOutput * m_nInputCells + iInput;
+                int iWeight = iWWAt + iInput;
 
                 //
                 // 输入对实际目标的偏差值，反向传递给上一层，其实就是相对于输入的偏导数
@@ -229,6 +230,11 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
             //
             DVV(pBaisArray, iOutput, m_nCells) -= (-derivationZ) * dLearnRate;
         }
+
+        pOutputArray += nOutputTensorSize;
+        pOutputDeviationArray += nOutputTensorSize;
+        pInputArray += nInputTensorSize;
+        pInputDeviationArray += nInputTensorSize;
     }
     double avgWeight = 0;
     double maxW = -100000;
@@ -247,7 +253,7 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
     }
 
     static int t = 0;
-    if( t++ % 100 == 0) {
+    if( (t++ / 2) % 20 == 0) {
         std::cout << "Dense " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
     }
 
