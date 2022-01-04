@@ -9,6 +9,9 @@ using namespace sw::core;
 class CNeuralNetwork {
 public:
     static void run();
+    static void runConv();
+    static void runDense();
+    static void runPool();
     static SNeuralNetwork createNetwork();
 };
 

@@ -152,7 +152,7 @@ void testNN() {
     struct LearnCtx : public SNeuralNetwork::ILearnCtx {
         int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeivation) {
             double y = 0.7*(*pV) - 0.3;
-            *outputDeivation.pDoubleArray = 1/(1+exp(-y)) - outputTensor.pDoubleArray[0];
+            *outputDeivation.pDoubleArray = outputTensor.pDoubleArray[0] - 1/(1+exp(-y));
             return sCtx.Success();
         }
         double *pV;

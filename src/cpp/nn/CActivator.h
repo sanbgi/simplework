@@ -24,7 +24,7 @@ public:
     //      对于大部分()：
     //          E = 求和(Delta*Delta)/2
     //      对于Softmax(交叉熵):
-    //          E = -求和((Yi+Delta)*log(Yi))
+    //          E = -求和((Yi-Delta)*log(Yi))
     //
     virtual void activate( int nData, double* pZArray, double* pYArray);
     virtual void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray);

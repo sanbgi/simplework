@@ -103,6 +103,11 @@ public:
     }
     typedef TValue __TValue;
 
+    static unsigned int getThisType() {
+        static unsigned int s_idType = SData::getTypeIdentifier<CBasicType>();
+        return s_idType;
+    }
+
 private:
     static const char* getBasicTypeKey() {
         if(typeid(TValue) == typeid(bool)) {

@@ -6,6 +6,9 @@ CActivator* CActivator::getActivation(SNeuralNetwork::EACTIVATION eActivation) {
         case SNeuralNetwork::ACTIVATION_ReLU:
             return getReLU();
 
+        case SNeuralNetwork::ACTIVATION_LeakyReLU:
+            return getLeakyReLU();
+
         case SNeuralNetwork::ACTIVATION_Softmax:
             return getSoftmax();
     }
@@ -16,12 +19,14 @@ CActivator* CActivator::getReLU() {
     static class CActivatorImp : public CActivator {
 
         static double activate(double x) {
+            //return x;
             return x>=0?x:0;
         }
         static double deactivate(double y) {
+            //return 1;
             //
             //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
-            //  好等于 -delta，其中delta = target - current 
+            //  好等于 delta，其中delta = Ycurrent - Ytarget 
             //
             return y>0?1:0;
         }
@@ -32,7 +37,7 @@ CActivator* CActivator::getReLU() {
         }
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
-                pDzArray[i] = deactivate(pYArray[i]) * (-pYDeltaArray[i]);
+                pDzArray[i] = deactivate(pYArray[i]) * pYDeltaArray[i];
             }
         }
         double loss(int nData, double* pYArray, double* pYDeltaArray) {
@@ -50,13 +55,15 @@ static double s_leaky_a = 0.01;
 CActivator* CActivator::getLeakyReLU() {
     static class CActivatorImp : public CActivator {
         static double activate(double x) {
+            //return x;
             return x>=0?x:(s_leaky_a*x);
         }
         static double deactivate(double y) {
             //
             //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
-            //  好等于 -delta，其中delta = target - current 
+            //  好等于 delta，其中delta = Ycurrent - Yexpect 
             //
+            //return 1;
             return y>=0?1:s_leaky_a;
         }
         void activate( int nData, double* pZArray, double* pYArray) {
@@ -66,7 +73,7 @@ CActivator* CActivator::getLeakyReLU() {
         }
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
-                pDzArray[i] = deactivate(pYArray[i]) * (-pYDeltaArray[i]);
+                pDzArray[i] = deactivate(pYArray[i]) * pYDeltaArray[i];
             }
         }
         double loss(int nData, double* pYArray, double* pYDeltaArray) {
@@ -88,7 +95,7 @@ CActivator* CActivator::getELU() {
         static double deactivate(double y) {
             //
             //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
-            //  好等于 -delta，其中delta = target - current 
+            //  好等于 delta，其中delta = Ycurrent - Yexpect 
             //
             return y>=0?1:(y+s_leaky_a);
         }
@@ -99,7 +106,7 @@ CActivator* CActivator::getELU() {
         }
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
-                pDzArray[i] = deactivate(pYArray[i]) * (-pYDeltaArray[i]);
+                pDzArray[i] = deactivate(pYArray[i]) * pYDeltaArray[i];
             }
         }
         double loss(int nData, double* pYArray, double* pYDeltaArray) {
@@ -128,7 +135,7 @@ CActivator* CActivator::getSigmod() {
         }
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
-                pDzArray[i] = deactivate(pYArray[i]) * (-pYDeltaArray[i]);
+                pDzArray[i] = deactivate(pYArray[i]) * pYDeltaArray[i];
             }
         }
         double loss(int nData, double* pYArray, double* pYDeltaArray) {
@@ -157,7 +164,7 @@ CActivator* CActivator::getTanh() {
         }
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
-                pDzArray[i] = deactivate(pYArray[i]) * (-pYDeltaArray[i]);
+                pDzArray[i] = deactivate(pYArray[i]) * pYDeltaArray[i];
             }
         }
         double loss(int nData, double* pYArray, double* pYDeltaArray) {
@@ -209,11 +216,10 @@ CActivator* CActivator::getSoftmax() {
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
                 //
-                //  ?, 参考地址：https://blog.csdn.net/jiongjiongai/article/details/88324000
+                //  参考地址：https://blog.csdn.net/jiongjiongai/article/details/88324000
                 //              https://blog.csdn.net/qq_42734797/article/details/110748836
-                //  究竟应该是正，还是负，两篇文章结果不一样，选择相信后者
                 //
-                pDzArray[i] = -pYDeltaArray[i];
+                pDzArray[i] = pYDeltaArray[i];
             }
         }
         double loss(int nData, double* pYArray, double* pYDeltaArray) {

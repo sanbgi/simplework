@@ -1,5 +1,6 @@
 #include "CConvolutionNetwork.h"
 #include "math.h"
+#include "iostream"
 
 SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
@@ -24,46 +25,63 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
         return sCtx.Error();
     }
 
-    int nConvs = m_nConvs;
-    int nConvSize = m_nConvWidth * m_nConvHeight * m_nInputLayers; 
-    int nConvWidth = m_nConvWidth;
     int nInputWidth = m_nInputWidth;
     int nInputLayers = m_nInputLayers;
-    int nOutputWidth = m_nInputWidth - m_nConvWidth + 1;
-    int nOutputHeight = m_nInputHeight - m_nConvHeight + 1;
-    int nOutput = nOutputWidth*nOutputHeight*nConvs;
-    double pOutputArray[nOutput];
-    double* pInputArray = inputTensor.pDoubleArray;
-    double* pWeights = m_spWeights;
-    double* pBais = m_spBais;
-    for( int iOutput=0; iOutput<nOutput; iOutput++) {
-        int iConv = iOutput % nConvs;
-        int iOutputX = iOutput / nConvs;
-        int iOutputY = iOutputX / nOutputWidth;
-        iOutputX = iOutputX % nOutputWidth;
+    int nInputTensorSize = inputTensor.nData/inputTensor.pDimSizes[0];
 
-        double* pConvWeights = pWeights + iConv * nConvSize;
-        double dConv = 0;
-        for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
-            for( int iConvY=0; iConvY<m_nConvHeight; iConvY++) {
-                for( int iConvX=0; iConvX<m_nConvWidth; iConvX++ ) {
-                    int iInputY = iOutputY+iConvY;
-                    int iInputX = iOutputX+iConvX;
-                    dConv += pConvWeights[(iConvY*nConvWidth+iConvX)*nInputLayers+iInputLayer] * 
-                                pInputArray[(iInputY*nInputWidth+iInputX)*nInputLayers+iInputLayer];
-                } 
+    int nConvs = m_nConvs;
+    int nConvWidth = m_nConvWidth;
+    int nConvHeight = m_nConvHeight;
+    int nConvSize = nConvWidth * nConvHeight * nInputLayers; 
+
+    int nOutputWidth = nInputWidth - nConvWidth + 1;
+    int nOutputHeight = m_nInputHeight - nConvHeight + 1;
+    int nOutputTensorSize = nOutputWidth * nOutputHeight * nConvs;
+
+    int nInputHeightStep = nInputWidth * nInputLayers;
+    int nInputWidthStep = nInputLayers;
+    int nConvHeightStep = nConvWidth * nInputLayers;
+    int nConvWidthStep = nInputLayers;
+
+    double* pWeightArray = m_spWeights;
+    double* pBaisArray = m_spBais;
+
+    int nTensor = inputTensor.pDimSizes[0];
+    CTaker<double*> spOutputTensorArray(new double[nOutputTensorSize * nTensor], [](double* ptr) {
+        delete[] ptr;
+    });
+    double* pAllOutputArray = spOutputTensorArray;
+    for(int iTensor=0; iTensor<nTensor; iTensor++) {
+        double* pInputArray = inputTensor.pDoubleArray + iTensor * nInputTensorSize;
+        double* pOutputArray = pAllOutputArray + iTensor * nOutputTensorSize;
+        for( int iOutput=0; iOutput<nOutputTensorSize; iOutput++) {
+            int iConv = iOutput % nConvs;
+            int iOutputX = iOutput / nConvs;
+            int iOutputY = iOutputX / nOutputWidth;
+            iOutputX = iOutputX % nOutputWidth;
+
+            double* pConvWeights = pWeightArray + iConv * nConvSize;
+            double dConv = 0;
+            int iInputH = iOutputY * nInputHeightStep + iOutputX * nInputWidthStep;
+            for( int iConvY=0, iWeightH=0; iConvY<nConvHeight; iConvY++, iWeightH+=nConvHeightStep, iInputH+=nInputHeightStep) {
+                for( int iConvX=0, iWeightW=iWeightH, iInputW=iInputH; iConvX<nConvWidth; iConvX++, iWeightW+=nConvWidthStep, iInputW+=nInputWidthStep ) {
+                    for( int iInputLayer=0, iWeightAt=iWeightW, iInputAt=iInputW; iInputLayer<nInputLayers; iInputLayer++, iWeightAt++, iInputAt++) {
+                        dConv += DVV(pConvWeights, iWeightAt, nConvSize) * 
+                                 DVV(pInputArray, iInputAt, nInputTensorSize);
+                    }
+                }
             }
+            DVV(pOutputArray, iOutput, nOutputTensorSize) = dConv - DVV(pBaisArray, iConv, nConvs);
         }
-        pOutputArray[iOutput] = dConv - pBais[iConv];
+        m_pActivator->activate(nOutputTensorSize, pOutputArray, pOutputArray);
     }
-    m_pActivator->activate(nOutput, pOutputArray, pOutputArray);
 
-    int dimSize[3] = { nOutputHeight, nOutputWidth, nConvs };
+    int dimSize[4] = { nTensor, nOutputHeight, nOutputWidth, nConvs };
     PTensor outTensor;
     outTensor.idType = inputTensor.idType;
-    outTensor.nData = nOutput;
-    outTensor.pData = pOutputArray;
-    outTensor.nDims = 3;
+    outTensor.nData = nOutputTensorSize * nTensor;
+    outTensor.pData = pAllOutputArray;
+    outTensor.nDims = 4;
     outTensor.pDimSizes = dimSize;
     return pOutputReceiver->visit(outTensor);
 }
@@ -74,13 +92,14 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILear
         int visit(const PTensor& outputTensor) {
 
             int nOutputData = outputTensor.nData;
-            double pOutputDelta[nOutputData];
+            CTaker<double*> spOutputDeviation(new double[nOutputData], [](double* ptr) {
+                delete[] ptr;
+            });
             PTensor outputDeviation = outputTensor;
-            outputDeviation.pDoubleArray = pOutputDelta;
+            outputDeviation.pDoubleArray = spOutputDeviation;
             if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
                 return sCtx.Error();
             }
-
             return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
         }
 
@@ -98,17 +117,18 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILear
 
 int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     //
-    // 维度小于2的张量，无法进行卷积运算
+    // 维度小于3的张量，无法进行卷积运算
     //
-    if(inputTensor.nDims < 2) {
-        return sCtx.Error();
+    if(inputTensor.nDims < 3) {
+        return sCtx.Error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
     }
 
-    int nInputHeight = inputTensor.pDimSizes[0];
-    int nInputWidth = inputTensor.pDimSizes[1];
-    int nInputLayers = inputTensor.nData / nInputHeight / nInputWidth;
+    int nTensor = inputTensor.pDimSizes[0];
+    int nInputHeight = inputTensor.pDimSizes[1];
+    int nInputWidth = inputTensor.pDimSizes[2];
+    int nInputLayers = inputTensor.nData / nInputHeight / nInputWidth / nTensor;
     if( nInputHeight < m_nConvWidth || nInputWidth < m_nConvWidth ) {
-        return sCtx.Error();
+        return sCtx.Error("输入张量尺寸需要大于等于卷积核尺寸");
     }
 
     int nWeight = m_nConvWidth*m_nConvHeight*nInputLayers*m_nConvs;
@@ -122,10 +142,12 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
     });
 
     //
-    // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
+    // 基础权重最大值为 0.5 / 卷积核权重值的数量
     //
+    int nConvSize = m_nConvWidth*m_nConvHeight*nInputLayers;
+    double xWeight = 1.0/nConvSize;
     for(int i=0; i<nWeight; i++) {
-        *(pWeights+i) = rand() % 1000 / 2000.0 / nWeight * m_nConvs;
+         *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
     }
     for(int i=0; i<m_nConvs; i++ ){
         *pBais = 0;
@@ -139,82 +161,167 @@ int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
 }
 
 int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
-
-    double fakeArray[inputTensor.nData];
-    double* pExpectInputDelta = fakeArray;
+    CTaker<double*> spInputDeviationArray;
+    double* pAllInputDerivationArray = nullptr;
     if(pInputDeviation) {
-        pExpectInputDelta = pInputDeviation->pDoubleArray;
-        memset(pExpectInputDelta,0,sizeof(double)*inputTensor.nData);
+        pAllInputDerivationArray = pInputDeviation->pDoubleArray;
+        memset(pAllInputDerivationArray,0,sizeof(double)*inputTensor.nData);
+    }else{
+        spInputDeviationArray.take(new double[inputTensor.nData], [](double* ptr) {
+            delete[] ptr;
+        });
+        pAllInputDerivationArray = spInputDeviationArray;
     }
 
     //
     // 学习率先固定
     //
-    double dLearnRate = 0.01;
+    int nInputWidth = m_nInputWidth;
+    int nInputHeight = m_nInputHeight;
+    int nInputLayers = m_nInputLayers;
+    int nInputTensorSize = inputTensor.nData/inputTensor.pDimSizes[0];
 
-    int nConvs = m_nConvs;
-    int nConvSize = m_nConvWidth * m_nConvHeight * m_nInputLayers; 
     int nConvWidth = m_nConvWidth;
     int nConvHeight = m_nConvHeight;
+    int nConvs = m_nConvs;
+    int nConvSize = nConvWidth * nConvHeight * nInputLayers; 
 
-    int nInputWidth = m_nInputWidth;
-    int nInputLayers = m_nInputLayers;
+    int nOutputWidth = nInputWidth - nConvWidth + 1;
+    int nOutputHeight = nInputHeight - nConvHeight + 1;
+    int nOutputTensorSize = outputTensor.nData/outputTensor.pDimSizes[0];
 
-    int nOutputWidth = m_nInputWidth - m_nConvWidth + 1;
-    int nOutputHeight = m_nInputHeight - m_nConvHeight + 1;
-    int nOutput = nOutputWidth*nOutputHeight*nConvs;
+    int nInputHeightStep = nInputWidth * nInputLayers;
+    int nInputWidthStep = nInputLayers;
+    int nConvHeightStep = nConvWidth * nInputLayers;
+    int nConvWidthStep = nInputLayers;
 
-    double* pInputArray = inputTensor.pDoubleArray;
-    double* pOutputArray = outputTensor.pDoubleArray;
-    double* pDeltaArray = outputDeviation.pDoubleArray;
-    double* pWeights = m_spWeights;
-    double* pBais = m_spBais;
+    double* pWeightArray = m_spWeights;
+    double* pBaisArray = m_spBais;
 
-    double pDerivationZ[nOutput];
-    m_pActivator->deactivate(nOutput, pOutputArray, pDeltaArray, pDerivationZ);
-    for( int iOutput=0; iOutput<nOutput; iOutput++) {
-        int iConv = iOutput % nConvs;
-        int iOutputX = iOutput / nConvs;
-        int iOutputY = iOutputX / nOutputWidth;
-        iOutputX = iOutputX % nOutputWidth;
+    int nWeights = nConvSize*nConvs;
+    CTaker<double*> spWeightDeviationArray(new double[nWeights], [](double* ptr) {
+        delete[] ptr;
+    });
+    double* pWeightDerivationArray = spWeightDeviationArray;
+    memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
 
-        //
-        //  计算目标函数对当前输出值的偏导数
-        //      X = 输入
-        //      Y = 权重*X-偏置
-        //      F = activation(Y)
-        //      delta = 目标 - F
-        //      E = delta*delta/2 目标函数
-        //      derivationZ = d(E) / d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(y)
-        //      其中：
-        //          d(E)/d(delta) = pDeltaArray[iOutput]
-        //          d(delta)/d(F) = -1
-        //          d(F)/d(y) = deactivate(y)
-        //
-        double derivationZ = pDerivationZ[iOutput];
+    int nTensor = inputTensor.pDimSizes[0];
+    double dLearnRate = 5.0 / nConvSize;
+    for(int iTensor=0; iTensor<nTensor; iTensor++) {
 
-        //
-        //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
-        //  
-        double* pConvWeights = pWeights + iConv * nConvSize;
-        for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
-            for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
-                for( int iConvX=0; iConvX<nConvWidth; iConvX++ ) {
-                    int iInputY = iOutputY+iConvY;
-                    int iInputX = iOutputX+iConvX;
-                    int iWeight = (iConvY*nConvWidth+iConvX)*nInputLayers+iInputLayer;
-                    int iInput = (iInputY*nInputWidth+iInputX)*nInputLayers+iInputLayer;
-                    pExpectInputDelta[iInput] -= derivationZ * pConvWeights[iWeight];
-                    pConvWeights[iWeight] -= derivationZ*pInputArray[iInput]*dLearnRate;
+        double* pOutputArray = outputTensor.pDoubleArray + iTensor * nOutputTensorSize;
+        double* pOutputDeviationArray = outputDeviation.pDoubleArray + iTensor * nOutputTensorSize;
+        double* pInputArray = inputTensor.pDoubleArray + iTensor * nInputTensorSize;
+        double* pInputDeviationArray = pAllInputDerivationArray + iTensor * nInputTensorSize;
+
+        double pDerivationZ[nOutputTensorSize];
+        m_pActivator->deactivate(nOutputTensorSize, pOutputArray, pOutputDeviationArray, pDerivationZ);
+        for( int iOutput=0; iOutput<nOutputTensorSize; iOutput++) {
+            int iConv = iOutput % nConvs;
+            int iOutputX = iOutput / nConvs;
+            int iOutputY = iOutputX / nOutputWidth;
+            iOutputX = iOutputX % nOutputWidth;
+
+            //
+            //  计算目标函数对当前输出值的偏导数
+            //      X = 输入
+            //      Y = 权重*X-偏置
+            //      F = activation(Y)
+            //      delta = 目标 - F
+            //      E = delta*delta/2 目标函数
+            //      derivationZ = d(E) / d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(y)
+            //      其中：
+            //          d(E)/d(delta) = pOutputDeviationArray[iOutput]
+            //          d(delta)/d(F) = 1
+            //          d(F)/d(y) = deactivate(y)
+            //
+            double derivationZ = DVV(pDerivationZ,iOutput,nOutputTensorSize);
+
+            //
+            //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
+            //  
+            double* pConvWeights = pWeightArray + iConv * nConvSize;
+            double* pConvWeightDeviations = pWeightDerivationArray + iConv * nConvSize;
+
+            /*
+            for( int iConvY=0; iConvY<m_nConvHeight; iConvY++) {
+                for( int iConvX=0; iConvX<m_nConvWidth; iConvX++ ) {
+                    for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
+                        int iInputHeight = iOutputY+iConvY;
+                        int iInputWidth = iOutputX+iConvX;
+                        int iWeight = (iConvY*nConvWidth+iConvX)*nInputLayers+iInputLayer;
+                        int iInput = (iInputHeight*nInputWidth+iInputWidth)*nInputLayers+iInputLayer;
+                        DVV(pInputDeviationArray,iInput,nInputTensorSize) += derivationZ * DVV(pConvWeights,iWeight,nConvSize);
+                        DVV(pConvWeightDeviations,iWeight,nConvSize) += derivationZ * DVV(pInputArray,iInput,nInputTensorSize);
+                    }
+                }
+            }*/
+
+            int iInputH = iOutputY * nInputHeightStep + iOutputX * nInputWidthStep;
+            for( int iConvY=0, iWeightH=0; iConvY<nConvHeight; iConvY++, iWeightH+=nConvHeightStep, iInputH+=nInputHeightStep) {
+                for( int iConvX=0, iWeightW=iWeightH, iInputW=iInputH; iConvX<nConvWidth; iConvX++, iWeightW+=nConvWidthStep, iInputW+=nInputWidthStep ) {
+                    for( int iInputLayer=0, iWeightAt=iWeightW, iInputAt=iInputW; iInputLayer<nInputLayers; iInputLayer++, iWeightAt++, iInputAt++) {
+                        DVV(pInputDeviationArray,iInputAt,nInputTensorSize) += derivationZ * DVV(pConvWeights,iWeightAt,nConvSize);
+                        DVV(pConvWeightDeviations,iWeightAt,nConvSize) += derivationZ * DVV(pInputArray,iInputAt,nInputTensorSize);
+                    }
                 }
             }
-        }
 
-        //
-        //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
-        //
-        pBais[iConv] -= (-derivationZ) * dLearnRate;
+            //
+            //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
+            //
+            DVV(pBaisArray,iConv,nConvs) -= (-derivationZ) * dLearnRate;
+        }
     }
+
+    double avgWeight = 0;
+    double maxW = -100000;
+    double minW = 100000;
+    double avgDerivation = 0;
+    for(int iWeight=0;iWeight<nWeights; iWeight++) {
+        DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
+        avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
+        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate) / nWeights;
+        if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
+            maxW = DVV(pWeightArray,iWeight,nWeights);
+        }
+        if(minW > DVV(pWeightArray,iWeight,nWeights)) {
+            minW = DVV(pWeightArray,iWeight,nWeights);
+        }
+    }
+    static int t = 0;
+    if( t++ % 100 == 0) {
+        std::cout << "Conv " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
+    }
+    /*
+    //
+    //  检查梯度下降后的值是否降低
+    //
+    struct CEvalCheck : IVisitor<const PTensor&> {
+        int visit(const PTensor& t) {
+            double delta0 = 0;
+            for(int i=0; i<pOutputDeviation->nData; i++) {
+                delta0 += pOutputDeviation->pDoubleArray[i]*pOutputDeviation->pDoubleArray[i];
+            }
+
+            double delta = 0;
+            for(int i=0; i<pOutputDeviation->nData; i++) {
+                delta += (t.pDoubleArray[i] - pOutput->pDoubleArray[i] + pOutputDeviation->pDoubleArray[i]) * (t.pDoubleArray[i] - pOutput->pDoubleArray[i] + pOutputDeviation->pDoubleArray[i]);
+            }
+
+            if( delta > delta0) {
+                std::cout << ", Conv" << pOutput->nData << ": " << delta0 << " --> " << delta << ", ";
+                //sCtx.Error("怎么下降，偏差越大？");
+            }
+            return sCtx.Success();
+        }
+        const PTensor* pOutput;
+        const PTensor* pOutputDeviation;
+    }evalCheck;
+    evalCheck.pOutput = &outputTensor;
+    evalCheck.pOutputDeviation = &outputDeviation;
+    return eval(inputTensor, &evalCheck);
+    */
 
     return sCtx.Success();
 }

@@ -30,7 +30,7 @@ public://Factory
     static int createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActivation, SNeuralNetwork& spNetwork);
 
 private:
-    int initWeights(int nInputCells);
+    int initWeights(const PTensor& inputTensor);
 
 private:
     int m_nCells;

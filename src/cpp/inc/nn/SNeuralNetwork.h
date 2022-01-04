@@ -29,6 +29,7 @@ public:
     //
     enum EACTIVATION {
         ACTIVATION_ReLU,
+        ACTIVATION_LeakyReLU,
         ACTIVATION_Softmax
     };
 
@@ -54,6 +55,7 @@ public:
         //      @inputTensor，输入张量
         //      @expectTensor，期望的输出张量
         //
+        /*
         int learn(const PTensor& inputTensor, const PTensor& expectTensor) {
             struct CLearnCtx : ILearnCtx {
                 int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) {
@@ -66,7 +68,7 @@ public:
             }ctx;
             ctx.pExpectTensor = &expectTensor;
             return learn(inputTensor, &ctx, nullptr);
-        }
+        }*/
 
     SIMPLEWORK_INTERFACE_LEAVE
 
