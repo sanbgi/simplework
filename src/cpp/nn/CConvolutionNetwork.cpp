@@ -229,15 +229,15 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
                     //
                     //  计算目标函数对当前输出值的偏导数
                     //      X = 输入
-                    //      Y = 权重*X-偏置
-                    //      F = activation(Y)
-                    //      delta = 目标 - F
+                    //      Z = 权重*X-偏置
+                    //      Y = activation(Z)
+                    //      delta = 目标 - Y
                     //      E = delta*delta/2 目标函数
-                    //      derivationZ = d(E) / d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(y)
+                    //      derivationZ = d(E) / d(Z) = d(E)/d(delta) * d(delta)/d(Y) * d(F)/d(Z)
                     //      其中：
                     //          d(E)/d(delta) = pOutputDeviationArray[iOutput]
-                    //          d(delta)/d(F) = 1
-                    //          d(F)/d(y) = deactivate(y)
+                    //          d(delta)/d(Y) = 1
+                    //          d(Y)/d(Z) = deactivate(Y)
                     //
                     double derivationZ = DVV(pDerivationZ,iOutWAt+iConv,nOutputTensorSize);
 

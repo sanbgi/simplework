@@ -1,8 +1,6 @@
 #ifndef __SimpleWork_Tensor_h__
 #define __SimpleWork_Tensor_h__
 
-#include "math.h"
-
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
@@ -18,36 +16,36 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取维度
         //
-        virtual const STensor& getDimVector() = 0;
+        virtual STensor& getDimVector() = 0;
 
         //
         // 获取元素类型
         //
-        virtual int getDataType() const = 0;
+        virtual unsigned int getDataType() = 0;
 
         //
         // 获取元素数量
         //
-        virtual int getDataSize() const = 0;
+        virtual int getDataSize() = 0;
 
     private:
         //
         // 获取元素数据指针
         //
-        virtual const void* getDataPtr(int eElementType, int iPos=0) const = 0;
+        virtual void* getDataPtr(unsigned int eElementType, int iPos=0) = 0;
 
     public:
         //
         // 获取元素数据指针
         //
-        template<typename Q> inline const Q* getDataPtr(int iPos=0) const {
-            return (Q*)getDataPtr(SData::getTypeIdentifier<CBasicType<Q>>(), iPos);
+        template<typename Q> inline Q* getDataPtr(int iPos=0) {
+            return (Q*)getDataPtr(CBasicType<Q>::getThisType(), iPos);
         }
 
         //
         // 获取元素值，不安全
         //
-        template<typename Q> inline const Q& getDataAt(int iPos) const {
+        template<typename Q> inline Q& getDataAt(int iPos) {
             return *getDataPtr<Q>(iPos);
         }
 
@@ -112,8 +110,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
             //
             // 构造全新的张量，私有函数，因为指针没类型，易出错
             //
-            virtual STensor createVector( int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-            virtual STensor createTensor( const STensor& spDimVector, int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+            virtual STensor createVector( unsigned int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+            virtual STensor createTensor( const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
 
@@ -122,13 +120,13 @@ public:
     // 构造一维张量
     //
     template<typename Q=void> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createVector(SData::getTypeIdentifier<CBasicType<Q>>(), nElementSize, (void*)pElementData);
+        return getFactory()->createVector(CBasicType<Q>::getThisType(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
     template<typename Q=void> static STensor createTensor(STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createTensor(spDimVector, SData::getTypeIdentifier<CBasicType<Q>>(), nElementSize, (void*)pElementData);
+        return getFactory()->createTensor(spDimVector, CBasicType<Q>::getThisType(), nElementSize, (void*)pElementData);
     }
 
 private:

@@ -57,7 +57,7 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
         
         double* pInArray = inputTensor.pDoubleArray;
         double* pOutArray = spOutputArray;
-        for(int iTensor = 0; iTensor < nTensor; iTensor++, pInArray+=nInputTensorSize, pOutArray+=nOutputTensorSize ) {
+        for(int iTensor = 0; iTensor < nTensor; iTensor++ ) {
             for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
                 for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
                     for(int iLayer=0, iPoolInLAt=iInWAt; iLayer<nLayer; iLayer++, iPoolInLAt++) {
@@ -74,6 +74,8 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
                     }
                 }
             }
+            pInArray+=nInputTensorSize;
+            pOutArray+=nOutputTensorSize;
         }
     }
 
@@ -156,7 +158,7 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
     double* pInArray = inputTensor.pDoubleArray;
     double* pOutDeltaArray = outputDeviation.pDoubleArray;
     double* pInDeltaArray = pDeviationInputArray;
-    for(int iTensor = 0; iTensor < nTensor; iTensor++, pInArray+=nInputTensorSize, pInDeltaArray+=nInputTensorSize, pOutDeltaArray+=nOutputTensorSize ) {
+    for(int iTensor = 0; iTensor < nTensor; iTensor++ ) {
         for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
             for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
                 for(int iLayer=0, iPoolInLAt=iInWAt; iLayer<nLayer; iLayer++, iPoolInLAt++) {
@@ -177,6 +179,9 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
                 }
             }
         }
+        pInArray+=nInputTensorSize;
+        pInDeltaArray+=nInputTensorSize;
+        pOutDeltaArray+=nOutputTensorSize;
     }
     return sCtx.Success();
 }

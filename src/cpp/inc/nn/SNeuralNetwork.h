@@ -50,26 +50,6 @@ public:
         //
         virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx, PTensor* pInputDeviation) = 0;
 
-        //
-        //  学习
-        //      @inputTensor，输入张量
-        //      @expectTensor，期望的输出张量
-        //
-        /*
-        int learn(const PTensor& inputTensor, const PTensor& expectTensor) {
-            struct CLearnCtx : ILearnCtx {
-                int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) {
-                    for(int i=0; i<outputTensor.nData; i++) {
-                        outputDeviation.pDoubleArray[i] = pExpectTensor->pDoubleArray[i] - outputTensor.pDoubleArray[i];
-                    }
-                    return SError::ERRORTYPE_SUCCESS;
-                }
-                const PTensor* pExpectTensor;
-            }ctx;
-            ctx.pExpectTensor = &expectTensor;
-            return learn(inputTensor, &ctx, nullptr);
-        }*/
-
     SIMPLEWORK_INTERFACE_LEAVE
 
     SIMPLEWORK_INTERFACECLASS_ENTER(NeuralNetworkFactory, "sw.nn.NeuralNetworkFactory")
