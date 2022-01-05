@@ -12,18 +12,7 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 // 神经网络核心接口定义
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
-
 public:
-    //
-    // 神经网络学习需要的上下文，提供给神经网络学习需要的目标偏差值
-    //
-    struct ILearnCtx {
-        //
-        // 获得输出的偏差量，在前向计算中，Ctx可以在这个回调函数中，将输出作为下一级神经网络的输入，进行学习
-        //
-        virtual int getOutputDeviation(const STensor& outputTensor, STensor& outputDeviation) = 0;
-    };
-
     //
     // 激活函数
     //

@@ -178,14 +178,6 @@ void CNeuralNetwork::runDense() {
         inputTensor.pDimSizes = pDimSize;
         inputTensor.nData = 2;
         inputTensor.pData = pData;
-        struct CLearnCtx : public SNeuralNetwork::ILearnCtx {
-                int getOutputDeviation(const STensor& outputTensor, STensor& outputDeviation) {
-                    //outputDeviation.pDoubleArray[0] =  outputTensor.pDoubleArray[0] - (0.7 * 1 + 0.3);
-                    //outputDeviation.pDoubleArray[1] =  outputTensor.pDoubleArray[1] - (0.7 * 2 + 0.3);
-                    return SError::ERRORTYPE_SUCCESS;
-                }
-                unsigned char* pKind;
-        }ctx;
         //spNet->learn(inputTensor, &ctx, nullptr);
     }
 }  
