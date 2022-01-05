@@ -9,8 +9,81 @@ using namespace sw::av;
 using namespace sw::math;
 using namespace sw::nn;
 
-
+static SCtx sCtx("CNeuralNetwork.Test");
 void CNeuralNetwork::run() {
+
+    SNeuralPipe spImageReader = SNeuralNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
+    SNeuralPipe spLabelReader = SNeuralNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
+
+    STensor spPipeIn = STensor::createValue(10);
+    SNeuralNetwork nn = createNetwork();
+
+    STensor spBatchImage;
+    STensor spBatchLabel;
+    while( spImageReader->push(spPipeIn, spBatchImage) == sCtx.Success() && spLabelReader->push(spPipeIn, spBatchLabel) == sCtx.Success() ) {
+        //
+        // 将字节类型图片张量，转化为[0,1)浮点类型张量
+        //
+        STensor spIn;
+        int nSize = spBatchImage->getDataSize();
+        STensor::createTensor<double>(spIn, spBatchImage->getDimVector(), nSize);
+        unsigned char* pByteImage = spBatchImage->getDataPtr<unsigned char>();
+        double* pDoubleImage = spIn->getDataPtr<double>();
+        for(int i=0; i<nSize; i++) {
+            pDoubleImage[i] = pByteImage[i] / 256.0;
+        }
+
+        //
+        // 神经网络求解
+        //
+        STensor spOut;
+        nn->eval(spIn, spOut);
+
+        //
+        // 计算偏差量
+        //
+        STensor& spDimOutVector = spOut->getDimVector();
+        STensor spOutDeviation;
+        STensor::createTensor(spOutDeviation, spDimOutVector, spOut->getDataType(), spOut->getDataSize());
+        {
+            unsigned char* pKind = spBatchLabel->getDataPtr<unsigned char>();
+            int* pOutDimSizes = spDimOutVector->getDataPtr<int>();
+            double delta = 0;
+            int nTensorSize = pOutDimSizes[1];
+            int nAcc = 0;
+            double xAcc = 0;
+            for( int iTensor=0; iTensor<pOutDimSizes[0]; iTensor++) {
+                int iKind = pKind[iTensor];
+                double* pOutputArray = spOut->getDataPtr<double>() + iTensor * nTensorSize;
+                double* pDeviationArray = spOutDeviation->getDataPtr<double>() + iTensor * nTensorSize;
+                for(int i=0; i<nTensorSize; i++) {
+                    if( i==iKind) {
+                        pDeviationArray[i] = pOutputArray[i] - 1;
+                        xAcc += (1-pOutputArray[i])/10;
+                        if(1-pOutputArray[i] < 0.1) {
+                            nAcc++;
+                        }
+                    }else{
+                        pDeviationArray[i] = pOutputArray[i];
+                    }
+                    delta += pDeviationArray[i] * pDeviationArray[i];
+                }
+            }
+            static int t = 0;
+            if( t++ % 10 == 0) {
+                std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
+            }
+        }
+
+        //
+        // 学习更新神经网络
+        //
+        STensor spInDeviation;
+        nn->learn(spOut, spOutDeviation, spIn, spInDeviation);
+    }
+}
+
+void CNeuralNetwork::run2() {
 
     STensor images = SNeuralNetwork::loadIdxFile("D:\\Workspace\\simplework\\mnist\\train-images.gz");
     STensor labels = SNeuralNetwork::loadIdxFile("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
@@ -28,7 +101,7 @@ void CNeuralNetwork::run() {
         int pDimSizes[3] = {nBatchImages, pImageDimSizes[1], pImageDimSizes[2] };
         STensor spInDimVector;
         STensor::createVector(spInDimVector, 3, pDimSizes);
-        for( int iImage = 0; iImage<nAllImages; /*iImage+=nBatchImages*/ ) {
+        for( int iImage = 0; iImage<nAllImages; ) {
 
             unsigned char* pImageData = images->getDataPtr<unsigned char>() + iImage * nImageSize;
             int nImages = nBatchImages > (nAllImages - iImage) ? (nAllImages - iImage) : nBatchImages;
@@ -79,13 +152,15 @@ void CNeuralNetwork::run() {
                     }
                 }
                 static int t = 0;
-                if( t++ % 20 == 0) {
+                if( t++ % 10 == 0) {
                     std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
                 }
             }
 
             STensor spInDeviation;
             nn->learn(spOut, spOutDeviation, spIn, spInDeviation);
+
+            iImage += nBatchImages;
         }
     }
 }
@@ -107,7 +182,7 @@ void CNeuralNetwork::runConv() {
     SNeuralNetwork spNet = SNeuralNetwork::createConv(2,2,1);
     for(int i=0; i<100; i++) {
         PTensor inputTensor;
-        inputTensor.idType = CBasicType<double>::getThisType();
+        inputTensor.idType = CBasicData<double>::getStaticType();
         
         int pDimSize[4] = { 2, 3, 3, 2 };
         double pData[36] = { 
@@ -138,7 +213,7 @@ void CNeuralNetwork::runPool() {
     SNeuralNetwork spNet = SNeuralNetwork::createPool(2,2,2,2);
     for(int i=0; i<100; i++) {
         PTensor inputTensor;
-        inputTensor.idType = CBasicType<double>::getThisType();
+        inputTensor.idType = CBasicData<double>::getStaticType();
         
         int pDimSize[4] = { 2, 4, 4, 2 };
         double pData[64] = { 
@@ -170,7 +245,7 @@ void CNeuralNetwork::runDense() {
     SNeuralNetwork spNet = SNeuralNetwork::createDense(1);
     for(int i=0; i<100; i++) {
         PTensor inputTensor;
-        inputTensor.idType = CBasicType<double>::getThisType();
+        inputTensor.idType = CBasicData<double>::getStaticType();
         
         int pDimSize[2] = { 2, 1 };
         double pData[2] = { 1, 2 };

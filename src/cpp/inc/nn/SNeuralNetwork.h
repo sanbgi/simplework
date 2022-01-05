@@ -26,13 +26,20 @@ public:
 
         //
         //  计算
-        //      @inputTensor，输入张量
-        //      @pReceiver，输出数据接收回调接口
+        //      @spInTensor 输入张量，多维张量，其中第一个维度为实际张量的个数
+        //      @spOutTensor 输出张量
         //
         virtual int eval(const STensor& spInTensor, STensor& spOutTensor) = 0;
 
         //
         //  学习
+        //      @spOutTensor 由eval计算输出的结果
+        //      @spOutDeviation 计算结果与实际期望的偏差 = 计算值 - 期望值
+        //      @spInTensor 返回上次计算的输入值
+        //      @spInDeviation 输入值与期望输入值的偏差 = 输入值 - 期望值
+        //
+        //  注意：
+        //      spOutTensor必须是由eval最有一次计算出来的张量，否则，学习会失败；
         //
         virtual int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) = 0;
 
@@ -68,8 +75,12 @@ public:
 
             //
             //  打开IDX格式的文件读取器，格式参考：http://yann.lecun.com/exdb/mnist/
+            //  管道输入：
+            //      需要读取的张量个数，类型int
+            //  管道输出：
+            //      读取出来的张量，第一个维度为张量个数，类型STensor
             //
-            virtual int openIdxFileReader( const char* szFileName, SPipe& spPipe) = 0;
+            virtual int openIdxFileReader(const char* szFileName, SNeuralPipe& spPipe) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetworkFactory)
 
@@ -101,6 +112,12 @@ public:
         SNeuralNetwork nn;
         getFactory()->createSequence(nNetworks, pNetworks, nn);
         return nn;
+    }
+
+    static SNeuralPipe openIdxFileReader(const char* szFilename) {
+        SNeuralPipe pipe;
+        getFactory()->openIdxFileReader(szFilename, pipe);
+        return pipe;
     }
 
     static STensor loadIdxFile(const char* szFilename) {

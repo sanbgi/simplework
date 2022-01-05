@@ -34,7 +34,7 @@ public:
         std::cout << "Great ! Hi everyone!";
     }
 };
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, SMyObject::getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, SMyObject::__getClassKey())
 
 struct FAA {
     SIMPLEWORK_PDATAKEY(FAA, "FAA")
@@ -112,7 +112,7 @@ void testTensor() {
     int dim1[] = {2, 3};
     double data1[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
     PTensor t1 = {
-        SData::getTypeIdentifier<CBasicType<double>>(),
+        SData::getTypeIdentifier<CBasicData<double>>(),
         2,
         dim1,
         6,
@@ -122,7 +122,7 @@ void testTensor() {
     int dim2[] = {3, 1};
     double data2[] = { 6.0, 7.0, 8.0, 9.0, 10.0, 11.0 };
     PTensor t2 = {
-        SData::getTypeIdentifier<CBasicType<double>>(),
+        SData::getTypeIdentifier<CBasicData<double>>(),
         1,
         dim2,
         3,
@@ -145,7 +145,7 @@ void testNN() {
     double v = 0.5;
     int dimsize[] = { 1 };
     PTensor inputTensor;
-    inputTensor.idType = SData::getTypeIdentifier<CBasicType<double>>();
+    inputTensor.idType = SData::getTypeIdentifier<CBasicData<double>>();
     inputTensor.nData = 1;
     inputTensor.pData = &v;
     inputTensor.nDims = 1;
@@ -169,29 +169,25 @@ void testNN() {
 void testIdx() {
     //std::string strFilename = "D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-labels-idx1-ubyte965g-S4A7G3r0jpgiMMdvSNx7KP_oN7677JZkkIErsY.gz";
     std::string strFilename = "D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-images-idx3-ubytejUIsewocHHkkWlvPB_6G4z7q_ueSuEWErsJ29aLbxOY.gz";
-    SData spTensor;
     //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_t10k-images-idx3-ubytejUIsewocHHkkWlvPB_6G4z7q_ueSuEWErsJ29aLbxOY.gz", spTensor);
     //SNeuralNetwork::getFactory()->readIdxFile("", spTensor);
     //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-images-idx3-ubyteRA_Kv3PMVG-iFHXoHqNwJlYF9WviEKQCTSyo8gNSNgk.gz", spTensor);
     //SNeuralNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-labels-idx1-ubyteNVJTSgpVi77WrtMrMMSVzKI9Vn7FLKyL4aBzDoAQJVw.gz", spTensor);
-    SPipe spReader;
+    SNeuralPipe spReader;
     SNeuralNetwork::getFactory()->openIdxFileReader(strFilename.c_str(), spReader);
     if(spReader) {
-        struct CReceiver : IVisitor<const PData&> {
-            int visit(const PData& rData) {
-                const PTensor* pTensor = CData<PTensor>(rData);
-                if(pTensor == nullptr) {
-                    return sCtx.Error();
-                }
-                return sCtx.Success();
-            }
-        }receiver;
-        while(spReader->pushData(CData<CBasicType<int>>(1),&receiver)==sCtx.Success()){
-
+        int nRead = 10;
+        int nReaded = 0;
+        STensor spIn;
+        STensor::createVector(spIn, 1, &nRead);
+        STensor spOut;
+        while(spReader->push(spIn, spOut) == sCtx.Success()) {
+            nReaded += 10;
+            //std::cout << spOut->getDataSize();
         }
+
+        nRead = 0;
     }
-    //const PTensor* pTensor = spTensor.getDataPtr<PTensor>();
-    //std::cout << pTensor->nData;
 }
 
 int main(int argc, char *argv[]){

@@ -21,11 +21,15 @@
 //
 //
 #define SIMPLEWORK_INTERFACECLASS_ENTER0(className) \
-    class S##className {
+    class S##className { \
+    public:\
+        typedef S##className __TValue;
+
 #define SIMPLEWORK_INTERFACECLASS_ENTER(className, classKey) \
     class S##className {\
     public:\
-    const static inline char* getClassKey() { return classKey; }
+    const static inline char* __getClassKey() { return classKey; }\
+    typedef S##className __TValue;
 
 #define SIMPLEWORK_INTERFACECLASS_LEAVE(className) \
     private: \

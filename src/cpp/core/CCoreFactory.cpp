@@ -25,6 +25,6 @@ public:
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CCoreFactory, SCoreFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CCoreFactory, SCoreFactory::__getClassKey())
 
 __SimpleWork_Core_Namespace_Leave__

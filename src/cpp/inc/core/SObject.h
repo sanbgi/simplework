@@ -20,7 +20,7 @@ public:
 
     template<typename TObject> static inline SObject createObject() {
         SObject spObject;
-        createObject(TObject::getClassKey(), spObject);
+        createObject(TObject::__getClassKey(), spObject);
         return spObject;
     }
 

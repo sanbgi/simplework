@@ -204,7 +204,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         }
     }
     static int t = 0;
-    if( (t++ / 2) % 20 == 0) {
+    if( (t++ / 2) % 10 == 0) {
         std::cout << "Conv " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
     }
     /*

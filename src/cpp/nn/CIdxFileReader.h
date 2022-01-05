@@ -9,30 +9,30 @@ using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
 
-class CIdxFileReader : public CObject, IPipe{
+class CIdxFileReader : public CObject, INeuralPipe{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(INeuralPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
+    int push(const STensor& spIn, STensor& spOut);
 
 public://Factory
-    static int createReader(const char* szFileName, SPipe& spPipe);
+    static int createReader(const char* szFileName, SNeuralPipe& spPipe);
     static int readFile(const char* szFileName, STensor& spData);
     static void highEndianToCPU(int nData, int nDataByte, unsigned char* pData);
 
-protected:
-    CIdxFileReader() {
-    }
-
 private:
     std::ifstream m_file;
-    CTaker<int*> m_spDims;
-    PTensor m_tensorTemplate;
-    int m_nTensor;
+    int m_nDims;
+    int m_nEleSize;
     int m_nEleByte;
+    unsigned int m_iEleType;
+    CTaker<int*> m_spDims;
+    STensor m_spDimVector;
+    int m_nTensor;
+
 };
 
 #endif//__SimpleWork_NN_CIdxFileReader_H__

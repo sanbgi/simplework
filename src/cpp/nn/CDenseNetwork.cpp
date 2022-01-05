@@ -163,7 +163,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     }
 
     static int t = 0;
-    if( (t++ / 2) % 20 == 0) {
+    if( (t++ / 2) % 10 == 0) {
         std::cout << "Dense " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
     }
 

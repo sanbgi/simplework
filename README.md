@@ -72,7 +72,7 @@
             std::cout << "Great ! Hi everyone!";
         }
     };
-    SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, MyObject::getClassKey())
+    SIMPLEWORK_FACTORY_AUTO_REGISTER(CMyObject, MyObject::__getClassKey())
 
     int main() {
         SMyObject spMyObject = SObject::createObject<SMyObject>());

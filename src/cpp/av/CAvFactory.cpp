@@ -87,4 +87,4 @@ public:
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CAvFactory, SAvFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CAvFactory, SAvFactory::__getClassKey())

@@ -61,7 +61,7 @@ public://ITensor
         }
 
         if( spDimVector ) {
-            if( spDimVector->getDataType() != CBasicType<int>::getThisType() ) {
+            if( spDimVector->getDataType() != CBasicData<int>::getStaticType() ) {
                 return SError::ERRORTYPE_FAILURE;
             }
 
@@ -96,7 +96,7 @@ public://ITensor
 public://ITensor
 
     unsigned int getDataType() {
-        return CBasicType<T>::getThisType();
+        return CBasicData<T>::getStaticType();
     }
 
     int getDataSize() {
@@ -141,14 +141,14 @@ private:
 
 typedef CPlaceTensor* (*FCreateTensor)(SObject& spTensor);
 std::map<unsigned int, FCreateTensor> g_tensorFacotries = {
-    { CBasicType<bool>::getThisType(), CTensor<bool>::createTensor },
-    { CBasicType<char>::getThisType(), CTensor<char>::createTensor },
-    { CBasicType<unsigned char>::getThisType(), CTensor<unsigned char>::createTensor },
-    { CBasicType<short>::getThisType(), CTensor<short>::createTensor },
-    { CBasicType<int>::getThisType(), CTensor<int>::createTensor },
-    { CBasicType<long>::getThisType(), CTensor<long>::createTensor },
-    { CBasicType<float>::getThisType(), CTensor<float>::createTensor },
-    { CBasicType<double>::getThisType(), CTensor<double>::createTensor },
+    { CBasicData<bool>::getStaticType(), CTensor<bool>::createTensor },
+    { CBasicData<char>::getStaticType(), CTensor<char>::createTensor },
+    { CBasicData<unsigned char>::getStaticType(), CTensor<unsigned char>::createTensor },
+    { CBasicData<short>::getStaticType(), CTensor<short>::createTensor },
+    { CBasicData<int>::getStaticType(), CTensor<int>::createTensor },
+    { CBasicData<long>::getStaticType(), CTensor<long>::createTensor },
+    { CBasicData<float>::getStaticType(), CTensor<float>::createTensor },
+    { CBasicData<double>::getStaticType(), CTensor<double>::createTensor },
 };
 
 //
@@ -196,6 +196,6 @@ public://ITensor
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorFactory, STensor::STensorFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorFactory, STensor::STensorFactory::__getClassKey())
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

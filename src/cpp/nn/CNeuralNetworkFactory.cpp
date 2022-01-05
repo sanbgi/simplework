@@ -37,9 +37,9 @@ public:
         return CIdxFileReader::readFile(szFileName, spData);
     }
 
-    int openIdxFileReader( const char* szFileName, SPipe& spPipe) {
+    int openIdxFileReader(const char* szFileName, SNeuralPipe& spPipe) {
         return CIdxFileReader::createReader(szFileName, spPipe);
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNeuralNetworkFactory, SNeuralNetwork::SNeuralNetworkFactory::getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNeuralNetworkFactory, SNeuralNetwork::SNeuralNetworkFactory::__getClassKey())
