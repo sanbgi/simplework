@@ -156,6 +156,18 @@ public:
         return spOut;
     }
 
+public:
+    STensor eval(const STensor& spIn) {
+        STensor spOut;
+        (*this)->eval(spIn, spOut);
+        return spOut;
+    }
+
+    int learn(const STensor& spOut, const STensor& spOutDeviation) {
+        STensor spIn, spInDeviation;
+        return (*this)->learn(spOut, spOutDeviation, spIn, spInDeviation);
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetwork)
 
 SIMPLEWORK_NN_NAMESPACE_LEAVE
