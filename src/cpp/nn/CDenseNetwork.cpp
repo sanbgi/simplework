@@ -12,152 +12,61 @@ int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActiva
     return sCtx.Success();
 }
 
-int CDenseNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
-    if(m_nInputCells == 0) {
-        if( initWeights(inputTensor) != sCtx.Success() ) {
-            return sCtx.Error();
-        }
+int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
+    if( int errCode = initWeights(spInTensor) != sCtx.Success() ) {
+        return errCode;
     }
 
-    int nTensor = inputTensor.pDimSizes[0];
-    CTaker<double*> spOutputTensorArray(new double[m_nCells * nTensor], [](double* ptr) {
-        delete[] ptr;
-    });
-    {
-        int nWeights = m_nInputCells*m_nCells;
-        int nWWsize = m_nInputCells;
-        int nInputTensorSize = inputTensor.nData/nTensor;
-        double* pWeights = m_spWeights;
-        double* pBais = m_spBais;
-        double* pInput = inputTensor.pDoubleArray;
-        double* pOutput = spOutputTensorArray;
-        for(int iTensor=0; iTensor<nTensor; iTensor++) {
-            for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
-                double& dOutout = DVV(pOutput,iOutput,m_nCells);
-                dOutout = 0;
-                for(int iInput=0; iInput<m_nInputCells; iInput++) {
-                    dOutout += DVV(pWeights, iWWAt+iInput,nWeights) * DVV(pInput, iInput, nInputTensorSize);
-                }
-                dOutout -= DVV(pBais,iOutput, m_nCells);
+    int nInData = spInTensor->getDataSize();
+    if(nInData != m_nInputCells * m_nInputTensor) {
+        return sCtx.Error("不支持输入张量尺寸与第一次的张量尺寸不同");
+    }
+
+    if( int errCode = STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nInputTensor*m_nCells) != sCtx.Success() ) {
+        return sCtx.Error(errCode, "创建输出张量失败");
+    }
+
+    int nTensor = m_nInputTensor;
+    int nWeights = m_nInputCells*m_nCells;
+    int nWWsize = m_nInputCells;
+    int nInputTensorSize = m_nInputCells;
+    double* pWeights = m_spWeights;
+    double* pBais = m_spBais;
+    double* pInput = spInTensor->getDataPtr<double>();
+    double* pOutput = spOutTensor->getDataPtr<double>();
+    for(int iTensor=0; iTensor<nTensor; iTensor++) {
+        for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
+            double& dOutout = DVV(pOutput,iOutput,m_nCells);
+            dOutout = 0;
+            for(int iInput=0; iInput<m_nInputCells; iInput++) {
+                dOutout += DVV(pWeights, iWWAt+iInput,nWeights) * DVV(pInput, iInput, nInputTensorSize);
             }
-            m_pActivator->activate(m_nCells, pOutput, pOutput);
-            pInput+=nInputTensorSize;
-            pOutput+=m_nCells;
+            dOutout -= DVV(pBais,iOutput, m_nCells);
         }
-    }
-    
-    int pDimSize[2] = { nTensor, m_nCells };
-    PTensor tensorOutput;
-    tensorOutput.idType = inputTensor.idType;
-    tensorOutput.nData = m_nCells * nTensor;
-    tensorOutput.pDoubleArray = spOutputTensorArray;
-    tensorOutput.nDims = 2;
-    tensorOutput.pDimSizes = pDimSize;
-    return pOutputReceiver->visit(tensorOutput);
-}
-
-int CDenseNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation) {
-
-    struct COutputReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& outputTensor) {
-
-            int nOutputData = outputTensor.nData;
-            CTaker<double*> spOutputDeviation(new double[nOutputData], [](double* ptr) {
-                delete[] ptr;
-            });
-            PTensor outputDeviation = outputTensor;
-            outputDeviation.pDoubleArray = spOutputDeviation;
-            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
-                return sCtx.Error();
-            }
-
-            int retCode = pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
-            return retCode;
-        }
-
-        CDenseNetwork* pNetwork;
-        double dInputWeight;
-        SNeuralNetwork::ILearnCtx* pLearnCtx;
-        const PTensor* pInputTensor;
-        PTensor* pInputDeviation;
-    }outputReceiver;
-    outputReceiver.pNetwork = this;
-    outputReceiver.pLearnCtx = pLearnCtx;
-    outputReceiver.pInputTensor = &inputTensor;
-    outputReceiver.pInputDeviation = pInputDeviation;
-    return eval(inputTensor, &outputReceiver);
-}
-
-int CDenseNetwork::initWeights(const PTensor& inputTensor) {
-    
-    if(inputTensor.nDims < 2) {
-        return sCtx.Error("输入张量维度需要大于1，其中第一个维度是张量个数");
+        m_pActivator->activate(m_nCells, pOutput, pOutput);
+        pInput+=nInputTensorSize;
+        pOutput+=m_nCells;
     }
 
-    int nInputCells = inputTensor.nData / inputTensor.pDimSizes[0];
-
-    //
-    // 检查细胞数量是否合法
-    //
-    if( m_nCells <= 0 || nInputCells <= 0 ) {
-        return sCtx.Error("不允许全连接网络细胞数或输入细胞数为零");
-    }
-
-    //
-    // 如果当前权重数量大于等于目标权重数量，则无需调整
-    //
-    if( m_nInputCells >= nInputCells ) {
-        m_nInputCells = nInputCells;
-        return sCtx.Success();
-    }
-
-    if(m_nInputCells != 0) {
-        m_nInputCells = 0;
-        m_spWeights.release();
-    }
-
-    int nWeight = m_nCells*nInputCells;
-    double* pWeight = new double[nWeight];
-    double* pBais = new double[m_nCells];
-    m_spWeights.take(pWeight, [](double* pWeight){
-        delete[] pWeight;
-    });
-    m_spBais.take(pBais, [](double* pBais){
-        delete[] pBais;
-    });
-
-    //
-    // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
-    //
-    double xWeight = 1.0/nInputCells;
-    for(int i=0; i<nWeight; i++) {
-        *(pWeight+i) = (rand() % 10000 / 10000.0) * xWeight;
-    }
-    for(int i=0; i<m_nCells; i++ ){
-        *(pBais+i) = 0;
-    }
-
-    m_nInputCells = nInputCells;
+    m_spInTensor = spInTensor;
+    m_spOutTensor = spOutTensor;
     return sCtx.Success();
 }
 
-int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
-    CTaker<double*> spInputDeviationArray;
-    double* pAllInputDerivationArray = nullptr;
-    if(pInputDeviation) {
-        pAllInputDerivationArray = pInputDeviation->pDoubleArray;
-        memset(pAllInputDerivationArray,0,sizeof(double)*inputTensor.nData);
-    }else{
-        spInputDeviationArray.take(new double[inputTensor.nData], [](double* ptr) {
-            delete[] ptr;
-        });
-        pAllInputDerivationArray = spInputDeviationArray;
+int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+        return sCtx.Error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    int nTensor = IVV(inputTensor.pDimSizes,0,inputTensor.nDims);
+    spInTensor = m_spInTensor;
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.Success() ) {
+        return sCtx.Error(errCode, "创建输入偏差张量失败");
+    }
+
+    int nTensor = m_nInputTensor;
     int nWWsize = m_nInputCells;
-    int nInputTensorSize = inputTensor.nData/nTensor;
-    int nOutputTensorSize = outputTensor.nData/IVV(outputTensor.pDimSizes,0,outputTensor.nDims);
+    int nInputTensorSize = m_nInputCells;
+    int nOutputTensorSize = m_nCells;
 
     double* pWeightArray = m_spWeights;
     double* pBaisArray = m_spBais;
@@ -174,10 +83,10 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
     double* pWeightDerivationArray = spWeightDeviationArray;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
 
-    double* pOutputArray = outputTensor.pDoubleArray;
-    double* pOutputDeviationArray = outputDeviation.pDoubleArray;
-    double* pInputArray = inputTensor.pDoubleArray;
-    double* pInputDeviationArray = pAllInputDerivationArray;
+    double* pOutputArray = spOutTensor->getDataPtr<double>();
+    double* pOutputDeviationArray = spOutDeviation->getDataPtr<double>();
+    double* pInputArray = spInTensor->getDataPtr<double>();
+    double* pInputDeviationArray = spInDeviation->getDataPtr<double>();
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         //
         //  计算目标函数相对于Y值的偏导数
@@ -236,6 +145,7 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
         pInputArray += nInputTensorSize;
         pInputDeviationArray += nInputTensorSize;
     }
+
     double avgWeight = 0;
     double maxW = -100000;
     double minW = 100000;
@@ -287,5 +197,74 @@ int CDenseNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor
     return eval(inputTensor, &evalCheck);
     */
     
+    return sCtx.Success();
+}
+
+int CDenseNetwork::initWeights(const STensor& spInTensor) {
+    if(m_spOutDimVector) {
+        return sCtx.Success();
+    }
+
+    STensor& spDimVector = spInTensor->getDimVector();
+    int nDims = spDimVector->getDataSize();
+    int* pDimSizes = spDimVector->getDataPtr<int>();
+    if(nDims < 2) {
+        return sCtx.Error("输入张量维度需要大于1，其中第一个维度是张量个数");
+    }
+
+    int nTensor = pDimSizes[0];
+    int nInputCells = pDimSizes[1];
+    for( int i=2; i<nDims; i++) {
+        nInputCells *= pDimSizes[i];
+    }
+
+    //
+    // 检查细胞数量是否合法
+    //
+    if( m_nCells <= 0 || nInputCells <= 0 ) {
+        return sCtx.Error("不允许全连接网络细胞数或输入细胞数为零");
+    }
+
+    int pOutDimSizes[2] = { nTensor, m_nCells };
+    if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.Success() ) {
+        return sCtx.Error(errCode, "创建神经网络输出张量维度向量失败");
+    }
+
+    //
+    // 如果当前权重数量大于等于目标权重数量，则无需调整
+    //
+    if( m_nInputCells >= nInputCells ) {
+        m_nInputCells = nInputCells;
+        return sCtx.Success();
+    }
+
+    if(m_nInputCells != 0) {
+        m_nInputCells = 0;
+        m_spWeights.release();
+    }
+
+    int nWeight = m_nCells*nInputCells;
+    double* pWeight = new double[nWeight];
+    double* pBais = new double[m_nCells];
+    m_spWeights.take(pWeight, [](double* pWeight){
+        delete[] pWeight;
+    });
+    m_spBais.take(pBais, [](double* pBais){
+        delete[] pBais;
+    });
+
+    //
+    // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
+    //
+    double xWeight = 1.0/nInputCells;
+    for(int i=0; i<nWeight; i++) {
+        *(pWeight+i) = (rand() % 10000 / 10000.0) * xWeight;
+    }
+    for(int i=0; i<m_nCells; i++ ){
+        *(pBais+i) = 0;
+    }
+
+    m_nInputCells = nInputCells;
+    m_nInputTensor = nTensor;
     return sCtx.Success();
 }

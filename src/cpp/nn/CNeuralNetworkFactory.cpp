@@ -33,7 +33,7 @@ public:
         return CPoolNetwork::createNetwork(nWidth, nHeight, nStrideWidth, nStrideHeight, spNetwork);
     }
 
-    int readIdxFile(const char* szFileName, SData& spData) {
+    int readIdxFile(const char* szFileName, STensor& spData) {
         return CIdxFileReader::readFile(szFileName, spData);
     }
 

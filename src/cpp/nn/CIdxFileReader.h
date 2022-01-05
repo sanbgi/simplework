@@ -20,7 +20,7 @@ public:
 
 public://Factory
     static int createReader(const char* szFileName, SPipe& spPipe);
-    static int readFile(const char* szFileName, SData& spData);
+    static int readFile(const char* szFileName, STensor& spData);
     static void highEndianToCPU(int nData, int nDataByte, unsigned char* pData);
 
 protected:

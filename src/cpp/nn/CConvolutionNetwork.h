@@ -14,25 +14,36 @@ class CConvolutionNetwork : public CObject, public INeuralNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INeuralNetwork
-    int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
-    int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation);
-    int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTener, PTensor* pInputDeviation);
-//    int learn(const PTensor& inputTensor, const PTensor& expectTensor);
+    int eval(const STensor& spInTensor, STensor& spOutTensor);
+    int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
     static int createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork);
 
 private:
-    int initWeights(const PTensor& inputTensor);
+    int initWeights(const STensor& inputTensor);
 
 private:
+    STensor m_spInTensor;
+    STensor m_spOutTensor;
+    STensor m_spOutDimVector;
+
     int m_nConvWidth;
     int m_nConvHeight;
     int m_nConvs;
+
+    int m_nTensor;
+    int m_nInputLayers;
+
     int m_nInputWidth;
     int m_nInputHeight;
-    int m_nInputLayers;
+    int m_nInputTensorSize;
     int m_nInputData;
+
+    int m_nOutWidth;
+    int m_nOutHeight;
+    int m_nOutTensorSize;
+
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
     CActivator* m_pActivator;

@@ -22,18 +22,21 @@ class CDenseNetwork : public CObject, public INeuralNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INeuralNetwork
-    int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
-    int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation);
-    int learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& deltaTener, PTensor* pInputDeviation);
+    int eval(const STensor& spInTensor, STensor& spOutTensor);
+    int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
     static int createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActivation, SNeuralNetwork& spNetwork);
 
 private:
-    int initWeights(const PTensor& inputTensor);
+    int initWeights(const STensor& spDimTensor);
 
 private:
+    STensor m_spInTensor;
+    STensor m_spOutTensor;
+    STensor m_spOutDimVector;
     int m_nCells;
+    int m_nInputTensor;
     int m_nInputCells;
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
@@ -44,7 +47,6 @@ public:
     CDenseNetwork() {
         m_nInputCells = 0;
     }
-
 };
 
 #endif//__SimpleWork_NN_CDenseNetwork_H__

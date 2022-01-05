@@ -14,8 +14,8 @@ class CSequenceNetwork : public CObject, public INeuralNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INeuralNetwork
-    int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver);
-    int learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation);
+    int eval(const STensor& spInTensor, STensor& spOutTensor);
+    int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
     static int createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork);

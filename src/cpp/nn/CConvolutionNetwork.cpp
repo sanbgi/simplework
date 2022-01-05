@@ -14,29 +14,27 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeu
     return sCtx.Success();
 }
 
-int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
-    if(m_nInputWidth == 0) {
-        if( initWeights(inputTensor) != sCtx.Success() ) {
-            return sCtx.Error();
-        }
+int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
+    if( initWeights(spInTensor) != sCtx.Success() ) {
+        return sCtx.Error();
     }
 
-    if(inputTensor.nData != m_nInputData) {
+    if(spInTensor->getDataSize() != m_nInputData) {
         return sCtx.Error();
     }
 
     int nInputWidth = m_nInputWidth;
     int nInputLayers = m_nInputLayers;
-    int nInputTensorSize = inputTensor.nData/inputTensor.pDimSizes[0];
+    int nInputTensorSize = m_nInputTensorSize;
 
     int nConvs = m_nConvs;
     int nConvWidth = m_nConvWidth;
     int nConvHeight = m_nConvHeight;
     int nConvSize = nConvWidth * nConvHeight * nInputLayers; 
 
-    int nOutputWidth = nInputWidth - nConvWidth + 1;
-    int nOutputHeight = m_nInputHeight - nConvHeight + 1;
-    int nOutputTensorSize = nOutputWidth * nOutputHeight * nConvs;
+    int nOutputWidth = m_nOutWidth;
+    int nOutputHeight = m_nOutHeight;
+    int nOutputTensorSize = m_nOutTensorSize;
 
     int nInputHeightStep = nInputWidth * nInputLayers;
     int nInputWidthStep = nInputLayers;
@@ -46,12 +44,12 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
     double* pWeightArray = m_spWeights;
     double* pBaisArray = m_spBais;
 
-    int nTensor = inputTensor.pDimSizes[0];
-    CTaker<double*> spOutputTensorArray(new double[nOutputTensorSize * nTensor], [](double* ptr) {
-        delete[] ptr;
-    });
-    double* pInArray = inputTensor.pDoubleArray;
-    double* pOutArray = spOutputTensorArray;
+    int nTensor = m_nTensor;
+    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, nTensor * m_nOutTensorSize) != sCtx.Success() ){
+        return sCtx.Error("创建输出张量失败");
+    }  
+    double* pInArray = spInTensor->getDataPtr<double>();
+    double* pOutArray = spOutTensor->getDataPtr<double>();
     int nOutHsize = nOutputWidth*nConvs;
     int nOutWsize = nConvs;
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
@@ -78,102 +76,19 @@ int CConvolutionNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor
         pInArray += nInputTensorSize;
         pOutArray += nOutputTensorSize;
     }
-
-    int dimSize[4] = { nTensor, nOutputHeight, nOutputWidth, nConvs };
-    PTensor outTensor;
-    outTensor.idType = inputTensor.idType;
-    outTensor.nData = nOutputTensorSize * nTensor;
-    outTensor.pDoubleArray = spOutputTensorArray;
-    outTensor.nDims = 4;
-    outTensor.pDimSizes = dimSize;
-    return pOutputReceiver->visit(outTensor);
-}
-
-int CConvolutionNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation) {
-
-    struct COutputReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& outputTensor) {
-
-            int nOutputData = outputTensor.nData;
-            CTaker<double*> spOutputDeviation(new double[nOutputData], [](double* ptr) {
-                delete[] ptr;
-            });
-            PTensor outputDeviation = outputTensor;
-            outputDeviation.pDoubleArray = spOutputDeviation;
-            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
-                return sCtx.Error();
-            }
-            return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
-        }
-
-        CConvolutionNetwork* pNetwork;
-        SNeuralNetwork::ILearnCtx* pLearnCtx;
-        const PTensor* pInputTensor;
-        PTensor* pInputDeviation;
-    }outputReceiver;
-    outputReceiver.pNetwork = this;
-    outputReceiver.pLearnCtx = pLearnCtx;
-    outputReceiver.pInputTensor = &inputTensor;
-    outputReceiver.pInputDeviation = pInputDeviation;
-    return eval(inputTensor, &outputReceiver);
-}
-
-int CConvolutionNetwork::initWeights(const PTensor& inputTensor) {
-    //
-    // 维度小于3的张量，无法进行卷积运算
-    //
-    if(inputTensor.nDims < 3) {
-        return sCtx.Error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
-    }
-
-    int nTensor = inputTensor.pDimSizes[0];
-    int nInputHeight = inputTensor.pDimSizes[1];
-    int nInputWidth = inputTensor.pDimSizes[2];
-    int nInputLayers = inputTensor.nData / nInputHeight / nInputWidth / nTensor;
-    if( nInputHeight < m_nConvWidth || nInputWidth < m_nConvWidth ) {
-        return sCtx.Error("输入张量尺寸需要大于等于卷积核尺寸");
-    }
-
-    int nWeight = m_nConvWidth*m_nConvHeight*nInputLayers*m_nConvs;
-    double* pWeights = new double[nWeight];
-    double* pBais = new double[m_nConvs];
-    m_spWeights.take(pWeights, [](double* pWeights){
-        delete[] pWeights;
-    });
-    m_spBais.take(pBais, [](double* pBais){
-        delete[] pBais;
-    });
-
-    //
-    // 基础权重最大值为 0.5 / 卷积核权重值的数量
-    //
-    int nConvSize = m_nConvWidth*m_nConvHeight*nInputLayers;
-    double xWeight = 1.0/nConvSize;
-    for(int i=0; i<nWeight; i++) {
-         *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
-    }
-    for(int i=0; i<m_nConvs; i++ ){
-        *pBais = 0;
-    }
-
-    m_nInputWidth = nInputWidth;
-    m_nInputHeight = nInputHeight;
-    m_nInputLayers = nInputLayers;
-    m_nInputData = inputTensor.nData;
+    m_spInTensor = spInTensor;
+    m_spOutTensor = spOutTensor;
     return sCtx.Success();
 }
 
-int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
-    CTaker<double*> spInputDeviationArray;
-    double* pAllInputDerivationArray = nullptr;
-    if(pInputDeviation) {
-        pAllInputDerivationArray = pInputDeviation->pDoubleArray;
-        memset(pAllInputDerivationArray,0,sizeof(double)*inputTensor.nData);
-    }else{
-        spInputDeviationArray.take(new double[inputTensor.nData], [](double* ptr) {
-            delete[] ptr;
-        });
-        pAllInputDerivationArray = spInputDeviationArray;
+int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+        return sCtx.Error("神经网络已经更新，原有数据不能用于学习");
+    }
+
+    spInTensor = m_spInTensor;
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.Success() ) {
+        return sCtx.Error(errCode, "创建输入偏差张量失败");
     }
 
     //
@@ -182,16 +97,16 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
     int nInputWidth = m_nInputWidth;
     int nInputHeight = m_nInputHeight;
     int nInputLayers = m_nInputLayers;
-    int nInputTensorSize = inputTensor.nData/inputTensor.pDimSizes[0];
+    int nInputTensorSize = m_nInputTensorSize;
 
     int nConvWidth = m_nConvWidth;
     int nConvHeight = m_nConvHeight;
     int nConvs = m_nConvs;
     int nConvSize = nConvWidth * nConvHeight * nInputLayers; 
 
-    int nOutputWidth = nInputWidth - nConvWidth + 1;
-    int nOutputHeight = nInputHeight - nConvHeight + 1;
-    int nOutputTensorSize = outputTensor.nData/outputTensor.pDimSizes[0];
+    int nOutputWidth = m_nOutWidth;
+    int nOutputHeight = m_nOutHeight;
+    int nOutputTensorSize = m_nOutTensorSize;
 
     int nInputHeightStep = nInputWidth * nInputLayers;
     int nInputWidthStep = nInputLayers;
@@ -208,12 +123,12 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
     double* pWeightDerivationArray = spWeightDeviationArray;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
 
-    int nTensor = inputTensor.pDimSizes[0];
+    int nTensor = m_nTensor;
     double dLearnRate = 5.0 / nConvSize;
-    double* pOutArray = outputTensor.pDoubleArray;
-    double* pOutputDeviationArray = outputDeviation.pDoubleArray;
-    double* pInArray = inputTensor.pDoubleArray;
-    double* pInputDeviationArray = pAllInputDerivationArray;
+    double* pOutArray = spOutTensor->getDataPtr<double>();
+    double* pOutputDeviationArray = spOutDeviation->getDataPtr<double>();
+    double* pInArray = spInTensor->getDataPtr<double>();
+    double* pInputDeviationArray = spInDeviation->getDataPtr<double>();
     int nOutHsize = nOutputWidth*nConvs;
     int nOutWsize = nConvs;
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
@@ -322,5 +237,72 @@ int CConvolutionNetwork::learn(const PTensor& inputTensor, const PTensor& output
     return eval(inputTensor, &evalCheck);
     */
 
+    return sCtx.Success();
+}
+
+int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
+    if( !m_spOutDimVector ) {
+        STensor& spInDimVector = spInTensor->getDimVector();
+
+        int nInDims = spInDimVector->getDataSize();
+        int* pInDimSizes = spInDimVector->getDataPtr<int>();
+
+        //
+        // 维度小于3的张量，无法进行卷积运算
+        //
+        if(nInDims < 3) {
+            return sCtx.Error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
+        }
+
+        int nTensor = pInDimSizes[0];
+        int nInputHeight = pInDimSizes[1];
+        int nInputWidth = pInDimSizes[2];
+        if( nInputHeight < m_nConvWidth || nInputWidth < m_nConvWidth ) {
+            return sCtx.Error("输入张量尺寸需要大于等于卷积核尺寸");
+        }
+
+        int nInputLayers = 1;
+        for( int i=3; i<nInDims; i++ ) {
+            nInputLayers *= pInDimSizes[i];
+        }
+        m_nInputWidth = nInputWidth;
+        m_nInputHeight = nInputHeight;
+        m_nInputTensorSize = m_nInputHeight*m_nInputWidth*nInputLayers;
+        m_nInputData = nTensor*m_nInputTensorSize;
+
+        m_nOutWidth = nInputWidth - m_nConvWidth + 1;
+        m_nOutHeight = nInputHeight - m_nConvHeight + 1;
+        m_nOutTensorSize = m_nOutWidth*m_nOutHeight*m_nConvs;
+
+        m_nTensor = nTensor;
+        m_nInputLayers = nInputLayers;
+
+        int pOutDimSizes[4] = {nTensor, m_nOutHeight, m_nOutWidth, m_nConvs};
+        if( STensor::createVector<int>(m_spOutDimVector, 4, pOutDimSizes) != sCtx.Success() ) {
+            return sCtx.Error("创建输出张量的维度向量失败");
+        }
+
+        int nWeight = m_nConvWidth*m_nConvHeight*nInputLayers*m_nConvs;
+        double* pWeights = new double[nWeight];
+        double* pBais = new double[m_nConvs];
+        m_spWeights.take(pWeights, [](double* pWeights){
+            delete[] pWeights;
+        });
+        m_spBais.take(pBais, [](double* pBais){
+            delete[] pBais;
+        });
+
+        //
+        // 基础权重最大值为 0.5 / 卷积核权重值的数量
+        //
+        int nConvSize = m_nConvWidth*m_nConvHeight*nInputLayers;
+        double xWeight = 1.0/nConvSize;
+        for(int i=0; i<nWeight; i++) {
+            *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
+        }
+        for(int i=0; i<m_nConvs; i++ ){
+            *pBais = 0;
+        }
+    }
     return sCtx.Success();
 }

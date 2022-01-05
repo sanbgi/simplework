@@ -141,7 +141,7 @@ void CIdxFileReader::highEndianToCPU(int nData, int nDataByte, unsigned char* pD
     }
 }
 
-int CIdxFileReader::readFile(const char* szFileName, SData& spData) {
+int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
 
     //
     // 读取文件头信息
@@ -164,32 +164,32 @@ int CIdxFileReader::readFile(const char* szFileName, SData& spData) {
     unsigned int idType = 0;
     switch(headerArray[2]) {
         case 0x08:  // unsigned byte
-            idType = SData::getTypeIdentifier<CBasicType<unsigned char>>();
+            idType = CBasicType<unsigned char>::getThisType();
             nEleByte = 1;
             break;
 
         case 0x09:  //signed byte
-            idType = SData::getTypeIdentifier<CBasicType<char>>();
+            idType = CBasicType<char>::getThisType();
             nEleByte = 1;
             break;
 
         case 0x0B:  //short (2 bytes)
-            idType = SData::getTypeIdentifier<CBasicType<short>>();
+            idType = CBasicType<short>::getThisType();
             nEleByte = 2;
             break;
 
         case 0x0C:  //int (4 bytes)
-            idType = SData::getTypeIdentifier<CBasicType<int>>();
+            idType = CBasicType<int>::getThisType();
             nEleByte = 4;
             break;
 
         case 0x0D:  //float (4 bytes)
-            idType = SData::getTypeIdentifier<CBasicType<float>>();
+            idType = CBasicType<float>::getThisType();
             nEleByte = 4;
             break;
 
         case 0x0E:  //double (8 bytes)
-            idType = SData::getTypeIdentifier<CBasicType<double>>();
+            idType = CBasicType<double>::getThisType();
             nEleByte = 8;
             break;
 
@@ -204,54 +204,26 @@ int CIdxFileReader::readFile(const char* szFileName, SData& spData) {
     }
     highEndianToCPU(nDims, sizeof(int), (unsigned char*)pDimSize);
 
-    //
-    // 读取张量数据，并保存为CIdxFileData
-    //
-    class CIdxFileData : public CObject, public IData{
-        SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-            SIMPLEWORK_INTERFACE_ENTRY(IData)
-        SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
-    private://IPipe
-        const void* getDataPtr(unsigned int idType){
-            if(idType != SData::getTypeIdentifier<PTensor>()) {
-                return nullptr;
-            }
-            return &m_tensor;
-        }
-        unsigned int getDataType() {
-            return SData::getTypeIdentifier<PTensor>();
-        }
-    public:
-        CTaker<unsigned char*> m_spBytes;
-        PTensor m_tensor;
-    };
-
     int nData = 1;
     for(int i=0; i<nDims; i++) {
         nData *= pDimSize[i];
     }
 
-    int nSize = nDims*sizeof(int) + nData*nEleByte;
-    CPointer<CIdxFileData> spIdxData;
-    CObject::createObject(spIdxData);
-    spIdxData->m_spBytes.take(new unsigned char[nSize], [](unsigned char* ptr) {
-        delete[] ptr;
-    });
+    STensor spDimVector;
+    if( STensor::createVector(spDimVector, nDims, pDimSize) != sCtx.Success() ) {
+        return sCtx.Error("创建张量的维度向量失败");
+    }
+    STensor spTensor;
+    if( STensor::createTensor(spTensor, spDimVector, idType, nData) != sCtx.Success() ) {
+        return sCtx.Error("创建张量失败");
+    }
 
-    unsigned char* pBuf = spIdxData->m_spBytes;
-    unsigned char* pData = pBuf+sizeof(int)*nDims;
+    int nSize = nDims*sizeof(int) + nData*nEleByte;
+    unsigned char* pData = (unsigned char*)spTensor->getDataPtr(idType);
     if( !idxFile.read((char*)pData, nData*nEleByte) ){
         return sCtx.Error(string(string("IDX文件数据数据不完整，读取数据信息失败，文件名: ") + szFileName).c_str());
     }
     highEndianToCPU(nData, nEleByte, pData);
-
-    memcpy(pBuf, pDimSize, sizeof(int)*nDims);
-    PTensor& tensor = spIdxData->m_tensor;
-    tensor.idType = idType;
-    tensor.nDims = nDims;
-    tensor.pDimSizes = (int*)pBuf;
-    tensor.nData = nData;
-    tensor.pData = pData;
-    spData.setPtr(spIdxData.getPtr());
+    spData = spTensor;
     return sCtx.Success();
 }

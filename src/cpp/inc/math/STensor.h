@@ -28,7 +28,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         virtual int getDataSize() = 0;
 
-    private:
         //
         // 获取元素数据指针
         //
@@ -110,8 +109,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
             //
             // 构造全新的张量，私有函数，因为指针没类型，易出错
             //
-            virtual STensor createVector( unsigned int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-            virtual STensor createTensor( const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+            virtual int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
+            virtual int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
 
@@ -119,14 +118,17 @@ public:
     //
     // 构造一维张量
     //
-    template<typename Q=void> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createVector(CBasicType<Q>::getThisType(), nElementSize, (void*)pElementData);
+    template<typename Q=void> static int createVector(STensor& spTensor, int nElementSize, Q* pElementData=nullptr) {
+        return getFactory()->createVector(spTensor, CBasicType<Q>::getThisType(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
-    template<typename Q=void> static STensor createTensor(STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createTensor(spDimVector, CBasicType<Q>::getThisType(), nElementSize, (void*)pElementData);
+    template<typename Q> static int createTensor(STensor& spTensor, STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
+        return getFactory()->createTensor(spTensor, spDimVector, CBasicType<Q>::getThisType(), nElementSize, (void*)pElementData);
+    }
+    static int createTensor(STensor& spTensor, STensor& spDimVector, unsigned int iElementType, int nElementSize, void* pElementData=nullptr) {
+        return getFactory()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
     }
 
 private:

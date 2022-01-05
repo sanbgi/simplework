@@ -139,6 +139,7 @@ void testTensor() {
 }
 
 void testNN() {
+    /*
     SNeuralNetwork n;
     SNeuralNetwork::getFactory()->createDense(1, SNeuralNetwork::ACTIVATION_ReLU, n);
     double v = 0.5;
@@ -162,7 +163,7 @@ void testNN() {
     for( int i=1; i<1000; i++) {
         v = rand() % 100 / 50.0;
         n->learn(inputTensor, &ctx, nullptr);
-    }
+    }*/
 }
 
 void testIdx() {

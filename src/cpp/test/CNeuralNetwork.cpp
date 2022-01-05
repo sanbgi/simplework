@@ -12,23 +12,31 @@ using namespace sw::nn;
 
 void CNeuralNetwork::run() {
 
-    SData images = SNeuralNetwork::loadIdxFile("D:\\Workspace\\simplework\\mnist\\train-images.gz");
-    SData labels = SNeuralNetwork::loadIdxFile("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
+    STensor images = SNeuralNetwork::loadIdxFile("D:\\Workspace\\simplework\\mnist\\train-images.gz");
+    STensor labels = SNeuralNetwork::loadIdxFile("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
     SNeuralNetwork nn = createNetwork();
-    const PTensor* pImages = images.getDataPtr<PTensor>();
-    const PTensor* pLabels = labels.getDataPtr<PTensor>();
-    if( pImages && pLabels && pImages->nDims == 3 && pLabels->nDims == 1 && 
-        pImages->pDimSizes[0] == pLabels->pDimSizes[0] ) {
-        int nAllImages = pImages->pDimSizes[0];
+    STensor spImageDimVector = images->getDimVector();
+    STensor spLabelDimVector = labels->getDimVector();
+    if( images && labels && spImageDimVector->getDataSize() == 3 && spLabelDimVector->getDataSize() == 1 && 
+        spImageDimVector->getDataAt<int>(0) == spLabelDimVector->getDataAt<int>(0) ) {
+        
+        int* pImageDimSizes = spImageDimVector->getDataPtr<int>();
+        int nAllImages = pImageDimSizes[0];
         int nBatchImages = 10;
-        int nImageSize = pImages->pDimSizes[1] * pImages->pDimSizes[2];
+        int nImageSize = pImageDimSizes[1] * pImageDimSizes[2];
+
+        int pDimSizes[3] = {nBatchImages, pImageDimSizes[1], pImageDimSizes[2] };
+        STensor spInDimVector;
+        STensor::createVector(spInDimVector, 3, pDimSizes);
         for( int iImage = 0; iImage<nAllImages; /*iImage+=nBatchImages*/ ) {
 
-            unsigned char* pImageData = pImages->pByteArray + iImage * nImageSize;
+            unsigned char* pImageData = images->getDataPtr<unsigned char>() + iImage * nImageSize;
             int nImages = nBatchImages > (nAllImages - iImage) ? (nAllImages - iImage) : nBatchImages;
-            int pDimSize[3] = { nImages, pImages->pDimSizes[1], pImages->pDimSizes[2] };
-            int nData = nImages * nImageSize;
+            if(nImages < nBatchImages) {
+                break;
+            }
 
+            int nData = nImages * nImageSize;
             CTaker<double*> spData(new double[nData], [](double* ptr) {
                 delete[] ptr;
             });
@@ -37,57 +45,47 @@ void CNeuralNetwork::run() {
                 pData[j] = *(pImageData + j) / 256.0;
             }
 
-            PTensor tensorImage = *pImages;
-            tensorImage.pDimSizes = pDimSize;
-            tensorImage.nData = nData;
-            tensorImage.pData = pData;
-            struct CLearnCtx : public SNeuralNetwork::ILearnCtx {
-                int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) {
+            STensor spIn;
+            STensor::createTensor(spIn, spInDimVector, nData, pData);
 
-                    double delta = 0;
-                    int nTensorSize = outputTensor.pDimSizes[1];
-                    int nAcc = 0;
-                    double xAcc = 0;
-                    for( int iTensor=0; iTensor<outputTensor.pDimSizes[0]; iTensor++) {
-                        int iKind = pKind[iTensor];
-                        double* pOutputArray = outputTensor.pDoubleArray + iTensor * nTensorSize;
-                        double* pDeviationArray = outputDeviation.pDoubleArray + iTensor * nTensorSize;
-                        for(int i=0; i<nTensorSize; i++) {
-                            if( i==iKind) {
-                                pDeviationArray[i] = pOutputArray[i] - 1;
-                                xAcc += (1-pOutputArray[i])/10;
-                                if(1-pOutputArray[i] < 0.1) {
-                                    nAcc++;
-                                }
-                            }else{
-                                pDeviationArray[i] = pOutputArray[i];
-                            }
-                            delta += pDeviationArray[i] * pDeviationArray[i];
-                        }
-                    }
+            STensor spOut;
+            nn->eval(spIn, spOut);
 
-                    static int t = 0;
-
-                    /*
-                    if(delta < 1) {
-                        std::cout << "\r delta: " << delta;
-                    }
-                    */
-                    if( t++ % 20 == 0) {
-                        std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
-                    }
-                    deltaV = delta;
-                    return SError::ERRORTYPE_SUCCESS;
-                }
-                unsigned char* pKind;
-                double deltaV;
-            }ctx;
-            ctx.pKind = pLabels->pByteArray + iImage;
-            nn->learn(tensorImage, &ctx, nullptr);
-            //if(ctx.deltaV < 5) 
+            STensor spOutDeviation;
+            STensor& spDimOutVector = spOut->getDimVector();
+            STensor::createTensor(spOutDeviation, spDimOutVector, spOut->getDataType(), spOut->getDataSize());
             {
-                iImage+=nBatchImages;
+                unsigned char* pKind = labels->getDataPtr<unsigned char>() + iImage;
+                int* pOutDimSizes = spDimOutVector->getDataPtr<int>();
+                double delta = 0;
+                int nTensorSize = pOutDimSizes[1];
+                int nAcc = 0;
+                double xAcc = 0;
+                for( int iTensor=0; iTensor<pOutDimSizes[0]; iTensor++) {
+                    int iKind = pKind[iTensor];
+                    double* pOutputArray = spOut->getDataPtr<double>() + iTensor * nTensorSize;
+                    double* pDeviationArray = spOutDeviation->getDataPtr<double>() + iTensor * nTensorSize;
+                    for(int i=0; i<nTensorSize; i++) {
+                        if( i==iKind) {
+                            pDeviationArray[i] = pOutputArray[i] - 1;
+                            xAcc += (1-pOutputArray[i])/10;
+                            if(1-pOutputArray[i] < 0.1) {
+                                nAcc++;
+                            }
+                        }else{
+                            pDeviationArray[i] = pOutputArray[i];
+                        }
+                        delta += pDeviationArray[i] * pDeviationArray[i];
+                    }
+                }
+                static int t = 0;
+                if( t++ % 20 == 0) {
+                    std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
+                }
             }
+
+            STensor spInDeviation;
+            nn->learn(spOut, spOutDeviation, spIn, spInDeviation);
         }
     }
 }
@@ -130,7 +128,7 @@ void CNeuralNetwork::runConv() {
                 return SError::ERRORTYPE_SUCCESS;
             }
         }ctx;
-        spNet->eval(inputTensor, &ctx);
+        //spNet->eval(inputTensor, &ctx);
     }
 }
 
@@ -162,7 +160,7 @@ void CNeuralNetwork::runPool() {
                 return SError::ERRORTYPE_SUCCESS;
             }
         }ctx;
-        spNet->eval(inputTensor, &ctx);
+        //spNet->eval(inputTensor, &ctx);
     }
 }
 
@@ -181,13 +179,13 @@ void CNeuralNetwork::runDense() {
         inputTensor.nData = 2;
         inputTensor.pData = pData;
         struct CLearnCtx : public SNeuralNetwork::ILearnCtx {
-                int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) {
-                    outputDeviation.pDoubleArray[0] =  outputTensor.pDoubleArray[0] - (0.7 * 1 + 0.3);
-                    outputDeviation.pDoubleArray[1] =  outputTensor.pDoubleArray[1] - (0.7 * 2 + 0.3);
+                int getOutputDeviation(const STensor& outputTensor, STensor& outputDeviation) {
+                    //outputDeviation.pDoubleArray[0] =  outputTensor.pDoubleArray[0] - (0.7 * 1 + 0.3);
+                    //outputDeviation.pDoubleArray[1] =  outputTensor.pDoubleArray[1] - (0.7 * 2 + 0.3);
                     return SError::ERRORTYPE_SUCCESS;
                 }
                 unsigned char* pKind;
         }ctx;
-        spNet->learn(inputTensor, &ctx, nullptr);
+        //spNet->learn(inputTensor, &ctx, nullptr);
     }
 }  

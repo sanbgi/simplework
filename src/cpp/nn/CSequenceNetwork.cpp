@@ -11,56 +11,35 @@ int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SN
     return sCtx.Success();
 }
 
-int CSequenceNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
-    class CInteralReceiver : public IVisitor<const PTensor&> {
-    public:
-        int visit(const PTensor& rData) {
-            if(iPipe == pArr->size()) {
-                if( pFinalReceiver ) {
-                    return pFinalReceiver->visit(rData);
-                }
-                return sCtx.Success();
-            }
-
-            CInteralReceiver receiver;
-            receiver.pFinalReceiver = pFinalReceiver;
-            receiver.iPipe = iPipe+1;
-            receiver.pArr = pArr;
-            return pArr->at(iPipe)->eval(rData, &receiver);
+int CSequenceNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
+    STensor spIn = spInTensor;
+    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
+    while(it != m_arrNetworks.end() ) {
+        STensor spOut;
+        if( int errCode = (*it)->eval(spIn, spOut) != sCtx.Success() ){
+            return errCode;
         }
-        int iPipe;
-        std::vector<SNeuralNetwork>* pArr;
-        IVisitor<const PTensor&>* pFinalReceiver;
-    }receiver;
-    receiver.pArr = &m_arrNetworks;
-    receiver.iPipe = 0;
-    receiver.pFinalReceiver = pOutputReceiver;
-    return receiver.visit(inputTensor);
+        spIn = spOut;
+        it++;
+    }
+    spOutTensor = spIn;
+    return sCtx.Success();
 }
 
-int CSequenceNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation) {
-    class CNextCtx : public SNeuralNetwork::ILearnCtx {
-    public:
-        int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation){
-            if(iPipe == pArr->size()) {
-                return pFinalCtx->getOutputDeviation(outputTensor, outputDeviation);
-            }
-
-            CNextCtx nextCtx;
-            nextCtx.pArr = pArr;
-            nextCtx.iPipe = iPipe+1;
-            nextCtx.pFinalCtx = pFinalCtx;
-            return (*pArr)[iPipe]->learn(outputTensor, &nextCtx, &outputDeviation);
+int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+    STensor spOut = spOutTensor;
+    STensor spOutDev = spOutDeviation;
+    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.end();
+    while(it-- != m_arrNetworks.begin() ) {
+        STensor spIn;
+        STensor spInDev;
+        if( int errCode = (*it)->learn(spOut, spOutDev, spIn, spInDev) != sCtx.Success() ) {
+            return errCode;
         }
-        int iPipe;
-        std::vector<SNeuralNetwork>* pArr;
-        SNeuralNetwork::ILearnCtx* pFinalCtx;
-    }ctx;
-    ctx.pArr = &m_arrNetworks;
-    ctx.iPipe = 1;
-    ctx.pFinalCtx = pLearnCtx;
-    if(m_arrNetworks.size() == 0) {
-        return sCtx.Error();
+        spOut = spIn;
+        spOutDev = spInDev;
     }
-    return m_arrNetworks[0]->learn(inputTensor, &ctx, pInputDeviation );
+    spInTensor = spOut;
+    spInDeviation = spOutDev;
+    return sCtx.Success();
 }

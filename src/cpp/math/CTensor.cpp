@@ -6,6 +6,8 @@ using namespace sw::math;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
+static SCtx sCtx("CTensor");
+
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
@@ -27,7 +29,7 @@ template<typename T> class CTensor : public CPlaceTensor {
 public://ITensor
     int initVector(unsigned int eDt, int nSize, void* pData) {
 
-        if( eDt != getDataType() || pData == nullptr ) {
+        if( eDt != getDataType() ) {
             return SError::ERRORTYPE_FAILURE;
         }
 
@@ -86,7 +88,7 @@ public://ITensor
 
     STensor& getDimVector() {
         if(!m_spDimVector && m_nElementSize > 0) {
-            m_spDimVector = STensor::createVector(1, &m_nElementSize);
+            STensor::createVector(m_spDimVector, 1, &m_nElementSize);
         }
         return m_spDimVector;
     }
@@ -167,26 +169,30 @@ public://ITensor
         return nullptr;
     }
 
-    STensor createVector( unsigned int idElementType, int nElementSize, void* pElementData) {
+    int createVector( STensor& spTensor, unsigned int idElementType, int nElementSize, void* pElementData) {
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(idElementType, spObject);
         if(pTensor) {
-            if( pTensor->initVector(idElementType, nElementSize, pElementData) == SError::ERRORTYPE_SUCCESS)
-                return STensor::wrapPtr((ITensor*)pTensor);
-            return STensor();
+            if( int errCode = pTensor->initVector(idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
+                return errCode;
+            }
+            spTensor.setPtr((ITensor*)pTensor);
+            return sCtx.Success();
         }
-        return STensor();
+        return sCtx.Error("无法创建指定类型的张量");
     }
 
-    STensor createTensor( const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
+    int createTensor( STensor& spTensor, const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
         SObject spObject;
         CPlaceTensor* pTensor = createTensor(idElementType, spObject);
         if(pTensor) {
-            if( pTensor->initTensor(spDimVector, idElementType, nElementSize, pElementData) == SError::ERRORTYPE_SUCCESS)
-                return STensor::wrapPtr((ITensor*)pTensor);
-            return STensor();
+            if( int errCode = pTensor->initTensor(spDimVector, idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
+                return errCode;
+            }
+            spTensor.setPtr((ITensor*)pTensor);
+            return sCtx.Success();
         }
-        return STensor();
+        return sCtx.Error("无法创建指定类型的张量");
     }
 };
 

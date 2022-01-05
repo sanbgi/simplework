@@ -12,39 +12,24 @@ int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int n
     return sCtx.Success();
 }
 
-int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) {
+int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
 
-    if(initNetwork(inputTensor) != sCtx.Success()) {
+    if(initNetwork(spInTensor) != sCtx.Success()) {
         return sCtx.Error();
     }
 
-    if(m_isTransparent) {
-        return pOutputReceiver->visit(inputTensor);
+    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nOutTensorSize * m_nTensor) != sCtx.Success() ) {
+        return sCtx.Error("创建输出张量失败");
     }
 
-    int nLayer = 1;
-    int pDimSizes[inputTensor.nDims];
-    for(int i=0; i<inputTensor.nDims; i++) {
-        pDimSizes[i] = inputTensor.pDimSizes[i];
-        if(i>2) {
-            nLayer *= pDimSizes[i];
-        }
-    }
-
-    int nInputWidth = m_nInputWidth;
-    int nInputHeight = m_nInputHeight;
     int nPoolWidth = m_nWidth;
     int nPoolHeight = m_nHeight;
-    int nOutWidth = (m_nInputWidth - m_nWidth) / m_nStrideWidth + 1;
-    int nOutHeight = (m_nInputHeight - m_nHeight) / m_nStrideHeight + 1;
-    pDimSizes[1] = nOutHeight;
-    pDimSizes[2] = nOutWidth;
-    int nTensor = inputTensor.pDimSizes[0];
-    int nInputTensorSize = inputTensor.nData/inputTensor.pDimSizes[0];
-    int nOutputTensorSize = nOutWidth*nOutHeight*nLayer;
-    CTaker<double*> spOutputArray(new double[nTensor*nOutputTensorSize], [](double* ptr) {
-        delete[] ptr;
-    });
+    int nOutWidth = m_nOutWidth;
+    int nOutHeight = m_nOutHeight;
+    int nTensor = m_nTensor;
+    int nLayer = m_nInputLayer;
+    int nInputTensorSize = m_nInputTensorSize;
+    int nOutputTensorSize = m_nOutTensorSize;
     {
         int nInputHstep = m_nInputWidth * nLayer;
         int nInputWstep = nLayer;
@@ -52,11 +37,11 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
         int nInStrideHstep = nInputHstep * m_nStrideHeight;
         int nInStrideWstep = nInputWstep * m_nStrideWidth;
 
-        int nOutHstep = nOutWidth * nLayer;
+        int nOutHstep = m_nOutWidth * nLayer;
         int nOutWstep = nLayer;
         
-        double* pInArray = inputTensor.pDoubleArray;
-        double* pOutArray = spOutputArray;
+        double* pInArray = spInTensor->getDataPtr<double>();
+        double* pOutArray = spOutTensor->getDataPtr<double>();
         for(int iTensor = 0; iTensor < nTensor; iTensor++ ) {
             for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
                 for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
@@ -78,59 +63,23 @@ int CPoolNetwork::eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOu
             pOutArray+=nOutputTensorSize;
         }
     }
-
-    PTensor tensorOutput;
-    tensorOutput.idType = inputTensor.idType;
-    tensorOutput.nData = nTensor*nOutWidth*nOutHeight*nLayer;
-    tensorOutput.pDoubleArray = spOutputArray;
-    tensorOutput.nDims = inputTensor.nDims;
-    tensorOutput.pDimSizes = pDimSizes;
-    return pOutputReceiver->visit(tensorOutput);
+    m_spInTensor = spInTensor;
+    m_spOutTensor = spOutTensor;
+    return sCtx.Success();
 }
 
-int CPoolNetwork::learn(const PTensor& inputTensor, SNeuralNetwork::ILearnCtx* pLearnCtx, PTensor* pInputDeviation) {
-
-    struct COutputReceiver : IVisitor<const PTensor&> {
-        int visit(const PTensor& outputTensor) {
-
-            int nOutputData = outputTensor.nData;
-            CTaker<double*> spOutputDeviation(new double[nOutputData], [](double* ptr) {
-                delete[] ptr;
-            });
-            PTensor outputDeviation = outputTensor;
-            outputDeviation.pDoubleArray = spOutputDeviation;
-            if( pLearnCtx->getOutputDeviation(outputTensor, outputDeviation) != sCtx.Success() ) {
-                return sCtx.Error();
-            }
-
-            return pNetwork->learn(*pInputTensor, outputTensor, outputDeviation, pInputDeviation);
-        }
-
-        CPoolNetwork* pNetwork;
-        SNeuralNetwork::ILearnCtx* pLearnCtx;
-        const PTensor* pInputTensor;
-        PTensor* pInputDeviation;
-    }outputReceiver;
-    outputReceiver.pNetwork = this;
-    outputReceiver.pLearnCtx = pLearnCtx;
-    outputReceiver.pInputTensor = &inputTensor;
-    outputReceiver.pInputDeviation = pInputDeviation;
-    return eval(inputTensor, &outputReceiver);
-}
-
-int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor, const PTensor& outputDeviation, PTensor* pInputDeviation) {
-    if(pInputDeviation == nullptr) {
-        return sCtx.Success();
-    }
-    
-    if(m_isTransparent) {
-        if(pInputDeviation)
-        mempcpy(pInputDeviation->pDoubleArray, outputDeviation.pDoubleArray, sizeof(double)*inputTensor.nData);
-        return sCtx.Success();
+int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+        return sCtx.Error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    double* pDeviationInputArray = pInputDeviation->pDoubleArray;
-    memset(pDeviationInputArray,0,sizeof(double)*inputTensor.nData);
+    spInTensor = m_spInTensor;
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.Success() ) {
+        return sCtx.Error(errCode, "创建输入偏差张量失败");
+    }
+
+    double* pDeviationInputArray = spInDeviation->getDataPtr<double>();
+    memset(pDeviationInputArray,0,sizeof(double)*spInTensor->getDataSize());
 
     int nLayer = m_nInputLayer;
     int nInputWidth = m_nInputWidth;
@@ -138,13 +87,12 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
     int nInputLayer = m_nInputLayer;
     int nPoolWidth = m_nWidth;
     int nPoolHeight = m_nHeight;
-    int nOutWidth = (m_nInputWidth - m_nWidth) / m_nStrideWidth + 1;
-    int nOutHeight = (m_nInputHeight - m_nHeight) / m_nStrideHeight + 1;
+    int nOutWidth = m_nOutWidth;
+    int nOutHeight = m_nOutHeight;
 
-    int nTensor = inputTensor.pDimSizes[0];
-    int nInputTensorSize = inputTensor.nData/inputTensor.pDimSizes[0];
-    int nOutputTensorSize = outputTensor.nData/outputTensor.pDimSizes[0];
-    int nDeltaTensorSize = outputDeviation.nData/outputDeviation.pDimSizes[0];
+    int nTensor = m_nTensor;
+    int nInputTensorSize = m_nInputTensorSize;
+    int nOutputTensorSize = m_nOutTensorSize;
 
     int nInputHstep = m_nInputWidth * nLayer;
     int nInputWstep = nLayer;
@@ -155,8 +103,8 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
     int nOutHstep = nOutWidth * nLayer;
     int nOutWstep = nLayer;
 
-    double* pInArray = inputTensor.pDoubleArray;
-    double* pOutDeltaArray = outputDeviation.pDoubleArray;
+    double* pInArray = spInTensor->getDataPtr<double>();
+    double* pOutDeltaArray = spOutDeviation->getDataPtr<double>();
     double* pInDeltaArray = pDeviationInputArray;
     for(int iTensor = 0; iTensor < nTensor; iTensor++ ) {
         for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
@@ -186,18 +134,35 @@ int CPoolNetwork::learn(const PTensor& inputTensor, const PTensor& outputTensor,
     return sCtx.Success();
 }
 
-int CPoolNetwork::initNetwork(const PTensor& inputTensor) {
-    if(m_nInputHeight == 0) {
-        if(inputTensor.nDims < 3) {
+int CPoolNetwork::initNetwork(const STensor& inputTensor) {
+    if( !m_spOutDimVector ) {
+
+        STensor& spInDimVector = inputTensor->getDimVector();
+        int nDims = spInDimVector->getDataSize();
+        int* pDimSizes = spInDimVector->getDataPtr<int>();
+        if(nDims < 3) {
             return sCtx.Error("池化层输入张量维度需要大于等于3，其中第一个维度为实际张量个数");
         }
-        int nTensor = inputTensor.pDimSizes[0];
-        m_nInputHeight = inputTensor.pDimSizes[1];
-        m_nInputWidth = inputTensor.pDimSizes[2];
-        if(m_nInputHeight < m_nHeight || m_nInputWidth < m_nWidth ) {
-            m_isTransparent = true;
-        }else{
-            m_nInputLayer = inputTensor.nData/m_nInputWidth/m_nInputHeight/nTensor;
+        m_nTensor = pDimSizes[0];
+        m_nInputHeight = pDimSizes[1];
+        m_nInputWidth = pDimSizes[2];
+        m_nInputLayer = 1;
+
+
+        int pOutDimSizes[nDims];
+        for( int i=3; i<nDims; i++) {
+            pOutDimSizes[i] = pDimSizes[i];
+            m_nInputLayer *= pDimSizes[i];
+        }
+        m_nOutHeight = (m_nInputHeight - m_nHeight) / m_nStrideHeight + 1;
+        m_nOutWidth = (m_nInputWidth - m_nWidth) / m_nStrideWidth + 1;
+        m_nOutTensorSize = m_nOutHeight * m_nOutWidth * m_nInputLayer;
+        m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;
+        pOutDimSizes[0] = m_nTensor;
+        pOutDimSizes[1] = m_nOutHeight;
+        pOutDimSizes[2] = m_nOutWidth;
+        if( STensor::createVector(m_spOutDimVector, nDims, pOutDimSizes) != sCtx.Success() ) {
+            return sCtx.Error("创建输出张量的维度张量失败");
         }
     }
     return sCtx.Success();

@@ -21,7 +21,7 @@ public:
         //
         // 获得输出的偏差量，在前向计算中，Ctx可以在这个回调函数中，将输出作为下一级神经网络的输入，进行学习
         //
-        virtual int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeviation) = 0;
+        virtual int getOutputDeviation(const STensor& outputTensor, STensor& outputDeviation) = 0;
     };
 
     //
@@ -40,15 +40,12 @@ public:
         //      @inputTensor，输入张量
         //      @pReceiver，输出数据接收回调接口
         //
-        virtual int eval(const PTensor& inputTensor, IVisitor<const PTensor&>* pOutputReceiver) = 0;
+        virtual int eval(const STensor& spInTensor, STensor& spOutTensor) = 0;
 
         //
-        //  学习(可实现级联)
-        //      @inputTensor，输入数据
-        //      @pLearnCtx，计算所需要的上下文
-        //      @pInputDeviation，输入量的偏差量（希望输入能够调整）
+        //  学习
         //
-        virtual int learn(const PTensor& inputTensor, ILearnCtx* pLearnCtx, PTensor* pInputDeviation) = 0;
+        virtual int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -78,7 +75,7 @@ public:
             //
             //  读取整个IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
             //
-            virtual int readIdxFile(const char* szFileName, SData& spData) = 0;
+            virtual int readIdxFile(const char* szFileName, STensor& spTensor) = 0;
 
             //
             //  打开IDX格式的文件读取器，格式参考：http://yann.lecun.com/exdb/mnist/
@@ -117,8 +114,8 @@ public:
         return nn;
     }
 
-    static SData loadIdxFile(const char* szFilename) {
-        SData data;
+    static STensor loadIdxFile(const char* szFilename) {
+        STensor data;
         getFactory()->readIdxFile(szFilename, data);
         return data;
     }
