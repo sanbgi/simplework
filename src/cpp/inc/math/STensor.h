@@ -50,47 +50,31 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-    SIMPLEWORK_INTERFACECLASS_ENTER(TensorFactory, "sw.math.TensorFactory")
-        SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensorFactory", 211211)
-            //
-            // 构造全新的张量，私有函数，因为指针没类型，易出错
-            //
-            virtual int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-            virtual int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
-        SIMPLEWORK_INTERFACE_LEAVE
-    SIMPLEWORK_INTERFACECLASS_LEAVE(TensorFactory)
-
 public:
     template<typename Q> static STensor createValue(Q v) {
         STensor spTensor;
-        getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), 1, (void*)&v);
+        STensorSolver::getSolver()->createVector(spTensor, CBasicData<Q>::getStaticType(), 1, (void*)&v);
         return spTensor;
     }
     template<typename Q> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
         STensor spTensor;
-        getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
+        STensorSolver::getSolver()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
         return spTensor;
     }
     //
     // 构造一维张量
     //
     template<typename Q> static int createVector(STensor& spTensor, int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
+        return STensorSolver::getSolver()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
     template<typename Q> static int createTensor(STensor& spTensor, STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        return getFactory()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
+        return STensorSolver::getSolver()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
     static int createTensor(STensor& spTensor, STensor& spDimVector, unsigned int iElementType, int nElementSize, void* pElementData=nullptr) {
-        return getFactory()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
-    }
-
-private:
-    static STensorFactory& getFactory() {
-        static STensorFactory g_factory = SObject::createObject<STensorFactory>();
-        return g_factory;
+        return STensorSolver::getSolver()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
     }
 
 public:

@@ -1,5 +1,4 @@
-#include "../inc/math/math.h"
-#include <map>
+#include "CTensorFactory.h"
 
 using namespace sw::core;
 using namespace sw::math;
@@ -151,51 +150,39 @@ std::map<unsigned int, FCreateTensor> g_tensorFacotries = {
     { CBasicData<double>::getStaticType(), CTensor<double>::createTensor },
 };
 
-//
-// 定义一个张量工厂类
-//
-class CTensorFactory : public CObject, STensor::ITensorFactory {
-    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(STensor::ITensorFactory)
-    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
-
-public://ITensor
-    CPlaceTensor* createTensor(unsigned int tid, SObject& rObject) {
-        std::map<unsigned int, FCreateTensor>::iterator it = g_tensorFacotries.find(tid);
-        if( it != g_tensorFacotries.end() ) {
-            return (*(it->second))(rObject);
-        }
-        
-        return nullptr;
+CPlaceTensor* createTensor(unsigned int tid, SObject& rObject) {
+    std::map<unsigned int, FCreateTensor>::iterator it = g_tensorFacotries.find(tid);
+    if( it != g_tensorFacotries.end() ) {
+        return (*(it->second))(rObject);
     }
+    
+    return nullptr;
+}
 
-    int createVector( STensor& spTensor, unsigned int idElementType, int nElementSize, void* pElementData) {
-        SObject spObject;
-        CPlaceTensor* pTensor = createTensor(idElementType, spObject);
-        if(pTensor) {
-            if( int errCode = pTensor->initVector(idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
-                return errCode;
-            }
-            spTensor.setPtr((ITensor*)pTensor);
-            return sCtx.Success();
+int CTensorFactory::createVector( STensor& spTensor, unsigned int idElementType, int nElementSize, void* pElementData) {
+    SObject spObject;
+    CPlaceTensor* pTensor = ::createTensor(idElementType, spObject);
+    if(pTensor) {
+        if( int errCode = pTensor->initVector(idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
+            return errCode;
         }
-        return sCtx.Error("无法创建指定类型的张量");
+        spTensor.setPtr((ITensor*)pTensor);
+        return sCtx.Success();
     }
+    return sCtx.Error("无法创建指定类型的张量");
+}
 
-    int createTensor( STensor& spTensor, const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
-        SObject spObject;
-        CPlaceTensor* pTensor = createTensor(idElementType, spObject);
-        if(pTensor) {
-            if( int errCode = pTensor->initTensor(spDimVector, idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
-                return errCode;
-            }
-            spTensor.setPtr((ITensor*)pTensor);
-            return sCtx.Success();
+int CTensorFactory::createTensor( STensor& spTensor, const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
+    SObject spObject;
+    CPlaceTensor* pTensor = ::createTensor(idElementType, spObject);
+    if(pTensor) {
+        if( int errCode = pTensor->initTensor(spDimVector, idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
+            return errCode;
         }
-        return sCtx.Error("无法创建指定类型的张量");
+        spTensor.setPtr((ITensor*)pTensor);
+        return sCtx.Success();
     }
-};
-
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorFactory, STensor::STensorFactory::__getClassKey())
+    return sCtx.Error("无法创建指定类型的张量");
+}
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

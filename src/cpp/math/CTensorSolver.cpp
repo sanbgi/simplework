@@ -1,5 +1,6 @@
 #include "../inc/math/math.h"
 #include <map>
+#include "CTensorFactory.h"
 
 using namespace sw::core;
 using namespace sw::math;
@@ -87,6 +88,14 @@ public:
         resTensor.pDimSizes = nResDimSizes;
         return pRecerver->visit(resTensor);
     }
+
+    int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) {
+        return CTensorFactory::createVector(spTensor, eElementType, nElementSize, pElementData);
+    }
+    
+    int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ){
+        return CTensorFactory::createTensor(spTensor, spDimVector, eElementType, nElementSize, pElementData);
+    } 
 
     static SCtx sCtx;
 };

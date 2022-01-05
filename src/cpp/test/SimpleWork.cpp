@@ -107,37 +107,6 @@ int testPipe() {
     return sCtx.Success();
 }
 
-void testTensor() {
-
-    int dim1[] = {2, 3};
-    double data1[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
-    PTensor t1 = {
-        SData::getTypeIdentifier<CBasicData<double>>(),
-        2,
-        dim1,
-        6,
-        data1
-    };
-
-    int dim2[] = {3, 1};
-    double data2[] = { 6.0, 7.0, 8.0, 9.0, 10.0, 11.0 };
-    PTensor t2 = {
-        SData::getTypeIdentifier<CBasicData<double>>(),
-        1,
-        dim2,
-        3,
-        data2
-    };
-
-    struct CInternalReceiver : public IVisitor<const PTensor&> {
-        int visit(const PTensor& r) {
-            return sCtx.Error();
-        }
-    }receiver;
-
-    STensorSolver::getSolver()->multiply(t1, t2, &receiver);
-}
-
 void testNN() {
     /*
     SNeuralNetwork n;
