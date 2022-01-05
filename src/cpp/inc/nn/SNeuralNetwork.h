@@ -75,12 +75,24 @@ public:
 
             //
             //  打开IDX格式的文件读取器，格式参考：http://yann.lecun.com/exdb/mnist/
-            //  管道输入：
-            //      需要读取的张量个数，类型int
-            //  管道输出：
-            //      读取出来的张量，第一个维度为张量个数，类型STensor
             //
             virtual int openIdxFileReader(const char* szFileName, SNeuralPipe& spPipe) = 0;
+
+            //
+            //  创建归一化管道
+            //
+            virtual int createNormallizePipe(SNeuralPipe& spPipe) = 0;
+
+            //
+            //  归一化张量，将字节数据归一到[0,1]范围
+            //
+            virtual int normalizeTensor(const STensor& spIn, STensor& spOut) = 0;
+
+            //
+            //  分类化张量，将张量中的每一个分类下标，都转化为一个分类向量，新向量对应下标位置为1.0，其它位置为0.0
+            //
+            virtual int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) = 0;
+
         SIMPLEWORK_INTERFACE_LEAVE
     SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetworkFactory)
 
@@ -124,6 +136,24 @@ public:
         STensor data;
         getFactory()->readIdxFile(szFilename, data);
         return data;
+    }
+
+    static SNeuralPipe createNormalizePipe() {
+        SNeuralPipe pipe;
+        getFactory()->createNormallizePipe(pipe);
+        return pipe;
+    }
+
+    static STensor normalizeTensor(const STensor& spIn) {
+        STensor spOut;
+        getFactory()->normalizeTensor(spIn, spOut);
+        return spOut;
+    }
+
+    static STensor classifyTensor(int nClassify, const STensor& spIn) {
+        STensor spOut;
+        getFactory()->classifyTensor(nClassify, spIn, spOut);
+        return spOut;
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NeuralNetwork)

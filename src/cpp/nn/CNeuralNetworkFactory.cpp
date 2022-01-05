@@ -5,6 +5,8 @@
 #include "CSequenceNetwork.h"
 #include "CPoolNetwork.h"
 #include "CIdxFileReader.h"
+#include "CNormallizePipe.h"
+#include "CTensorSolver.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
@@ -39,6 +41,18 @@ public:
 
     int openIdxFileReader(const char* szFileName, SNeuralPipe& spPipe) {
         return CIdxFileReader::createReader(szFileName, spPipe);
+    }
+
+    int createNormallizePipe(SNeuralPipe& spPipe) {
+        return CNormalizePipe::createPipe(spPipe);
+    }
+
+    int normalizeTensor(const STensor& spIn, STensor& spOut) {
+        return CTensorSolver::normalize(spIn, spOut);
+    }
+
+    int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) {
+        return CTensorSolver::classify(nClassify, spIn, spOut);
     }
 };
 

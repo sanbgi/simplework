@@ -15,23 +15,16 @@ void CNeuralNetwork::run() {
     SNeuralPipe spImageReader = SNeuralNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
     SNeuralPipe spLabelReader = SNeuralNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
 
-    STensor spPipeIn = STensor::createValue(10);
     SNeuralNetwork nn = createNetwork();
 
     STensor spBatchImage;
     STensor spBatchLabel;
+    STensor spPipeIn = STensor::createValue(10);
     while( spImageReader->push(spPipeIn, spBatchImage) == sCtx.Success() && spLabelReader->push(spPipeIn, spBatchLabel) == sCtx.Success() ) {
         //
         // 将字节类型图片张量，转化为[0,1)浮点类型张量
         //
-        STensor spIn;
-        int nSize = spBatchImage->getDataSize();
-        STensor::createTensor<double>(spIn, spBatchImage->getDimVector(), nSize);
-        unsigned char* pByteImage = spBatchImage->getDataPtr<unsigned char>();
-        double* pDoubleImage = spIn->getDataPtr<double>();
-        for(int i=0; i<nSize; i++) {
-            pDoubleImage[i] = pByteImage[i] / 256.0;
-        }
+        STensor spIn = SNeuralNetwork::normalizeTensor(spBatchImage);
 
         //
         // 神经网络求解
@@ -42,44 +35,39 @@ void CNeuralNetwork::run() {
         //
         // 计算偏差量
         //
-        STensor& spDimOutVector = spOut->getDimVector();
-        STensor spOutDeviation;
-        STensor::createTensor(spOutDeviation, spDimOutVector, spOut->getDataType(), spOut->getDataSize());
-        {
-            unsigned char* pKind = spBatchLabel->getDataPtr<unsigned char>();
-            int* pOutDimSizes = spDimOutVector->getDataPtr<int>();
-            double delta = 0;
-            int nTensorSize = pOutDimSizes[1];
-            int nAcc = 0;
-            double xAcc = 0;
-            for( int iTensor=0; iTensor<pOutDimSizes[0]; iTensor++) {
-                int iKind = pKind[iTensor];
-                double* pOutputArray = spOut->getDataPtr<double>() + iTensor * nTensorSize;
-                double* pDeviationArray = spOutDeviation->getDataPtr<double>() + iTensor * nTensorSize;
-                for(int i=0; i<nTensorSize; i++) {
-                    if( i==iKind) {
-                        pDeviationArray[i] = pOutputArray[i] - 1;
-                        xAcc += (1-pOutputArray[i])/10;
-                        if(1-pOutputArray[i] < 0.1) {
-                            nAcc++;
-                        }
-                    }else{
-                        pDeviationArray[i] = pOutputArray[i];
-                    }
-                    delta += pDeviationArray[i] * pDeviationArray[i];
-                }
-            }
-            static int t = 0;
-            if( t++ % 10 == 0) {
-                std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
-            }
-        }
+        STensor spOutTarget = SNeuralNetwork::classifyTensor(10, spBatchLabel);
+        STensor spOutDeviation = spOut - spOutTarget;
 
         //
         // 学习更新神经网络
         //
         STensor spInDeviation;
         nn->learn(spOut, spOutDeviation, spIn, spInDeviation);
+
+        //
+        // 打印一些结果
+        //
+        {
+            int nOutDeviation = spOutDeviation->getDataSize();
+            double* pOutDeviation = spOutDeviation->getDataPtr<double>();
+            double* pOutTarget = spOutTarget->getDataPtr<double>();
+            int nAcc = 0;
+            double xAcc = 0;
+            double delta = 0;
+            for(int i=0; i<nOutDeviation; i++) {
+                if( pOutTarget[i] > 0.9999999 ) {
+                    if(pOutDeviation[i] > -0.1) {
+                        nAcc++;
+                    }
+                    xAcc += -pOutDeviation[i]/10;
+                }
+                delta += pOutDeviation[i] * pOutDeviation[i];
+            }
+            static int t = 0;
+            if( t++ % 10 == 0) {
+                std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
+            }
+        }
     }
 }
 
