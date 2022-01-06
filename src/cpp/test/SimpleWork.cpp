@@ -68,43 +68,43 @@ void fun(const PData& r) {
 
 int testPipe() {
     SPipe avIn;
-    if( SAvFactory::getAvFactory()->openAvFileReader("d:/tt.mkv", avIn) != sCtx.Success() ) {
-        return sCtx.Error();
+    if( SAvFactory::getAvFactory()->openAvFileReader("d:/tt.mkv", avIn) != sCtx.success() ) {
+        return sCtx.error();
     }
 
     SPipe avWindows;
-    if( SAvFactory::getAvFactory()->openWindow("DisplayAv", 640, 360, avWindows) != sCtx.Success() ){
-        return sCtx.Error();
+    if( SAvFactory::getAvFactory()->openWindow("DisplayAv", 640, 360, avWindows) != sCtx.success() ){
+        return sCtx.error();
     } 
 
     SPipe avSpeaker;
     if( SAvFactory::getAvFactory()->openSpeaker(nullptr, avSpeaker) ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     SPipe avFileWriter;
     if( SAvFactory::getAvFactory()->openAvFileWriter("d:/tt2.mkv", avFileWriter) ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     SPipe pipes[3] = { avWindows, avSpeaker, avFileWriter };
     SPipe avOut;
-    if( SAvFactory::getAvFactory()->createParallelPipe(3, pipes, avOut) != sCtx.Success() ) {
-        return sCtx.Error();
+    if( SAvFactory::getAvFactory()->createParallelPipe(3, pipes, avOut) != sCtx.success() ) {
+        return sCtx.error();
     }
 
     SPipe inPipe[2] = {avIn, avOut};
     SPipe av;
-    if( SAvFactory::getAvFactory()->createSequencePipe(2, inPipe, av) != sCtx.Success() ) {
-        return sCtx.Error();
+    if( SAvFactory::getAvFactory()->createSequencePipe(2, inPipe, av) != sCtx.success() ) {
+        return sCtx.error();
     }
 
     int nFrames=0;
-    while(av->pushData(CData<PAvFrame>(nullptr), nullptr) == sCtx.Success()) {
+    while(av->pushData(CData<PAvFrame>(nullptr), nullptr) == sCtx.success()) {
         std::cout << "frames: " << ++nFrames << "processed \n";
     }
 
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 void testNN() {
@@ -123,7 +123,7 @@ void testNN() {
         int getOutputDeviation(const PTensor& outputTensor, PTensor& outputDeivation) {
             double y = 0.7*(*pV) - 0.3;
             *outputDeivation.pDoubleArray = outputTensor.pDoubleArray[0] - 1/(1+exp(-y));
-            return sCtx.Success();
+            return sCtx.success();
         }
         double *pV;
     }ctx;
@@ -150,7 +150,7 @@ void testIdx() {
         STensor spIn;
         STensor::createVector(spIn, 1, &nRead);
         STensor spOut;
-        while(spReader->push(spIn, spOut) == sCtx.Success()) {
+        while(spReader->push(spIn, spOut) == sCtx.success()) {
             nReaded += 10;
             //std::cout << spOut->getDataSize();
         }

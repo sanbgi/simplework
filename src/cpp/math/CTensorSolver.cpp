@@ -21,15 +21,15 @@ public:
     int minus( const STensor& t1, const STensor& t2, STensor& spOut) {
         int nSize = t1->getDataSize();
         if( nSize != t2->getDataSize()) {
-            return sCtx.Error("大小不同的两个张量不能相减");
+            return sCtx.error("大小不同的两个张量不能相减");
         }
 
         if(t1->getDataType() != s_double_type_id || t2->getDataType() != s_double_type_id ) {
-            return sCtx.Error("目前张量运算只支持双精度类型");
+            return sCtx.error("目前张量运算只支持双精度类型");
         }
 
-        if( STensor::createTensor<double>(spOut, t1->getDimVector(), nSize) != sCtx.Success() ) {
-            return sCtx.Error("创建结果张量失败");
+        if( STensor::createTensor<double>(spOut, t1->getDimVector(), nSize) != sCtx.success() ) {
+            return sCtx.error("创建结果张量失败");
         }
 
         double* pT1 = t1->getDataPtr<double>();
@@ -38,20 +38,20 @@ public:
         for(int i=0; i<nSize; i++) {
             pOut[i] = pT1[i] - pT2[i];
         }
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int multiply( const PTensor& t1, const PTensor& t2, IVisitor<const PTensor&>* pRecerver) {
         if( t1.idType != s_double_type_id || t2.idType != s_double_type_id ) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         if(t1.nDims < 1 || t2.nDims < 1 ) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         if(t1.pDimSizes[t1.nDims-1] != t2.pDimSizes[0] ) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         int mlength = t1.pDimSizes[t1.nDims-1];

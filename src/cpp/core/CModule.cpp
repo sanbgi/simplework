@@ -23,13 +23,13 @@ private:
     }
 
     int initModule(const char* szModuleKey, const SModule& pCaller) {
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int createObject(const char* szClassKey, SObject& spObject) {
         const SFactory& spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
-            return sCtx.Error();
+            return sCtx.error();
         }
         return spFactory->createObject(spObject);
     }
@@ -43,7 +43,7 @@ private:
 
     int registerFactory(const char* szClassKey,  const SFactory& pFactory) {
         m_mapFactories[szClassKey] = pFactory;
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     const SFactory& getRegisteredFactory(const char* szClassKey) {

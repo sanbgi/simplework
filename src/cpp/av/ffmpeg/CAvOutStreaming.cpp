@@ -48,7 +48,7 @@ int CAvOutStreaming::init(AVFormatContext* pFormatContext, const PAvStreaming* p
     case EAvSampleType::AvSampleType_Audio:
         return initAudio(pFormatContext, pSrc);
     }
-    return sCtx.Error();
+    return sCtx.error();
 }
 
 int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreaming* pSrc){
@@ -57,19 +57,19 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
 
     const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
     if(pOutputFormat == nullptr || pOutputFormat->video_codec == AV_CODEC_ID_NONE) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     // 获取Codec
     AVCodec* pCodec = avcodec_find_encoder(pOutputFormat->video_codec);
     if(pCodec == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     // 创建流
     AVStream* pAvStream = avformat_new_stream(pFormatContext, nullptr);
     if( pAvStream == nullptr ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
     pAvStream->id = pSrc->streamingId;
     pAvStream->index = pFormatContext->nb_streams-1;
@@ -77,7 +77,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
     // 创建编码上下文
     AVCodecContext* pCodecContext = avcodec_alloc_context3(pCodec);
     if(pCodecContext == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
     m_spCodecCtx.take(pCodecContext, [](AVCodecContext* pPtr) {
         avcodec_free_context(&pPtr);
@@ -137,8 +137,8 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
         sampleMeta.videoHeight = pCodecContext->height;
         sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->pix_fmt;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.Success() ) {
-            return sCtx.Error();
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.success() ) {
+            return sCtx.error();
         }
     }
 
@@ -147,7 +147,7 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
     //
     AVFrame* pAVFrame = av_frame_alloc();
     if(pAVFrame == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
     m_pAVFrame.take(pAVFrame, [](AVFrame* pPtr){
         av_frame_free(&pPtr);
@@ -156,32 +156,32 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
     m_pAvStream = pAvStream;
     m_iStreamingId = pAvStream->id;
     m_iStreamingIndex = pAvStream->index;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreaming* pSrc) {
     const AVOutputFormat* pOutputFormat = pFormatContext->oformat;
     if(pOutputFormat == nullptr || pOutputFormat->audio_codec == AV_CODEC_ID_NONE) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     // 获取Codec
     AVCodec* pCodec = avcodec_find_encoder(AV_CODEC_ID_AC3);
     if(pCodec == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     // 创建流
     AVStream* pAvStream = avformat_new_stream(pFormatContext, nullptr);
     if( pAvStream == nullptr ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
     pAvStream->id = pSrc->streamingId;
 
     // 创建编码上下文
     AVCodecContext* pCodecContext = avcodec_alloc_context3(pCodec);
     if(pCodecContext == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
     m_spCodecCtx.take(pCodecContext, [](AVCodecContext* pPtr) {
         avcodec_free_context(&pPtr);
@@ -241,8 +241,8 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
         sampleMeta.audioRate = pCodecContext->sample_rate;
         sampleMeta.sampleFormat = (EAvSampleFormat)pCodecContext->sample_fmt;
         sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.Success() ) {
-            return sCtx.Error();
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.success() ) {
+            return sCtx.error();
         }
     }
 
@@ -252,7 +252,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
     //
     AVFrame* pAVFrame = av_frame_alloc();
     if(pAVFrame == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
     m_pAVFrame.take(pAVFrame, [](AVFrame* pPtr){
         av_frame_free(&pPtr);
@@ -261,29 +261,29 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
     m_pAvStream = pAvStream;
     m_iStreamingId = pAvStream->id;
     m_iStreamingIndex = pAvStream->index;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 
 int CAvOutStreaming::open(AVFormatContext* pFormatContext) {
 
     if( avcodec_open2(m_spCodecCtx, m_pCodec, nullptr) < 0 ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     /* copy the stream parameters to the muxer */
     int ret = avcodec_parameters_from_context(m_pAvStream->codecpar, m_spCodecCtx);
     if (ret < 0) {
         fprintf(stderr, "Could not copy the stream parameters\n");
-        return sCtx.Error();
+        return sCtx.error();
     }
 
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CAvOutStreaming::close(AVFormatContext* pFormatContext) {
     m_spCodecCtx.release();
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
@@ -300,7 +300,7 @@ int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, const PAvFrame* 
             receiver.pAvOut = this;
             return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
         }
-        return sCtx.Success();
+        return sCtx.success();
         
     }
     return writeFrame(pFormatContext, (AVFrame*)nullptr);
@@ -342,7 +342,7 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFra
     //
     int ret = avcodec_send_frame(m_spCodecCtx, pAVFrame);
     if( ret < 0 ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     //
@@ -350,7 +350,7 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFra
     //
     AVPacket* pPkt = av_packet_alloc();
     if(pPkt == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     //
@@ -373,10 +373,10 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFra
 
         case AVERROR(EAGAIN):
         case AVERROR_EOF:
-            return sCtx.Success();
+            return sCtx.success();
 
         default:
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         //
@@ -385,10 +385,10 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFra
         pPkt->stream_index = m_iStreamingIndex;
         //av_packet_rescale_ts(pPkt, m_spCodecCtx->time_base, m_pAvStream->time_base);
         if( av_interleaved_write_frame(pFormatContext, takePkg) < 0 ) {
-            return sCtx.Error();
+            return sCtx.error();
         }
     }
-    return sCtx.Error();
+    return sCtx.error();
 }
 
 FFMPEG_NAMESPACE_LEAVE

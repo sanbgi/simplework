@@ -33,7 +33,7 @@ public://IPipe
             }
         }
 
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int initWindow(const char* szWindowName, int nWidth, int nHeight) {
@@ -41,16 +41,16 @@ public://IPipe
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return sCtx.Error();
+            return sCtx.error();
 
         //创建窗口
         m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, nWidth, nHeight, 0);
         if (nullptr == m_pWindow)
-            return sCtx.Error();
+            return sCtx.error();
 
         m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
 	    if (nullptr == m_pRenderer) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         m_nWinWidth = nWidth;
@@ -60,10 +60,10 @@ public://IPipe
         sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
         sampleMeta.videoWidth = nWidth;
         sampleMeta.videoHeight = nHeight;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.Success() ) {
-            return sCtx.Error();
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.success() ) {
+            return sCtx.error();
         }
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int pushFrame(const PAvFrame* pFrame) {
@@ -94,7 +94,7 @@ public://IPipe
                                 SDL_DestroyTexture
                             );
         if (!spTexture) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         SDL_Rect srcRect, dstRect;
@@ -115,12 +115,12 @@ public://IPipe
         //更新Renderer显示
         SDL_RenderPresent(pRenderer);
         
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int close() {
         release();
-        return sCtx.Success();
+        return sCtx.success();
     }
 
 public:

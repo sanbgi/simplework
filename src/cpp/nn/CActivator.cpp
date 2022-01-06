@@ -12,40 +12,53 @@ CActivator* CActivator::getActivation(SNeuralNetwork::EACTIVATION eActivation) {
         case SNeuralNetwork::ACTIVATION_Softmax:
             return getSoftmax();
     }
-    return getReLU();
+    return getNeuralActivator();
 }
 
-CActivator* CActivator::getReLU() {
-    static class CActivatorImp : public CActivator {
 
-        static double activate(double x) {
-            //return x;
-            return x>=0?x:0;
-        }
-        static double deactivate(double y) {
-            //return 1;
-            //
-            //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
-            //  好等于 delta，其中delta = Ycurrent - Ytarget 
-            //
-            return y>0?1:0;
-        }
+//
+// 神经网络输出总是在[0,1]之间
+//
+CActivator* CActivator::getNeuralActivator() {
+    static class CActivatorImp : public CActivator {
         void activate( int nData, double* pZArray, double* pYArray) {
             for(int i=0; i<nData; i++) {
-                pYArray[i] = activate(pZArray[i]);
+                double z = pZArray[i];
+                pYArray[i] = z >= 0 ? ( z > 1 ? 1: z ) : 0;
             }
         }
         void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
             for(int i=0; i<nData; i++) {
-                pDzArray[i] = deactivate(pYArray[i]) * pYDeltaArray[i];
+                if(pYArray[i]>0) {
+                    if(pYArray[i] >= 1) 
+                        pDzArray[i] = 0;//pYDeltaArray[i] >= 0 ? pYDeltaArray[i] : 0;
+                    else    
+                        pDzArray[i] = pYDeltaArray[i];
+                }else{
+                    pDzArray[i] = 0;
+                }
+                //pDzArray[i] = pYDeltaArray[i];
             }
         }
-        double loss(int nData, double* pYArray, double* pYDeltaArray) {
-            double dLoss = 0;
+    }s_activator;
+    return &s_activator;
+}
+
+CActivator* CActivator::getReLU() {
+    static class CActivatorImp : public CActivator {
+        void activate( int nData, double* pZArray, double* pYArray) {
             for(int i=0; i<nData; i++) {
-                dLoss += pYDeltaArray[i] * pYDeltaArray[i];
+                pYArray[i] = pZArray[i] >= 0 ? pZArray[i] : 0;
             }
-            return dLoss/2.0;
+        }
+        void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
+            for(int i=0; i<nData; i++) {
+                if(pYArray[i]>0) {
+                    pDzArray[i] = pYDeltaArray[i];
+                }else{
+                    pDzArray[i] = 0;
+                }
+            }
         }
     }s_activator;
     return &s_activator;
@@ -232,3 +245,4 @@ CActivator* CActivator::getSoftmax() {
     }s_activator;
     return &s_activator;
 }
+

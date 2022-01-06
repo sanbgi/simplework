@@ -3,7 +3,10 @@
 
 #include "../inc/nn/nn.h"
 
+#ifdef _DEBUG
 #define CHECK_POINTER
+#endif//
+
 #ifdef CHECK_POINTER
     struct CNullV {
         template<typename Q> static Q& getNullV() {

@@ -34,10 +34,10 @@ public://IPipe
             const PAvStreaming* pAvStreaming = CData<PAvStreaming>(rData);
             if(pAvStreaming->frameMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
                 m_targetSample = pAvStreaming->frameMeta;
-                return sCtx.Success();
+                return sCtx.success();
             }
         }
-        return sCtx.Success();
+        return sCtx.success();
     }
 public:
     int initSpeaker(const char* szName) {
@@ -45,12 +45,12 @@ public:
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return sCtx.Error();
+            return sCtx.error();
 
         if(szName != nullptr) {
             m_strDeviceName = szName;
         }
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int init() {
@@ -78,7 +78,7 @@ public:
                                 false, &wanted_spec, &m_specAudio, 0);
         if(m_iDeviceID == 0)
         {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         PAvSample specMeta;
@@ -86,18 +86,18 @@ public:
         specMeta.audioRate = m_specAudio.freq;
         specMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Audio_S16;
         specMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(specMeta, m_spConverter) != sCtx.Success() ) {
-            return sCtx.Error();
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(specMeta, m_spConverter) != sCtx.success() ) {
+            return sCtx.error();
         }
 
         SDL_PauseAudioDevice(m_iDeviceID, 0);
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int pushFrame(const PAvFrame* pFrame) {
         if(!m_bInitialized) {
-            if( init() != sCtx.Success() ) {
-                return sCtx.Error();
+            if( init() != sCtx.success() ) {
+                return sCtx.error();
             }
             m_bInitialized = true;
         }
@@ -122,12 +122,12 @@ public:
                             m_iDeviceID, pFrame->ppPlanes[0], 
                             pFrame->pPlaneLineSizes[0]);
         }
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     int close() {
         release();
-        return sCtx.Success();
+        return sCtx.success();
     }
 
 public:

@@ -25,25 +25,34 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Ctx)
     SIMPLEWORK_INTERFACE_LEAVE
 
     SCtx(const char* szModule) {
-        SCoreFactory::getFactory()->createCtx(szModule, *this);
+        m_szModule = szModule;
     }
-    void Warn(const char* szWarn) {
-        (*this)->logWarning(szWarn);
+    void warn(const char* szWarn) {
+        getCtx()->logWarning(szWarn);
     }
-    void Message(const char* szMessage) {
-        (*this)->logMessage(szMessage);
+    void message(const char* szMessage) {
+        getCtx()->logMessage(szMessage);
     }
-    int Error(int code, const char* szError = nullptr) {
-        (*this)->logError(szError);
+    int error(int code, const char* szError = nullptr) {
+        getCtx()->logError(szError);
         return code;
     }
-    int Error(const char* szError = nullptr) {
-        (*this)->logError(szError);
+    int error(const char* szError = nullptr) {
+        getCtx()->logError(szError);
         return SError::ERRORTYPE_FAILURE;
     }
-    int Success() {
+    int success() {
         return SError::ERRORTYPE_SUCCESS;
     }
+    IFace* getCtx() {
+        if( !(*this) ) {
+            SCoreFactory::getFactory()->createCtx(m_szModule, *this);
+        }
+        return getPtr();
+    }
+
+private:
+    const char* m_szModule; 
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Ctx)
 

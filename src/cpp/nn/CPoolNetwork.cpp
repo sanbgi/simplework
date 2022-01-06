@@ -9,17 +9,17 @@ int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int n
     spPool->m_nStrideWidth = nStrideWidth;
     spPool->m_nStrideHeight = nStrideHeight;
     spNetwork.setPtr(spPool.getPtr());
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
 
-    if(initNetwork(spInTensor) != sCtx.Success()) {
-        return sCtx.Error();
+    if(initNetwork(spInTensor) != sCtx.success()) {
+        return sCtx.error();
     }
 
-    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nOutTensorSize * m_nTensor) != sCtx.Success() ) {
-        return sCtx.Error("创建输出张量失败");
+    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nOutTensorSize * m_nTensor) != sCtx.success() ) {
+        return sCtx.error("创建输出张量失败");
     }
 
     int nPoolWidth = m_nWidth;
@@ -65,17 +65,17 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }
     m_spInTensor = spInTensor;
     m_spOutTensor = spOutTensor;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
-        return sCtx.Error("神经网络已经更新，原有数据不能用于学习");
+        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
     spInTensor = m_spInTensor;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.Success() ) {
-        return sCtx.Error(errCode, "创建输入偏差张量失败");
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
     double* pDeviationInputArray = spInDeviation->getDataPtr<double>();
@@ -131,7 +131,7 @@ int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviatio
         pInDeltaArray+=nInputTensorSize;
         pOutDeltaArray+=nOutputTensorSize;
     }
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CPoolNetwork::initNetwork(const STensor& inputTensor) {
@@ -141,7 +141,7 @@ int CPoolNetwork::initNetwork(const STensor& inputTensor) {
         int nDims = spInDimVector->getDataSize();
         int* pDimSizes = spInDimVector->getDataPtr<int>();
         if(nDims < 3) {
-            return sCtx.Error("池化层输入张量维度需要大于等于3，其中第一个维度为实际张量个数");
+            return sCtx.error("池化层输入张量维度需要大于等于3，其中第一个维度为实际张量个数");
         }
         m_nTensor = pDimSizes[0];
         m_nInputHeight = pDimSizes[1];
@@ -161,9 +161,9 @@ int CPoolNetwork::initNetwork(const STensor& inputTensor) {
         pOutDimSizes[0] = m_nTensor;
         pOutDimSizes[1] = m_nOutHeight;
         pOutDimSizes[2] = m_nOutWidth;
-        if( STensor::createVector(m_spOutDimVector, nDims, pOutDimSizes) != sCtx.Success() ) {
-            return sCtx.Error("创建输出张量的维度张量失败");
+        if( STensor::createVector(m_spOutDimVector, nDims, pOutDimSizes) != sCtx.success() ) {
+            return sCtx.error("创建输出张量的维度张量失败");
         }
     }
-    return sCtx.Success();
+    return sCtx.success();
 }

@@ -15,7 +15,7 @@ int CPipe::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
                         if( pFinalReceiver ) {
                             return pFinalReceiver->visit(rData);
                         }
-                        return sCtx.Success();
+                        return sCtx.success();
                     }
 
                     CInteralReceiver receiver;
@@ -39,18 +39,18 @@ int CPipe::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
         {
             std::vector<SPipe>::iterator it = m_arrPipes.begin();
             for( ; it != m_arrPipes.end(); it++) {
-                if( (*it)->pushData(rData, pReceiver) != sCtx.Success() ) {
-                    return sCtx.Error();
+                if( (*it)->pushData(rData, pReceiver) != sCtx.success() ) {
+                    return sCtx.error();
                 }
             }
-            return sCtx.Success();
+            return sCtx.success();
         }
         break;
 
         default:
-            return sCtx.Error();
+            return sCtx.error();
     }
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CPipe::createPipe(EPipeMode eMode, int nPipe, SPipe pPipes[], SPipe& spPipe) {
@@ -61,6 +61,6 @@ int CPipe::createPipe(EPipeMode eMode, int nPipe, SPipe pPipes[], SPipe& spPipe)
     }
     spPointer->m_eMode = eMode;
     spPipe = spPointer.getObject();
-    return spPipe ? sCtx.Success() : sCtx.Error();
+    return spPipe ? sCtx.success() : sCtx.error();
 }
 

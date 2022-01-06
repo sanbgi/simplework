@@ -167,9 +167,9 @@ int CTensorFactory::createVector( STensor& spTensor, unsigned int idElementType,
             return errCode;
         }
         spTensor.setPtr((ITensor*)pTensor);
-        return sCtx.Success();
+        return sCtx.success();
     }
-    return sCtx.Error("无法创建指定类型的张量");
+    return sCtx.error("无法创建指定类型的张量");
 }
 
 int CTensorFactory::createTensor( STensor& spTensor, const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
@@ -180,9 +180,9 @@ int CTensorFactory::createTensor( STensor& spTensor, const STensor& spDimVector,
             return errCode;
         }
         spTensor.setPtr((ITensor*)pTensor);
-        return sCtx.Success();
+        return sCtx.success();
     }
-    return sCtx.Error("无法创建指定类型的张量");
+    return sCtx.error("无法创建指定类型的张量");
 }
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

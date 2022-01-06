@@ -9,18 +9,18 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeu
     spConvolution->m_nConvWidth = nWidth;
     spConvolution->m_nConvHeight = nHeight;
     spConvolution->m_nConvs = nConvs;
-    spConvolution->m_pActivator = CActivator::getReLU();
+    spConvolution->m_pActivator = CActivator::getActivation();
     spNetwork.setPtr(spConvolution.getPtr());
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( initWeights(spInTensor) != sCtx.Success() ) {
-        return sCtx.Error();
+    if( initWeights(spInTensor) != sCtx.success() ) {
+        return sCtx.error();
     }
 
     if(spInTensor->getDataSize() != m_nInputData) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     int nInputWidth = m_nInputWidth;
@@ -45,8 +45,8 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     double* pBaisArray = m_spBais;
 
     int nTensor = m_nTensor;
-    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, nTensor * m_nOutTensorSize) != sCtx.Success() ){
-        return sCtx.Error("创建输出张量失败");
+    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, nTensor * m_nOutTensorSize) != sCtx.success() ){
+        return sCtx.error("创建输出张量失败");
     }  
     double* pInArray = spInTensor->getDataPtr<double>();
     double* pOutArray = spOutTensor->getDataPtr<double>();
@@ -78,17 +78,17 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }
     m_spInTensor = spInTensor;
     m_spOutTensor = spOutTensor;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
-        return sCtx.Error("神经网络已经更新，原有数据不能用于学习");
+        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
     spInTensor = m_spInTensor;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.Success() ) {
-        return sCtx.Error(errCode, "创建输入偏差张量失败");
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
     //
@@ -194,6 +194,11 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     double avgDerivation = 0;
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
+        if( DVV(pWeightArray, iWeight, nWeights) > 1) {
+            DVV(pWeightArray, iWeight, nWeights) = 1;
+        }else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
+            DVV(pWeightArray, iWeight, nWeights) = -1;
+        }
         avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
         avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate) / nWeights;
         if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
@@ -203,41 +208,13 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
             minW = DVV(pWeightArray,iWeight,nWeights);
         }
     }
+
     static int t = 0;
     if( (t++ / 2) % 10 == 0) {
+
         std::cout << "Conv " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
     }
-    /*
-    //
-    //  检查梯度下降后的值是否降低
-    //
-    struct CEvalCheck : IVisitor<const PTensor&> {
-        int visit(const PTensor& t) {
-            double delta0 = 0;
-            for(int i=0; i<pOutputDeviation->nData; i++) {
-                delta0 += pOutputDeviation->pDoubleArray[i]*pOutputDeviation->pDoubleArray[i];
-            }
-
-            double delta = 0;
-            for(int i=0; i<pOutputDeviation->nData; i++) {
-                delta += (t.pDoubleArray[i] - pOutput->pDoubleArray[i] + pOutputDeviation->pDoubleArray[i]) * (t.pDoubleArray[i] - pOutput->pDoubleArray[i] + pOutputDeviation->pDoubleArray[i]);
-            }
-
-            if( delta > delta0) {
-                std::cout << ", Conv" << pOutput->nData << ": " << delta0 << " --> " << delta << ", ";
-                //sCtx.Error("怎么下降，偏差越大？");
-            }
-            return sCtx.Success();
-        }
-        const PTensor* pOutput;
-        const PTensor* pOutputDeviation;
-    }evalCheck;
-    evalCheck.pOutput = &outputTensor;
-    evalCheck.pOutputDeviation = &outputDeviation;
-    return eval(inputTensor, &evalCheck);
-    */
-
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
@@ -251,14 +228,14 @@ int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
         // 维度小于3的张量，无法进行卷积运算
         //
         if(nInDims < 3) {
-            return sCtx.Error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
+            return sCtx.error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
         }
 
         int nTensor = pInDimSizes[0];
         int nInputHeight = pInDimSizes[1];
         int nInputWidth = pInDimSizes[2];
         if( nInputHeight < m_nConvWidth || nInputWidth < m_nConvWidth ) {
-            return sCtx.Error("输入张量尺寸需要大于等于卷积核尺寸");
+            return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
         }
 
         int nInputLayers = 1;
@@ -278,8 +255,8 @@ int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
         m_nInputLayers = nInputLayers;
 
         int pOutDimSizes[4] = {nTensor, m_nOutHeight, m_nOutWidth, m_nConvs};
-        if( STensor::createVector<int>(m_spOutDimVector, 4, pOutDimSizes) != sCtx.Success() ) {
-            return sCtx.Error("创建输出张量的维度向量失败");
+        if( STensor::createVector<int>(m_spOutDimVector, 4, pOutDimSizes) != sCtx.success() ) {
+            return sCtx.error("创建输出张量的维度向量失败");
         }
 
         int nWeight = m_nConvWidth*m_nConvHeight*nInputLayers*m_nConvs;
@@ -295,14 +272,21 @@ int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
         //
         // 基础权重最大值为 0.5 / 卷积核权重值的数量
         //
+        /*
         int nConvSize = m_nConvWidth*m_nConvHeight*nInputLayers;
         double xWeight = 1.0/nConvSize;
         for(int i=0; i<nWeight; i++) {
             *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
+        }*/
+
+        for(int i=0; i<nWeight; i++) {
+            *(pWeights+i) = -0.05 + (rand() % 10000 / 10000.0) * 0.1;
         }
+
+
         for(int i=0; i<m_nConvs; i++ ){
             *pBais = 0;
         }
     }
-    return sCtx.Success();
+    return sCtx.success();
 }

@@ -80,13 +80,13 @@ const PAvSample& CAvStreaming::getSampleMeta() {
 
 int CAvStreaming::setSampleMeta(const PAvSample& sampleMeta) {
     m_sampleMeta = sampleMeta;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
     AVCodecParameters* pCodecParameter = pAvStream->codecpar;
     if(pCodecParameter == nullptr) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     CTaker<AVCodecContext*> pCodecCtx(  avcodec_alloc_context3(nullptr), 
@@ -94,18 +94,18 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
                                             avcodec_free_context(&pCtx);
                                         });
     if( avcodec_parameters_to_context(pCodecCtx, pCodecParameter) < 0 ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     AVCodec* pCodec=avcodec_find_decoder(pCodecParameter->codec_id);
     if(pCodec==NULL){
         printf("Codec not found.\n");
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     if(avcodec_open2(pCodecCtx, pCodec,NULL)<0){
         printf("Could not open codec.\n");
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     m_spCodecCtx.take(pCodecCtx);
@@ -129,11 +129,11 @@ int CAvStreaming::init(AVStream* pAvStream, int iStreamingIndex) {
         break;
     }
 
-    if( SAvFactory::getAvFactory()->openAvFrameConverter(m_sampleMeta, m_spConverter) != sCtx.Success()) {
-        return sCtx.Error();
+    if( SAvFactory::getAvFactory()->openAvFrameConverter(m_sampleMeta, m_spConverter) != sCtx.success()) {
+        return sCtx.error();
     }
 
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 
@@ -183,7 +183,7 @@ int CAvStreaming::receiveFrame(PAvFrame::FVisitor receiver, AVFrame* pAvFrame) {
         break;
 
         default:
-            return sCtx.Error();
+            return sCtx.error();
     }
 
     struct CInternalReceiver : IVisitor<const PData&> {

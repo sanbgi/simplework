@@ -9,21 +9,21 @@ int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActiva
     spDense->m_nCells = nCells;
     spDense->m_pActivator = CActivator::getActivation(eActivation);
     spNetwork.setPtr(spDense.getPtr());
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( int errCode = initWeights(spInTensor) != sCtx.Success() ) {
+    if( int errCode = initWeights(spInTensor) != sCtx.success() ) {
         return errCode;
     }
 
     int nInData = spInTensor->getDataSize();
     if(nInData != m_nInputCells * m_nInputTensor) {
-        return sCtx.Error("不支持输入张量尺寸与第一次的张量尺寸不同");
+        return sCtx.error("不支持输入张量尺寸与第一次的张量尺寸不同");
     }
 
-    if( int errCode = STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nInputTensor*m_nCells) != sCtx.Success() ) {
-        return sCtx.Error(errCode, "创建输出张量失败");
+    if( int errCode = STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nInputTensor*m_nCells) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输出张量失败");
     }
 
     int nTensor = m_nInputTensor;
@@ -50,17 +50,17 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
 
     m_spInTensor = spInTensor;
     m_spOutTensor = spOutTensor;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
-        return sCtx.Error("神经网络已经更新，原有数据不能用于学习");
+        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
     spInTensor = m_spInTensor;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.Success() ) {
-        return sCtx.Error(errCode, "创建输入偏差张量失败");
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
     int nTensor = m_nInputTensor;
@@ -164,9 +164,9 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
 
     static int t = 0;
     if( (t++ / 2) % 10 == 0) {
+
         std::cout << "Dense " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
     }
-
     /*
     //
     //  检查梯度下降后的值是否降低
@@ -186,7 +186,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
             if( delta > delta0) {
                 std::cout << ", Dense" << pOutput->nData << ": " << delta0 << " --> " << delta << ", ";
             }
-            return sCtx.Success();
+            return sCtx.success();
         }
         const PTensor* pOutput;
         const PTensor* pOutputDeviation;
@@ -197,19 +197,19 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     return eval(inputTensor, &evalCheck);
     */
     
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CDenseNetwork::initWeights(const STensor& spInTensor) {
     if(m_spOutDimVector) {
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     STensor& spDimVector = spInTensor->getDimVector();
     int nDims = spDimVector->getDataSize();
     int* pDimSizes = spDimVector->getDataPtr<int>();
     if(nDims < 2) {
-        return sCtx.Error("输入张量维度需要大于1，其中第一个维度是张量个数");
+        return sCtx.error("输入张量维度需要大于1，其中第一个维度是张量个数");
     }
 
     int nTensor = pDimSizes[0];
@@ -222,12 +222,12 @@ int CDenseNetwork::initWeights(const STensor& spInTensor) {
     // 检查细胞数量是否合法
     //
     if( m_nCells <= 0 || nInputCells <= 0 ) {
-        return sCtx.Error("不允许全连接网络细胞数或输入细胞数为零");
+        return sCtx.error("不允许全连接网络细胞数或输入细胞数为零");
     }
 
     int pOutDimSizes[2] = { nTensor, m_nCells };
-    if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.Success() ) {
-        return sCtx.Error(errCode, "创建神经网络输出张量维度向量失败");
+    if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
     }
 
     //
@@ -235,7 +235,7 @@ int CDenseNetwork::initWeights(const STensor& spInTensor) {
     //
     if( m_nInputCells >= nInputCells ) {
         m_nInputCells = nInputCells;
-        return sCtx.Success();
+        return sCtx.success();
     }
 
     if(m_nInputCells != 0) {
@@ -244,10 +244,10 @@ int CDenseNetwork::initWeights(const STensor& spInTensor) {
     }
 
     int nWeight = m_nCells*nInputCells;
-    double* pWeight = new double[nWeight];
+    double* pWeights = new double[nWeight];
     double* pBais = new double[m_nCells];
-    m_spWeights.take(pWeight, [](double* pWeight){
-        delete[] pWeight;
+    m_spWeights.take(pWeights, [](double* pWeights){
+        delete[] pWeights;
     });
     m_spBais.take(pBais, [](double* pBais){
         delete[] pBais;
@@ -256,9 +256,13 @@ int CDenseNetwork::initWeights(const STensor& spInTensor) {
     //
     // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
     //
+    /*
     double xWeight = 1.0/nInputCells;
     for(int i=0; i<nWeight; i++) {
-        *(pWeight+i) = (rand() % 10000 / 10000.0) * xWeight;
+        *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
+    }*/
+    for(int i=0; i<nWeight; i++) {
+        *(pWeights+i) = -0.05 + (rand() % 10000 / 10000.0) * 0.1;
     }
     for(int i=0; i<m_nCells; i++ ){
         *(pBais+i) = 0;
@@ -266,5 +270,5 @@ int CDenseNetwork::initWeights(const STensor& spInTensor) {
 
     m_nInputCells = nInputCells;
     m_nInputTensor = nTensor;
-    return sCtx.Success();
+    return sCtx.success();
 }

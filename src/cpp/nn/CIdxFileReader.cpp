@@ -9,14 +9,14 @@ static SCtx sCtx("CIdxFileReader");
 
 int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
     if(m_nTensor == 0) {
-        return sCtx.Error("文件读取完毕");
+        return sCtx.error("文件读取完毕");
     }
 
     //
     // 如果张量数据已经读完，则返回一个空张量
     //
     if(spIn->getDataSize() != 1 || spIn->getDataType() != CBasicData<int>::getStaticType() ) {
-        return sCtx.Error("IDX文件读取的输入张量需要是一个整数，代表要读取多少张量");
+        return sCtx.error("IDX文件读取的输入张量需要是一个整数，代表要读取多少张量");
     }
 
     int nRead = spIn->getDataAt<int>(0);
@@ -29,25 +29,25 @@ int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
     if( !m_spDimVector ) {
         int* pDimSizes = m_spDims;
         pDimSizes[0] = nRead;
-        if( STensor::createVector(m_spDimVector, m_nDims, pDimSizes) != sCtx.Success() ) {
-            return sCtx.Error("创建输出维度向量失败");
+        if( STensor::createVector(m_spDimVector, m_nDims, pDimSizes) != sCtx.success() ) {
+            return sCtx.error("创建输出维度向量失败");
         }
     }
 
-    if( STensor::createTensor(spOut, m_spDimVector, m_iEleType, m_nEleSize*nRead) != sCtx.Success() ) {
-        return sCtx.Error("创建输出维度向量失败");
+    if( STensor::createTensor(spOut, m_spDimVector, m_iEleType, m_nEleSize*nRead) != sCtx.success() ) {
+        return sCtx.error("创建输出维度向量失败");
     }
 
     int nData = m_nEleSize*nRead;
     int nSize = m_nEleByte*nData;
     unsigned char* pData = (unsigned char*)spOut->getDataPtr(m_iEleType);
     if( !m_file.read((char*)pData, nSize) ){
-        return sCtx.Error(string("IDX文件数据数据不完整，读取失败").c_str());
+        return sCtx.error(string("IDX文件数据数据不完整，读取失败").c_str());
     }
     highEndianToCPU(nData, m_nEleByte, pData);
 
     m_nTensor-=nRead;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CIdxFileReader::createReader(const char* szFileName, SNeuralPipe& spPipe) {
@@ -61,16 +61,16 @@ int CIdxFileReader::createReader(const char* szFileName, SNeuralPipe& spPipe) {
     ifstream& idxFile = spReader->m_file;
     idxFile.open(szFileName, ios_base::binary);
     if( !idxFile.is_open() ) {
-        return sCtx.Error(string(string("读取IDX文件失败，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("读取IDX文件失败，文件名: ") + szFileName).c_str());
     }
 
     unsigned char headerArray[4];
     if( !idxFile.read((char*)headerArray, 4) ) {
-        return sCtx.Error(string(string("无法读取IDX文件头信息，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("无法读取IDX文件头信息，文件名: ") + szFileName).c_str());
     }
 
     if( headerArray[0] != 0 || headerArray[1] != 0) {
-        return sCtx.Error(string(string("IDX文件格式错误，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("IDX文件格式错误，文件名: ") + szFileName).c_str());
     }
 
     int nEleByte = 0;
@@ -107,7 +107,7 @@ int CIdxFileReader::createReader(const char* szFileName, SNeuralPipe& spPipe) {
             break;
 
         default:
-            return sCtx.Error(string(string("IDX文件数据类型未知，文件名: ") + szFileName).c_str());
+            return sCtx.error(string(string("IDX文件数据类型未知，文件名: ") + szFileName).c_str());
     }
 
     int nDims = headerArray[3];
@@ -116,7 +116,7 @@ int CIdxFileReader::createReader(const char* szFileName, SNeuralPipe& spPipe) {
     });
     int* pDimSize = spReader->m_spDims;
     if( !idxFile.read((char*)pDimSize, sizeof(int)*nDims) ) {
-        return sCtx.Error(string(string("IDX文件数据数据不完整，读取维度信息失败，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("IDX文件数据数据不完整，读取维度信息失败，文件名: ") + szFileName).c_str());
     }
     highEndianToCPU(nDims, sizeof(int), (unsigned char*)pDimSize);
 
@@ -130,7 +130,7 @@ int CIdxFileReader::createReader(const char* szFileName, SNeuralPipe& spPipe) {
     spReader->m_nDims = nDims;
     spReader->m_iEleType = idType;
     spPipe.setPtr(spReader.getPtr());
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 void CIdxFileReader::highEndianToCPU(int nData, int nDataByte, unsigned char* pData) {
@@ -162,16 +162,16 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
     //
     ifstream idxFile(szFileName, ios_base::binary);
     if( !idxFile.is_open() ) {
-        return sCtx.Error(string(string("读取IDX文件失败，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("读取IDX文件失败，文件名: ") + szFileName).c_str());
     }
 
     unsigned char headerArray[4];
     if( !idxFile.read((char*)headerArray, 4) ) {
-        return sCtx.Error(string(string("无法读取IDX文件头信息，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("无法读取IDX文件头信息，文件名: ") + szFileName).c_str());
     }
 
     if( headerArray[0] != 0 || headerArray[1] != 0) {
-        return sCtx.Error(string(string("IDX文件格式错误，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("IDX文件格式错误，文件名: ") + szFileName).c_str());
     }
 
     int nEleByte = 0;
@@ -208,13 +208,13 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
             break;
 
         default:
-            return sCtx.Error(string(string("IDX文件数据类型未知，文件名: ") + szFileName).c_str());
+            return sCtx.error(string(string("IDX文件数据类型未知，文件名: ") + szFileName).c_str());
     }
 
     int nDims = headerArray[3];
     int pDimSize[nDims];
     if( !idxFile.read((char*)pDimSize, sizeof(int)*nDims) ) {
-        return sCtx.Error(string(string("IDX文件数据数据不完整，读取维度信息失败，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("IDX文件数据数据不完整，读取维度信息失败，文件名: ") + szFileName).c_str());
     }
     highEndianToCPU(nDims, sizeof(int), (unsigned char*)pDimSize);
 
@@ -224,20 +224,20 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
     }
 
     STensor spDimVector;
-    if( STensor::createVector(spDimVector, nDims, pDimSize) != sCtx.Success() ) {
-        return sCtx.Error("创建张量的维度向量失败");
+    if( STensor::createVector(spDimVector, nDims, pDimSize) != sCtx.success() ) {
+        return sCtx.error("创建张量的维度向量失败");
     }
     STensor spTensor;
-    if( STensor::createTensor(spTensor, spDimVector, idType, nData) != sCtx.Success() ) {
-        return sCtx.Error("创建张量失败");
+    if( STensor::createTensor(spTensor, spDimVector, idType, nData) != sCtx.success() ) {
+        return sCtx.error("创建张量失败");
     }
 
     int nSize = nDims*sizeof(int) + nData*nEleByte;
     unsigned char* pData = (unsigned char*)spTensor->getDataPtr(idType);
     if( !idxFile.read((char*)pData, nData*nEleByte) ){
-        return sCtx.Error(string(string("IDX文件数据数据不完整，读取数据信息失败，文件名: ") + szFileName).c_str());
+        return sCtx.error(string(string("IDX文件数据数据不完整，读取数据信息失败，文件名: ") + szFileName).c_str());
     }
     highEndianToCPU(nData, nEleByte, pData);
     spData = spTensor;
-    return sCtx.Success();
+    return sCtx.success();
 }

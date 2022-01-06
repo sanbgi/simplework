@@ -5,8 +5,8 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
 
     int nSize = spIn->getDataSize();
     STensor spOutTensor;
-    if( STensor::createTensor<double>(spOutTensor, spIn->getDimVector(), nSize ) != sCtx.Success() ) {
-        return sCtx.Error("创建标准化张量失败");
+    if( STensor::createTensor<double>(spOutTensor, spIn->getDimVector(), nSize ) != sCtx.success() ) {
+        return sCtx.error("创建标准化张量失败");
     }
 
     unsigned int iInType = spIn->getDataType();
@@ -17,10 +17,10 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
             pDesc[i] = pSrc[i] / 256.0;
         }
         spOut = spOutTensor;
-        return sCtx.Success();
+        return sCtx.success();
     }
 
-    return sCtx.Error("不支持的归一化输入类型");
+    return sCtx.error("不支持的归一化输入类型");
 }
 
 int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) {
@@ -43,8 +43,8 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     //
     int nSize = spIn->getDataSize();
     STensor spOutTensor;
-    if( STensor::createTensor<double>(spOutTensor, spNewDimVector, nSize*nClassify ) != sCtx.Success() ) {
-        return sCtx.Error("创建标准化张量失败");
+    if( STensor::createTensor<double>(spOutTensor, spNewDimVector, nSize*nClassify ) != sCtx.success() ) {
+        return sCtx.error("创建标准化张量失败");
     }
 
     //
@@ -60,8 +60,8 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
             }
         }
         spOut = spOutTensor;
-        return sCtx.Success();
+        return sCtx.success();
     }
 
-    return sCtx.Error("不支持的归一化输入类型");
+    return sCtx.error("不支持的归一化输入类型");
 }

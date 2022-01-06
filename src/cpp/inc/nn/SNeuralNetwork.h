@@ -17,6 +17,7 @@ public:
     // 激活函数
     //
     enum EACTIVATION {
+        ACTIVATION_Default,
         ACTIVATION_ReLU,
         ACTIVATION_LeakyReLU,
         ACTIVATION_Softmax
@@ -102,7 +103,7 @@ public:
         return g_factory;
     }
 
-    static SNeuralNetwork createDense(int nCells, EACTIVATION eActivation=ACTIVATION_ReLU) {
+    static SNeuralNetwork createDense(int nCells, EACTIVATION eActivation=ACTIVATION_Default) {
         SNeuralNetwork nn;
         getFactory()->createDense(nCells,eActivation,nn);
         return nn;

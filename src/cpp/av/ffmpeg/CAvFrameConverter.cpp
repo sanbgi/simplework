@@ -32,17 +32,17 @@ int CAvFrameConverter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visito
         case EAvSampleType::AvSampleType_Video:
             return convertVideo(pSrc, visitor);
     }
-    return sCtx.Error();
+    return sCtx.error();
 }
 
 int CAvFrameConverter::createFilter(const PAvSample& targetSample, SPipe& spFilter) {
     CPointer<CAvFrameConverter> spAvFrameConverter;
     CObject::createObject(spAvFrameConverter);
-    if( spAvFrameConverter->initFilter(targetSample) != sCtx.Success()) {
-        return sCtx.Error();
+    if( spAvFrameConverter->initFilter(targetSample) != sCtx.success()) {
+        return sCtx.error();
     }
     spFilter.setPtr((IPipe*)spAvFrameConverter);
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 int CAvFrameConverter::initFilter(const PAvSample& targetSample) {
@@ -57,11 +57,11 @@ int CAvFrameConverter::initFilter(const PAvSample& targetSample) {
             break;
 
         default:
-            return sCtx.Error();
+            return sCtx.error();
     }
     m_targetFormat = fmt;
     m_targetSample = targetSample;
-    return sCtx.Success();
+    return sCtx.success();
 }
 
 CAvFrameConverter::CAvFrameConverter(){
@@ -149,14 +149,14 @@ int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor vis
             0
         );
         if(pSwsContext == nullptr) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         m_spSwsContext.take(pSwsContext, sws_freeContext);
         if( av_image_alloc(m_pVideoData, m_pVideoLinesizes,
             targetWidth, targetHeight, targetFormat, 1) < 0 ){
             releaseVideoCtx();
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         m_lastSourceFormat = CFormat(sourceWidth, sourceHeight, sourceFormat);
@@ -179,7 +179,7 @@ int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor vis
 
     // 如果转化结果尺寸与想要的目标尺寸不一致，则转化失败
     if( ret_height != m_targetFormat.m_nHeight ) {
-        return sCtx.Error();
+        return sCtx.error();
     }
 
     // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
@@ -240,12 +240,12 @@ int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor vis
                             swr_free(&pCtx);
         });
         if( !m_spSwrCtx ) {
-            return sCtx.Error();
+            return sCtx.error();
         }
 
         if( swr_init(m_spSwrCtx) < 0 ) {
             releaseAudioCtx();
-            return sCtx.Error();
+            return sCtx.error();
         }
         m_lastSourceFormat = CFormat(sourceRate, sourceChannels, sourceFormat);
     }
@@ -258,7 +258,7 @@ int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor vis
                         targetChannels, nTargetSamples, 
                         targetFormat, 0) <0 ){
         releaseVideoCtx();
-        return sCtx.Error();
+        return sCtx.error();
     }
     
     //
@@ -273,7 +273,7 @@ int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor vis
     if (nb_samples < 0) {
         printf("swr_convert() failed\n");
         releaseAudioCtx();
-        return sCtx.Error();
+        return sCtx.error();
     }
     if (nb_samples == nTargetSamples)
     {

@@ -6,7 +6,7 @@ __SimpleWork_Core_Namespace_Enter__
 
 void CCtx::logError(const char* szError) {
     if(szError != nullptr)
-        std::cout << "Error: " << m_strModule << "," << szError << "\n";
+        std::cout << "error: " << m_strModule << "," << szError << "\n";
 }
 
 void CCtx::logWarning(const char* szWarning) {

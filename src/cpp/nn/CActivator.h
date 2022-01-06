@@ -28,10 +28,9 @@ public:
     //
     virtual void activate( int nData, double* pZArray, double* pYArray);
     virtual void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray);
-    virtual double loss(int nData, double* pYArray, double* pYDeltaArray);
 
 public:
-    static CActivator* getActivation(SNeuralNetwork::EACTIVATION eActivation);
+    static CActivator* getActivation(SNeuralNetwork::EACTIVATION eActivation = SNeuralNetwork::ACTIVATION_Default);
 
 public:
     static CActivator* getReLU();
@@ -40,6 +39,7 @@ public:
     static CActivator* getSigmod();
     static CActivator* getTanh();
     static CActivator* getSoftmax();
+    static CActivator* getNeuralActivator();
 };
 
 #endif//__SimpleWork_NN_CActivation_H__
