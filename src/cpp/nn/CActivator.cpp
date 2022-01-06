@@ -12,6 +12,7 @@ CActivator* CActivator::getActivation(SNeuralNetwork::EACTIVATION eActivation) {
         case SNeuralNetwork::ACTIVATION_Softmax:
             return getSoftmax();
     }
+    //return getReLU();
     return getNeuralActivator();
 }
 

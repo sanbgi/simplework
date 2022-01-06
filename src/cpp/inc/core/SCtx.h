@@ -44,6 +44,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Ctx)
     int success() {
         return SError::ERRORTYPE_SUCCESS;
     }
+
+private:
     IFace* getCtx() {
         if( !(*this) ) {
             SCoreFactory::getFactory()->createCtx(m_szModule, *this);

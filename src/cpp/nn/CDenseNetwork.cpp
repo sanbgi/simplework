@@ -71,6 +71,15 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     double* pWeightArray = m_spWeights;
     double* pBaisArray = m_spBais;
 
+    #ifdef _DEBUG
+    double avgWeight = 0;
+    double maxW = -100000;
+    double minW = 100000;
+    double avgDerivation = 0;
+    double avgOutDerivation = 0;
+    double avgBais = 0;
+    #endif//_DEBUG
+
     //
     // 学习率先固定
     //
@@ -98,6 +107,10 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         //  调整权重
         //
         for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
+
+            #ifdef _DEBUG
+            avgOutDerivation += abs(DVV(pOutputDeviationArray, iOutput, m_nCells)) / m_nCells / nTensor;
+            #endif//_DEBUG
 
             //
             //  计算目标函数对当前输出值的偏导数
@@ -146,27 +159,38 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         pInputDeviationArray += nInputTensorSize;
     }
 
-    double avgWeight = 0;
-    double maxW = -100000;
-    double minW = 100000;
-    double avgDerivation = 0;
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
+
+        //权重值范围是否需要限制为[-1,1]?
+        if( DVV(pWeightArray, iWeight, nWeights) > 1) {
+            DVV(pWeightArray, iWeight, nWeights) = 1;
+        }else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
+            DVV(pWeightArray, iWeight, nWeights) = -1;
+        }
+    }
+
+    #ifdef _DEBUG
+
+    for(int iWeight=0;iWeight<nWeights; iWeight++) {
         avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
         avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate) / nWeights;
         if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
             maxW = DVV(pWeightArray,iWeight,nWeights);
-        }
+        }else
         if(minW > DVV(pWeightArray,iWeight,nWeights)) {
             minW = DVV(pWeightArray,iWeight,nWeights);
         }
     }
+    for(int iBais = 0; iBais<m_nCells; iBais++) {
+        avgBais += abs(DVV(pBaisArray, iBais, m_nCells)) / m_nCells;
+    }
 
     static int t = 0;
     if( (t++ / 2) % 10 == 0) {
-
-        std::cout << "Dense " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
+        std::cout << "Dense: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
     }
+    #endif//_DEBUG
     /*
     //
     //  检查梯度下降后的值是否降低
@@ -261,11 +285,12 @@ int CDenseNetwork::initWeights(const STensor& spInTensor) {
     for(int i=0; i<nWeight; i++) {
         *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
     }*/
+    double xWeight = 0.1;//sqrt(1.0/nInputCells);
     for(int i=0; i<nWeight; i++) {
-        *(pWeights+i) = -0.05 + (rand() % 10000 / 10000.0) * 0.1;
+        pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
     }
     for(int i=0; i<m_nCells; i++ ){
-        *(pBais+i) = 0;
+        pBais[i] = 0;
     }
 
     m_nInputCells = nInputCells;

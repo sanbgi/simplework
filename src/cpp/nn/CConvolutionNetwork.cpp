@@ -123,6 +123,15 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     double* pWeightDerivationArray = spWeightDeviationArray;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
 
+    #ifdef _DEBUG
+    double avgOutDerivation = 0;
+    double avgWeight = 0;
+    double maxW = -100000;
+    double minW = 100000;
+    double avgDerivation = 0;
+    double avgBais = 0;
+    #endif//_DEBUG
+
     int nTensor = m_nTensor;
     double dLearnRate = 5.0 / nConvSize;
     double* pOutArray = spOutTensor->getDataPtr<double>();
@@ -132,7 +141,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     int nOutHsize = nOutputWidth*nConvs;
     int nOutWsize = nConvs;
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
-
         double pDerivationZ[nOutputTensorSize];
         m_pActivator->deactivate(nOutputTensorSize, pOutArray, pOutputDeviationArray, pDerivationZ);
         for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHsize ) {
@@ -140,6 +148,10 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                 double* pConvWeights = pWeightArray;
                 double* pConvWeightDeviations = pWeightDerivationArray;
                 for( int iConv = 0; iConv < nConvs; iConv++) {
+
+                    #ifdef _DEBUG
+                    avgOutDerivation += abs(pOutputDeviationArray[iOutWAt+iConv]) / nOutputTensorSize / nTensor ;
+                    #endif//_DEBUG
 
                     //
                     //  计算目标函数对当前输出值的偏导数
@@ -175,7 +187,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
                     //
-                    DVV(pBaisArray,iConv,nConvs) -= (-derivationZ) * dLearnRate;
+                    //DVV(pBaisArray,iConv,nConvs) -= (-derivationZ) * dLearnRate;
                     pConvWeightDeviations += nConvSize;
                     pConvWeights += nConvSize;
                 }
@@ -188,19 +200,23 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         pInputDeviationArray += nInputTensorSize;
     }
 
-    double avgWeight = 0;
-    double maxW = -100000;
-    double minW = 100000;
-    double avgDerivation = 0;
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
-        if( DVV(pWeightArray, iWeight, nWeights) > 1) {
-            DVV(pWeightArray, iWeight, nWeights) = 1;
-        }else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
-            DVV(pWeightArray, iWeight, nWeights) = -1;
-        }
+
+        //权重值范围是否需要限制为[-1,1]?
+        //if( DVV(pWeightArray, iWeight, nWeights) > 1) {
+        //    DVV(pWeightArray, iWeight, nWeights) = 1;
+        //}else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
+        //    DVV(pWeightArray, iWeight, nWeights) = -1;
+        //}
+    }
+
+    #ifdef _DEBUG
+
+    for(int iWeight=0;iWeight<nWeights; iWeight++) {
         avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
         avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate) / nWeights;
+
         if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
             maxW = DVV(pWeightArray,iWeight,nWeights);
         }
@@ -208,12 +224,15 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
             minW = DVV(pWeightArray,iWeight,nWeights);
         }
     }
-
+    for(int iConv = 0; iConv<nConvs; iConv++) {
+        avgBais += abs(DVV(pBaisArray, iConv, nConvs)) / nConvs;
+    }
+    
     static int t = 0;
     if( (t++ / 2) % 10 == 0) {
-
-        std::cout << "Conv " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , AD: " << avgDerivation << "\n";
+        std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
     }
+    #endif//_DEBUG
     return sCtx.success();
 }
 
@@ -279,13 +298,13 @@ int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
             *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
         }*/
 
+        double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInputLayers));
         for(int i=0; i<nWeight; i++) {
-            *(pWeights+i) = -0.05 + (rand() % 10000 / 10000.0) * 0.1;
+            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
         }
 
-
         for(int i=0; i<m_nConvs; i++ ){
-            *pBais = 0;
+            pBais[i] = 0;
         }
     }
     return sCtx.success();

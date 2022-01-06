@@ -14,7 +14,7 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
         unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
         double* pDesc = spOutTensor->getDataPtr<double>();
         for(int i=0; i<nSize; i++) {
-            pDesc[i] = pSrc[i] / 256.0;
+            pDesc[i] = pSrc[i] / 255.0;
         }
         spOut = spOutTensor;
         return sCtx.success();

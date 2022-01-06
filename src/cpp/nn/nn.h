@@ -3,6 +3,10 @@
 
 #include "../inc/nn/nn.h"
 
+#ifndef _DEBUG
+#define _DEBUG
+#endif//_DEBUG
+
 #ifdef _DEBUG
 #define CHECK_POINTER
 #endif//

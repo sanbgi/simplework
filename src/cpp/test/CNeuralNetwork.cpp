@@ -59,17 +59,17 @@ void CNeuralNetwork::run() {
             double xAcc = 0;
             double delta = 0;
             for(int i=0; i<nOutDeviation; i++) {
-                if( pOutTarget[i] > 0.9999999 ) {
+                if( pOutTarget[i] > 0.9 ) {
                     if(pOutDeviation[i] > -0.1) {
                         nAcc++;
                     }
-                    xAcc += -pOutDeviation[i]/10;
+                    xAcc += abs(pOutDeviation[i]) / nOutDeviation * 10;
                 }
-                delta += pOutDeviation[i] * pOutDeviation[i];
+                delta += abs(pOutDeviation[i]) / nOutDeviation;
             }
             static int t = 0;
             if( t++ % 10 == 0) {
-                std::cout << "\rtrain:" << t << ", delta :" << delta <<", nAcc:" << nAcc << ", xAcc:" << xAcc<< "\n";
+                std::cout << "\rtrain:" << t << ", avgDelta :" << delta <<", nAcc:" << nAcc << ", avgAccDelta:" << xAcc<< "\n";
             }
         }
     }
