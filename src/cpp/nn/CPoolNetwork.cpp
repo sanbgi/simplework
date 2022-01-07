@@ -30,39 +30,73 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     int nLayer = m_nInputLayer;
     int nInputTensorSize = m_nInputTensorSize;
     int nOutputTensorSize = m_nOutTensorSize;
-    {
-        int nInputHstep = m_nInputWidth * nLayer;
-        int nInputWstep = nLayer;
 
-        int nInStrideHstep = nInputHstep * m_nStrideHeight;
-        int nInStrideWstep = nInputWstep * m_nStrideWidth;
+    int nInputHstep = m_nInputWidth * nLayer;
+    int nInputWstep = nLayer;
 
-        int nOutHstep = m_nOutWidth * nLayer;
-        int nOutWstep = nLayer;
-        
-        double* pInArray = spInTensor->getDataPtr<double>();
-        double* pOutArray = spOutTensor->getDataPtr<double>();
-        for(int iTensor = 0; iTensor < nTensor; iTensor++ ) {
-            for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
-                for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
-                    for(int iLayer=0, iPoolInLAt=iInWAt; iLayer<nLayer; iLayer++, iPoolInLAt++) {
-                        double dMax = DVV(pInArray, iPoolInLAt, nInputTensorSize);
-                        for( int iPoolH=0, iPoolInHAt=iPoolInLAt; iPoolH<nPoolHeight; iPoolH++, iPoolInHAt+=nInputHstep) {
-                            for( int iPoolW=0, iPoolInWAt=iPoolInHAt; iPoolW<nPoolWidth; iPoolW++, iPoolInWAt+=nInputWstep) {
-                                double dValue = DVV(pInArray, iPoolInWAt, nInputTensorSize);
-                                if( dValue > dMax) {
-                                    dMax = dValue;
-                                }
+    int nInStrideHstep = nInputHstep * m_nStrideHeight;
+    int nInStrideWstep = nInputWstep * m_nStrideWidth;
+
+    int nOutHstep = m_nOutWidth * nLayer;
+    int nOutWstep = nLayer;
+
+    struct CItOutVariables {
+        double* pIn;
+        double* pOut;
+    }it = {
+        spInTensor->getDataPtr<double>(),
+        spOutTensor->getDataPtr<double>(),
+    };
+    for(int iTensor=0; iTensor<nTensor; iTensor++) {
+        CItOutVariables varTBackup = {
+            it.pIn,
+            it.pOut,
+        };
+        for( int iOutY=0; iOutY < nOutHeight; iOutY++) {
+            CItOutVariables varOYBackup;
+            varOYBackup.pIn = it.pIn;
+            varOYBackup.pOut = it.pOut;
+            for( int iOutX=0; iOutX < nOutWidth; iOutX++) {
+                CItOutVariables varOXBackup;
+                varOXBackup.pIn = it.pIn;
+                varOXBackup.pOut = it.pOut;
+                for( int iLayer = 0; iLayer < nLayer; iLayer++) {
+                    CItOutVariables varConvBackup;
+                    varConvBackup.pIn = it.pIn;
+                    varConvBackup.pOut = it.pOut;
+
+                    double dMax = (*it.pIn);
+
+                    //
+                    //  从输入中找到最大的那个值
+                    //  
+                    for( int iConvY=0; iConvY<nPoolHeight; iConvY++) {
+                        CItOutVariables varConvYBackup;
+                        varConvYBackup.pIn = it.pIn;
+                        for( int iConvX=0; iConvX<nPoolWidth; iConvX++) {
+                            if( (*it.pIn) > dMax) {
+                                dMax = (*it.pIn);
                             }
+                            it.pIn += nInputWstep;
                         }
-                        DVV(pOutArray, iOutWAt+iLayer, nOutputTensorSize) = dMax;
+                        it.pIn = varConvYBackup.pIn + nInputHstep;
                     }
+
+                    (*it.pOut) = dMax;
+
+                    it.pIn = varConvBackup.pIn + 1;
+                    it.pOut = varConvBackup.pOut + 1;;
                 }
+                it.pIn = varOXBackup.pIn + nInStrideWstep;
+                it.pOut = varOXBackup.pOut + nOutWstep;
             }
-            pInArray+=nInputTensorSize;
-            pOutArray+=nOutputTensorSize;
+            it.pIn = varOYBackup.pIn + nInStrideHstep;
+            it.pOut = varOYBackup.pOut + nOutHstep;
         }
+        it.pIn = varTBackup.pIn + nInputTensorSize;
+        it.pOut = varTBackup.pOut + nOutputTensorSize;
     }
+    
     m_spInTensor = spInTensor;
     m_spOutTensor = spOutTensor;
     return sCtx.success();
@@ -103,34 +137,82 @@ int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviatio
     int nOutHstep = nOutWidth * nLayer;
     int nOutWstep = nLayer;
 
-    double* pInArray = spInTensor->getDataPtr<double>();
-    double* pOutDeltaArray = spOutDeviation->getDataPtr<double>();
-    double* pInDeltaArray = pDeviationInputArray;
-    for(int iTensor = 0; iTensor < nTensor; iTensor++ ) {
-        for( int iOutH=0, iInHAt=0, iOutHAt=0; iOutH < nOutHeight; iOutH++, iInHAt+=nInStrideHstep, iOutHAt += nOutHstep ) {
-            for( int iOutW = 0, iInWAt=iInHAt, iOutWAt=iOutHAt; iOutW < nOutWidth; iOutW++, iInWAt+=nInStrideWstep, iOutWAt+=nOutWstep) {
-                for(int iLayer=0, iPoolInLAt=iInWAt; iLayer<nLayer; iLayer++, iPoolInLAt++) {
-                    double dMax = DVV(pInArray, iPoolInLAt, nInputTensorSize);
-                    double* pExpectDelta = nullptr;
-                    for( int iPoolH=0, iPoolInHAt=iPoolInLAt; iPoolH<nPoolHeight; iPoolH++, iPoolInHAt+=nInputHstep) {
-                        for( int iPoolW=0, iPoolInWAt=iPoolInHAt; iPoolW<nPoolWidth; iPoolW++, iPoolInWAt+=nInputWstep) {
-                            double dValue = DVV(pInArray, iPoolInWAt, nInputTensorSize);
-                            if( dValue > dMax) {
-                                dMax = dValue;
-                                pExpectDelta = &DVV(pInDeltaArray, iPoolInWAt, nInputTensorSize);
+    struct CItOutVariables {
+        double* pIn;
+        double* pInDeviation;
+        double* pOutDeviation;
+    }it = {
+        spInTensor->getDataPtr<double>(),
+        spInDeviation->getDataPtr<double>(),
+        spOutDeviation->getDataPtr<double>(),
+    };
+    for(int iTensor=0; iTensor<nTensor; iTensor++) {
+        CItOutVariables varTBackup = {
+            it.pIn,
+            it.pInDeviation,
+            it.pOutDeviation
+        };
+        for( int iOutY=0; iOutY < nOutHeight; iOutY++) {
+            CItOutVariables varOYBackup;
+            varOYBackup.pIn = it.pIn;
+            varOYBackup.pInDeviation = it.pInDeviation;
+            varOYBackup.pOutDeviation = it.pOutDeviation;
+            for( int iOutX=0; iOutX < nOutWidth; iOutX++) {
+                CItOutVariables varOXBackup;
+                varOXBackup.pIn = it.pIn;
+                varOXBackup.pInDeviation = it.pInDeviation;
+                varOXBackup.pOutDeviation = it.pOutDeviation;
+                for( int iLayer = 0; iLayer < nLayer; iLayer++) {
+                    CItOutVariables varConvBackup;
+                    varConvBackup.pIn = it.pIn;
+                    varConvBackup.pInDeviation = it.pInDeviation;
+                    varConvBackup.pOutDeviation = it.pOutDeviation;
+
+                    double dMax = (*it.pIn);
+                    double* pExpectDelta = it.pInDeviation;
+
+                    //
+                    //  从输入中找到最大的那个点，作为反向传到的点
+                    //  
+                    for( int iConvY=0; iConvY<nPoolHeight; iConvY++) {
+                        CItOutVariables varConvYBackup;
+                        varConvYBackup.pIn = it.pIn;
+                        varConvYBackup.pInDeviation = it.pInDeviation;
+                        for( int iConvX=0; iConvX<nPoolWidth; iConvX++) {
+                            if( (*it.pIn) > dMax) {
+                                dMax = (*it.pIn);
+                                pExpectDelta = it.pInDeviation;
                             }
+                            it.pIn += nInputWstep;
+                            it.pInDeviation += nInputWstep;
                         }
+                        it.pIn = varConvYBackup.pIn + nInputHstep;
+                        it.pInDeviation = varConvYBackup.pInDeviation + nInputHstep;
                     }
-                    if(pExpectDelta) {
-                        *pExpectDelta = DVV(pOutDeltaArray,iOutWAt+iLayer, nOutputTensorSize);
-                    }
+
+                    (*pExpectDelta) = (*it.pOutDeviation);
+
+                    it.pIn = varConvBackup.pIn + 1;
+                    it.pInDeviation = varConvBackup.pInDeviation + 1;
+                    it.pOutDeviation = varConvBackup.pOutDeviation + 1;;
                 }
+
+                it.pIn = varOXBackup.pIn + nInStrideWstep;
+                it.pInDeviation = varOXBackup.pInDeviation + nInStrideWstep;
+                it.pOutDeviation = varOXBackup.pOutDeviation + nOutWstep;
             }
+
+            it.pIn = varOYBackup.pIn + nInStrideHstep;
+            it.pInDeviation = varOYBackup.pInDeviation + nInStrideHstep;
+            it.pOutDeviation = varOYBackup.pOutDeviation + nOutHstep;
         }
-        pInArray+=nInputTensorSize;
-        pInDeltaArray+=nInputTensorSize;
-        pOutDeltaArray+=nOutputTensorSize;
+
+        //  更新迭代参数
+        it.pIn = varTBackup.pIn + nInputTensorSize;
+        it.pInDeviation = varTBackup.pInDeviation + nInputTensorSize;
+        it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
     }
+    
     return sCtx.success();
 }
 

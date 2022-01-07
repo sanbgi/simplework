@@ -66,7 +66,6 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
             it.pIn,
             it.pOut,
         };
-
         for( int iOutY=0; iOutY < nOutputHeight; iOutY++) {
             CItOutVariables varOYBackup;
             varOYBackup.pIn = it.pIn;
@@ -82,7 +81,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pWeights = it.pWeights;
 
-                    double dConv = 0;  
+                    double dConv = 0;
                     for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
                         CItOutVariables varConvYBackup;
                         varConvYBackup.pIn = it.pIn;
