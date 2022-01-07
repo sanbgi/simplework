@@ -1,6 +1,7 @@
 #include "CConvolutionNetwork.h"
 #include "math.h"
 #include "iostream"
+#include <time.h>
 
 SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
@@ -47,35 +48,85 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     int nTensor = m_nTensor;
     if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, nTensor * m_nOutTensorSize) != sCtx.success() ){
         return sCtx.error("创建输出张量失败");
-    }  
-    double* pInArray = spInTensor->getDataPtr<double>();
-    double* pOutArray = spOutTensor->getDataPtr<double>();
+    }
     int nOutHstep = nOutputWidth*nConvs;
     int nOutWstep = nConvs;
+    struct CItOutVariables {
+        double* pIn;
+        double* pOut;
+        double* pWeights;
+        double* pBais;
+    }it = {
+        spInTensor->getDataPtr<double>(),
+        spOutTensor->getDataPtr<double>(),
+        m_spWeights,
+        m_spBais
+    };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
-        for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHstep ) {
-            for( int iOutX = 0, iOutWAt=iOutHAt; iOutX < nOutputWidth; iOutX++, iOutWAt+=nOutWstep ) {
-                double* pConvWeights = pWeightArray;
+        CItOutVariables varTBackup = {
+            it.pIn,
+            it.pOut,
+        };
+
+        for( int iOutY=0; iOutY < nOutputHeight; iOutY++) {
+            CItOutVariables varOYBackup;
+            varOYBackup.pIn = it.pIn;
+            varOYBackup.pOut = it.pOut;
+            for( int iOutX=0; iOutX < nOutputWidth; iOutX++) {
+                CItOutVariables varOXBackup;
+                varOXBackup.pIn = it.pIn;
+                varOXBackup.pOut = it.pOut;
+                varOXBackup.pWeights = it.pWeights;
+                varOXBackup.pBais = it.pBais;
                 for( int iConv = 0; iConv < nConvs; iConv++) {
-                    double dConv = 0;
-                    int iInputH = iOutY * nInputHeightStep + iOutX * nInputWidthStep;
-                    for( int iConvY=0, iWeightH=0; iConvY<nConvHeight; iConvY++, iWeightH+=nConvHeightStep, iInputH+=nInputHeightStep) {
-                        for( int iConvX=0, iWeightW=iWeightH, iInputW=iInputH; iConvX<nConvWidth; iConvX++, iWeightW+=nConvWidthStep, iInputW+=nInputWidthStep ) {
-                            for( int iInputLayer=0, iWeightAt=iWeightW, iInputAt=iInputW; iInputLayer<nInputLayers; iInputLayer++, iWeightAt++, iInputAt++) {
-                                dConv += DVV(pConvWeights, iWeightAt, nConvSize) * 
-                                        DVV(pInArray, iInputAt, nInputTensorSize);
+                    CItOutVariables varConvBackup;
+                    varConvBackup.pIn = it.pIn;
+                    varConvBackup.pWeights = it.pWeights;
+
+                    double dConv = 0;  
+                    for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
+                        CItOutVariables varConvYBackup;
+                        varConvYBackup.pIn = it.pIn;
+                        varConvYBackup.pWeights = it.pWeights;
+                        for( int iConvX=0; iConvX<nConvWidth; iConvX++) {
+                            CItOutVariables varConvXBackup;
+                            varConvXBackup.pIn = it.pIn;
+                            varConvXBackup.pWeights = it.pWeights;
+                            for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
+                                //乘积结果求和
+                                dConv += (*it.pWeights) * (*it.pIn);
+                                it.pIn++;
+                                it.pWeights++;
                             }
+                            it.pIn = varConvXBackup.pIn + nInputWidthStep;
+                            it.pWeights = varConvXBackup.pWeights + nConvWidthStep;
                         }
+                        it.pIn = varConvYBackup.pIn + nInputHeightStep;
+                        it.pWeights = varConvYBackup.pWeights + nConvHeightStep;
                     }
-                    DVV(pOutArray, iOutWAt+iConv, nOutputTensorSize) = dConv - DVV(pBaisArray, iConv, nConvs);
-                    pConvWeights += nConvSize;
+                    //减去偏置
+                    (*it.pOut) = dConv - (*it.pBais);
+
+                    it.pIn = varConvBackup.pIn;
+                    it.pOut++;
+                    it.pWeights = varConvBackup.pWeights + nConvSize;
+                    it.pBais++;
                 }
+                it.pWeights = varOXBackup.pWeights;
+                it.pBais = varOXBackup.pBais;
+                it.pOut = varOXBackup.pOut + nOutWstep;
+                it.pIn = varOXBackup.pIn + nInputWidthStep;
             }
+            it.pIn = varOYBackup.pIn + nInputHeightStep;
+            it.pOut = varOYBackup.pOut + nOutHstep;
         }
-        m_pActivator->activate(nOutputTensorSize, pOutArray, pOutArray);
-        pInArray += nInputTensorSize;
-        pOutArray += nOutputTensorSize;
+        m_pActivator->activate(nOutputTensorSize, varTBackup.pOut, varTBackup.pOut);
+        //  更新迭代参数
+        it.pIn = varTBackup.pIn + nInputTensorSize;
+        it.pOut = varTBackup.pOut + nOutputTensorSize;
     }
+
+
     m_spInTensor = spInTensor;
     m_spOutTensor = spOutTensor;
     return sCtx.success();
@@ -232,10 +283,10 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                                 it.pWeights++;
                                 it.pWeightDerivation++;
                             }
-                            it.pIn = varConvYBackup.pIn + nInputWidthStep;
-                            it.pInDeviation = varConvYBackup.pInDeviation + nInputWidthStep;
-                            it.pWeights = varConvYBackup.pWeights + nConvWidthStep;
-                            it.pWeightDerivation = varConvYBackup.pWeightDerivation + nConvWidthStep;
+                            it.pIn = varConvXBackup.pIn + nInputWidthStep;
+                            it.pInDeviation = varConvXBackup.pInDeviation + nInputWidthStep;
+                            it.pWeights = varConvXBackup.pWeights + nConvWidthStep;
+                            it.pWeightDerivation = varConvXBackup.pWeightDerivation + nConvWidthStep;
                         }
                         it.pIn = varConvYBackup.pIn + nInputHeightStep;
                         it.pInDeviation = varConvYBackup.pInDeviation + nInputHeightStep;
