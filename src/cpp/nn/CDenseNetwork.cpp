@@ -27,25 +27,63 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }
 
     int nTensor = m_nInputTensor;
+    int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
-    int nWWsize = m_nInputCells;
-    int nInputTensorSize = m_nInputCells;
-    double* pWeights = m_spWeights;
-    double* pBais = m_spBais;
-    double* pInput = spInTensor->getDataPtr<double>();
-    double* pOutput = spOutTensor->getDataPtr<double>();
+    int nInCells = m_nInputCells;
+    
+    struct CItOutVariables {
+        double* pIn;
+        double* pOut;
+        double* pWeight;
+        double* pBais;
+    }it = {
+        spInTensor->getDataPtr<double>(),
+        spOutTensor->getDataPtr<double>(),
+        m_spWeights,
+        m_spBais
+    };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
-        for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
-            double& dOutout = DVV(pOutput,iOutput,m_nCells);
-            dOutout = 0;
-            for(int iInput=0; iInput<m_nInputCells; iInput++) {
-                dOutout += DVV(pWeights, iWWAt+iInput,nWeights) * DVV(pInput, iInput, nInputTensorSize);
+        CItOutVariables varTBackup = {
+            it.pIn,
+            it.pOut,
+            it.pWeight,
+            it.pBais,
+        };
+
+        //
+        //  调整权重
+        //
+        for(int iOutput=0; iOutput<nOutCells; iOutput++) {
+
+            CItOutVariables varOBackup = {
+                it.pIn,
+                it.pOut,
+                it.pWeight,
+            };
+
+            double dOut = 0;
+            for(int iInput=0; iInput<nInCells; iInput++ ) {
+                dOut += (*it.pWeight) * (*it.pIn);
+                it.pIn++;
+                it.pWeight++;
             }
-            dOutout -= DVV(pBais,iOutput, m_nCells);
+
+            (*it.pOut) = dOut - (*it.pBais);
+
+            //  更新迭代参数
+            it.pOut++;
+            it.pBais++;
+            it.pIn = varOBackup.pIn;
+            it.pWeight = varOBackup.pWeight + nInCells;
         }
-        m_pActivator->activate(m_nCells, pOutput, pOutput);
-        pInput+=nInputTensorSize;
-        pOutput+=m_nCells;
+
+        m_pActivator->activate(nOutCells, varTBackup.pOut, varTBackup.pOut);
+
+        //  更新迭代参数
+        it.pIn = varTBackup.pIn + nInCells;
+        it.pOut = varTBackup.pOut + nOutCells;
+        it.pWeight = varTBackup.pWeight;
+        it.pBais = varTBackup.pBais;
     }
 
     m_spInTensor = spInTensor;
@@ -64,12 +102,10 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     }
 
     int nTensor = m_nInputTensor;
-    int nWWsize = m_nInputCells;
-    int nInputTensorSize = m_nInputCells;
+    int nInCells = m_nInputCells;
     int nOutputTensorSize = m_nCells;
 
     double* pWeightArray = m_spWeights;
-    double* pBaisArray = m_spBais;
 
     #ifdef _DEBUG
     double avgWeight = 0;
@@ -108,7 +144,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         spOutDeviation->getDataPtr<double>(),
         m_spWeights,
         spWeightDeviationArray,
-        pBaisArray
+        m_spBais
     };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         CItOutVariables varTBackup = {
@@ -193,13 +229,13 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
             it.pZDeviatioin++;
             it.pIn = varOBackup.pIn;
             it.pInDeviation = varOBackup.pInDeviation;
-            it.pWeight = varOBackup.pWeight + nWWsize;
-            it.pWeightDerivation = varOBackup.pWeightDerivation + nWWsize;
+            it.pWeight = varOBackup.pWeight + nInCells;
+            it.pWeightDerivation = varOBackup.pWeightDerivation + nInCells;
         }
 
         //  更新迭代参数
-        it.pIn = varTBackup.pIn + nInputTensorSize;
-        it.pInDeviation = varTBackup.pInDeviation + nInputTensorSize;
+        it.pIn = varTBackup.pIn + nInCells;
+        it.pInDeviation = varTBackup.pInDeviation + nInCells;
         it.pOut = varTBackup.pOut + nOutputTensorSize;
         it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
         it.pWeight = varTBackup.pWeight;
@@ -230,6 +266,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
             minW = DVV(pWeightArray,iWeight,nWeights);
         }
     }
+    double* pBaisArray = m_spBais;
     for(int iBais = 0; iBais<m_nCells; iBais++) {
         avgBais += abs(DVV(pBaisArray, iBais, m_nCells)) / m_nCells;
     }

@@ -1,7 +1,6 @@
 #include "CConvolutionNetwork.h"
 #include "math.h"
 #include "iostream"
-#include <time.h>
 
 SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
@@ -125,7 +124,6 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         it.pIn = varTBackup.pIn + nInputTensorSize;
         it.pOut = varTBackup.pOut + nOutputTensorSize;
     }
-
 
     m_spInTensor = spInTensor;
     m_spOutTensor = spOutTensor;
