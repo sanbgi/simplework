@@ -19,12 +19,12 @@ class CNeuralNetworkFactory : public CObject, public SNeuralNetwork::INeuralNetw
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int createDense(int nCells, SNeuralNetwork::EACTIVATION eActivation, SNeuralNetwork& spNetwork) {
-        return CDenseNetwork::createNetwork(nCells, eActivation, spNetwork);
+    int createDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
+        return CDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
     }
 
-    int createConvolution(int nWidth, int nHeight, int nConv, SNeuralNetwork& spNetwork) {
-        return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, spNetwork);
+    int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) {
+        return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
     int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {

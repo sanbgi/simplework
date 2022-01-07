@@ -30,7 +30,7 @@ public:
     virtual void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray);
 
 public:
-    static CActivator* getActivation(SNeuralNetwork::EACTIVATION eActivation = SNeuralNetwork::ACTIVATION_Default);
+    static CActivator* getActivation(const char* szActivator = nullptr);
 
 public:
     static CActivator* getReLU();

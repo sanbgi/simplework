@@ -3,13 +3,13 @@
 #include "iostream"
 
 SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
-int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, SNeuralNetwork& spNetwork) {
+int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);
     spConvolution->m_nConvWidth = nWidth;
     spConvolution->m_nConvHeight = nHeight;
     spConvolution->m_nConvs = nConvs;
-    spConvolution->m_pActivator = CActivator::getActivation();
+    spConvolution->m_pActivator = CActivator::getActivation(szActivator);
     spNetwork.setPtr(spConvolution.getPtr());
     return sCtx.success();
 }

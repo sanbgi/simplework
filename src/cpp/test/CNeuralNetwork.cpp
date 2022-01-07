@@ -83,6 +83,6 @@ SNeuralNetwork CNeuralNetwork::createNetwork() {
     arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNeuralNetwork::createDense(576));
     //arrNets.push_back(SNeuralNetwork::createDense(10));
-    arrNets.push_back(SNeuralNetwork::createDense(10, SNeuralNetwork::ACTIVATION_Softmax));
+    arrNets.push_back(SNeuralNetwork::createDense(10, "softmax"));
     return SNeuralNetwork::createSequence(arrNets.size(), arrNets.data());
 }

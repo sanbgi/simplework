@@ -12,16 +12,7 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 // 神经网络核心接口定义
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
-public:
-    //
-    // 激活函数
-    //
-    enum EACTIVATION {
-        ACTIVATION_Default,
-        ACTIVATION_ReLU,
-        ACTIVATION_LeakyReLU,
-        ACTIVATION_Softmax
-    };
+
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INeuralNetwork", 211223)
 
@@ -57,12 +48,12 @@ public:
             //
             //  创建直连神经网络
             //
-            virtual int createDense(int nCells, EACTIVATION eActivation, SNeuralNetwork& spNetwork) = 0;
+            virtual int createDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
 
             //
             //  创建卷积神经网络
             //
-            virtual int createConvolution(int nWidth, int nHeight, int nConv, SNeuralNetwork& spNetwork) = 0;
+            virtual int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
 
             //
             //  创建顺序处理神经网络
@@ -103,9 +94,9 @@ public:
         return g_factory;
     }
 
-    static SNeuralNetwork createDense(int nCells, EACTIVATION eActivation=ACTIVATION_Default) {
+    static SNeuralNetwork createDense(int nCells, const char* szActivator = nullptr) {
         SNeuralNetwork nn;
-        getFactory()->createDense(nCells,eActivation,nn);
+        getFactory()->createDense(nCells,szActivator,nn);
         return nn;
     }
 
@@ -115,9 +106,9 @@ public:
         return nn;
     }
 
-    static SNeuralNetwork createConv(int nWidth, int nHeight, int nConv) {
+    static SNeuralNetwork createConv(int nWidth, int nHeight, int nConv, const char* szActivator = nullptr ) {
         SNeuralNetwork nn;
-        getFactory()->createConvolution(nWidth, nHeight, nConv, nn);
+        getFactory()->createConvolution(nWidth, nHeight, nConv, szActivator, nn);
         return nn;
     }
 

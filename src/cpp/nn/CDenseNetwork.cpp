@@ -3,11 +3,11 @@
 #include <iostream>
 
 SCtx CDenseNetwork::sCtx("CDenseNetwork");
-int CDenseNetwork::createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActivation, SNeuralNetwork& spNetwork) {
+int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
-    spDense->m_pActivator = CActivator::getActivation(eActivation);
+    spDense->m_pActivator = CActivator::getActivation();
     spNetwork.setPtr(spDense.getPtr());
     return sCtx.success();
 }

@@ -26,7 +26,7 @@ private://INeuralNetwork
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
-    static int createNetwork(int nCells, SNeuralNetwork::EACTIVATION eActivation, SNeuralNetwork& spNetwork);
+    static int createNetwork(int nCells, const char* szActivator, SNeuralNetwork& spNetwork);
 
 private:
     int initWeights(const STensor& spDimTensor);

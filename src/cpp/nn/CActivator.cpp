@@ -1,21 +1,28 @@
 #include "CActivator.h"
 #include "math.h"
+#include <map>
+#include <string>
 
-CActivator* CActivator::getActivation(SNeuralNetwork::EACTIVATION eActivation) {
-    switch(eActivation) {
-        case SNeuralNetwork::ACTIVATION_ReLU:
-            return getReLU();
+using namespace std;
 
-        case SNeuralNetwork::ACTIVATION_LeakyReLU:
-            return getLeakyReLU();
+map<string, CActivator*> s_mapActivators = {
+    { "relu", CActivator::getReLU() },
+    { "softmax", CActivator::getSoftmax() },
+    { "sigmod", CActivator::getSigmod() },
+    { "tanh", CActivator::getTanh() },
+    { "elu", CActivator::getELU() },
+    { "lrelu", CActivator::getLeakyReLU() },
+};
 
-        case SNeuralNetwork::ACTIVATION_Softmax:
-            return getSoftmax();
+CActivator* CActivator::getActivation(const char* szActivator) {
+    if(szActivator) {
+        map<string, CActivator*>::iterator it = s_mapActivators.find(szActivator);
+        if( it != s_mapActivators.end() ) {
+            return it->second;
+        }
     }
-    //return getReLU();
     return getNeuralActivator();
 }
-
 
 //
 // 神经网络输出总是在[0,1]之间
@@ -69,7 +76,6 @@ static double s_leaky_a = 0.01;
 CActivator* CActivator::getLeakyReLU() {
     static class CActivatorImp : public CActivator {
         static double activate(double x) {
-            //return x;
             return x>=0?x:(s_leaky_a*x);
         }
         static double deactivate(double y) {
@@ -77,7 +83,6 @@ CActivator* CActivator::getLeakyReLU() {
             //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
             //  好等于 delta，其中delta = Ycurrent - Yexpect 
             //
-            //return 1;
             return y>=0?1:s_leaky_a;
         }
         void activate( int nData, double* pZArray, double* pYArray) {
