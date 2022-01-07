@@ -136,21 +136,57 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     double dLearnRate = 5.0 / nConvSize;
     int nOutHstep = nOutputWidth*nConvs;
     int nOutWstep = nConvs;
-    double* pOutArray = spOutTensor->getDataPtr<double>();
-    double* pOutputDeviationArray = spOutDeviation->getDataPtr<double>();
-    double* pInArray = spInTensor->getDataPtr<double>();
-    double* pInputDeviationArray = spInDeviation->getDataPtr<double>();
+    
+    struct CItOutVariables {
+        double* pIn;
+        double* pInDeviation;
+        double* pOut;
+        double* pOutDeviation;
+        double* pWeights;
+        double* pWeightDerivation;
+        double* pBais;
+        double* pZDeviatioin;
+    }it = {
+        spInTensor->getDataPtr<double>(),
+        spInDeviation->getDataPtr<double>(),
+        spOutTensor->getDataPtr<double>(),
+        spOutDeviation->getDataPtr<double>(),
+        m_spWeights,
+        spWeightDeviationArray,
+        m_spBais
+    };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
+        CItOutVariables varTBackup = {
+            it.pIn,
+            it.pInDeviation,
+            it.pOut,
+            it.pOutDeviation
+        };
+
         double pDerivationZ[nOutputTensorSize];
-        m_pActivator->deactivate(nOutputTensorSize, pOutArray, pOutputDeviationArray, pDerivationZ);
-        for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHstep ) {
-            for( int iOutX = 0, iOutWAt=iOutHAt; iOutX < nOutputWidth; iOutX++, iOutWAt+=nOutWstep ) {
-                double* pConvWeights = pWeightArray;
-                double* pConvWeightDeviations = pWeightDerivationArray;
+        m_pActivator->deactivate(nOutputTensorSize, it.pOut, it.pOutDeviation, pDerivationZ);
+        it.pZDeviatioin = pDerivationZ;
+
+        for( int iOutY=0; iOutY < nOutputHeight; iOutY++) {
+            CItOutVariables varOYBackup;
+            varOYBackup.pIn = it.pIn;
+            varOYBackup.pInDeviation = it.pInDeviation;
+            varOYBackup.pZDeviatioin = it.pZDeviatioin;
+            for( int iOutX=0; iOutX < nOutputWidth; iOutX++) {
+                CItOutVariables varOXBackup;
+                varOXBackup.pWeights = it.pWeights;
+                varOXBackup.pWeightDerivation = it.pWeightDerivation;
+                varOXBackup.pBais = it.pBais;
+                varOXBackup.pZDeviatioin = it.pZDeviatioin;
                 for( int iConv = 0; iConv < nConvs; iConv++) {
+                    CItOutVariables varConvBackup;
+                    varConvBackup.pIn = it.pIn;
+                    varConvBackup.pInDeviation = it.pInDeviation;
+                    varConvBackup.pWeights = it.pWeights;
+                    varConvBackup.pWeightDerivation = it.pWeightDerivation;
 
                     #ifdef _DEBUG
-                    avgOutDerivation += abs(pOutputDeviationArray[iOutWAt+iConv]) / nOutputTensorSize / nTensor ;
+                    avgOutDerivation += abs(it.pOutDeviation[(iOutY*nOutWstep+iOutX)+iConv]) / nOutputTensorSize / nTensor ;
                     #endif//_DEBUG
 
                     //
@@ -162,39 +198,84 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //      E = delta*delta/2 目标函数
                     //      derivationZ = d(E) / d(Z) = d(E)/d(delta) * d(delta)/d(Y) * d(F)/d(Z)
                     //      其中：
-                    //          d(E)/d(delta) = pOutputDeviationArray[iOutput]
+                    //          d(E)/d(delta) = pOutDeviation[iOutput]
                     //          d(delta)/d(Y) = 1
                     //          d(Y)/d(Z) = deactivate(Y)
                     //
-                    double derivationZ = DVV(pDerivationZ,iOutWAt+iConv,nOutputTensorSize);
+                    double derivationZ = (*it.pZDeviatioin);
 
                     //
                     //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                     //  
-                    int iInputH = iOutY * nInputHeightStep + iOutX * nInputWidthStep;
-                    for( int iConvY=0, iWeightH=0; iConvY<nConvHeight; iConvY++, iWeightH+=nConvHeightStep, iInputH+=nInputHeightStep) {
-                        for( int iConvX=0, iWeightW=iWeightH, iInputW=iInputH; iConvX<nConvWidth; iConvX++, iWeightW+=nConvWidthStep, iInputW+=nInputWidthStep ) {
-                            for( int iInputLayer=0, iWeightAt=iWeightW, iInputAt=iInputW; iInputLayer<nInputLayers; iInputLayer++, iWeightAt++, iInputAt++) {
-                                DVV(pInputDeviationArray,iInputAt,nInputTensorSize) += derivationZ * DVV(pConvWeights,iWeightAt,nConvSize);
-                                DVV(pConvWeightDeviations,iWeightAt,nConvSize) += derivationZ * DVV(pInArray,iInputAt,nInputTensorSize);
+                    for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
+                        CItOutVariables varConvYBackup;
+                        varConvYBackup.pIn = it.pIn;
+                        varConvYBackup.pInDeviation = it.pInDeviation;
+                        varConvYBackup.pWeights = it.pWeights;
+                        varConvYBackup.pWeightDerivation = it.pWeightDerivation;
+                        for( int iConvX=0; iConvX<nConvWidth; iConvX++) {
+                            CItOutVariables varConvXBackup;
+                            varConvXBackup.pIn = it.pIn;
+                            varConvXBackup.pInDeviation = it.pInDeviation;
+                            varConvXBackup.pWeights = it.pWeights;
+                            varConvXBackup.pWeightDerivation = it.pWeightDerivation;
+                            for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
+                                
+                                //
+                                // 累计计算权重值
+                                //
+                                (*it.pInDeviation) += derivationZ * (*it.pWeights);
+                                (*it.pWeightDerivation) += derivationZ * (*it.pIn);
+
+                                it.pIn++;
+                                it.pInDeviation++;
+                                it.pWeights++;
+                                it.pWeightDerivation++;
                             }
+                            it.pIn = varConvYBackup.pIn + nInputWidthStep;
+                            it.pInDeviation = varConvYBackup.pInDeviation + nInputWidthStep;
+                            it.pWeights = varConvYBackup.pWeights + nConvWidthStep;
+                            it.pWeightDerivation = varConvYBackup.pWeightDerivation + nConvWidthStep;
                         }
+                        it.pIn = varConvYBackup.pIn + nInputHeightStep;
+                        it.pInDeviation = varConvYBackup.pInDeviation + nInputHeightStep;
+                        it.pWeights = varConvYBackup.pWeights + nConvHeightStep;
+                        it.pWeightDerivation = varConvYBackup.pWeightDerivation + nConvHeightStep;
                     }
 
                     //
                     //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
                     //
-                    DVV(pBaisArray,iConv,nConvs) -= (-derivationZ) * dLearnRate;
-                    pConvWeightDeviations += nConvSize;
-                    pConvWeights += nConvSize;
+                    (*pBaisArray) -= (-derivationZ) * dLearnRate;
+
+                    it.pIn = varConvBackup.pIn;
+                    it.pInDeviation = varConvBackup.pInDeviation;
+                    it.pWeights = varConvBackup.pWeights + nConvSize;
+                    it.pWeightDerivation = varConvBackup.pWeightDerivation + nConvSize;
+                    it.pBais++;
+                    it.pZDeviatioin++;
                 }
+
+                it.pWeights = varOXBackup.pWeights;
+                it.pWeightDerivation = varOXBackup.pWeightDerivation;
+                it.pBais = varOXBackup.pBais;
+                it.pZDeviatioin = varOXBackup.pZDeviatioin;
+
+                it.pIn += nInputWidthStep;
+                it.pInDeviation += nInputWidthStep;
+                it.pZDeviatioin += nOutWstep;
             }
+
+            it.pIn = varOYBackup.pIn + nInputHeightStep;
+            it.pInDeviation = varOYBackup.pInDeviation + nInputHeightStep;
+            it.pZDeviatioin = varOYBackup.pZDeviatioin + nOutHstep;
         }
 
-        pOutArray += nOutputTensorSize;
-        pOutputDeviationArray += nOutputTensorSize;
-        pInArray += nInputTensorSize;
-        pInputDeviationArray += nInputTensorSize;
+        //  更新迭代参数
+        it.pIn = varTBackup.pIn + nInputTensorSize;
+        it.pInDeviation = varTBackup.pInDeviation + nInputTensorSize;
+        it.pOut = varTBackup.pOut + nOutputTensorSize;
+        it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
     }
 
     for(int iWeight=0;iWeight<nWeights; iWeight++) {

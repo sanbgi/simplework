@@ -108,8 +108,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         spOutDeviation->getDataPtr<double>(),
         m_spWeights,
         spWeightDeviationArray,
-        pBaisArray,
-        nullptr
+        pBaisArray
     };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         
