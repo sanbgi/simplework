@@ -7,7 +7,10 @@ int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNeuralNet
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
-    spDense->m_pActivator = CActivator::getActivation();
+    spDense->m_pActivator = CActivator::getActivation(szActivator);
+    if(spDense->m_pActivator == nullptr) {
+        return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
+    }
     spNetwork.setPtr(spDense.getPtr());
     return sCtx.success();
 }

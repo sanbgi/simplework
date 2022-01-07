@@ -10,6 +10,9 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     spConvolution->m_nConvHeight = nHeight;
     spConvolution->m_nConvs = nConvs;
     spConvolution->m_pActivator = CActivator::getActivation(szActivator);
+    if(spConvolution->m_pActivator == nullptr) {
+        return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
+    }
     spNetwork.setPtr(spConvolution.getPtr());
     return sCtx.success();
 }

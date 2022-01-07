@@ -20,8 +20,9 @@ CActivator* CActivator::getActivation(const char* szActivator) {
         if( it != s_mapActivators.end() ) {
             return it->second;
         }
+        return nullptr;
     }
-    return getNeuralActivator();
+    return getTanh();
 }
 
 //
@@ -171,7 +172,8 @@ CActivator* CActivator::getSigmod() {
 CActivator* CActivator::getTanh() {
     static class CActivatorImp : public CActivator {
         static double activate(double x) {
-            return 2/(1+exp(-2*x)-1);
+            double v = exp(-2*x);
+            return (1-v)/(1+v);
         }
         static double deactivate(double y) {
             return 1-y*y;
