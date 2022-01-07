@@ -61,37 +61,37 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         m_spWeights,
         m_spBais
     };
-    for(int iTensor=0; iTensor<nTensor; iTensor++) {
-        CItOutVariables varTBackup = {
+
+    double dConv;
+    int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
+    CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
+    for(iTensor=0; iTensor<nTensor; iTensor++) {
+        varTBackup = {
             it.pIn,
             it.pOut,
         };
-        for( int iOutY=0; iOutY < nOutputHeight; iOutY++) {
-            CItOutVariables varOYBackup;
+        for(iOutY=0; iOutY < nOutputHeight; iOutY++) {
             varOYBackup.pIn = it.pIn;
             varOYBackup.pOut = it.pOut;
-            for( int iOutX=0; iOutX < nOutputWidth; iOutX++) {
-                CItOutVariables varOXBackup;
+            for(iOutX=0; iOutX < nOutputWidth; iOutX++) {
                 varOXBackup.pIn = it.pIn;
                 varOXBackup.pOut = it.pOut;
                 varOXBackup.pWeights = it.pWeights;
                 varOXBackup.pBais = it.pBais;
-                for( int iConv = 0; iConv < nConvs; iConv++) {
-                    CItOutVariables varConvBackup;
+                for(iConv = 0; iConv < nConvs; iConv++) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pWeights = it.pWeights;
 
-                    double dConv = 0;
-                    for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
-                        CItOutVariables varConvYBackup;
+                    //初始化卷积结果
+                    dConv = 0;
+                    for( iConvY=0; iConvY<nConvHeight; iConvY++) {
                         varConvYBackup.pIn = it.pIn;
                         varConvYBackup.pWeights = it.pWeights;
-                        for( int iConvX=0; iConvX<nConvWidth; iConvX++) {
-                            CItOutVariables varConvXBackup;
+                        for(iConvX=0; iConvX<nConvWidth; iConvX++) {
                             varConvXBackup.pIn = it.pIn;
                             varConvXBackup.pWeights = it.pWeights;
-                            for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
-                                //乘积结果求和
+                            for( int iLayer=0; iLayer<nInputLayers; iLayer++) {
+                                //卷积结果为乘积结果求和
                                 dConv += (*it.pWeights) * (*it.pIn);
                                 it.pIn++;
                                 it.pWeights++;
@@ -102,7 +102,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
                         it.pIn = varConvYBackup.pIn + nInputHeightStep;
                         it.pWeights = varConvYBackup.pWeights + nConvHeightStep;
                     }
-                    //减去偏置
+                    //卷积结果减去偏置
                     (*it.pOut) = dConv - (*it.pBais);
 
                     it.pIn = varConvBackup.pIn;
@@ -118,8 +118,10 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
             it.pIn = varOYBackup.pIn + nInputHeightStep;
             it.pOut = varOYBackup.pOut + nOutHstep;
         }
+        //
+        // 激活结果值
+        //
         m_pActivator->activate(nOutputTensorSize, varTBackup.pOut, varTBackup.pOut);
-        //  更新迭代参数
         it.pIn = varTBackup.pIn + nInputTensorSize;
         it.pOut = varTBackup.pOut + nOutputTensorSize;
     }
@@ -200,34 +202,33 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         spOutTensor->getDataPtr<double>(),
         spOutDeviation->getDataPtr<double>(),
         m_spWeights,
-        spWeightDeviationArray,
+        pWeightDerivationArray,
         m_spBais
     };
-    for(int iTensor=0; iTensor<nTensor; iTensor++) {
-        CItOutVariables varTBackup = {
+    double derivationZ;
+    double pDerivationZ[nOutputTensorSize];
+    int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
+    CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
+    for(iTensor=0; iTensor<nTensor; iTensor++) {
+        varTBackup = {
             it.pIn,
             it.pInDeviation,
             it.pOut,
             it.pOutDeviation
         };
 
-        double pDerivationZ[nOutputTensorSize];
         m_pActivator->deactivate(nOutputTensorSize, it.pOut, it.pOutDeviation, pDerivationZ);
         it.pZDeviatioin = pDerivationZ;
-
-        for( int iOutY=0; iOutY < nOutputHeight; iOutY++) {
-            CItOutVariables varOYBackup;
+        for(iOutY=0; iOutY < nOutputHeight; iOutY++) {
             varOYBackup.pIn = it.pIn;
             varOYBackup.pInDeviation = it.pInDeviation;
             varOYBackup.pZDeviatioin = it.pZDeviatioin;
-            for( int iOutX=0; iOutX < nOutputWidth; iOutX++) {
-                CItOutVariables varOXBackup;
+            for(iOutX=0; iOutX < nOutputWidth; iOutX++) {
                 varOXBackup.pWeights = it.pWeights;
                 varOXBackup.pWeightDerivation = it.pWeightDerivation;
                 varOXBackup.pBais = it.pBais;
                 varOXBackup.pZDeviatioin = it.pZDeviatioin;
-                for( int iConv = 0; iConv < nConvs; iConv++) {
-                    CItOutVariables varConvBackup;
+                for(iConv = 0; iConv < nConvs; iConv++) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pInDeviation = it.pInDeviation;
                     varConvBackup.pWeights = it.pWeights;
@@ -250,24 +251,22 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //          d(delta)/d(Y) = 1
                     //          d(Y)/d(Z) = deactivate(Y)
                     //
-                    double derivationZ = (*it.pZDeviatioin);
+                    derivationZ = (*it.pZDeviatioin);
 
                     //
                     //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                     //  
-                    for( int iConvY=0; iConvY<nConvHeight; iConvY++) {
-                        CItOutVariables varConvYBackup;
+                    for(iConvY=0; iConvY<nConvHeight; iConvY++) {
                         varConvYBackup.pIn = it.pIn;
                         varConvYBackup.pInDeviation = it.pInDeviation;
                         varConvYBackup.pWeights = it.pWeights;
                         varConvYBackup.pWeightDerivation = it.pWeightDerivation;
-                        for( int iConvX=0; iConvX<nConvWidth; iConvX++) {
-                            CItOutVariables varConvXBackup;
+                        for(iConvX=0; iConvX<nConvWidth; iConvX++) {
                             varConvXBackup.pIn = it.pIn;
                             varConvXBackup.pInDeviation = it.pInDeviation;
                             varConvXBackup.pWeights = it.pWeights;
                             varConvXBackup.pWeightDerivation = it.pWeightDerivation;
-                            for( int iInputLayer=0; iInputLayer<nInputLayers; iInputLayer++) {
+                            for(iLayer=0; iLayer<nInputLayers; iLayer++) {
                                 
                                 //
                                 // 累计计算权重值
@@ -326,6 +325,9 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
     }
 
+    // 
+    // 权重值更新，需要在输入偏导数计算完成后进行，否则，中间会影响输入偏导数值
+    //
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
 
