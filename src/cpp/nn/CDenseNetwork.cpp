@@ -92,24 +92,60 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     double* pWeightDerivationArray = spWeightDeviationArray;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
 
-    double* pOutputArray = spOutTensor->getDataPtr<double>();
-    double* pOutputDeviationArray = spOutDeviation->getDataPtr<double>();
-    double* pInputArray = spInTensor->getDataPtr<double>();
-    double* pInputDeviationArray = spInDeviation->getDataPtr<double>();
+    struct CItOutVariables {
+        double* pInputArray;
+        double* pInputDeviationArray;
+        double* pOutputArray;
+        double* pOutputDeviationArray;
+        double* pWeightArray;
+        double* pWeightDerivationArray;
+        double* pBaisArray;
+        double* pZDeviatioinArray;
+    }it = {
+        spInTensor->getDataPtr<double>(),
+        spInDeviation->getDataPtr<double>(),
+        spOutTensor->getDataPtr<double>(),
+        spOutDeviation->getDataPtr<double>(),
+        m_spWeights,
+        spWeightDeviationArray,
+        pBaisArray,
+        nullptr
+    };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
+        
+        CItOutVariables varTBackup = {
+            it.pInputArray,
+            it.pInputDeviationArray,
+            it.pOutputArray,
+            it.pOutputDeviationArray,
+            it.pWeightArray,
+            it.pWeightDerivationArray,
+            it.pBaisArray,
+        };
+
         //
         //  计算目标函数相对于Y值的偏导数
         //
         double pZDerivationArray[m_nCells];
-        m_pActivator->deactivate(m_nCells, pOutputArray, pOutputDeviationArray, pZDerivationArray);
+        m_pActivator->deactivate(m_nCells, it.pOutputArray, it.pOutputDeviationArray, pZDerivationArray);
+        it.pZDeviatioinArray = pZDerivationArray;
 
         //
         //  调整权重
         //
-        for(int iOutput=0, iWWAt=0; iOutput<m_nCells; iOutput++, iWWAt+=nWWsize ) {
+        for(int iOutput=0; iOutput<m_nCells; iOutput++) {
+
+            CItOutVariables varOBackup = {
+                it.pInputArray,
+                it.pInputDeviationArray,
+                it.pOutputArray,
+                it.pOutputDeviationArray,
+                it.pWeightArray,
+                it.pWeightDerivationArray,
+            };
 
             #ifdef _DEBUG
-            avgOutDerivation += abs(DVV(pOutputDeviationArray, iOutput, m_nCells)) / m_nCells / nTensor;
+            avgOutDerivation += abs(it.pOutputDeviationArray[iOutput]) / m_nCells / nTensor;
             #endif//_DEBUG
 
             //
@@ -125,14 +161,12 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
             //          d(delta)/d(F) = 1
             //          d(F)/d(Y) = deactivate(Y)
             //
-            double derivationZ = DVV(pZDerivationArray, iOutput, m_nCells);
+            double derivationZ = *(it.pZDeviatioinArray);
 
             //
             // 更新权重，权重值的偏导数=输出值偏导数*数入值
             //
             for(int iInput=0; iInput<m_nInputCells; iInput++ ) {
-
-                int iWeight = iWWAt + iInput;
 
                 //
                 // 输入对实际目标的偏差值，反向传递给上一层，其实就是相对于输入的偏导数
@@ -142,32 +176,48 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
                 //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
                 //
                 //pInputDeviationArray[iInput] += derivationZ * pWeights[iWeight] * dLearnRate;
-                DVV(pInputDeviationArray, iInput, nInputTensorSize) += derivationZ * DVV(pWeightArray, iWeight, nWeights);
+                (*it.pInputDeviationArray) += derivationZ * (*it.pWeightArray);
+                (*it.pWeightDerivationArray) += derivationZ * (*it.pInputArray);
 
-                DVV(pWeightDerivationArray, iWeight, nWeights) += derivationZ * DVV(pInputArray, iInput, nInputTensorSize);
+                it.pInputArray++;
+                it.pInputDeviationArray++;
+                it.pWeightArray++;
+                it.pWeightDerivationArray++;
             }
 
             //
             // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
             //
-            DVV(pBaisArray, iOutput, m_nCells) -= (-derivationZ) * dLearnRate;
+            *it.pBaisArray -= (-derivationZ) * dLearnRate;
+
+            //  更新迭代参数
+            it.pBaisArray++;
+            it.pZDeviatioinArray++;
+            it.pInputArray = varOBackup.pInputArray;
+            it.pInputDeviationArray = varOBackup.pInputDeviationArray;
+            it.pWeightArray = varOBackup.pWeightArray + nWWsize;
+            it.pWeightDerivationArray = varOBackup.pWeightDerivationArray + nWWsize;
         }
 
-        pOutputArray += nOutputTensorSize;
-        pOutputDeviationArray += nOutputTensorSize;
-        pInputArray += nInputTensorSize;
-        pInputDeviationArray += nInputTensorSize;
+        //  更新迭代参数
+        it.pInputArray = varTBackup.pInputArray + nInputTensorSize;
+        it.pInputDeviationArray = varTBackup.pInputDeviationArray + nInputTensorSize;
+        it.pOutputArray = varTBackup.pOutputArray + nOutputTensorSize;
+        it.pOutputDeviationArray = varTBackup.pOutputDeviationArray + nOutputTensorSize;
+        it.pWeightArray = varTBackup.pWeightArray;
+        it.pWeightDerivationArray = varTBackup.pWeightDerivationArray;
+        it.pBaisArray = varTBackup.pBaisArray;
     }
 
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
 
         //权重值范围是否需要限制为[-1,1]?
-        if( DVV(pWeightArray, iWeight, nWeights) > 1) {
-            DVV(pWeightArray, iWeight, nWeights) = 1;
-        }else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
-            DVV(pWeightArray, iWeight, nWeights) = -1;
-        }
+        //if( DVV(pWeightArray, iWeight, nWeights) > 1) {
+        //    DVV(pWeightArray, iWeight, nWeights) = 1;
+        //}else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
+        //    DVV(pWeightArray, iWeight, nWeights) = -1;
+        //}
     }
 
     #ifdef _DEBUG
@@ -191,36 +241,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         std::cout << "Dense: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
     }
     #endif//_DEBUG
-    /*
-    //
-    //  检查梯度下降后的值是否降低
-    //
-    struct CEvalCheck : IVisitor<const PTensor&> {
-        int visit(const PTensor& t) {
-            double delta0 = 0;
-            for(int i=0; i<pOutputDeviation->nData; i++) {
-                delta0 += pOutputDeviation->pDoubleArray[i]*pOutputDeviation->pDoubleArray[i];
-            }
 
-            double delta = 0;
-            for(int i=0; i<pOutputDeviation->nData; i++) {
-                delta += (t.pDoubleArray[i] - pOutput->pDoubleArray[i] + pOutputDeviation->pDoubleArray[i]) * (t.pDoubleArray[i] - pOutput->pDoubleArray[i] + pOutputDeviation->pDoubleArray[i]);
-            }
-
-            if( delta > delta0) {
-                std::cout << ", Dense" << pOutput->nData << ": " << delta0 << " --> " << delta << ", ";
-            }
-            return sCtx.success();
-        }
-        const PTensor* pOutput;
-        const PTensor* pOutputDeviation;
-    }evalCheck;
-    evalCheck.pOutput = &outputTensor;
-    evalCheck.pOutputDeviation = &outputDeviation;
-
-    return eval(inputTensor, &evalCheck);
-    */
-    
     return sCtx.success();
 }
 

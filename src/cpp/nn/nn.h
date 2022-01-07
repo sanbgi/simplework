@@ -24,4 +24,5 @@
     #define DVV(ptr, index, size) ptr[index] 
     #define IVV(ptr, index, size) ptr[index] 
 #endif//CHECK_POINTER
+
 #endif//__SimpleWork_nn_nn_h__

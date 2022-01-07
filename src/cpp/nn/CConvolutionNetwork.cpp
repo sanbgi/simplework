@@ -50,11 +50,11 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }  
     double* pInArray = spInTensor->getDataPtr<double>();
     double* pOutArray = spOutTensor->getDataPtr<double>();
-    int nOutHsize = nOutputWidth*nConvs;
-    int nOutWsize = nConvs;
+    int nOutHstep = nOutputWidth*nConvs;
+    int nOutWstep = nConvs;
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
-        for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHsize ) {
-            for( int iOutX = 0, iOutWAt=iOutHAt; iOutX < nOutputWidth; iOutX++, iOutWAt+=nOutWsize ) {
+        for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHstep ) {
+            for( int iOutX = 0, iOutWAt=iOutHAt; iOutX < nOutputWidth; iOutX++, iOutWAt+=nOutWstep ) {
                 double* pConvWeights = pWeightArray;
                 for( int iConv = 0; iConv < nConvs; iConv++) {
                     double dConv = 0;
@@ -134,17 +134,17 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
 
     int nTensor = m_nTensor;
     double dLearnRate = 5.0 / nConvSize;
+    int nOutHstep = nOutputWidth*nConvs;
+    int nOutWstep = nConvs;
     double* pOutArray = spOutTensor->getDataPtr<double>();
     double* pOutputDeviationArray = spOutDeviation->getDataPtr<double>();
     double* pInArray = spInTensor->getDataPtr<double>();
     double* pInputDeviationArray = spInDeviation->getDataPtr<double>();
-    int nOutHsize = nOutputWidth*nConvs;
-    int nOutWsize = nConvs;
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         double pDerivationZ[nOutputTensorSize];
         m_pActivator->deactivate(nOutputTensorSize, pOutArray, pOutputDeviationArray, pDerivationZ);
-        for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHsize ) {
-            for( int iOutX = 0, iOutWAt=iOutHAt; iOutX < nOutputWidth; iOutX++, iOutWAt+=nOutWsize ) {
+        for( int iOutY = 0, iOutHAt=0; iOutY < nOutputHeight; iOutY++, iOutHAt+=nOutHstep ) {
+            for( int iOutX = 0, iOutWAt=iOutHAt; iOutX < nOutputWidth; iOutX++, iOutWAt+=nOutWstep ) {
                 double* pConvWeights = pWeightArray;
                 double* pConvWeightDeviations = pWeightDerivationArray;
                 for( int iConv = 0; iConv < nConvs; iConv++) {
@@ -171,9 +171,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                     //  
-                    double* pConvWeights = pWeightArray + iConv * nConvSize;
-                    double* pConvWeightDeviations = pWeightDerivationArray + iConv * nConvSize;
-
                     int iInputH = iOutY * nInputHeightStep + iOutX * nInputWidthStep;
                     for( int iConvY=0, iWeightH=0; iConvY<nConvHeight; iConvY++, iWeightH+=nConvHeightStep, iInputH+=nInputHeightStep) {
                         for( int iConvX=0, iWeightW=iWeightH, iInputW=iInputH; iConvX<nConvWidth; iConvX++, iWeightW+=nConvWidthStep, iInputW+=nInputWidthStep ) {
@@ -187,7 +184,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
                     //
-                    //DVV(pBaisArray,iConv,nConvs) -= (-derivationZ) * dLearnRate;
+                    DVV(pBaisArray,iConv,nConvs) -= (-derivationZ) * dLearnRate;
                     pConvWeightDeviations += nConvSize;
                     pConvWeights += nConvSize;
                 }
