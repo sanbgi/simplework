@@ -11,7 +11,7 @@ map<string, CActivator*> s_mapActivators = {
     { "sigmod", CActivator::getSigmod() },
     { "tanh", CActivator::getTanh() },
     { "elu", CActivator::getELU() },
-    { "lrelu", CActivator::getLeakyReLU() },
+    { "leakyrelu", CActivator::getLeakyReLU() },
 };
 
 CActivator* CActivator::getActivation(const char* szActivator) {
@@ -22,7 +22,7 @@ CActivator* CActivator::getActivation(const char* szActivator) {
         }
         return nullptr;
     }
-    return getTanh();
+    return getELU();
 }
 
 //

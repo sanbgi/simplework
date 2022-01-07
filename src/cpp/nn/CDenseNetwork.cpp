@@ -11,6 +11,9 @@ int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNeuralNet
     if(spDense->m_pActivator == nullptr) {
         return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
     }
+    if( COptimizer::getOptimizer(nullptr, spDense->m_spOptimizer) != sCtx.success()) {
+        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+    }
     spNetwork.setPtr(spDense.getPtr());
     return sCtx.success();
 }
@@ -108,8 +111,6 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     int nInCells = m_nInputCells;
     int nOutputTensorSize = m_nCells;
 
-    double* pWeightArray = m_spWeights;
-
     #ifdef _DEBUG
     double avgWeight = 0;
     double maxW = -100000;
@@ -119,17 +120,11 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     double avgBais = 0;
     #endif//_DEBUG
 
-    //
-    // 学习率先固定
-    //
-    double dLearnRate = 5.0/m_nInputCells;
-
     int nWeights = m_nCells * m_nInputCells;
-    CTaker<double*> spWeightDeviationArray(new double[nWeights], [](double* ptr) {
-        delete[] ptr;
-    });
-    double* pWeightDerivationArray = spWeightDeviationArray;
-    memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
+    
+    double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+m_nCells);
+    double* pBaisDeviationArray = pWeightDerivationArray+nWeights;
+    memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+m_nCells));
 
     struct CItOutVariables {
         double* pIn;
@@ -137,8 +132,8 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         double* pOut;
         double* pOutDeviation;
         double* pWeight;
-        double* pWeightDerivation;
-        double* pBais;
+        double* pWeightDeviation;
+        double* pBaisDeviation;
         double* pZDeviatioin;
     }it = {
         spInTensor->getDataPtr<double>(),
@@ -146,8 +141,8 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         spOutTensor->getDataPtr<double>(),
         spOutDeviation->getDataPtr<double>(),
         m_spWeights,
-        spWeightDeviationArray,
-        m_spBais
+        pWeightDerivationArray,
+        pBaisDeviationArray
     };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         CItOutVariables varTBackup = {
@@ -156,8 +151,8 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
             it.pOut,
             it.pOutDeviation,
             it.pWeight,
-            it.pWeightDerivation,
-            it.pBais,
+            it.pWeightDeviation,
+            it.pBaisDeviation,
         };
 
         //
@@ -178,7 +173,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
                 it.pOut,
                 it.pOutDeviation,
                 it.pWeight,
-                it.pWeightDerivation,
+                it.pWeightDeviation,
             };
 
             #ifdef _DEBUG
@@ -214,26 +209,26 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
                 //
                 //pInDeviation[iInput] += derivationZ * pWeights[iWeight] * dLearnRate;
                 (*it.pInDeviation) += derivationZ * (*it.pWeight);
-                (*it.pWeightDerivation) += derivationZ * (*it.pIn);
+                (*it.pWeightDeviation) += derivationZ * (*it.pIn);
 
                 it.pIn++;
                 it.pInDeviation++;
                 it.pWeight++;
-                it.pWeightDerivation++;
+                it.pWeightDeviation++;
             }
 
             //
             // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
             //
-            *it.pBais -= (-derivationZ) * dLearnRate;
+            *it.pBaisDeviation += (-derivationZ);
 
             //  更新迭代参数
-            it.pBais++;
+            it.pBaisDeviation++;
             it.pZDeviatioin++;
             it.pIn = varOBackup.pIn;
             it.pInDeviation = varOBackup.pInDeviation;
             it.pWeight = varOBackup.pWeight + nInCells;
-            it.pWeightDerivation = varOBackup.pWeightDerivation + nInCells;
+            it.pWeightDeviation = varOBackup.pWeightDeviation + nInCells;
         }
 
         //  更新迭代参数
@@ -242,26 +237,30 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         it.pOut = varTBackup.pOut + nOutputTensorSize;
         it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
         it.pWeight = varTBackup.pWeight;
-        it.pWeightDerivation = varTBackup.pWeightDerivation;
-        it.pBais = varTBackup.pBais;
+        it.pWeightDeviation = varTBackup.pWeightDeviation;
+        it.pBaisDeviation = varTBackup.pBaisDeviation;
     }
 
-    for(int iWeight=0;iWeight<nWeights; iWeight++) {
-        DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
+    m_spOptimizer->updateDeviation(nTensor);
 
-        //权重值范围是否需要限制为[-1,1]?
-        //if( DVV(pWeightArray, iWeight, nWeights) > 1) {
-        //    DVV(pWeightArray, iWeight, nWeights) = 1;
-        //}else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
-        //    DVV(pWeightArray, iWeight, nWeights) = -1;
-        //}
+    double* pWeights = m_spWeights;
+    for(int iWeight=0;iWeight<nWeights; iWeight++) {
+        *pWeights -= *pWeightDerivationArray;
+        pWeights++;
+        pWeightDerivationArray++;
+    }
+    double* pBais = m_spBais;
+    for(int iBais=0; iBais<m_nCells; iBais++) {
+        *pBais -= *pBaisDeviationArray;
+        pBais++;
+        pBaisDeviationArray++;
     }
 
     #ifdef _DEBUG
-
+    double* pWeightArray = m_spWeights;
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate) / nWeights;
+        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
         if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
             maxW = DVV(pWeightArray,iWeight,nWeights);
         }else

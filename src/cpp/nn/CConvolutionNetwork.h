@@ -3,6 +3,8 @@
 
 #include "nn.h"
 #include "CActivator.h"
+#include "COptimizer.h"
+
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
@@ -47,6 +49,7 @@ private:
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
     CActivator* m_pActivator;
+    SOptimizer m_spOptimizer;
     static SCtx sCtx;
 
 public:

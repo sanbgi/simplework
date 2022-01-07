@@ -13,6 +13,9 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     if(spConvolution->m_pActivator == nullptr) {
         return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
     }
+    if( COptimizer::getOptimizer(nullptr, spConvolution->m_spOptimizer) != sCtx.success()) {
+        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+    }
     spNetwork.setPtr(spConvolution.getPtr());
     return sCtx.success();
 }
@@ -170,11 +173,9 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     double* pBaisArray = m_spBais;
 
     int nWeights = nConvSize*nConvs;
-    CTaker<double*> spWeightDeviationArray(new double[nWeights], [](double* ptr) {
-        delete[] ptr;
-    });
-    double* pWeightDerivationArray = spWeightDeviationArray;
-    memset(pWeightDerivationArray, 0 ,sizeof(double)*nWeights);
+    double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+nConvs);
+    double* pBaisDerivationArray = pWeightDerivationArray+nWeights;
+    memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+nConvs));
 
     #ifdef _DEBUG
     double avgOutDerivation = 0;
@@ -186,7 +187,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     #endif//_DEBUG
 
     int nTensor = m_nTensor;
-    double dLearnRate = 5.0 / nConvSize;
     int nOutHstep = nOutputWidth*nConvs;
     int nOutWstep = nConvs;
     
@@ -196,8 +196,8 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         double* pOut;
         double* pOutDeviation;
         double* pWeights;
-        double* pWeightDerivation;
-        double* pBais;
+        double* pWeightDevivation;
+        double* pBaisDeviation;
         double* pZDeviatioin;
     }it = {
         spInTensor->getDataPtr<double>(),
@@ -206,7 +206,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         spOutDeviation->getDataPtr<double>(),
         m_spWeights,
         pWeightDerivationArray,
-        m_spBais
+        pBaisDerivationArray
     };
     double derivationZ;
     double pDerivationZ[nOutputTensorSize];
@@ -228,14 +228,14 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
             varOYBackup.pZDeviatioin = it.pZDeviatioin;
             for(iOutX=0; iOutX < nOutputWidth; iOutX++) {
                 varOXBackup.pWeights = it.pWeights;
-                varOXBackup.pWeightDerivation = it.pWeightDerivation;
-                varOXBackup.pBais = it.pBais;
+                varOXBackup.pWeightDevivation = it.pWeightDevivation;
+                varOXBackup.pBaisDeviation = it.pBaisDeviation;
                 varOXBackup.pZDeviatioin = it.pZDeviatioin;
                 for(iConv = 0; iConv < nConvs; iConv++) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pInDeviation = it.pInDeviation;
                     varConvBackup.pWeights = it.pWeights;
-                    varConvBackup.pWeightDerivation = it.pWeightDerivation;
+                    varConvBackup.pWeightDevivation = it.pWeightDevivation;
 
                     #ifdef _DEBUG
                     avgOutDerivation += abs(it.pOutDeviation[(iOutY*nOutWstep+iOutX)+iConv]) / nOutputTensorSize / nTensor ;
@@ -263,52 +263,52 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                         varConvYBackup.pIn = it.pIn;
                         varConvYBackup.pInDeviation = it.pInDeviation;
                         varConvYBackup.pWeights = it.pWeights;
-                        varConvYBackup.pWeightDerivation = it.pWeightDerivation;
+                        varConvYBackup.pWeightDevivation = it.pWeightDevivation;
                         for(iConvX=0; iConvX<nConvWidth; iConvX++) {
                             varConvXBackup.pIn = it.pIn;
                             varConvXBackup.pInDeviation = it.pInDeviation;
                             varConvXBackup.pWeights = it.pWeights;
-                            varConvXBackup.pWeightDerivation = it.pWeightDerivation;
+                            varConvXBackup.pWeightDevivation = it.pWeightDevivation;
                             for(iLayer=0; iLayer<nInputLayers; iLayer++) {
                                 
                                 //
                                 // 累计计算权重值
                                 //
                                 (*it.pInDeviation) += derivationZ * (*it.pWeights);
-                                (*it.pWeightDerivation) += derivationZ * (*it.pIn);
+                                (*it.pWeightDevivation) += derivationZ * (*it.pIn);
 
                                 it.pIn++;
                                 it.pInDeviation++;
                                 it.pWeights++;
-                                it.pWeightDerivation++;
+                                it.pWeightDevivation++;
                             }
                             it.pIn = varConvXBackup.pIn + nInputWidthStep;
                             it.pInDeviation = varConvXBackup.pInDeviation + nInputWidthStep;
                             it.pWeights = varConvXBackup.pWeights + nConvWidthStep;
-                            it.pWeightDerivation = varConvXBackup.pWeightDerivation + nConvWidthStep;
+                            it.pWeightDevivation = varConvXBackup.pWeightDevivation + nConvWidthStep;
                         }
                         it.pIn = varConvYBackup.pIn + nInputHeightStep;
                         it.pInDeviation = varConvYBackup.pInDeviation + nInputHeightStep;
                         it.pWeights = varConvYBackup.pWeights + nConvHeightStep;
-                        it.pWeightDerivation = varConvYBackup.pWeightDerivation + nConvHeightStep;
+                        it.pWeightDevivation = varConvYBackup.pWeightDevivation + nConvHeightStep;
                     }
 
                     //
                     //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
                     //
-                    (*pBaisArray) -= (-derivationZ) * dLearnRate;
+                    (*it.pBaisDeviation) += (-derivationZ);
 
                     it.pIn = varConvBackup.pIn;
                     it.pInDeviation = varConvBackup.pInDeviation;
                     it.pWeights = varConvBackup.pWeights + nConvSize;
-                    it.pWeightDerivation = varConvBackup.pWeightDerivation + nConvSize;
-                    it.pBais++;
+                    it.pWeightDevivation = varConvBackup.pWeightDevivation + nConvSize;
+                    it.pBaisDeviation++;
                     it.pZDeviatioin++;
                 }
 
                 it.pWeights = varOXBackup.pWeights;
-                it.pWeightDerivation = varOXBackup.pWeightDerivation;
-                it.pBais = varOXBackup.pBais;
+                it.pWeightDevivation = varOXBackup.pWeightDevivation;
+                it.pBaisDeviation = varOXBackup.pBaisDeviation;
                 it.pZDeviatioin = varOXBackup.pZDeviatioin;
 
                 it.pIn += nInputWidthStep;
@@ -328,25 +328,26 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
     }
 
+    //
+    // 用优化器优化偏差值
+    //
+    m_spOptimizer->updateDeviation(nTensor);
+
     // 
     // 权重值更新，需要在输入偏导数计算完成后进行，否则，中间会影响输入偏导数值
     //
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
-        DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate;
-
-        //权重值范围是否需要限制为[-1,1]?
-        //if( DVV(pWeightArray, iWeight, nWeights) > 1) {
-        //    DVV(pWeightArray, iWeight, nWeights) = 1;
-        //}else if( DVV(pWeightArray, iWeight, nWeights) < -1) {
-        //    DVV(pWeightArray, iWeight, nWeights) = -1;
-        //}
+        DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights);
+    }
+    for(int iBais=0; iBais<nConvs; iBais++) {
+        DVV(pBaisArray, iBais, nConvs) -= DVV(pBaisDerivationArray, iBais, nConvs);
     }
 
     #ifdef _DEBUG
 
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights) * dLearnRate) / nWeights;
+        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
 
         if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
             maxW = DVV(pWeightArray,iWeight,nWeights);
