@@ -4,6 +4,7 @@
 #include "nn.h"
 #include "CActivator.h"
 #include "COptimizer.h"
+#include "CSize.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
@@ -23,39 +24,38 @@ public://Factory
     static int createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork);
 
 private:
-    int initWeights(const STensor& inputTensor);
+    int initNetwork(const STensor& inputTensor);
 
 private:
     STensor m_spInTensor;
     STensor m_spOutTensor;
     STensor m_spOutDimVector;
 
-    int m_nConvWidth;
-    int m_nConvHeight;
-    int m_nConvs;
+    //基础参数
+    int m_nPadingWidth;
+    int m_nPadingHeight;
+    int m_nStrideWidth;
+    int m_nStrideHeight;
 
-    int m_nTensor;
-    int m_nInputLayers;
+    //数据计算参数
+    int m_nInData;
 
-    int m_nInputWidth;
-    int m_nInputHeight;
-    int m_nInputTensorSize;
-    int m_nInputData;
+    //输入、输出、卷积尺寸
+    CBatchSize3D m_sizeIn;
+    CBatchSize3D m_sizeOut;
+    CBatchSize3D m_sizeConv;
 
-    int m_nOutWidth;
-    int m_nOutHeight;
-    int m_nOutTensorSize;
+    //输入、输出、卷积步长
+    CBatchSize2D m_stepInMove;
+    CBatchSize2D m_stepInConv;
+    CBatchSize2D m_stepOut;
+    CBatchSize2D m_stepConv;
 
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
     static SCtx sCtx;
-
-public:
-    CConvolutionNetwork() {
-        m_nInputWidth = 0;
-    }
 };
 
 #endif//__SimpleWork_NN_CConvNetwork_H__

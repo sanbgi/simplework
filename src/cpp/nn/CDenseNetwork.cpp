@@ -19,7 +19,7 @@ int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNeuralNet
 }
 
 int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( int errCode = initWeights(spInTensor) != sCtx.success() ) {
+    if( int errCode = initNetwork(spInTensor) != sCtx.success() ) {
         return errCode;
     }
 
@@ -282,7 +282,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     return sCtx.success();
 }
 
-int CDenseNetwork::initWeights(const STensor& spInTensor) {
+int CDenseNetwork::initNetwork(const STensor& spInTensor) {
     if(m_spOutDimVector) {
         return sCtx.success();
     }

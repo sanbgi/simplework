@@ -30,7 +30,7 @@ public://Factory
     static int createNetwork(int nCells, const char* szActivator, SNeuralNetwork& spNetwork);
 
 private:
-    int initWeights(const STensor& spDimTensor);
+    int initNetwork(const STensor& spDimTensor);
 
 private:
     STensor m_spInTensor;

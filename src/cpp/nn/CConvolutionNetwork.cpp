@@ -6,9 +6,16 @@ SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);
-    spConvolution->m_nConvWidth = nWidth;
-    spConvolution->m_nConvHeight = nHeight;
-    spConvolution->m_nConvs = nConvs;
+    spConvolution->m_sizeConv = {
+        nConvs,
+        nHeight,
+        nWidth,
+        0
+    };
+    spConvolution->m_nPadingWidth = 0;
+    spConvolution->m_nPadingHeight = 0;
+    spConvolution->m_nStrideWidth = 1;
+    spConvolution->m_nStrideHeight = 1;
     spConvolution->m_pActivator = CActivator::getActivation(szActivator);
     if(spConvolution->m_pActivator == nullptr) {
         return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
@@ -21,41 +28,26 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
 }
 
 int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( initWeights(spInTensor) != sCtx.success() ) {
+    if( initNetwork(spInTensor) != sCtx.success() ) {
         return sCtx.error();
     }
 
-    if(spInTensor->getDataSize() != m_nInputData) {
+    if(spInTensor->getDataSize() != m_nInData) {
         return sCtx.error();
     }
 
-    int nInputWidth = m_nInputWidth;
-    int nInputLayers = m_nInputLayers;
-    int nInputTensorSize = m_nInputTensorSize;
+    CBatchSize3D& sizeIn = m_sizeIn;
+    CBatchSize3D& sizeOut = m_sizeOut;
+    CBatchSize3D& sizeConv = m_sizeConv;
 
-    int nConvs = m_nConvs;
-    int nConvWidth = m_nConvWidth;
-    int nConvHeight = m_nConvHeight;
-    int nConvSize = nConvWidth * nConvHeight * nInputLayers; 
-
-    int nOutputWidth = m_nOutWidth;
-    int nOutputHeight = m_nOutHeight;
-    int nOutputTensorSize = m_nOutTensorSize;
-
-    int nInputHeightStep = nInputWidth * nInputLayers;
-    int nInputWidthStep = nInputLayers;
-    int nConvHeightStep = nConvWidth * nInputLayers;
-    int nConvWidthStep = nInputLayers;
-
-    double* pWeightArray = m_spWeights;
-    double* pBaisArray = m_spBais;
-
-    int nTensor = m_nTensor;
-    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, nTensor * m_nOutTensorSize) != sCtx.success() ){
+    CBatchSize2D& stepInMove = m_stepInMove;
+    CBatchSize2D& stepInConv = m_stepInConv;
+    CBatchSize2D& stepOut = m_stepOut;
+    CBatchSize2D& stepConv = m_stepConv;
+    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, sizeIn.batch * stepOut.batch) != sCtx.success() ){
         return sCtx.error("创建输出张量失败");
     }
-    int nOutHstep = nOutputWidth*nConvs;
-    int nOutWstep = nConvs;
+
     struct CItOutVariables {
         double* pIn;
         double* pOut;
@@ -71,65 +63,65 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     double dConv;
     int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
     CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
-    for(iTensor=0; iTensor<nTensor; iTensor++) {
+    for(iTensor=0; iTensor<sizeIn.batch; iTensor++) {
         varTBackup = {
             it.pIn,
             it.pOut,
         };
-        for(iOutY=0; iOutY < nOutputHeight; iOutY++) {
+        for(iOutY=0; iOutY < sizeOut.height; iOutY++) {
             varOYBackup.pIn = it.pIn;
             varOYBackup.pOut = it.pOut;
-            for(iOutX=0; iOutX < nOutputWidth; iOutX++) {
+            for(iOutX=0; iOutX < sizeOut.width; iOutX++) {
                 varOXBackup.pIn = it.pIn;
                 varOXBackup.pOut = it.pOut;
                 varOXBackup.pWeights = it.pWeights;
                 varOXBackup.pBais = it.pBais;
-                for(iConv = 0; iConv < nConvs; iConv++) {
+                for(iConv = 0; iConv < sizeConv.batch; iConv++) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pWeights = it.pWeights;
 
                     //初始化卷积结果
                     dConv = 0;
-                    for( iConvY=0; iConvY<nConvHeight; iConvY++) {
+                    for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
                         varConvYBackup.pIn = it.pIn;
                         varConvYBackup.pWeights = it.pWeights;
-                        for(iConvX=0; iConvX<nConvWidth; iConvX++) {
+                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
                             varConvXBackup.pIn = it.pIn;
                             varConvXBackup.pWeights = it.pWeights;
-                            for( int iLayer=0; iLayer<nInputLayers; iLayer++) {
+                            for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
                                 //卷积结果为乘积结果求和
                                 dConv += (*it.pWeights) * (*it.pIn);
                                 it.pIn++;
                                 it.pWeights++;
                             }
-                            it.pIn = varConvXBackup.pIn + nInputWidthStep;
-                            it.pWeights = varConvXBackup.pWeights + nConvWidthStep;
+                            it.pIn = varConvXBackup.pIn + stepInConv.width;
+                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
                         }
-                        it.pIn = varConvYBackup.pIn + nInputHeightStep;
-                        it.pWeights = varConvYBackup.pWeights + nConvHeightStep;
+                        it.pIn = varConvYBackup.pIn + stepInConv.height;
+                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
                     }
                     //卷积结果减去偏置
                     (*it.pOut) = dConv - (*it.pBais);
 
                     it.pIn = varConvBackup.pIn;
                     it.pOut++;
-                    it.pWeights = varConvBackup.pWeights + nConvSize;
+                    it.pWeights = varConvBackup.pWeights + stepConv.batch;
                     it.pBais++;
                 }
                 it.pWeights = varOXBackup.pWeights;
                 it.pBais = varOXBackup.pBais;
-                it.pOut = varOXBackup.pOut + nOutWstep;
-                it.pIn = varOXBackup.pIn + nInputWidthStep;
+                it.pIn = varOXBackup.pIn + stepInMove.width;
+                it.pOut = varOXBackup.pOut + stepOut.width;
             }
-            it.pIn = varOYBackup.pIn + nInputHeightStep;
-            it.pOut = varOYBackup.pOut + nOutHstep;
+            it.pIn = varOYBackup.pIn + stepInMove.height;
+            it.pOut = varOYBackup.pOut + stepOut.height;
         }
         //
         // 激活结果值
         //
-        m_pActivator->activate(nOutputTensorSize, varTBackup.pOut, varTBackup.pOut);
-        it.pIn = varTBackup.pIn + nInputTensorSize;
-        it.pOut = varTBackup.pOut + nOutputTensorSize;
+        m_pActivator->activate(stepOut.batch, varTBackup.pOut, varTBackup.pOut);
+        it.pIn = varTBackup.pIn + stepInMove.batch;
+        it.pOut = varTBackup.pOut + stepOut.batch;
     }
 
     m_spInTensor = spInTensor;
@@ -147,32 +139,17 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
-    //
-    // 学习率先固定
-    //
-    int nInputWidth = m_nInputWidth;
-    int nInputHeight = m_nInputHeight;
-    int nInputLayers = m_nInputLayers;
-    int nInputTensorSize = m_nInputTensorSize;
+    CBatchSize3D& sizeIn = m_sizeIn;
+    CBatchSize3D& sizeOut = m_sizeOut;
+    CBatchSize3D& sizeConv = m_sizeConv;
 
-    int nConvWidth = m_nConvWidth;
-    int nConvHeight = m_nConvHeight;
-    int nConvs = m_nConvs;
-    int nConvSize = nConvWidth * nConvHeight * nInputLayers; 
+    CBatchSize2D& stepInMove = m_stepInMove;
+    CBatchSize2D& stepInConv = m_stepInConv;
+    CBatchSize2D& stepOut = m_stepOut;
+    CBatchSize2D& stepConv = m_stepConv;
 
-    int nOutputWidth = m_nOutWidth;
-    int nOutputHeight = m_nOutHeight;
-    int nOutputTensorSize = m_nOutTensorSize;
-
-    int nInputHeightStep = nInputWidth * nInputLayers;
-    int nInputWidthStep = nInputLayers;
-    int nConvHeightStep = nConvWidth * nInputLayers;
-    int nConvWidthStep = nInputLayers;
-
-    double* pWeightArray = m_spWeights;
-    double* pBaisArray = m_spBais;
-
-    int nWeights = nConvSize*nConvs;
+    int nConvs = sizeConv.batch;
+    int nWeights = stepConv.batch * sizeConv.batch;
     double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+nConvs);
     double* pBaisDerivationArray = pWeightDerivationArray+nWeights;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+nConvs));
@@ -186,10 +163,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     double avgBais = 0;
     #endif//_DEBUG
 
-    int nTensor = m_nTensor;
-    int nOutHstep = nOutputWidth*nConvs;
-    int nOutWstep = nConvs;
-    
     struct CItOutVariables {
         double* pIn;
         double* pInDeviation;
@@ -209,10 +182,10 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         pBaisDerivationArray
     };
     double derivationZ;
-    double pDerivationZ[nOutputTensorSize];
+    double pDerivationZ[stepOut.batch];
     int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
     CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
-    for(iTensor=0; iTensor<nTensor; iTensor++) {
+    for(iTensor=0; iTensor<sizeIn.batch; iTensor++) {
         varTBackup = {
             it.pIn,
             it.pInDeviation,
@@ -220,13 +193,13 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
             it.pOutDeviation
         };
 
-        m_pActivator->deactivate(nOutputTensorSize, it.pOut, it.pOutDeviation, pDerivationZ);
+        m_pActivator->deactivate(stepOut.batch, it.pOut, it.pOutDeviation, pDerivationZ);
         it.pZDeviatioin = pDerivationZ;
-        for(iOutY=0; iOutY < nOutputHeight; iOutY++) {
+        for(iOutY=0; iOutY < sizeOut.height; iOutY++) {
             varOYBackup.pIn = it.pIn;
             varOYBackup.pInDeviation = it.pInDeviation;
             varOYBackup.pZDeviatioin = it.pZDeviatioin;
-            for(iOutX=0; iOutX < nOutputWidth; iOutX++) {
+            for(iOutX=0; iOutX < sizeOut.width; iOutX++) {
                 varOXBackup.pWeights = it.pWeights;
                 varOXBackup.pWeightDevivation = it.pWeightDevivation;
                 varOXBackup.pBaisDeviation = it.pBaisDeviation;
@@ -238,7 +211,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     varConvBackup.pWeightDevivation = it.pWeightDevivation;
 
                     #ifdef _DEBUG
-                    avgOutDerivation += abs(it.pOutDeviation[(iOutY*nOutWstep+iOutX)+iConv]) / nOutputTensorSize / nTensor ;
+                    avgOutDerivation += abs(it.pOutDeviation[(iOutY*stepOut.height+iOutX)+iConv]) / stepOut.batch / sizeIn.batch ;
                     #endif//_DEBUG
 
                     //
@@ -259,17 +232,17 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                     //  
-                    for(iConvY=0; iConvY<nConvHeight; iConvY++) {
+                    for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
                         varConvYBackup.pIn = it.pIn;
                         varConvYBackup.pInDeviation = it.pInDeviation;
                         varConvYBackup.pWeights = it.pWeights;
                         varConvYBackup.pWeightDevivation = it.pWeightDevivation;
-                        for(iConvX=0; iConvX<nConvWidth; iConvX++) {
+                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
                             varConvXBackup.pIn = it.pIn;
                             varConvXBackup.pInDeviation = it.pInDeviation;
                             varConvXBackup.pWeights = it.pWeights;
                             varConvXBackup.pWeightDevivation = it.pWeightDevivation;
-                            for(iLayer=0; iLayer<nInputLayers; iLayer++) {
+                            for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
                                 
                                 //
                                 // 累计计算权重值
@@ -282,15 +255,15 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                                 it.pWeights++;
                                 it.pWeightDevivation++;
                             }
-                            it.pIn = varConvXBackup.pIn + nInputWidthStep;
-                            it.pInDeviation = varConvXBackup.pInDeviation + nInputWidthStep;
-                            it.pWeights = varConvXBackup.pWeights + nConvWidthStep;
-                            it.pWeightDevivation = varConvXBackup.pWeightDevivation + nConvWidthStep;
+                            it.pIn = varConvXBackup.pIn + stepInConv.width;
+                            it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
+                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                            it.pWeightDevivation = varConvXBackup.pWeightDevivation + stepConv.width;
                         }
-                        it.pIn = varConvYBackup.pIn + nInputHeightStep;
-                        it.pInDeviation = varConvYBackup.pInDeviation + nInputHeightStep;
-                        it.pWeights = varConvYBackup.pWeights + nConvHeightStep;
-                        it.pWeightDevivation = varConvYBackup.pWeightDevivation + nConvHeightStep;
+                        it.pIn = varConvYBackup.pIn + stepInConv.height;
+                        it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
+                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                        it.pWeightDevivation = varConvYBackup.pWeightDevivation + stepConv.height;
                     }
 
                     //
@@ -300,8 +273,8 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
 
                     it.pIn = varConvBackup.pIn;
                     it.pInDeviation = varConvBackup.pInDeviation;
-                    it.pWeights = varConvBackup.pWeights + nConvSize;
-                    it.pWeightDevivation = varConvBackup.pWeightDevivation + nConvSize;
+                    it.pWeights = varConvBackup.pWeights + stepConv.batch;
+                    it.pWeightDevivation = varConvBackup.pWeightDevivation + stepConv.batch;
                     it.pBaisDeviation++;
                     it.pZDeviatioin++;
                 }
@@ -311,64 +284,68 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                 it.pBaisDeviation = varOXBackup.pBaisDeviation;
                 it.pZDeviatioin = varOXBackup.pZDeviatioin;
 
-                it.pIn += nInputWidthStep;
-                it.pInDeviation += nInputWidthStep;
-                it.pZDeviatioin += nOutWstep;
+                it.pIn += stepInMove.width;
+                it.pInDeviation += stepInMove.width;
+                it.pZDeviatioin += stepOut.width;
             }
 
-            it.pIn = varOYBackup.pIn + nInputHeightStep;
-            it.pInDeviation = varOYBackup.pInDeviation + nInputHeightStep;
-            it.pZDeviatioin = varOYBackup.pZDeviatioin + nOutHstep;
+            it.pIn = varOYBackup.pIn + stepInMove.height;
+            it.pInDeviation = varOYBackup.pInDeviation + stepInMove.height;
+            it.pZDeviatioin = varOYBackup.pZDeviatioin + stepOut.height;
         }
 
         //  更新迭代参数
-        it.pIn = varTBackup.pIn + nInputTensorSize;
-        it.pInDeviation = varTBackup.pInDeviation + nInputTensorSize;
-        it.pOut = varTBackup.pOut + nOutputTensorSize;
-        it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
+        it.pIn = varTBackup.pIn + stepInMove.batch;
+        it.pInDeviation = varTBackup.pInDeviation + stepInMove.batch;
+        it.pOut = varTBackup.pOut + stepOut.batch;
+        it.pOutDeviation = varTBackup.pOutDeviation + stepOut.batch;
     }
 
     //
     // 用优化器优化偏差值
     //
-    m_spOptimizer->updateDeviation(nTensor);
+    m_spOptimizer->updateDeviation(sizeIn.batch);
 
     // 
     // 权重值更新，需要在输入偏导数计算完成后进行，否则，中间会影响输入偏导数值
     //
+    double* pWeightArray = m_spWeights;
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
         DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights);
     }
+    double* pBaisArray = m_spBais;
     for(int iBais=0; iBais<nConvs; iBais++) {
         DVV(pBaisArray, iBais, nConvs) -= DVV(pBaisDerivationArray, iBais, nConvs);
     }
 
     #ifdef _DEBUG
+    {
+        for(int iWeight=0;iWeight<nWeights; iWeight++) {
+            avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
+            avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
 
-    for(int iWeight=0;iWeight<nWeights; iWeight++) {
-        avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
-
-        if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
-            maxW = DVV(pWeightArray,iWeight,nWeights);
+            if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
+                maxW = DVV(pWeightArray,iWeight,nWeights);
+            }
+            if(minW > DVV(pWeightArray,iWeight,nWeights)) {
+                minW = DVV(pWeightArray,iWeight,nWeights);
+            }
         }
-        if(minW > DVV(pWeightArray,iWeight,nWeights)) {
-            minW = DVV(pWeightArray,iWeight,nWeights);
+        for(int iConv = 0; iConv<nConvs; iConv++) {
+            avgBais += abs(DVV(pBaisArray, iConv, nConvs)) / nConvs;
         }
-    }
-    for(int iConv = 0; iConv<nConvs; iConv++) {
-        avgBais += abs(DVV(pBaisArray, iConv, nConvs)) / nConvs;
-    }
-    
-    static int t = 0;
-    if( (t++ / 2) % 10 == 0) {
-        std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
+        
+        static int t = 0;
+        if( (t++ / 2) % 10 == 0) {
+            std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
+        }
     }
     #endif//_DEBUG
+
     return sCtx.success();
 }
 
-int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
+int CConvolutionNetwork::initNetwork(const STensor& spInTensor) {
     if( !m_spOutDimVector ) {
         STensor& spInDimVector = spInTensor->getDimVector();
 
@@ -383,36 +360,64 @@ int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
         }
 
         int nTensor = pInDimSizes[0];
-        int nInputHeight = pInDimSizes[1];
-        int nInputWidth = pInDimSizes[2];
-        if( nInputHeight < m_nConvWidth || nInputWidth < m_nConvWidth ) {
+        int nInHeight = pInDimSizes[1];
+        int nInWidth = pInDimSizes[2];
+        if( nInHeight < m_sizeConv.height || nInWidth < m_sizeConv.width ) {
             return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
         }
 
-        int nInputLayers = 1;
+        int nInLayers = 1;
         for( int i=3; i<nInDims; i++ ) {
-            nInputLayers *= pInDimSizes[i];
+            nInLayers *= pInDimSizes[i];
         }
-        m_nInputWidth = nInputWidth;
-        m_nInputHeight = nInputHeight;
-        m_nInputTensorSize = m_nInputHeight*m_nInputWidth*nInputLayers;
-        m_nInputData = nTensor*m_nInputTensorSize;
+        m_nInData = nTensor*nInHeight*nInWidth*nInLayers;
+        m_sizeConv.layers = nInLayers;
+        m_sizeIn = {
+            nTensor,
+            nInHeight,
+            nInWidth,
+            nInLayers
+        };
 
-        m_nOutWidth = nInputWidth - m_nConvWidth + 1;
-        m_nOutHeight = nInputHeight - m_nConvHeight + 1;
-        m_nOutTensorSize = m_nOutWidth*m_nOutHeight*m_nConvs;
+        m_sizeOut = {
+            m_sizeIn.batch,
+            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+            m_sizeConv.batch
+        };
 
-        m_nTensor = nTensor;
-        m_nInputLayers = nInputLayers;
+        m_stepInConv = {
+            m_sizeIn.height * m_sizeIn.width * nInLayers,
+            m_sizeIn.width * nInLayers,
+            nInLayers
+        };
 
-        int pOutDimSizes[4] = {nTensor, m_nOutHeight, m_nOutWidth, m_nConvs};
-        if( STensor::createVector<int>(m_spOutDimVector, 4, pOutDimSizes) != sCtx.success() ) {
+        m_stepInMove = {  
+            m_stepInConv.batch,
+            m_stepInConv.height * m_nStrideHeight,
+            m_stepInConv.width * m_nStrideWidth
+        };
+
+        m_stepOut = {
+            m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
+            m_sizeOut.width * m_sizeConv.batch,
+            m_sizeConv.batch
+        };
+
+        m_stepConv = {
+            m_sizeConv.height * m_sizeConv.width * nInLayers,
+            m_sizeConv.width * nInLayers,
+            nInLayers
+        };
+
+        if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
             return sCtx.error("创建输出张量的维度向量失败");
         }
 
-        int nWeight = m_nConvWidth*m_nConvHeight*nInputLayers*m_nConvs;
-        double* pWeights = new double[nWeight];
-        double* pBais = new double[m_nConvs];
+        int nWeights = m_stepConv.batch * m_sizeConv.batch;
+        int nConvs = m_sizeConv.batch;
+        double* pWeights = new double[nWeights];
+        double* pBais = new double[nConvs];
         m_spWeights.take(pWeights, [](double* pWeights){
             delete[] pWeights;
         });
@@ -421,21 +426,14 @@ int CConvolutionNetwork::initWeights(const STensor& spInTensor) {
         });
 
         //
-        // 基础权重最大值为 0.5 / 卷积核权重值的数量
+        // TODO：权重初始化采用什么策略？
         //
-        /*
-        int nConvSize = m_nConvWidth*m_nConvHeight*nInputLayers;
-        double xWeight = 1.0/nConvSize;
-        for(int i=0; i<nWeight; i++) {
-            *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
-        }*/
-
-        double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInputLayers));
-        for(int i=0; i<nWeight; i++) {
+        double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
+        for(int i=0; i<nWeights; i++) {
             pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
         }
 
-        for(int i=0; i<m_nConvs; i++ ){
+        for(int i=0; i<m_sizeConv.batch; i++ ){
             pBais[i] = 0;
         }
     }
