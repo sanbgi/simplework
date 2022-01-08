@@ -6,6 +6,7 @@
 using namespace std;
 
 map<string, CActivator*> s_mapActivators = {
+    { "none", CActivator::getNoneActivator() },
     { "relu", CActivator::getReLU() },
     { "softmax", CActivator::getSoftmax() },
     { "sigmod", CActivator::getSigmod() },
@@ -23,6 +24,26 @@ CActivator* CActivator::getActivation(const char* szActivator) {
         return nullptr;
     }
     return getELU();
+}
+
+
+//
+// 神经网络输出总是在[0,1]之间
+//
+CActivator* CActivator::getNoneActivator() {
+    static class CActivatorImp : public CActivator {
+        void activate( int nData, double* pZArray, double* pYArray) {
+            for(int i=0; i<nData; i++) {
+                pYArray[i] = pZArray[i];
+            }
+        }
+        void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray) {
+            for(int i=0; i<nData; i++) {
+                pDzArray[i] = pYDeltaArray[i];
+            }
+        }
+    }s_activator;
+    return &s_activator;
 }
 
 //

@@ -40,6 +40,7 @@ public:
     static CActivator* getTanh();
     static CActivator* getSoftmax();
     static CActivator* getNeuralActivator();
+    static CActivator* getNoneActivator();
 };
 
 #endif//__SimpleWork_NN_CActivation_H__
