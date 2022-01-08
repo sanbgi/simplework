@@ -18,8 +18,8 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         return sCtx.error();
     }
 
-    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nOutTensorSize * m_nTensor) != sCtx.success() ) {
-        return sCtx.error("创建输出张量失败");
+    if(spInTensor->getDataSize() != m_nTensor * m_nInputTensorSize) {
+        return sCtx.error();
     }
 
     int nPoolWidth = m_nWidth;
@@ -45,7 +45,7 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pOut;
     }it = {
         spInTensor->getDataPtr<double>(),
-        spOutTensor->getDataPtr<double>(),
+        m_spOutTensor->getDataPtr<double>(),
     };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         CItOutVariables varTBackup = {
@@ -98,7 +98,7 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }
     
     m_spInTensor = spInTensor;
-    m_spOutTensor = spOutTensor;
+    spOutTensor = m_spOutTensor;
     return sCtx.success();
 }
 
@@ -245,6 +245,10 @@ int CPoolNetwork::initNetwork(const STensor& inputTensor) {
         pOutDimSizes[2] = m_nOutWidth;
         if( STensor::createVector(m_spOutDimVector, nDims, pOutDimSizes) != sCtx.success() ) {
             return sCtx.error("创建输出张量的维度张量失败");
+        }
+
+        if( STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, m_nOutTensorSize * m_nTensor) != sCtx.success() ) {
+            return sCtx.error("创建输出张量失败");
         }
     }
     return sCtx.success();

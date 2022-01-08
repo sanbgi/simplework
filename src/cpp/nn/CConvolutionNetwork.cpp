@@ -39,15 +39,10 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     CBatchSize3D& sizeIn = m_sizeIn;
     CBatchSize3D& sizeOut = m_sizeOut;
     CBatchSize3D& sizeConv = m_sizeConv;
-
     CBatchSize2D& stepInMove = m_stepInMove;
     CBatchSize2D& stepInConv = m_stepInConv;
     CBatchSize2D& stepOut = m_stepOut;
     CBatchSize2D& stepConv = m_stepConv;
-    if( STensor::createTensor<double>(spOutTensor, m_spOutDimVector, sizeIn.batch * stepOut.batch) != sCtx.success() ){
-        return sCtx.error("创建输出张量失败");
-    }
-
     struct CItOutVariables {
         double* pIn;
         double* pOut;
@@ -55,7 +50,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pBais;
     }it = {
         spInTensor->getDataPtr<double>(),
-        spOutTensor->getDataPtr<double>(),
+        m_spOutTensor->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
@@ -125,7 +120,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }
 
     m_spInTensor = spInTensor;
-    m_spOutTensor = spOutTensor;
+    spOutTensor = m_spOutTensor;
     return sCtx.success();
 }
 
@@ -142,7 +137,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     CBatchSize3D& sizeIn = m_sizeIn;
     CBatchSize3D& sizeOut = m_sizeOut;
     CBatchSize3D& sizeConv = m_sizeConv;
-
     CBatchSize2D& stepInMove = m_stepInMove;
     CBatchSize2D& stepInConv = m_stepInConv;
     CBatchSize2D& stepOut = m_stepOut;
@@ -404,6 +398,10 @@ int CConvolutionNetwork::initNetwork(const STensor& spInTensor) {
 
         if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
             return sCtx.error("创建输出张量的维度向量失败");
+        }
+
+        if( STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+            return sCtx.error("创建输出张量失败");
         }
 
         int nWeights = m_stepConv.batch * m_sizeConv.batch;

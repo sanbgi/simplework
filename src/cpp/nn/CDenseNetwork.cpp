@@ -28,10 +28,6 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         return sCtx.error("不支持输入张量尺寸与第一次的张量尺寸不同");
     }
 
-    if( int errCode = STensor::createTensor<double>(spOutTensor, m_spOutDimVector, m_nInputTensor*m_nCells) != sCtx.success() ) {
-        return sCtx.error(errCode, "创建输出张量失败");
-    }
-
     int nTensor = m_nInputTensor;
     int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
@@ -44,7 +40,7 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pBais;
     }it = {
         spInTensor->getDataPtr<double>(),
-        spOutTensor->getDataPtr<double>(),
+        m_spOutTensor->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
@@ -93,7 +89,7 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     }
 
     m_spInTensor = spInTensor;
-    m_spOutTensor = spOutTensor;
+    spOutTensor = m_spOutTensor;
     return sCtx.success();
 }
 
@@ -303,6 +299,10 @@ int CDenseNetwork::initNetwork(const STensor& spInTensor) {
     int pOutDimSizes[2] = { nTensor, m_nCells };
     if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
         return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
+    }
+
+    if( int errCode = STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, nTensor * m_nCells) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输出张量失败");
     }
 
     //
