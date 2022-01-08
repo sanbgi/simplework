@@ -110,16 +110,6 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     int nTensor = m_nInputTensor;
     int nInCells = m_nInputCells;
     int nOutputTensorSize = m_nCells;
-
-    #ifdef _DEBUG
-    double avgWeight = 0;
-    double maxW = -100000;
-    double minW = 100000;
-    double avgDerivation = 0;
-    double avgOutDerivation = 0;
-    double avgBais = 0;
-    #endif//_DEBUG
-
     int nWeights = m_nCells * m_nInputCells;
     
     double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+m_nCells);
@@ -175,10 +165,6 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
                 it.pWeight,
                 it.pWeightDeviation,
             };
-
-            #ifdef _DEBUG
-            avgOutDerivation += abs(it.pOutDeviation[iOutput]) / m_nCells / nTensor;
-            #endif//_DEBUG
 
             //
             //  计算目标函数对当前输出值的偏导数
@@ -257,25 +243,32 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
     }
 
     #ifdef _DEBUG
-    double* pWeightArray = m_spWeights;
-    for(int iWeight=0;iWeight<nWeights; iWeight++) {
-        avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-        avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
-        if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
-            maxW = DVV(pWeightArray,iWeight,nWeights);
-        }else
-        if(minW > DVV(pWeightArray,iWeight,nWeights)) {
-            minW = DVV(pWeightArray,iWeight,nWeights);
+    {
+        double avgWeight = 0;
+        double maxW = -100000;
+        double minW = 100000;
+        double avgDerivation = 0;
+        double avgBais = 0;
+        double* pWeightArray = m_spWeights;
+        for(int iWeight=0;iWeight<nWeights; iWeight++) {
+            avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
+            avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
+            if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
+                maxW = DVV(pWeightArray,iWeight,nWeights);
+            }else
+            if(minW > DVV(pWeightArray,iWeight,nWeights)) {
+                minW = DVV(pWeightArray,iWeight,nWeights);
+            }
         }
-    }
-    double* pBaisArray = m_spBais;
-    for(int iBais = 0; iBais<m_nCells; iBais++) {
-        avgBais += abs(DVV(pBaisArray, iBais, m_nCells)) / m_nCells;
-    }
+        double* pBaisArray = m_spBais;
+        for(int iBais = 0; iBais<m_nCells; iBais++) {
+            avgBais += abs(DVV(pBaisArray, iBais, m_nCells)) / m_nCells;
+        }
 
-    static int t = 0;
-    if( (t++ / 2) % 10 == 0) {
-        std::cout << "Dense: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
+        static int t = 0;
+        if( (t++ / 2) % 10 == 0) {
+            std::cout << "Dense: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << "\n";
+        }
     }
     #endif//_DEBUG
 

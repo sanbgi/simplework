@@ -2,7 +2,7 @@
 #include "math.h"
 #include "iostream"
 
-SCtx CConvolutionNetwork::sCtx("CConvolutionNetwork");
+static SCtx sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);
@@ -154,15 +154,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     double* pBaisDerivationArray = pWeightDerivationArray+nWeights;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+nConvs));
 
-    #ifdef _DEBUG
-    double avgOutDerivation = 0;
-    double avgWeight = 0;
-    double maxW = -100000;
-    double minW = 100000;
-    double avgDerivation = 0;
-    double avgBais = 0;
-    #endif//_DEBUG
-
     struct CItOutVariables {
         double* pIn;
         double* pInDeviation;
@@ -209,10 +200,6 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     varConvBackup.pInDeviation = it.pInDeviation;
                     varConvBackup.pWeights = it.pWeights;
                     varConvBackup.pWeightDevivation = it.pWeightDevivation;
-
-                    #ifdef _DEBUG
-                    avgOutDerivation += abs(it.pOutDeviation[(iOutY*stepOut.height+iOutX)+iConv]) / stepOut.batch / sizeIn.batch ;
-                    #endif//_DEBUG
 
                     //
                     //  计算目标函数对当前输出值的偏导数
@@ -320,6 +307,11 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
 
     #ifdef _DEBUG
     {
+        double avgWeight = 0;
+        double maxW = -100000;
+        double minW = 100000;
+        double avgDerivation = 0;
+        double avgBais = 0;
         for(int iWeight=0;iWeight<nWeights; iWeight++) {
             avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
             avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
@@ -337,7 +329,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         
         static int t = 0;
         if( (t++ / 2) % 10 == 0) {
-            std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << ", AvgOutD: " << avgOutDerivation << "\n";
+            std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << "\n";
         }
     }
     #endif//_DEBUG

@@ -55,7 +55,6 @@ private:
     CTaker<double*> m_spBais;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
-    static SCtx sCtx;
 };
 
 #endif//__SimpleWork_NN_CConvNetwork_H__
