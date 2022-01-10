@@ -4,6 +4,7 @@
 #include "../inc/SimpleWork.h"
 #include <math.h>
 #include "CNeuralNetwork.h"
+#include "CAvNetwork.h"
 
 using namespace sw;
 using namespace sw::av;
@@ -67,6 +68,7 @@ void fun(const PData& r) {
 
 
 int testPipe() {
+    /*
     SPipe avIn;
     if( SAvFactory::getAvFactory()->openAvFileReader("d:/tt.mkv", avIn) != sCtx.success() ) {
         return sCtx.error();
@@ -102,7 +104,7 @@ int testPipe() {
     int nFrames=0;
     while(av->pushData(CData<PAvFrame>(nullptr), nullptr) == sCtx.success()) {
         std::cout << "frames: " << ++nFrames << "processed \n";
-    }
+    }*/
 
     return sCtx.success();
 }
@@ -174,7 +176,8 @@ int main(int argc, char *argv[]){
     //testTensor();
     //testNN();
     //testIdx();
-    CNeuralNetwork::run();
+    //CNeuralNetwork::run();
+    CAvNetwork::run();
 
     /*
     int i=10;

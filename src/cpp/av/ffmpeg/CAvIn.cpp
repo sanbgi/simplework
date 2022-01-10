@@ -1,84 +1,32 @@
 
 #include "av_ffmpeg.h"
 #include "CAvIn.h"
-#include "CAvStreaming.h"
+#include "CAvFrame.h"
+#include "CAvInStreaming.h"
 #include "CAvSampleType.h"
 
 FFMPEG_NAMESPACE_ENTER
 
 static SCtx sCtx("CAvIn");
 
-int CAvIn::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
-    //
-    // 如果还没有读取HEADER，则先读取HEADER
-    //
-    if( !m_bHeaderReaded ) {
-        struct CInteralStreamingVisitor : public IVisitor<const PAvStreaming*> {
-            int visit(const PAvStreaming* pStreaming) {
-                return pReceiver->visit(CData<PAvStreaming>(pStreaming));
-            }
-            IVisitor<const PData&>* pReceiver;
-        }visitor;
-        visitor.pReceiver = pReceiver;
-        if( visitStreamings(&visitor) != sCtx.success() ) {
-            return sCtx.error();
-        }
-        m_bHeaderReaded = true;
+int CAvIn::getStreamingSize() {
+    return m_arrStreamings.size();
+}
+const PAvStreaming* CAvIn::getStreamingAt(int iPos) {
+    if(iPos < 0 || iPos >= m_arrStreamings.size() ) {
+        sCtx.warn("尝试读取不存在的视频流信息");
+        return nullptr;
     }
-
-    //
-    //  读取一帧音视频
-    //
-    struct CInteralVisitor : public IVisitor<const PAvFrame*> {
-        int visit(const PAvFrame* pFrame) {
-            return pReceiver->visit(CData<PAvFrame>(pFrame));
-        }
-        IVisitor<const PData&>* pReceiver;
-    }visitor;
-    visitor.pReceiver = pReceiver;
-    return readFrame(&visitor);
+    return &m_arrStreamings.at(iPos);
 }
 
-int CAvIn::visitStreamings(PAvStreaming::FVisitor visitor) {
-    if(!m_spOpenedCtx) {
+int CAvIn::createAvFileReader(const char* szFileName, SAvIn& spIn) {
+    CPointer<ffmpeg::CAvIn> spAvIn;
+    CObject::createObject(spAvIn);
+    if( spAvIn->initVideoFile(szFileName) != sCtx.success() ) {
         return sCtx.error();
     }
-
-    for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
-        AVStream* pStream = m_spOpenedCtx->streams[i];
-        PAvStreaming avStream;
-        avStream.timeDuration = pStream->duration;
-        avStream.streamingId = pStream->index;
-        avStream.timeRate = pStream->time_base.den/pStream->time_base.num;
-        AVCodecParameters* pCodecContext = pStream->codecpar;
-        switch(pCodecContext->codec_type) {
-            case AVMEDIA_TYPE_AUDIO:
-                {
-                    avStream.frameMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-                    avStream.frameMeta.sampleFormat = CAvSampleType::convert((AVSampleFormat)pCodecContext->format);
-                    avStream.frameMeta.audioChannels = pCodecContext->channels;
-                    avStream.frameMeta.audioRate = pCodecContext->sample_rate;
-                    int errcode = visitor->visit(&avStream);
-                    if( errcode != sCtx.success() ) {
-                        return errcode;
-                    }
-                }
-                break;
-            case AVMEDIA_TYPE_VIDEO:
-                {
-                    avStream.frameMeta.sampleType = EAvSampleType::AvSampleType_Video;
-                    avStream.frameMeta.sampleFormat = CAvSampleType::convert((AVPixelFormat)pCodecContext->format);
-                    avStream.frameMeta.videoWidth = pCodecContext->width;
-                    avStream.frameMeta.videoHeight = pCodecContext->height;
-                    int errcode = visitor->visit(&avStream);
-                    if( errcode != sCtx.success() ) {
-                        return errcode;
-                    }
-                }
-                break;
-        }
-        sCtx.success();
-    }
+    spIn.setPtr(spAvIn.getPtr());
     return sCtx.success();
 }
 
@@ -104,12 +52,13 @@ int CAvIn::initVideoFile(const char* szFileName) {
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
-        CPointer<CAvStreaming> spStreaming;
+        CPointer<CAvInStreaming> spStreaming;
         CObject::createObject(spStreaming);
         if( spStreaming->init(m_spOpenedCtx->streams[i], i) != sCtx.success() ) {
             return sCtx.error();
         }
         m_arrAvStreamings.push_back(spStreaming);
+        m_arrStreamings.push_back(spStreaming->getPAvStreaming());
     }
     return sCtx.success();
 }
@@ -121,7 +70,6 @@ void CAvIn::initDeviceRegistry() {
         g_bInitialized = true;
     }
 }
-
 
 int CAvIn::initVideoCapture(const char* szName) {
     release();
@@ -156,61 +104,94 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     // 打开视频流
     m_spFormatCtx.take(avformat_alloc_context(), [](AVFormatContext* pCtx){avformat_free_context(pCtx);});
     if(avformat_open_input(&m_spFormatCtx,szName,pInputForamt,NULL)!=0){
-        printf("Couldn't open input stream.\n");
-        release();
-        return sCtx.error();
+        return sCtx.error("无法打开输入设备");
     }
     m_spOpenedCtx.take(m_spFormatCtx.untake(), [](AVFormatContext* pCtx){avformat_close_input(&pCtx);});
 
     // 查找视频流中的具体流信息
     if(avformat_find_stream_info(m_spOpenedCtx,NULL)<0){
-        printf("Couldn't find stream information.\n");
-        release();
-        return sCtx.error(); 
+        return sCtx.error("读取视频流信息失败"); 
     }
 
     // 初始化所有流参数
     for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
-        CPointer<CAvStreaming> spStreaming;
+        CPointer<CAvInStreaming> spStreaming;
         CObject::createObject(spStreaming);
         if( spStreaming->init(m_spOpenedCtx->streams[i], i) != sCtx.success() ) {
             return sCtx.error();
         }
         m_arrAvStreamings.push_back(spStreaming);
+        m_arrStreamings.push_back(spStreaming->getPAvStreaming());
     }
     return sCtx.success();
 }
 
-int CAvIn::readFrame(PAvFrame::FVisitor receiver) {
-        //
+int CAvIn::readFrame(SAvFrame& spAvFrame) {
+    //
     // 如果上次流成功读取了数据，则还需要继续读取
     //
-    if(m_arrNeedReadingStreamings.size()) {
-        CAvStreaming* pStreaming = m_arrNeedReadingStreamings.at(0);
-        m_arrNeedReadingStreamings.erase(m_arrNeedReadingStreamings.begin());
-        return receiveFrame(receiver, pStreaming);
+    std::vector<CAvInStreaming*>::reverse_iterator it = m_arrToReadingStreamings.rbegin();
+    if(it != m_arrToReadingStreamings.rend() ) {
+        CAvInStreaming* pStreaming = *it;
+        m_arrToReadingStreamings.pop_back();
+        if( receiveFrame(spAvFrame, pStreaming) != sCtx.success() ) {
+            if(pStreaming->m_isCompleted) {
+                return readFrame(spAvFrame);
+            }
+            return sCtx.error("读取帧失败");
+        }
+        return sCtx.success();
+    }
+
+    //
+    // 如果文件已经读取结束，则直接返回失败，无法读取更多的帧
+    //
+    if(m_isCompoeted) {
+        return sCtx.error();
     }
 
     CTaker<AVPacket*> spPacket( av_packet_alloc(),
                                 [](AVPacket* pPtr){av_packet_free(&pPtr);});
 
-    if( av_read_frame(m_spOpenedCtx, spPacket) >= 0 ){
-        return sendPackageAndReceiveFrame(receiver, spPacket);
-    }
+    int retCode = av_read_frame(m_spOpenedCtx, spPacket);
+    switch(retCode) {
+        case 0:
+            return sendPackageAndReceiveFrame(spAvFrame, spPacket);
 
-    if( receiver ) {
-        //对于最后一帧，无论回调是否成功，总体返回值都是失败
-        receiver->visit(nullptr);
+        case AVERROR_EOF:
+            m_isCompoeted = true;
+            return sendPackageAndReceiveFrame(spAvFrame, nullptr);
+
+        default:
+            return sCtx.error(retCode, "读取帧信息错误");
     }
-    //
-    // TODO:这个地方是否需要flush所有的codeccontext，并且取出最后的帧？(这部分逻辑还没实现)
-    //
-    return sCtx.error();
 }
 
-int CAvIn::sendPackageAndReceiveFrame(PAvFrame::FVisitor receiver, AVPacket* pPackage) {
+int CAvIn::sendPackageAndReceiveFrame(SAvFrame& spAvFrame, AVPacket* pPackage) {
 
-    CAvStreaming* pStreaming = m_arrAvStreamings[pPackage->stream_index];
+    //
+    // 如果读取帧结束，则刷新所有流解码上下文，并将所有的流加入到待读取流队列中，重新读取
+    //
+    if(pPackage == nullptr) {
+        std::vector<CPointer<CAvInStreaming>>::iterator it = m_arrAvStreamings.begin();
+        while(it != m_arrAvStreamings.end()) {
+            AVCodecContext* pCodecCtx = (*it)->m_spCodecCtx;
+            int ret = avcodec_send_packet(pCodecCtx, pPackage);
+            switch(ret) {
+                case 0:
+                case AVERROR_EOF:
+                    break;
+
+                default:
+                    return sCtx.error("视频解码上下文无法正确处理视频流结束包"); 
+            }
+            m_arrToReadingStreamings.push_back((*it));
+            it++;
+        }
+        return readFrame(spAvFrame);
+    }
+
+    CAvInStreaming* pStreaming = m_arrAvStreamings[pPackage->stream_index];
 
     AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
     int ret = avcodec_send_packet(pCodecCtx, pPackage);
@@ -235,13 +216,15 @@ int CAvIn::sendPackageAndReceiveFrame(PAvFrame::FVisitor receiver, AVPacket* pPa
         default:
             return sCtx.error(); 
     }
-    return receiveFrame(receiver, pStreaming);
+    return receiveFrame(spAvFrame, pStreaming);
 }
 
-int CAvIn::receiveFrame(PAvFrame::FVisitor receiver, CAvStreaming* pStreaming) {
+int CAvIn::receiveFrame(SAvFrame& spAvFrame, CAvInStreaming* pStreaming) {
     AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
-    CTaker<AVFrame*> avFrame(av_frame_alloc(), [](AVFrame* pFrame){av_frame_free(&pFrame);});
-    int ret = avcodec_receive_frame(pCodecCtx, avFrame);
+    CPointer<CAvFrame> spFrame;
+    CObject::createObject(spFrame);
+    AVFrame* pAvFrame = spFrame->allocAvFramePtr(pStreaming->m_pAvStream, pStreaming->m_avStreaming.streamingId);
+    int ret = avcodec_receive_frame(pCodecCtx, pAvFrame);
 /*
 *      0:                 success, a frame was returned
 *      AVERROR(EAGAIN):   output is not available in this state - user must try
@@ -259,22 +242,32 @@ int CAvIn::receiveFrame(PAvFrame::FVisitor receiver, CAvStreaming* pStreaming) {
         break;
 
     case AVERROR_EOF:
-        return receiver ? receiver->visit(nullptr) : sCtx.error();
+        pStreaming->m_isCompleted = true;
+        return sCtx.error();
 
     case AVERROR(EAGAIN):
-        return readFrame(receiver);
+        return readFrame(spAvFrame);
 
     default:
         return sCtx.error();
     }
 
+    if( spFrame->setAVFrameToPAvFrame() != sCtx.success() ) {
+        return sCtx.error("更新帧信息失败");
+    }
+
     //如果读取成功，则下次继续读取
-    m_arrNeedReadingStreamings.push_back(pStreaming);
-    return pStreaming->receiveFrame(receiver, avFrame);
+    m_arrToReadingStreamings.push_back(pStreaming);
+    spAvFrame.setPtr(spFrame.getPtr());
+    return sCtx.success();
+}
+
+bool CAvIn::isCompleted() {
+    return m_isCompoeted;
 }
 
 CAvIn::CAvIn() {
-    m_bHeaderReaded = false;
+    m_isCompoeted = false;
 }
 
 CAvIn::~CAvIn() {

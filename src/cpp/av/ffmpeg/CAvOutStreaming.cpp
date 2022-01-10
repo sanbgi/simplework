@@ -286,27 +286,26 @@ int CAvOutStreaming::close(AVFormatContext* pFormatContext) {
     return sCtx.success();
 }
 
-int CAvOutStreaming::pushFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame) {
-    if(pFrame) {
-        if(pFrame->streamingId == m_iStreamingId ) {
-            m_pFormatContext = pFormatContext;
+int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const SAvFrame& spFrame) {
 
-            struct CInternalReceiver : IVisitor<const PData&> {
-                int visit(const PData& rData) {
-                    return pAvOut->visit( CData<PAvFrame>(rData) );
-                } 
-                CAvOutStreaming* pAvOut;
-            }receiver;
-            receiver.pAvOut = this;
-            return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
-        }
-        return sCtx.success();
-        
+    //空值表示关闭流
+    const PAvFrame* pFrame = spFrame? spFrame->getFramePtr() : nullptr;
+    if( pFrame == nullptr ) {
+        return writeFrame(pFormatContext, (AVFrame*)nullptr);
     }
-    return writeFrame(pFormatContext, (AVFrame*)nullptr);
-}
 
-int CAvOutStreaming::visit(const PAvFrame* pFrame) {
+    //只处理自己的流对应的帧
+    if(pFrame->streamingId != m_iStreamingId) {
+        return sCtx.success();
+    }
+
+    //转化为当前编码器可以识别的帧
+    SAvFrame spOut;
+    if( m_spConverter->pipeIn(spFrame, spOut) != sCtx.success() ) {
+        return sCtx.error("帧格式转化失败");
+    }
+    pFrame = spOut->getFramePtr();
+
     //
     // 准备帧数据对象
     //
@@ -332,7 +331,7 @@ int CAvOutStreaming::visit(const PAvFrame* pFrame) {
     if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio)
         pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
 
-    return writeFrame(m_pFormatContext, pAVFrame);
+    return writeFrame(pFormatContext, pAVFrame);
 }
 
 int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFrame) {

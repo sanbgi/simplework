@@ -10,80 +10,27 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLWindow : public CObject, public IPipe, IVisitor<const PAvFrame*>{
+class CAvOut_SDLWindow : public CObject, public IAvOut{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private:
     static SCtx sCtx;
 
-public://IPipe
-    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
-
-        CData<PAvFrame> avFrame(rData);
-        if(avFrame.isThisType() ) {
-            const PAvFrame* pAvFrame = avFrame;
-            if(pAvFrame == nullptr) {
-                return close();
-            }
-            if( pAvFrame->sampleMeta.sampleType == EAvSampleType::AvSampleType_Video ) {
-                return pushFrame(avFrame);
-            }
-        }
-
-        return sCtx.success();
-    }
-
-    int initWindow(const char* szWindowName, int nWidth, int nHeight) {
-        
-        release();
-
-        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-            return sCtx.error();
-
-        //创建窗口
-        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, nWidth, nHeight, 0);
-        if (nullptr == m_pWindow)
-            return sCtx.error();
-
-        m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
-	    if (nullptr == m_pRenderer) {
-            return sCtx.error();
-        }
-
-        m_nWinWidth = nWidth;
-        m_nWinHeight = nHeight;
-        PAvSample sampleMeta;
-        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
-        sampleMeta.videoWidth = nWidth;
-        sampleMeta.videoHeight = nHeight;
-        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.success() ) {
-            return sCtx.error();
-        }
-        return sCtx.success();
-    }
-
-    int pushFrame(const PAvFrame* pFrame) {
-        if(pFrame == nullptr) {
+public://IAvOut
+    int writeFrame(const SAvFrame& spFrame) {
+        if(!spFrame) {
             return close();
         }
 
-        struct CInternalReceiver : IVisitor<const PData&> {
-            int visit(const PData& rData) {
-                return pAvOut->visit( CData<PAvFrame>(rData) );
-            } 
-            CAvOut_SDLWindow* pAvOut;
-        }receiver;
-        receiver.pAvOut = this;
+        SAvFrame spOut;
+        if( m_spConverter->pipeIn(spFrame, spOut) != sCtx.success() ) {
+            return sCtx.error("转化图片格式失败");
+        }
 
-        return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
-    }
-
-    int visit(const PAvFrame* pFrame) {
-
+        const PAvFrame* pFrame = spOut->getFramePtr();
         PAvSample sampleMeta = pFrame->sampleMeta;
         SDL_PixelFormatEnum ePixelFormat = CAvSampleType::toPixelFormat(sampleMeta.sampleFormat);
         int width = sampleMeta.videoWidth;
@@ -118,6 +65,47 @@ public://IPipe
         return sCtx.success();
     }
 
+public:
+    static int createWindow(const char* szWindowName, int nWidth, int nHeight, SAvOut& spAvOutWindow) {
+        CPointer<sdl::CAvOut_SDLWindow> spAvOut;
+        CObject::createObject(spAvOut);
+        if( spAvOut->initWindow(szWindowName, nWidth, nHeight) != sCtx.success() ) {
+            return sCtx.error();
+        }
+        spAvOutWindow.setPtr(spAvOut.getPtr());
+        return sCtx.success();
+    }
+
+    int initWindow(const char* szWindowName, int nWidth, int nHeight) {
+        
+        release();
+
+        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+            return sCtx.error();
+
+        //创建窗口
+        m_pWindow = SDL_CreateWindow("SimpleWork: for mediaplayer", 0, 0, nWidth, nHeight, 0);
+        if (nullptr == m_pWindow)
+            return sCtx.error();
+
+        m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, 0);
+	    if (nullptr == m_pRenderer) {
+            return sCtx.error();
+        }
+
+        m_nWinWidth = nWidth;
+        m_nWinHeight = nHeight;
+        PAvSample sampleMeta;
+        sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
+        sampleMeta.sampleFormat = EAvSampleFormat::AvSampleFormat_Video_RGB;
+        sampleMeta.videoWidth = nWidth;
+        sampleMeta.videoHeight = nHeight;
+        if( SAvFactory::getAvFactory()->openAvFrameConverter(sampleMeta, m_spConverter) != sCtx.success() ) {
+            return sCtx.error();
+        }
+        return sCtx.success();
+    }
+
     int close() {
         release();
         return sCtx.success();
@@ -145,7 +133,7 @@ public:
     }
 
 private:
-    SPipe m_spConverter;
+    SAvNetwork m_spConverter;
     SDL_Window* m_pWindow;
     SDL_Renderer* m_pRenderer;
     int m_nWinWidth;

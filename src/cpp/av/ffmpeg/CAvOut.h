@@ -3,25 +3,22 @@
 
 #include <vector>
 #include "av_ffmpeg.h"
-#include "CAvStreaming.h"
 
 FFMPEG_NAMESPACE_ENTER
 
 class CAvOutStreaming;
-class CAvOut : public CObject, public IPipe {
+class CAvOut : public CObject, public IAvOut {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public://IPipe
-    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
-
 public://IAvOut
-    int pushFrame(const PAvFrame* pFrame);
+    int writeFrame(const SAvFrame& avFrame);
 
 public:
-    int initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings);
+    static int createAvFile(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings, SAvOut& spAvOut);
+    int initAvFile(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings);
 
 public:
     CAvOut();

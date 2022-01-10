@@ -5,6 +5,11 @@
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
+class SAvIn;
+class SAvOut;
+class SAvFrame;
+class SAvNetwork;
+
 //
 //
 //  音视频工厂，目前音视频工厂对于所有音视频，包括输入、输出、过滤等，为了追求新能，都是使用
@@ -32,7 +37,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //          1，如果是第一帧调用，则依次输出所有的PAvStreaming及第一帧音频或视频PAvFrame
         //          2，如果不是第一帧调用，则输出一帧音频或视频
         //
-        virtual int openAvFileReader(const char* szFileName, SPipe& spPipe) = 0;
+        virtual int openAvFileReader(const char* szFileName, SAvIn& spIn) = 0;
         //
         //  创建摄像头管道，输入输出同视频文件管道
         //
@@ -46,13 +51,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //      输入数据：一帧音视频
         //      输出数据：输出转化为指定格式后的帧
         //
-        virtual int openAvFrameConverter(PAvSample targetSample, SPipe& spPipe) = 0;
+        virtual int openAvFrameConverter(PAvSample targetSample, SAvNetwork& spNetwork) = 0;
         //
         //  创建windows窗口管道，其管道
         //      输入管道：PAvFrame
         //      输出管道：无
         //
-        virtual int openWindow(const char* szWindowName, int nWidth, int nHeight, SPipe& spPipe) = 0;
+        virtual int openWindow(const char* szWindowName, int nWidth, int nHeight, SAvOut& spAvOut) = 0;
         //
         //  创建音响管道
         //      输入管道：
@@ -60,7 +65,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //          PAvFrame：需要播放的音频帧
         //      输出管道：无
         //
-        virtual int openSpeaker(const char* szDeviceName, SPipe& spPipe) = 0;
+        virtual openSpeaker(const char* szDeviceName, const PAvSample& sampleMeta, SAvOut& spAvOut) = 0;
         //
         //  创建视频文件写入管道
         //      输入管道：
@@ -69,7 +74,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //      输出管道：
         //          无
         //
-        virtual int openAvFileWriter(const char* szFileName, SPipe& spPipe) = 0;
+        virtual int openAvFileWriter(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings, SAvOut& spAvWriter) = 0;
         //
         // 将多个管道串行成也给新管道
         //

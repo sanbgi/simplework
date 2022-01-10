@@ -5,7 +5,7 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvOutStreaming : public CObject, IVisitor<const PAvFrame*> {
+class CAvOutStreaming : public CObject{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -22,11 +22,10 @@ public:
     int initAudio(AVFormatContext* pFormatContext, const PAvStreaming* pSrc);
     int open(AVFormatContext* pFormatContext);
     int close(AVFormatContext* pFormatContext);
-    int pushFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
+    int writeFrame(AVFormatContext* pFormatContext, const SAvFrame& spFrame);
     int writeVideoFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeAudioFrame(AVFormatContext* pFormatContext, const PAvFrame* pFrame);
     int writeFrame(AVFormatContext* pFormatContext, AVFrame* pFrame);
-    int visit(const PAvFrame* pFrame);
 
 public:
     CAvOutStreaming();
@@ -48,8 +47,7 @@ public:
     CTaker<AVFrame*> m_pAVFrame;
     CTaker<AVCodecContext*> m_spCodecCtx;
     AVCodec* m_pCodec;
-    SPipe m_spConverter;
-    AVFormatContext* m_pFormatContext;
+    SAvNetwork m_spConverter;
 };
 
 FFMPEG_NAMESPACE_LEAVE

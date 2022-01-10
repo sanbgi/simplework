@@ -5,24 +5,18 @@
 
 FFMPEG_NAMESPACE_ENTER
 static SCtx sCtx("CAvOut");
-int CAvOut::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {  
-    int idType =rData.getType();
-    if(idType == SData::getTypeIdentifier<PAvStreaming>() ) {
-        const PAvStreaming* pStreaming = CData<PAvStreaming>(rData);
-        CPointer<CAvOutStreaming> spStreaming;
-        CObject::createObject(spStreaming);
-        if(spStreaming->init(m_spFormatContext, pStreaming) != sCtx.success()) {
-            return sCtx.error();
-        }
-        m_arrStreamings.push_back(spStreaming);
-        return sCtx.success();
-    }else if(idType == SData::getTypeIdentifier<PAvFrame>() ) {
-        return pushFrame(CData<PAvFrame>(rData));
+
+int CAvOut::createAvFile(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings, SAvOut& spAvOut) {
+    CPointer<ffmpeg::CAvOut> spOut;
+    CObject::createObject(spOut);
+    if( spOut->initAvFile(szFileName, nStreamings, pStreamings) != sCtx.success() ) {
+        return sCtx.error();
     }
+    spAvOut.setPtr(spOut.getPtr());
     return sCtx.success();
 }
 
-int CAvOut::initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pStreamings) {
+int CAvOut::initAvFile(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings) {
     //
     // 格式上下文
     //
@@ -39,7 +33,7 @@ int CAvOut::initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pS
         //
         // 创建并初始化流对象
         //
-        PAvStreaming* pStreaming = pStreamings+i;
+        const PAvStreaming* pStreaming = pStreamings+i;
         CPointer<CAvOutStreaming> spStreaming;
         CObject::createObject(spStreaming);
         if(spStreaming->init(pFormatContext, pStreaming) != sCtx.success()) {
@@ -47,58 +41,59 @@ int CAvOut::initAvFile(const char* szFileName, int nStreamings, PAvStreaming* pS
         }
         m_arrStreamings.push_back(spStreaming);
     }
-    m_strFileName = szFileName;
-    return sCtx.success();
-}
 
-int CAvOut::pushFrame(const PAvFrame* pFrame) {
-    if( !m_bOpened ) {
-        //
-        // 打开所有视频流
-        //
-        std::vector<CPointer<CAvOutStreaming>>::iterator it = m_arrStreamings.begin();
-        while(it != m_arrStreamings.end()) {
-            if( (*it)->open(m_spFormatContext) != sCtx.success() ) {
-                return sCtx.error();
-            }
-            it++;
-        }
-
-        //
-        // 打开视频流
-        //
-        if( avio_open(&m_spFormatContext->pb, m_strFileName.c_str(), AVIO_FLAG_WRITE) < 0 ) {
-            return sCtx.error();
-        }
-        m_spIOContext.take(m_spFormatContext->pb, [](AVIOContext* pPtr){
-            avio_close(pPtr);
-        });
-
-        //
-        // 写入头部信息
-        //
-        if( avformat_write_header(m_spFormatContext, NULL) < 0 ) {
-            return sCtx.error();
-        }
-
-        m_bOpened = true;
-    }
-
-    //如果写入一个空的帧，则表示要关闭写文件
-    if(pFrame == nullptr) {
-        close();
-        return sCtx.error();
-    }
-
+    //
+    // 打开所有视频流
+    //
     std::vector<CPointer<CAvOutStreaming>>::iterator it = m_arrStreamings.begin();
-    while(it != m_arrStreamings.end() ) {
-        if((*it)->pushFrame(m_spFormatContext, pFrame) != sCtx.success() ) {
-            return sCtx.error();
+    while(it != m_arrStreamings.end()) {
+        if( (*it)->open(m_spFormatContext) != sCtx.success() ) {
+            return sCtx.error("打开单个视频流失败");
         }
         it++;
     }
 
+    //
+    // 打开视频流
+    //
+    if( avio_open(&m_spFormatContext->pb, szFileName, AVIO_FLAG_WRITE) < 0 ) {
+        return sCtx.error("打开整个视频的音视频流失败");
+    }
+    m_spIOContext.take(m_spFormatContext->pb, [](AVIOContext* pPtr){
+        avio_close(pPtr);
+    });
+
+    //
+    // 写入头部信息
+    //
+    if( avformat_write_header(m_spFormatContext, NULL) < 0 ) {
+        return sCtx.error();
+    }
+
+    m_bOpened = true;
+    m_strFileName = szFileName;
     return sCtx.success();
+}
+
+int CAvOut::writeFrame(const SAvFrame& avFrame) {
+    const PAvFrame* pFrame = avFrame ? avFrame->getFramePtr() : nullptr;
+    //如果写入一个空的帧，则表示要关闭写文件
+    if(pFrame == nullptr) {
+        return close();
+    }
+
+    std::vector<CPointer<CAvOutStreaming>>::iterator it = m_arrStreamings.begin();
+    while(it != m_arrStreamings.end() ) {
+        if( (*it)->m_iStreamingId == pFrame->streamingId ) {
+            if((*it)->writeFrame(m_spFormatContext, avFrame) != sCtx.success() ) {
+                return sCtx.error("视频帧写入失败");
+            }
+            break;
+        }
+        it++;
+    }
+
+    return sCtx.success();    
 }
 
 int CAvOut::close() {

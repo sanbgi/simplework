@@ -1,7 +1,9 @@
 
 #include "nn.h"
 #include "CDenseNetwork.h"
+#include "CTwoPoleDenseNetwork.h"
 #include "CConvolutionNetwork.h"
+#include "CTwoPoleConvNetwork.h"
 #include "CSequenceNetwork.h"
 #include "CPoolNetwork.h"
 #include "CIdxFileReader.h"
@@ -23,8 +25,16 @@ public:
         return CDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
     }
 
+    int createTwoPoleDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
+        return CTwoPoleDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
+    }
+
     int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) {
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
+    }
+
+    int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) {
+        return CTwoPoleConvNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
     int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {

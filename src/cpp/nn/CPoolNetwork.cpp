@@ -1,4 +1,5 @@
 #include "CPoolNetwork.h"
+#include "iostream"
 
 SCtx CPoolNetwork::sCtx("CPoolNetwork");
 int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
@@ -212,7 +213,6 @@ int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviatio
         it.pInDeviation = varTBackup.pInDeviation + nInputTensorSize;
         it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
     }
-    
     return sCtx.success();
 }
 

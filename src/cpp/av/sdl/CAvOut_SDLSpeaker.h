@@ -11,50 +11,49 @@ using namespace SIMPLEWORK_MATH_NAMESPACE;
 
 SDL_NAMESPACE_ENTER
 
-class CAvOut_SDLSpeaker : public CObject, public IPipe, IVisitor<const PAvFrame*>{
+class CAvOut_SDLSpeaker : public CObject, IAvOut{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(IAvOut)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private:
     static SCtx sCtx;
 
-public://IPipe
-    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
-        if(rData.getType() == SData::getTypeIdentifier<PAvFrame>()) {
-            const PAvFrame* pAvFrame = CData<PAvFrame>(rData);
-            if(pAvFrame == nullptr) {
-                return close();
-            }
-            if(pAvFrame->sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
-                return pushFrame(pAvFrame);
-            }
-        }else if( rData.getType() == SData::getTypeIdentifier<PAvStreaming>()) {
-            const PAvStreaming* pAvStreaming = CData<PAvStreaming>(rData);
-            if(pAvStreaming->frameMeta.sampleType == EAvSampleType::AvSampleType_Audio) {
-                m_targetSample = pAvStreaming->frameMeta;
-                return sCtx.success();
-            }
+public://IAvOut
+    int writeFrame(const SAvFrame& spFrame) {
+        if(!spFrame) {
+            return close();
         }
+
+        SAvFrame spOut;
+        if( m_spConverter->pipeIn(spFrame, spOut) != sCtx.success() ) {
+            return sCtx.error("转化音频格式失败");
+        }
+        const PAvFrame* pFrame = spOut->getFramePtr();
+        int ret = SDL_QueueAudio(
+                            m_iDeviceID, pFrame->ppPlanes[0], 
+                            pFrame->pPlaneLineSizes[0]);
         return sCtx.success();
     }
+
 public:
-    int initSpeaker(const char* szName) {
-        
+    static int createSpeaker(const char* szName, PAvSample sampleMeta, SAvOut& spSpeaker) {
+        CPointer<sdl::CAvOut_SDLSpeaker> spAvOut;
+        CObject::createObject(spAvOut);
+        if( spAvOut->initSpeaker(szName, sampleMeta) != sCtx.success() ) {
+            return sCtx.error();
+        }
+        spSpeaker.setPtr(spAvOut.getPtr());
+        return sCtx.success();
+    }
+
+    int initSpeaker(const char* szName, PAvSample& sampleMeta) {
         release();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
             return sCtx.error();
 
-        if(szName != nullptr) {
-            m_strDeviceName = szName;
-        }
-        return sCtx.success();
-    }
-
-    int init() {
-        PAvSample sampleMeta = m_targetSample;
         int nTargetRate = sampleMeta.audioRate;
         int nTargetChannels = sampleMeta.audioChannels;
         SDL_AudioFormat eTargetFormat = CAvSampleType::toAudioFormat(sampleMeta.sampleFormat);
@@ -74,7 +73,7 @@ public:
         wanted_spec.callback = nullptr;          // 回调函数，若为NULL，则应使用SDL_QueueAudio()机制
         //wanted_spec.userdata = p_codec_ctx;    // 提供给回调函数的参数
         m_iDeviceID = SDL_OpenAudioDevice(
-                                m_strDeviceName.length()==0?nullptr:m_strDeviceName.c_str(), 
+                                szName, 
                                 false, &wanted_spec, &m_specAudio, 0);
         if(m_iDeviceID == 0)
         {
@@ -94,37 +93,6 @@ public:
         return sCtx.success();
     }
 
-    int pushFrame(const PAvFrame* pFrame) {
-        if(!m_bInitialized) {
-            if( init() != sCtx.success() ) {
-                return sCtx.error();
-            }
-            m_bInitialized = true;
-        }
-
-        if(pFrame == nullptr) {
-            return close();
-        }
-
-        struct CInternalReceiver : IVisitor<const PData&> {
-            int visit(const PData& rData) {
-                return pAvOut->visit( CData<PAvFrame>(rData) );
-            } 
-            CAvOut_SDLSpeaker* pAvOut;
-        }receiver;
-        receiver.pAvOut = this;
-        return m_spConverter->pushData(CData<PAvFrame>(pFrame), &receiver);
-    }
-
-    int visit(const PAvFrame* pFrame) {
-        if(pFrame) {
-            int ret = SDL_QueueAudio(
-                            m_iDeviceID, pFrame->ppPlanes[0], 
-                            pFrame->pPlaneLineSizes[0]);
-        }
-        return sCtx.success();
-    }
-
     int close() {
         release();
         return sCtx.success();
@@ -133,7 +101,6 @@ public:
 public:
     CAvOut_SDLSpeaker() {
         m_iDeviceID = 0;
-        m_bInitialized = false;
     }
     ~CAvOut_SDLSpeaker() {
         release();
@@ -149,10 +116,7 @@ public:
 private:
     SDL_AudioDeviceID m_iDeviceID;
     SDL_AudioSpec m_specAudio;
-    PAvSample m_targetSample;
-    std::string m_strDeviceName;
-    SPipe m_spConverter;
-    bool m_bInitialized;
+    SAvNetwork m_spConverter;
 };
 SCtx CAvOut_SDLSpeaker::sCtx("CAvOut_SDLSpeaker");
 

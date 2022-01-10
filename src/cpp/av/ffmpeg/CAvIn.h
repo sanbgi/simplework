@@ -2,30 +2,29 @@
 #define __SimpleWork_av_ffmpeg_CAvIn_h__
 
 #include "av_ffmpeg.h"
-#include "CAvStreaming.h"
+#include "CAvInStreaming.h"
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvIn : public CObject, public IPipe {
+class CAvIn : public CObject, public IAvIn {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(IAvIn)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public://IPipe
-    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
-
 public://IAvIn
-    int readFrame(PAvFrame::FVisitor visitor);
-    int visitStreamings(PAvStreaming::FVisitor visitor);
-
+    int getStreamingSize();
+    const PAvStreaming* getStreamingAt(int iPos);
+    int readFrame(SAvFrame& spAvFrame);
+    bool isCompleted();
 
 public:
+    static int createAvFileReader(const char* szFileName, SAvIn& spIn);
     int initVideoFile(const char* szFileName);
     int initVideoCapture(const char* szName);
     int initAudioCapture(const char* szName);
-    int sendPackageAndReceiveFrame(PAvFrame::FVisitor receiver, AVPacket* pPackage);
-    int receiveFrame(PAvFrame::FVisitor receiver, CAvStreaming* pStreaming);
+    int sendPackageAndReceiveFrame(SAvFrame& spAvFrame, AVPacket* pPackage);
+    int receiveFrame(SAvFrame& spAvFrame, CAvInStreaming* pStreaming);
     int initCapture(AVInputFormat* pInputForamt, const char* szName);
     static void initDeviceRegistry();
 
@@ -37,9 +36,10 @@ public:
 private:
     CTaker<AVFormatContext*> m_spFormatCtx;
     CTaker<AVFormatContext*> m_spOpenedCtx;
-    std::vector<CAvStreaming*> m_arrNeedReadingStreamings;
-    std::vector<CPointer<CAvStreaming>> m_arrAvStreamings;
-    int m_bHeaderReaded;
+    std::vector<CAvInStreaming*> m_arrToReadingStreamings;
+    std::vector<CPointer<CAvInStreaming>> m_arrAvStreamings;
+    std::vector<PAvStreaming> m_arrStreamings;
+    int m_isCompoeted;
 };
 
 FFMPEG_NAMESPACE_LEAVE

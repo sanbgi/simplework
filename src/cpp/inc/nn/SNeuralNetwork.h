@@ -51,9 +51,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
             virtual int createDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
 
             //
+            //  创建直连神经网络
+            //
+            virtual int createTwoPoleDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
+
+            //
             //  创建卷积神经网络
             //
             virtual int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
+
+            //
+            //  创建卷积神经网络
+            //
+            virtual int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
 
             //
             //  创建顺序处理神经网络
@@ -100,6 +110,12 @@ public:
         return nn;
     }
 
+    static SNeuralNetwork createTwoPoleDense(int nCells, const char* szActivator = nullptr) {
+        SNeuralNetwork nn;
+        getFactory()->createTwoPoleDense(nCells,szActivator,nn);
+        return nn;
+    }
+
     static SNeuralNetwork createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight) {
         SNeuralNetwork nn;
         getFactory()->createPool(nWidth, nHeight, nStrideWidth, nStrideHeight, nn);
@@ -112,6 +128,11 @@ public:
         return nn;
     }
 
+    static SNeuralNetwork createTwoPoleConv(int nWidth, int nHeight, int nConv, const char* szActivator = nullptr ) {
+        SNeuralNetwork nn;
+        getFactory()->createTwoPoleConvolution(nWidth, nHeight, nConv, szActivator, nn);
+        return nn;
+    }
     static SNeuralNetwork createSequence(int nNetworks, SNeuralNetwork* pNetworks) {
         SNeuralNetwork nn;
         getFactory()->createSequence(nNetworks, pNetworks, nn);

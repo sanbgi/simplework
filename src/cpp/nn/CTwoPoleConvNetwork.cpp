@@ -1,10 +1,10 @@
-#include "CConvolutionNetwork.h"
+#include "CTwoPoleConvNetwork.h"
 #include "math.h"
 #include "iostream"
 
-static SCtx sCtx("CConvolutionNetwork");
-int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
-    CPointer<CConvolutionNetwork> spConvolution;
+static SCtx sCtx("CTwoPoleConvNetwork");
+int CTwoPoleConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
+    CPointer<CTwoPoleConvNetwork> spConvolution;
     CObject::createObject(spConvolution);
     spConvolution->m_sizeConv = {
         nConvs,
@@ -27,7 +27,7 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     return sCtx.success();
 }
 
-int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
+int CTwoPoleConvNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     if( initNetwork(spInTensor) != sCtx.success() ) {
         return sCtx.error();
     }
@@ -77,23 +77,48 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
 
                     //初始化卷积结果
                     dConv = 0;
-                    for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                        varConvYBackup.pIn = it.pIn;
-                        varConvYBackup.pWeights = it.pWeights;
-                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                            varConvXBackup.pIn = it.pIn;
-                            varConvXBackup.pWeights = it.pWeights;
-                            for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
-                                //卷积结果为乘积结果求和
-                                dConv += (*it.pWeights) * (*it.pIn);
-                                it.pIn++;
-                                it.pWeights++;
+                    if(iConv%2 == 0) { 
+                        for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                            varConvYBackup.pIn = it.pIn;
+                            varConvYBackup.pWeights = it.pWeights;
+                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                varConvXBackup.pIn = it.pIn;
+                                varConvXBackup.pWeights = it.pWeights;
+                                for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                    //
+                                    // 偶数号卷积核输入x=x
+                                    //
+                                    dConv += (*it.pWeights) * (*it.pIn);
+                                    it.pIn++;
+                                    it.pWeights++;
+                                }
+                                it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                it.pWeights = varConvXBackup.pWeights + stepConv.width;
                             }
-                            it.pIn = varConvXBackup.pIn + stepInConv.width;
-                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                            it.pIn = varConvYBackup.pIn + stepInConv.height;
+                            it.pWeights = varConvYBackup.pWeights + stepConv.height;
                         }
-                        it.pIn = varConvYBackup.pIn + stepInConv.height;
-                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                    }else{
+                        for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                            varConvYBackup.pIn = it.pIn;
+                            varConvYBackup.pWeights = it.pWeights;
+                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                varConvXBackup.pIn = it.pIn;
+                                varConvXBackup.pWeights = it.pWeights;
+                                for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                    //
+                                    // 基数卷积核的输入为x=（1-x)
+                                    //
+                                    dConv += (*it.pWeights) * (1-(*it.pIn));
+                                    it.pIn++;
+                                    it.pWeights++;
+                                }
+                                it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                            }
+                            it.pIn = varConvYBackup.pIn + stepInConv.height;
+                            it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                        }
                     }
                     //卷积结果减去偏置
                     (*it.pOut) = dConv - (*it.pBais);
@@ -124,7 +149,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     return sCtx.success();
 }
 
-int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+int CTwoPoleConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
@@ -212,39 +237,75 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
 
                     //
                     //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
-                    //  
-                    for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                        varConvYBackup.pIn = it.pIn;
-                        varConvYBackup.pInDeviation = it.pInDeviation;
-                        varConvYBackup.pWeights = it.pWeights;
-                        varConvYBackup.pWeightDevivation = it.pWeightDevivation;
-                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                            varConvXBackup.pIn = it.pIn;
-                            varConvXBackup.pInDeviation = it.pInDeviation;
-                            varConvXBackup.pWeights = it.pWeights;
-                            varConvXBackup.pWeightDevivation = it.pWeightDevivation;
-                            for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
-                                
-                                //
-                                // 累计计算权重值
-                                //
-                                (*it.pInDeviation) += derivationZ * (*it.pWeights);
-                                (*it.pWeightDevivation) += derivationZ * (*it.pIn);
+                    //
+                    if(iConv % 2 == 0) {
+                        for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                            varConvYBackup.pIn = it.pIn;
+                            varConvYBackup.pInDeviation = it.pInDeviation;
+                            varConvYBackup.pWeights = it.pWeights;
+                            varConvYBackup.pWeightDevivation = it.pWeightDevivation;
+                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                varConvXBackup.pIn = it.pIn;
+                                varConvXBackup.pInDeviation = it.pInDeviation;
+                                varConvXBackup.pWeights = it.pWeights;
+                                varConvXBackup.pWeightDevivation = it.pWeightDevivation;
+                                for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                    
+                                    //
+                                    // 偶数号卷积核x=x(与奇数号卷积核有区别)
+                                    //
+                                    (*it.pInDeviation) += derivationZ * (*it.pWeights);
+                                    (*it.pWeightDevivation) += derivationZ * (*it.pIn);
 
-                                it.pIn++;
-                                it.pInDeviation++;
-                                it.pWeights++;
-                                it.pWeightDevivation++;
+                                    it.pIn++;
+                                    it.pInDeviation++;
+                                    it.pWeights++;
+                                    it.pWeightDevivation++;
+                                }
+                                it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
+                                it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                                it.pWeightDevivation = varConvXBackup.pWeightDevivation + stepConv.width;
                             }
-                            it.pIn = varConvXBackup.pIn + stepInConv.width;
-                            it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
-                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
-                            it.pWeightDevivation = varConvXBackup.pWeightDevivation + stepConv.width;
+                            it.pIn = varConvYBackup.pIn + stepInConv.height;
+                            it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
+                            it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                            it.pWeightDevivation = varConvYBackup.pWeightDevivation + stepConv.height;
                         }
-                        it.pIn = varConvYBackup.pIn + stepInConv.height;
-                        it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
-                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
-                        it.pWeightDevivation = varConvYBackup.pWeightDevivation + stepConv.height;
+                    }else{
+                        for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                            varConvYBackup.pIn = it.pIn;
+                            varConvYBackup.pInDeviation = it.pInDeviation;
+                            varConvYBackup.pWeights = it.pWeights;
+                            varConvYBackup.pWeightDevivation = it.pWeightDevivation;
+                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                varConvXBackup.pIn = it.pIn;
+                                varConvXBackup.pInDeviation = it.pInDeviation;
+                                varConvXBackup.pWeights = it.pWeights;
+                                varConvXBackup.pWeightDevivation = it.pWeightDevivation;
+                                for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                    
+                                    //
+                                    // 奇数号卷积核输入x=1-x所以，偏导数为负的权重
+                                    //
+                                    (*it.pInDeviation) += -derivationZ * (*it.pWeights);
+                                    (*it.pWeightDevivation) += derivationZ * (1-(*it.pIn));
+
+                                    it.pIn++;
+                                    it.pInDeviation++;
+                                    it.pWeights++;
+                                    it.pWeightDevivation++;
+                                }
+                                it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
+                                it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                                it.pWeightDevivation = varConvXBackup.pWeightDevivation + stepConv.width;
+                            }
+                            it.pIn = varConvYBackup.pIn + stepInConv.height;
+                            it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
+                            it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                            it.pWeightDevivation = varConvYBackup.pWeightDevivation + stepConv.height;
+                        }
                     }
 
                     //
@@ -331,7 +392,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     return sCtx.success();
 }
 
-int CConvolutionNetwork::initNetwork(const STensor& spInTensor) {
+int CTwoPoleConvNetwork::initNetwork(const STensor& spInTensor) {
     if( !m_spOutDimVector ) {
         STensor& spInDimVector = spInTensor->getDimVector();
 
@@ -416,12 +477,12 @@ int CConvolutionNetwork::initNetwork(const STensor& spInTensor) {
         });
 
         //
-        // TODO：权重初始化采用什么策略？nadam优化算法下，即便所有权重初始值为零，仍然不影响迭代
+        // TODO：权重初始化采用什么策略？还是先初始化为0，看看效果
         //
         double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
         for(int i=0; i<nWeights; i++) {
-            //pWeights[i] = 0;
-            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
+            pWeights[i] = 0;
+            //pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
         }
 
         for(int i=0; i<m_sizeConv.batch; i++ ){

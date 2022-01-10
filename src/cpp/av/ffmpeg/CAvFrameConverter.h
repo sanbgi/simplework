@@ -5,20 +5,17 @@
 
 FFMPEG_NAMESPACE_ENTER
 
-class CAvFrameConverter : public CObject, public IPipe {
+class CAvFrameConverter : public CObject, public IAvNetwork {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(IAvNetwork)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public://IPipe
-    int pushData(const PData& rData, IVisitor<const PData&>* pReceiver);
-
-public://IAvFrameConverter
-    int pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
+public:
+    int pipeIn(const SAvFrame& spIn, SAvFrame& spOut);
 
 public://For factory
-    static int createFilter(const PAvSample& targetSample, SPipe& spFilter);
+    static int createFilter(const PAvSample& targetSample, SAvNetwork& spFilter);
 
 private:
     class CFormat {
@@ -57,17 +54,11 @@ private:
 
 private://Image
     CTaker<SwsContext*> m_spSwsContext;
-    uint8_t *m_pVideoData[AV_NUM_DATA_POINTERS];
-    int m_pVideoLinesizes[AV_NUM_DATA_POINTERS];
 
 private://Audio
     CTaker<SwrContext*> m_spSwrCtx;
-    uint8_t **m_ppAudioData;
-    int m_pAudioLinesize[AV_NUM_DATA_POINTERS];
-    int m_nAudioSamples;
 
 private:
-    int m_nPlanes;
     PAvSample m_targetSample;
     CFormat m_targetFormat;
     CFormat m_lastSourceFormat;
@@ -79,15 +70,13 @@ public:
     void release();
     void releaseVideoCtx();
     void releaseAudioCtx();
-    void releaseVideoData();
-    void releaseAudioData();
 
 private:
     int initFilter(const PAvSample& targetSample);
 
 private:
-    int convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
-    int convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor);
+    int convertAudio(const SAvFrame& spIn, SAvFrame& spOut);
+    int convertVideo(const SAvFrame& spIn, SAvFrame& spOut);
 };
 
 FFMPEG_NAMESPACE_LEAVE

@@ -40,7 +40,6 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 struct PAvFrame {
     SIMPLEWORK_PDATAKEY(PAvFrame, "sw.av.AvFrame")
 
-
     //
     // 样本信息
     //
@@ -85,11 +84,6 @@ struct PAvFrame {
     //      音频：一行音频数据占用的字节数，由于音频始终只有一行，所以这个也就是一个数据平面的字节数
     //
     int* pPlaneLineSizes;
-
-    //
-    // 典型的帧数据访问器类型定义
-    //
-    typedef IVisitor<const PAvFrame*>* FVisitor;
 };
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE

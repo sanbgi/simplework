@@ -1,47 +1,36 @@
 
 #include "CAvFrameConverter.h"
 #include "CAvSampleType.h"
+#include "CAvFrame.h"
 
 FFMPEG_NAMESPACE_ENTER
 
 static SCtx sCtx("CAvFrameConverter");
 
-int CAvFrameConverter::pushData(const PData& rData, IVisitor<const PData&>* pReceiver) {
-    CData<PAvFrame> avFrame(rData);
-    if(avFrame.isThisType()) {
-        const PAvFrame* pAvFrame = avFrame.getDataPtr();
-        if(pAvFrame->sampleMeta.sampleType == m_targetSample.sampleType) {
-            struct CInternalVisitor : IVisitor<const PAvFrame*> {
-                int visit(const PAvFrame* pAvFrame) {
-                    return pReceiver->visit(CData<PAvFrame>(pAvFrame));
-                }
-                IVisitor<const PData&>* pReceiver;
-            }visitor;
-            visitor.pReceiver = pReceiver;
-            return pushFrame(pAvFrame, &visitor);
-        }
+int CAvFrameConverter::pipeIn(const SAvFrame& spIn, SAvFrame& spOut) {
+    //空帧不需要做任何转化
+    if(!spIn) {
+        return sCtx.success();
     }
-    return pReceiver->visit(rData);
-}
 
-int CAvFrameConverter::pushFrame(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+    const PAvFrame* pAvFrame = spIn->getFramePtr();
     switch(m_targetSample.sampleType) {
         case EAvSampleType::AvSampleType_Audio:
-            return convertAudio(pSrc, visitor);
+            return convertAudio(spIn, spOut);
 
         case EAvSampleType::AvSampleType_Video:
-            return convertVideo(pSrc, visitor);
+            return convertVideo(spIn, spOut);
     }
     return sCtx.error();
 }
 
-int CAvFrameConverter::createFilter(const PAvSample& targetSample, SPipe& spFilter) {
+int CAvFrameConverter::createFilter(const PAvSample& targetSample, SAvNetwork& spFilter) {
     CPointer<CAvFrameConverter> spAvFrameConverter;
     CObject::createObject(spAvFrameConverter);
     if( spAvFrameConverter->initFilter(targetSample) != sCtx.success()) {
         return sCtx.error();
     }
-    spFilter.setPtr((IPipe*)spAvFrameConverter);
+    spFilter.setPtr(spAvFrameConverter.getPtr());
     return sCtx.success();
 }
 
@@ -65,10 +54,6 @@ int CAvFrameConverter::initFilter(const PAvSample& targetSample) {
 }
 
 CAvFrameConverter::CAvFrameConverter(){
-
-    //表示缓存还未初始化
-    m_pVideoData[0] = nullptr;
-    m_ppAudioData = nullptr;
 }
 
 CAvFrameConverter::~CAvFrameConverter() {
@@ -77,30 +62,17 @@ CAvFrameConverter::~CAvFrameConverter() {
 }
 
 void CAvFrameConverter::releaseVideoCtx() {
-    releaseVideoData();
     m_spSwsContext.release();
 }
 
 void CAvFrameConverter::releaseAudioCtx() {
-    releaseAudioData();
     m_spSwrCtx.release();
 }
 
-void CAvFrameConverter::releaseVideoData() {
-    if(m_pVideoData[0] != nullptr) {
-        av_freep(&m_pVideoData[0]);
-        m_pVideoData[0] = nullptr;
-    }
-}
 
-void CAvFrameConverter::releaseAudioData() {
-    if(m_ppAudioData) {
-        av_freep(m_ppAudioData);
-        m_ppAudioData = nullptr;
-    }
-}
-
-int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
+    
+    const PAvFrame* pSrc = spIn->getFramePtr();
     const PAvSample& srcMeta = pSrc->sampleMeta;
 
     AVPixelFormat targetFormat = (AVPixelFormat)m_targetFormat.m_nFormat;
@@ -115,7 +87,8 @@ int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor vis
     //  如果格式相同，则不要转化了，直接用
     //
     if(sourceFormat == targetFormat && sourceWidth == targetWidth && sourceHeight == targetHeight) {
-        return visitor->visit(pSrc);
+        spOut = spIn;
+        return sCtx.success();
     }
 
     //
@@ -149,18 +122,25 @@ int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor vis
             0
         );
         if(pSwsContext == nullptr) {
-            return sCtx.error();
+            return sCtx.error("图像转化器创建失败");
         }
 
         m_spSwsContext.take(pSwsContext, sws_freeContext);
-        if( av_image_alloc(m_pVideoData, m_pVideoLinesizes,
-            targetWidth, targetHeight, targetFormat, 1) < 0 ){
-            releaseVideoCtx();
-            return sCtx.error();
-        }
-
         m_lastSourceFormat = CFormat(sourceWidth, sourceHeight, sourceFormat);
     }
+
+    CPointer<CAvFrame> spAvFrameOut;
+    CObject::createObject(spAvFrameOut);
+    if( av_image_alloc(spAvFrameOut->m_ppPlanes, spAvFrameOut->m_pLinesizes,
+        targetWidth, targetHeight, targetFormat, 1) < 0 ){
+        return sCtx.error("分配图像内存失败");
+    }
+    spAvFrameOut->m_spPlanes.take(spAvFrameOut->m_ppPlanes, [](uint8_t** ppPlanes){
+        if(ppPlanes[0] != nullptr) {
+            av_freep(&ppPlanes[0]);
+            ppPlanes[0] = nullptr;
+        }
+    });
 
     int ret_height = sws_scale(
         //SwsContext *swsContext 转换上下文
@@ -172,30 +152,34 @@ int CAvFrameConverter::convertVideo(const PAvFrame* pSrc, PAvFrame::FVisitor vis
         0,
         sourceHeight,
         //转换后目标图像数据存放在这里
-        m_pVideoData,
+        spAvFrameOut->m_ppPlanes,
         //转换后的目标图像行数
-        m_pVideoLinesizes
+        spAvFrameOut->m_pLinesizes
     );
 
     // 如果转化结果尺寸与想要的目标尺寸不一致，则转化失败
     if( ret_height != m_targetFormat.m_nHeight ) {
-        return sCtx.error();
+        return sCtx.error("转化出来的图像的尺寸与想要的尺寸不一致，转化失败");
     }
 
     // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
-    for( int i=0; i<AV_NUM_DATA_POINTERS && m_pVideoLinesizes[i]; i++ ) {
-        m_nPlanes = i;
+    int nPlanes = 0;
+    for( int i=0; i<AV_NUM_DATA_POINTERS && spAvFrameOut->m_ppPlanes[i]; i++ ) {
+        nPlanes = i;
     }
 
-    PAvFrame targetFrame = *pSrc;
+    PAvFrame& targetFrame = spAvFrameOut->m_avFrame;
     targetFrame.sampleMeta = m_targetSample;
-    targetFrame.nPlanes = m_nPlanes;
-    targetFrame.ppPlanes = m_pVideoData;
-    targetFrame.pPlaneLineSizes = m_pVideoLinesizes;
-    return visitor->visit(&targetFrame);
+    targetFrame.nPlanes = nPlanes;
+    targetFrame.ppPlanes = spAvFrameOut->m_spPlanes;
+    targetFrame.pPlaneLineSizes = spAvFrameOut->m_pLinesizes;
+    spOut.setPtr(spAvFrameOut.getPtr());
+    return sCtx.success();
 }
 
-int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor visitor) {
+int CAvFrameConverter::convertAudio(const SAvFrame& spIn, SAvFrame& spOut) {
+        
+    const PAvFrame* pSrc = spIn->getFramePtr();
     const PAvSample& srcMeta = pSrc->sampleMeta;
 
     AVSampleFormat targetFormat = (AVSampleFormat)m_targetFormat.m_nFormat;
@@ -210,7 +194,8 @@ int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor vis
     //  如果格式相同，则不要转化了，直接用
     //
     if(sourceFormat == targetFormat && sourceChannels == targetChannels && sourceRate == targetRate) {
-        return visitor->visit(pSrc);
+        spOut = spIn;
+        return sCtx.success();
     }
 
     //
@@ -250,16 +235,19 @@ int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor vis
         m_lastSourceFormat = CFormat(sourceRate, sourceChannels, sourceFormat);
     }
 
-    releaseAudioData();
-
+    CPointer<CAvFrame> spAvFrameOut;
+    CObject::createObject(spAvFrameOut);
     int nBufSize;
     int nTargetSamples = (int64_t)pSrc->nWidth * targetRate / sourceRate + 256;
-    if( nBufSize = av_samples_alloc_array_and_samples( &m_ppAudioData, nullptr,
+    uint8_t** ppPlanes = nullptr;
+    if( nBufSize = av_samples_alloc_array_and_samples( &ppPlanes, nullptr,
                         targetChannels, nTargetSamples, 
                         targetFormat, 0) <0 ){
-        releaseVideoCtx();
-        return sCtx.error();
+        return sCtx.error("分配音频缓冲失败");
     }
+    spAvFrameOut->m_spPlanes.take(ppPlanes, [](uint8_t** ptr){
+        av_freep(&ptr[0]);
+    });
     
     //
     // 这里面关系比较复杂，extended_data与pData格式相同，一般情况下也是相同的，其含义是
@@ -269,29 +257,29 @@ int CAvFrameConverter::convertAudio(const PAvFrame* pSrc, PAvFrame::FVisitor vis
     const uint8_t **in = (const uint8_t **)pSrc->ppPlanes;
 
     // 音频重采样：返回值是重采样后得到的音频数据中单个声道的样本数
-    int nb_samples = swr_convert(m_spSwrCtx, m_ppAudioData, nTargetSamples, in, pSrc->nWidth);
+    int nb_samples = swr_convert(m_spSwrCtx, ppPlanes, nTargetSamples, in, pSrc->nWidth);
     if (nb_samples < 0) {
-        printf("swr_convert() failed\n");
-        releaseAudioCtx();
-        return sCtx.error();
+        return sCtx.error("swr_convert()失败");
     }
     if (nb_samples == nTargetSamples)
     {
-        printf("audio buffer is probably too small\n");
+        sCtx.warn("音频缓冲区太小了");
+        return sCtx.success();
     }
 
     //假设音频的plane只可能是1或者2，对于package audio为1，对于plannar audio为2
-    m_nPlanes = av_sample_fmt_is_planar(targetFormat) ? 2 : 1;
-    m_nAudioSamples = nb_samples;
-    m_pAudioLinesize[0] = nb_samples * targetChannels * av_get_bytes_per_sample(targetFormat);
-    m_pAudioLinesize[1] = m_pAudioLinesize[0];
+    int nPlanes = av_sample_fmt_is_planar(targetFormat) ? 2 : 1;
+    int nAudioSamples = nb_samples;
+    spAvFrameOut->m_pLinesizes[0] = nb_samples * targetChannels * av_get_bytes_per_sample(targetFormat);
+    spAvFrameOut->m_pLinesizes[1] = spAvFrameOut->m_pLinesizes[0];
 
-    PAvFrame targetFrame = *pSrc;
+    PAvFrame& targetFrame = spAvFrameOut->m_avFrame;
     targetFrame.sampleMeta = m_targetSample;
-    targetFrame.nPlanes = m_nPlanes;
-    targetFrame.ppPlanes = m_ppAudioData;
-    targetFrame.pPlaneLineSizes = m_pAudioLinesize;
-    return visitor->visit(&targetFrame);
+    targetFrame.nPlanes = nPlanes;
+    targetFrame.ppPlanes = ppPlanes;
+    targetFrame.pPlaneLineSizes = spAvFrameOut->m_pLinesizes;
+    spOut.setPtr(spAvFrameOut.getPtr());
+    return sCtx.success();
 }
 
 FFMPEG_NAMESPACE_LEAVE

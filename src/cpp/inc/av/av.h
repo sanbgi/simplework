@@ -12,5 +12,9 @@
 #include "PAvSample.h"
 #include "PAvStreaming.h"
 #include "SAvFactory.h"
+#include "SAvFrame.h"
+#include "SAvIn.h"
+#include "SAvOut.h"
+#include "SAvNetwork.h"
 
 #endif//__SimpleWork_AV_h__
