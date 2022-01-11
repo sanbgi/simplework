@@ -46,7 +46,6 @@ public:
     AVStream* m_pAvStream;
     CTaker<AVFrame*> m_pAVFrame;
     CTaker<AVCodecContext*> m_spCodecCtx;
-    AVCodec* m_pCodec;
     SAvNetwork m_spConverter;
 };
 

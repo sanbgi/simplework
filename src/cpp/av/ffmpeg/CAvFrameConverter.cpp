@@ -125,6 +125,26 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
             return sCtx.error("图像转化器创建失败");
         }
 
+        //
+        /*
+        switch(targetFormat) {
+            case AV_PIX_FMT_YUVJ420P:
+            case AV_PIX_FMT_YUVJ422P:
+            case AV_PIX_FMT_YUVJ444P:
+            case AV_PIX_FMT_YUVJ440P:
+            {
+                int dummy[4];
+                int srcRange, dstRange;
+                int brightness, contrast, saturation;
+                sws_getColorspaceDetails(pSwsContext, (int**)&dummy, &srcRange, (int**)&dummy, &dstRange, &brightness, &contrast, &saturation);
+                const int* coefs = sws_getCoefficients(SWS_CS_DEFAULT);
+                srcRange = 1; // this marks that values are according to yuvj
+                sws_setColorspaceDetails(pSwsContext, coefs, srcRange, coefs, dstRange,
+                                            brightness, contrast, saturation);
+            }
+            break;
+        }*/
+
         m_spSwsContext.take(pSwsContext, sws_freeContext);
         m_lastSourceFormat = CFormat(sourceWidth, sourceHeight, sourceFormat);
     }
@@ -169,6 +189,7 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
     }
 
     PAvFrame& targetFrame = spAvFrameOut->m_avFrame;
+    targetFrame = *pSrc;
     targetFrame.sampleMeta = m_targetSample;
     targetFrame.nPlanes = nPlanes;
     targetFrame.ppPlanes = spAvFrameOut->m_spPlanes;

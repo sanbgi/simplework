@@ -177,7 +177,7 @@ int main(int argc, char *argv[]){
     //testNN();
     //testIdx();
     //CNeuralNetwork::run();
-    CAvNetwork::run();
+    CAvNetwork::runImage();
 
     /*
     int i=10;

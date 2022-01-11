@@ -3,6 +3,7 @@
 
 #include "av.h"
 #include "PAvFrame.h"
+#include "SAvFactory.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
@@ -16,6 +17,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvFrame)
         virtual const PAvFrame* getFramePtr() = 0; 
 
     SIMPLEWORK_INTERFACE_LEAVE
+
+
+    static SAvFrame loadImageFile(const char* szFileName) {
+        SAvFrame spFrame;
+        SAvFactory::getAvFactory()->loadAvImageFile(szFileName, spFrame);
+        return spFrame;
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvFrame)
 

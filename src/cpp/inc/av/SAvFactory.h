@@ -76,6 +76,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //
         virtual int openAvFileWriter(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings, SAvOut& spAvWriter) = 0;
         //
+        // 保存图片文件
+        //
+        virtual int saveAvImageFile(const char* szFileName, const SAvFrame& spFrame) = 0;
+        //
+        // 读取图片文件
+        //
+        virtual int loadAvImageFile(const char* szFileName, SAvFrame& spFrame) = 0;
+        //
         // 将多个管道串行成也给新管道
         //
         virtual int createSequencePipe(int nPipe, SPipe pPipes[], SPipe& spPipe) = 0;

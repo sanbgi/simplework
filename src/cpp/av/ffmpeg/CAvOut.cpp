@@ -1,6 +1,7 @@
 
 #include "av_ffmpeg.h"
 #include "CAvOut.h"
+#include "CAvSampleType.h"
 #include "CAvOutStreaming.h"
 
 FFMPEG_NAMESPACE_ENTER

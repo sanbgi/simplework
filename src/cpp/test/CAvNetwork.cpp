@@ -2,6 +2,7 @@
 #include <math.h>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include "CAvNetwork.h"
 
 using namespace sw;
@@ -34,6 +35,13 @@ void CAvNetwork::run() {
         {
         case EAvSampleType::AvSampleType_Video:
             spWindow->writeFrame(spFrame);
+
+            if(nFrames % 100 == 50) {
+                std::stringstream ss;
+                ss << "d://tmp/frame_" << nFrames << ".bmp";
+                SAvOut::saveAvImageFile(ss.str().c_str(), spFrame);
+            }
+
             break;
         
         case EAvSampleType::AvSampleType_Audio:
@@ -53,4 +61,15 @@ void CAvNetwork::run() {
     if( spFile->writeFrame(spFrame) != sCtx.success() ) {
         sCtx.error("写入文件结尾失败");
     }
+}
+
+
+void CAvNetwork::runImage() {
+//ff_load_image
+
+    SAvFrame spImage = SAvFrame::loadImageFile("D://tmp/image.png");
+    SAvOut spWindow = SAvOut::openWindow("TestWindow", 720, 360);
+
+    spWindow->writeFrame(spImage);
+
 }

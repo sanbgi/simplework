@@ -8,7 +8,7 @@ CAvOutStreaming::CAvOutStreaming() {
     m_pAvStream = nullptr;
     m_eStreamingType = EAvSampleType::AvSampleType_None;
     m_iStreamingId = -1;
-    m_pCodec = nullptr;
+    //m_pCodec = nullptr;
     m_nWriteNumber = 0;
     m_nDuration = 0;
 }
@@ -71,8 +71,30 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
     if( pAvStream == nullptr ) {
         return sCtx.error();
     }
+    PAvSample sampleMeta = pSrc->frameMeta;
     pAvStream->id = pSrc->streamingId;
     pAvStream->index = pFormatContext->nb_streams-1;
+    /* timebase: This is the fundamental unit of time (in seconds) in terms
+        * of which frame timestamps are represented. For fixed-fps content,
+        * timebase should be 1/framerate and timestamp increments should be
+        * identical to 1. */
+    pAvStream->time_base = { 1, pSrc->timeRate };
+    pAvStream->duration = pSrc->timeDuration;
+
+    AVCodecParameters *parameters = pAvStream->codecpar;
+    parameters->codec_type = AVMEDIA_TYPE_VIDEO;
+    parameters->codec_id = pOutputFormat->video_codec;
+    parameters->width    = sampleMeta.videoWidth;
+    parameters->height   = sampleMeta.videoHeight;
+    parameters->format   = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
+    //parameters->qu
+    int iFormat = 0;
+    while(pCodec->pix_fmts[iFormat] != parameters->format && pCodec->pix_fmts[iFormat] != AV_PIX_FMT_NONE) {
+        iFormat++;
+    }
+    if(pCodec->pix_fmts[iFormat] == AV_PIX_FMT_NONE) {
+        parameters->format = pCodec->pix_fmts[0];
+    }
 
     // 创建编码上下文
     AVCodecContext* pCodecContext = avcodec_alloc_context3(pCodec);
@@ -82,30 +104,20 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
     m_spCodecCtx.take(pCodecContext, [](AVCodecContext* pPtr) {
         avcodec_free_context(&pPtr);
     });
+    if ((avcodec_parameters_to_context(pCodecContext, pAvStream->codecpar)) < 0) {
+        return sCtx.error("拷贝参数到编码器中失败");
+    }
 
     //
-    // 设置CodecContext参数
+    // 修正CodecContext参数
     //
     {
-        PAvSample sampleMeta = pSrc->frameMeta;
-        pCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
-        pCodecContext->codec_id = pOutputFormat->video_codec;
         //pCodecContext->bit_rate = 1600000;
         pCodecContext->qmax = 5;
         pCodecContext->qmin = 1;
 
         /* Resolution must be a multiple of two. */
-        pCodecContext->width    = sampleMeta.videoWidth;
-        pCodecContext->height   = sampleMeta.videoHeight;
-
-        /* timebase: This is the fundamental unit of time (in seconds) in terms
-            * of which frame timestamps are represented. For fixed-fps content,
-            * timebase should be 1/framerate and timestamp increments should be
-            * identical to 1. */
-        pAvStream->time_base = { 1, pSrc->timeRate };
-        pAvStream->duration = pSrc->timeDuration;
         pCodecContext->time_base = pAvStream->time_base;
-
         pCodecContext->gop_size      = 12; /* emit one intra frame every twelve frames at most */
         if (pCodecContext->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
             /* just for testing, we also add B-frames */
@@ -116,15 +128,6 @@ int CAvOutStreaming::initVideo(AVFormatContext* pFormatContext, const PAvStreami
                 * This does not happen with normal video, it just happens here as
                 * the motion of the chroma plane does not match the luma plane. */
             pCodecContext->mb_decision = 2;
-        }
-
-        pCodecContext->pix_fmt = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
-        int iFormat = 0;
-        while(pCodec->pix_fmts[iFormat] != pCodecContext->pix_fmt && pCodec->pix_fmts[iFormat] != AV_PIX_FMT_NONE) {
-            iFormat++;
-        }
-        if(pCodec->pix_fmts[iFormat] == AV_PIX_FMT_NONE) {
-            pCodecContext->pix_fmt = pCodec->pix_fmts[0];
         }
     }
 
@@ -267,7 +270,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
 
 int CAvOutStreaming::open(AVFormatContext* pFormatContext) {
 
-    if( avcodec_open2(m_spCodecCtx, m_pCodec, nullptr) < 0 ) {
+    if( avcodec_open2(m_spCodecCtx, nullptr, nullptr) < 0 ) {
         return sCtx.error();
     }
 
@@ -316,21 +319,29 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, const SAvFrame&
         pAVFrame->linesize[i] = pFrame->pPlaneLineSizes[i];
     }
     pAVFrame->pts = pFrame->timeStamp;
+    pAVFrame->extended_data = pAVFrame->data;
 
     //视频
-    pAVFrame->width = sampleMeta.videoWidth;
-    pAVFrame->height = sampleMeta.videoHeight;
-    if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Video)
+    switch (sampleMeta.sampleType)
+    {
+    case EAvSampleType::AvSampleType_Video:
+        pAVFrame->width = sampleMeta.videoWidth;
+        pAVFrame->height = sampleMeta.videoHeight;
         pAVFrame->format = CAvSampleType::toPixFormat(sampleMeta.sampleFormat);
- 
-    //音频
-    pAVFrame->nb_samples = pFrame->nWidth;
-    pAVFrame->sample_rate = sampleMeta.audioRate;
-    pAVFrame->channels = sampleMeta.audioChannels;
-    pAVFrame->extended_data = &pAVFrame->data[0];
-    if(sampleMeta.sampleType == EAvSampleType::AvSampleType_Audio)
-        pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
+        break;
 
+    case EAvSampleType::AvSampleType_Audio:
+        pAVFrame->nb_samples = pFrame->nWidth;
+        pAVFrame->sample_rate = sampleMeta.audioRate;
+        pAVFrame->channels = sampleMeta.audioChannels;
+        pAVFrame->extended_data = &pAVFrame->data[0];
+        pAVFrame->format = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);
+        break;
+    
+    default:
+        break;
+    }
+ 
     return writeFrame(pFormatContext, pAVFrame);
 }
 
@@ -351,10 +362,6 @@ int CAvOutStreaming::writeFrame(AVFormatContext* pFormatContext, AVFrame* pAVFra
     if(pPkt == nullptr) {
         return sCtx.error();
     }
-
-    //
-    //  文档上说：如果avcodec_encode_video2调用失败，pPkt会被avcodec_encode_video2释放
-    //
     CTaker<AVPacket*> takePkg(pPkt, [](AVPacket* pPtr){
         av_packet_free(&pPtr);
     });

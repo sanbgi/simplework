@@ -9,6 +9,7 @@ using namespace sw::core;
 class CAvNetwork {
 public:
     static void run();
+    static void runImage();
 };
 
 #endif//__SimpleWork_CAvNetwork_H__

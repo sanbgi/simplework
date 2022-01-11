@@ -18,6 +18,7 @@ public://IAvOut
 
 public:
     static int createAvFile(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings, SAvOut& spAvOut);
+
     int initAvFile(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings);
 
 public:

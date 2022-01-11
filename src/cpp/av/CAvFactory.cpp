@@ -3,6 +3,7 @@
 #include "ffmpeg/CAvFrameConverter.h"
 #include "ffmpeg/CAvIn.h"
 #include "ffmpeg/CAvOut.h"
+#include "ffmpeg/CAvFrame.h"
 #include "sdl/CAvOut_SDLWindow.h"
 #include "sdl/CAvOut_SDLSpeaker.h"
 #include "pipe/CPipe.h"
@@ -53,6 +54,14 @@ public:
 
     int openAvFileWriter(const char* szFileName, int nStreamings, const PAvStreaming* pStreamings, SAvOut& spAvWriter) {
         return ffmpeg::CAvOut::createAvFile(szFileName, nStreamings, pStreamings, spAvWriter);
+    }
+
+    int saveAvImageFile(const char* szFileName, const SAvFrame& spFrame) {
+        return ffmpeg::CAvFrame::saveImage(szFileName, spFrame);
+    }
+
+    int loadAvImageFile(const char* szFileName, SAvFrame& spFrame) {
+        return ffmpeg::CAvFrame::loadImage(szFileName, spFrame);
     }
 
     int createSequencePipe(int nPipe, SPipe pPipes[], SPipe& spPipe) {
