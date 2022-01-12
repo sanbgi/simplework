@@ -8,6 +8,7 @@ using namespace sw;
 using namespace sw::av;
 using namespace sw::math;
 using namespace sw::nn;
+using namespace sw::io;
 
 static SCtx sCtx("CNnNetwork.Test");
 void CNnNetwork::run() {
@@ -113,4 +114,17 @@ SNnNetwork CNnNetwork::createRotNetwork() {
     //arrNets.push_back(SNnNetwork::createDense(10));
     arrNets.push_back(SNnNetwork::createDense(10, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+}
+
+void CNnNetwork::runFile() {
+
+    SNnNetwork spNet = SNnNetwork::createDense(576);
+    SIoFactory::getFactory()->saveArchive("D://Dense.bin", spNet);
+
+    spNet.release();
+
+    SIoArchivable arObj; 
+    SIoFactory::getFactory()->loadArchive("D://Dense.bin", arObj);
+    spNet = arObj;
+    spNet.release();
 }

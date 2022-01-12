@@ -11,6 +11,7 @@ public:
     static void run();
     static SNnNetwork createNetwork();
     static SNnNetwork createRotNetwork();
+    static void runFile();
 };
 
 #endif//__SimpleWork_NeuralWork_H__

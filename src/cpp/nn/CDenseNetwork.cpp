@@ -350,3 +350,17 @@ int CDenseNetwork::initNetwork(const STensor& spInTensor) {
     m_nInputTensor = nTensor;
     return sCtx.success();
 }
+
+int CDenseNetwork::toVisit(const SIoArchive& ar) {
+    //int m_nCells;
+    //int m_nInputTensor;
+    //int m_nInputCells;
+    //CTaker<double*> m_spWeights;
+    //CTaker<double*> m_spBais;
+    //CActivator* m_pActivator;
+    //SOptimizer m_spOptimizer;
+    ar.visit("nCells", m_nCells);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CDenseNetwork, CDenseNetwork::__getClassKey())

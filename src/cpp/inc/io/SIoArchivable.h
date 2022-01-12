@@ -29,8 +29,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchivable)
         //
         // 序列化
         //
-        virtual int archive(const SIoArchive& ar) = 0;
-
+        virtual int toVisit(const SIoArchive& ar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

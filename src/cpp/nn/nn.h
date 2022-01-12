@@ -2,6 +2,7 @@
 #define __SimpleWork_nn_nn_h__
 
 #include "../inc/nn/nn.h"
+#include "../inc/io/io.h"
 
 #ifndef _DEBUG
 #define _DEBUG

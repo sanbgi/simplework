@@ -9,6 +9,7 @@ using namespace sw;
 using namespace sw::av;
 using namespace sw::math;
 using namespace sw::nn;
+using namespace sw::io;
 
 static SCtx sCtx("CAvNetwork.Test");
 void CAvNetwork::run() {
