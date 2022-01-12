@@ -144,7 +144,7 @@ void testIdx() {
     //SNnNetwork::getFactory()->readIdxFile("", spTensor);
     //SNnNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-images-idx3-ubyteRA_Kv3PMVG-iFHXoHqNwJlYF9WviEKQCTSyo8gNSNgk.gz", spTensor);
     //SNnNetwork::getFactory()->readIdxFile("D:\\Workspace\\tensorflow\\tensorflow_datas\\downloads\\extracted\\GZIP.cvdf-datasets_mnist_train-labels-idx1-ubyteNVJTSgpVi77WrtMrMMSVzKI9Vn7FLKyL4aBzDoAQJVw.gz", spTensor);
-    SNeuralPipe spReader;
+    SNnPipe spReader;
     SNnFactory::getFactory()->openIdxFileReader(strFilename.c_str(), spReader);
     if(spReader) {
         int nRead = 10;

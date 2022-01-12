@@ -9,17 +9,17 @@ using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
 
-class CIdxFileReader : public CObject, INeuralPipe{
+class CIdxFileReader : public CObject, INnPipe{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INeuralPipe)
+        SIMPLEWORK_INTERFACE_ENTRY(INnPipe)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
     int push(const STensor& spIn, STensor& spOut);
 
 public://Factory
-    static int createReader(const char* szFileName, SNeuralPipe& spPipe);
+    static int createReader(const char* szFileName, SNnPipe& spPipe);
     static int readFile(const char* szFileName, STensor& spData);
     static void highEndianToCPU(int nData, int nDataByte, unsigned char* pData);
 

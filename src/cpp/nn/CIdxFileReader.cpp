@@ -50,7 +50,7 @@ int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
     return sCtx.success();
 }
 
-int CIdxFileReader::createReader(const char* szFileName, SNeuralPipe& spPipe) {
+int CIdxFileReader::createReader(const char* szFileName, SNnPipe& spPipe) {
 
     CPointer<CIdxFileReader> spReader;
     CObject::createObject(spReader);

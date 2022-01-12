@@ -21,7 +21,7 @@ int CNormalizePipe::push(const STensor& spIn, STensor& spOut) {
     return sCtx.error("不支持的归一化输入类型");
 }
 
-int CNormalizePipe::createPipe(SNeuralPipe& spPipe) {
+int CNormalizePipe::createPipe(SNnPipe& spPipe) {
     CPointer<CNormalizePipe> spReader;
     CObject::createObject(spReader);
     spPipe.setPtr(spReader.getPtr());

@@ -59,11 +59,11 @@ public:
         return CIdxFileReader::readFile(szFileName, spData);
     }
 
-    int openIdxFileReader(const char* szFileName, SNeuralPipe& spPipe) {
+    int openIdxFileReader(const char* szFileName, SNnPipe& spPipe) {
         return CIdxFileReader::createReader(szFileName, spPipe);
     }
 
-    int createNormallizePipe(SNeuralPipe& spPipe) {
+    int createNormallizePipe(SNnPipe& spPipe) {
         return CNormalizePipe::createPipe(spPipe);
     }
 

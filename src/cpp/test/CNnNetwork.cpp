@@ -12,8 +12,8 @@ using namespace sw::nn;
 static SCtx sCtx("CNnNetwork.Test");
 void CNnNetwork::run() {
 
-    SNeuralPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
-    SNeuralPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
+    SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
+    SNnPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
 
     //
     // 一次读取10个

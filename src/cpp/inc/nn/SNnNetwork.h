@@ -87,8 +87,8 @@ public:
         return nn;
     }
 
-    static SNeuralPipe openIdxFileReader(const char* szFilename) {
-        SNeuralPipe pipe;
+    static SNnPipe openIdxFileReader(const char* szFilename) {
+        SNnPipe pipe;
         SNnFactory::getFactory()->openIdxFileReader(szFilename, pipe);
         return pipe;
     }
@@ -99,8 +99,8 @@ public:
         return data;
     }
 
-    static SNeuralPipe createNormalizePipe() {
-        SNeuralPipe pipe;
+    static SNnPipe createNormalizePipe() {
+        SNnPipe pipe;
         SNnFactory::getFactory()->createNormallizePipe(pipe);
         return pipe;
     }
