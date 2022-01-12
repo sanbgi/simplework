@@ -3,9 +3,9 @@
 
 #include "../core/core.h"
 
-#define SIMPLEWORK_MATH_NAMESPACE sw::math
-#define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace sw { namespace math {
-#define SIMPLEWORK_MATH_NAMESPACE_LEAVE }}
+#define SIMPLEWORK_MATH_NAMESPACE sw
+#define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace sw {
+#define SIMPLEWORK_MATH_NAMESPACE_LEAVE }
 
 #include "PTensor.h"
 #include "STensor.h"

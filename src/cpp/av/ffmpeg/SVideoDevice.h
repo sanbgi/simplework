@@ -10,7 +10,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(VideoDevice)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvIn", 211206)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IAvIn", 211206)
 
         //
         // 获取设备名

@@ -16,8 +16,8 @@ extern "C" {
 }
 #include "../Av.h"
 
-using namespace sw::core;
-using namespace sw::math;
-using namespace sw::av;
+using namespace sw;
+using namespace sw;
+using namespace sw;
 
 #endif//__SimpleWork_av_ffmpeg_h__

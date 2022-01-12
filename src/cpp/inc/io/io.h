@@ -3,9 +3,9 @@
 
 #include "../core/core.h"
 
-#define SIMPLEWORK_IO_NAMESPACE sw::io
-#define SIMPLEWORK_IO_NAMESPACE_ENTER namespace sw { namespace io {
-#define SIMPLEWORK_IO_NAMESPACE_LEAVE }}
+#define SIMPLEWORK_IO_NAMESPACE sw
+#define SIMPLEWORK_IO_NAMESPACE_ENTER namespace sw {
+#define SIMPLEWORK_IO_NAMESPACE_LEAVE }
 
 #include "SIoArchive.h"
 #include "SIoArchivable.h"

@@ -4,9 +4,9 @@
 #include "../core/core.h"
 #include "../math/math.h"
 
-#define SIMPLEWORK_NN_NAMESPACE sw::nn
-#define SIMPLEWORK_NN_NAMESPACE_ENTER namespace sw { namespace nn {
-#define SIMPLEWORK_NN_NAMESPACE_LEAVE }}
+#define SIMPLEWORK_NN_NAMESPACE sw
+#define SIMPLEWORK_NN_NAMESPACE_ENTER namespace sw { 
+#define SIMPLEWORK_NN_NAMESPACE_LEAVE }
 
 #include "SNnPipe.h"
 #include "SNnNetwork.h"

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-using namespace sw::av;
+using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CJpegFileWriter");

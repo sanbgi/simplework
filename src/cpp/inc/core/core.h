@@ -7,9 +7,9 @@
 //      1.1, 命名域需要的宏
 //
 //
-#define SIMPLEWORK_CORE_NAMESPACE sw::core
-#define __SimpleWork_Core_Namespace_Enter__ namespace sw { namespace core {
-#define __SimpleWork_Core_Namespace_Leave__ }}
+#define SIMPLEWORK_CORE_NAMESPACE sw
+#define __SimpleWork_Core_Namespace_Enter__ namespace sw {
+#define __SimpleWork_Core_Namespace_Leave__ }
 
 //
 //

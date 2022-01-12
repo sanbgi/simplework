@@ -3,8 +3,8 @@
 
 #include "../inc/SimpleWork.h"
 
-using namespace sw::nn;
-using namespace sw::core;
+using namespace sw;
+using namespace sw;
 
 class CAvNetwork {
 public:

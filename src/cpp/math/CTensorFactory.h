@@ -5,8 +5,8 @@
 #include "../inc/math/math.h"
 #include <map>
 
-using namespace sw::core;
-using namespace sw::math;
+using namespace sw;
+using namespace sw;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 

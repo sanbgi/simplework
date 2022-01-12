@@ -28,7 +28,7 @@ class SAvNetwork;
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvFactory", 011220)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IAvFactory", 011220)
 
         //
         //  创建视频文件读取管道，视频文件读取管道

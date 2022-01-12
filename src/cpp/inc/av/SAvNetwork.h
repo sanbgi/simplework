@@ -9,7 +9,7 @@ class SAvFrame;
 
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvNetwork)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvNetwork", 220109)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IAvNetwork", 220109)
 
         //
         // 向管道推入帧，并获取返回帧

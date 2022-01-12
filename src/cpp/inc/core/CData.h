@@ -125,6 +125,8 @@ private:
             return "sw.core.Float";
         } else if(typeid(TValue) == typeid(double)) {
             return "sw.core.Double";
+        } else if(typeid(TValue) == typeid(char*)) {
+            return "sw.core.String";
         }
         return nullptr;
     }

@@ -2,8 +2,8 @@
 #include "CIoBinaryArReader.h"
 #include "CIoBinaryArWriter.h"
 
-using namespace sw::core;
-using namespace sw::io;
+using namespace sw;
+using namespace sw;
 
 class CIoFactory : public CObject, public IIoFactory{
 

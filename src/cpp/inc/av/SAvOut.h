@@ -9,7 +9,7 @@ SIMPLEWORK_AV_NAMESPACE_ENTER
 
 SIMPLEWORK_INTERFACECLASS_ENTER0(AvOut)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IAvOut", 220109)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IAvOut", 220109)
 
         //
         // 写入视频帧

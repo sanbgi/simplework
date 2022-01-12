@@ -10,14 +10,14 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(NnPipe)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.math.INnPipe", 220105)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.math.INnPipe", 220105)
 
         //
         // 向管道注入数据
         //      @spInTensor 输入张量
         //      @spOutTensor 输出张量
         //
-        virtual int push(const sw::math::STensor& spInTensor, sw::math::STensor& spOutTensor) = 0;
+        virtual int push(const sw::STensor& spInTensor, sw::STensor& spOutTensor) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

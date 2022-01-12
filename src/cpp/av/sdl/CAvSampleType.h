@@ -3,7 +3,7 @@
 
 #include "av_sdl.h"
 
-using namespace sw::av;
+using namespace sw;
 
 SDL_NAMESPACE_ENTER
 

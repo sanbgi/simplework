@@ -7,8 +7,8 @@
 #include <vector>
 #include <string>
 
-using namespace sw::core;
-using namespace sw::io;
+using namespace sw;
+using namespace sw;
 using namespace std;
 
 class CIoBinaryArReader : public CObject, public IIoArchive {

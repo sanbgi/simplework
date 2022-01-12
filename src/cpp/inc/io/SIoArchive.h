@@ -17,7 +17,7 @@ struct IArrayVisitee {
 
 template<typename Q> class CArrayVisitee : IArrayVisitee {
 public:
-    unsigned int getElementType() { return sw::core::CBasicData<Q>::getStaticType(); }
+    unsigned int getElementType() { return sw::CBasicData<Q>::getStaticType(); }
     int size() { return m_nEle; }
     const void* data() { return m_pEle; }
     int getElementBytes() { return sizeof(Q); }
@@ -43,7 +43,7 @@ private:
 
 template<typename Q> class CTakerVisitee : IArrayVisitee {
 public:
-    unsigned int getElementType() { return sw::core::CBasicData<Q>::getStaticType(); }
+    unsigned int getElementType() { return sw::CBasicData<Q>::getStaticType(); }
     int size() { return m_nEle; }
     const void* data() { return m_pTaker->getPtr(); }
     int getElementBytes() { return sizeof(Q); }
@@ -55,7 +55,7 @@ public:
     }
 
 public:
-    CTakerVisitee(int nEle, sw::core::CTaker<Q>& spTaker) {
+    CTakerVisitee(int nEle, sw::CTaker<Q>& spTaker) {
         m_nEle = nEle;
         m_pTaker = &spTaker;
     }
@@ -65,13 +65,13 @@ public:
 
 private:
     int m_nEle;
-    sw::core::CTaker<Q>* m_pTaker;
+    sw::CTaker<Q>* m_pTaker;
 };
 
 template<typename Q> class CStringVisitee : IArrayVisitee {
 public:
-    unsigned int getElementType() { return sw::core::CBasicData<char*>::getStaticType(); }
-    int size() { return m_pStr->size()+1; }
+    unsigned int getElementType() { return sw::CBasicData<char*>::getStaticType(); }
+    int size() { return m_pStr->length()+1; }
     const void* data() { return m_pStr->c_str(); }
     int getElementBytes() { return sizeof(char); }
     void setArray(int nEle, const void* pEle) {
@@ -98,7 +98,7 @@ struct IObjectArrayVisitee {
 
 template<typename Q> class CEleArrayVisitee : IObjectArrayVisitee {
 public:
-    unsigned int getElementType() { return sw::core::CBasicData<char*>::getStaticType(); }
+    unsigned int getElementType() { return sw::CBasicData<char*>::getStaticType(); }
     int size() { return m_pArray->size(); }
     int getEleAt(int iIndex, SIoArchivable& spEle){
         spEle = (*m_pArray)[iIndex];
@@ -123,7 +123,7 @@ private:
 
 SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchive)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IIoArchive", 220112)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IIoArchive", 220112)
 
         //
         // 是否是读入
@@ -166,7 +166,7 @@ public:
     // 简单数据类型：bool, int, char, unsigned char ....
     //
     template<typename Q> int visit(const char* szName, Q& v, int nMinVer=0, int nMaxVer=999999999 ) const {
-        return (*this)->visit(szName, sw::core::CBasicData<Q>::getStaticType(), sizeof(v), &v, nMinVer, nMaxVer);
+        return (*this)->visit(szName, sw::CBasicData<Q>::getStaticType(), sizeof(v), &v, nMinVer, nMaxVer);
     }
 
     //
@@ -179,7 +179,7 @@ public:
     //
     // 变长数组
     //
-    template<typename Q> int visit(const char* szName, int nSize, sw::core::CTaker<Q>& spTaker, int nMinVer, int nMaxVer = 999999999) const {
+    template<typename Q> int visit(const char* szName, int nSize, sw::CTaker<Q>& spTaker, int nMinVer, int nMaxVer = 999999999) const {
         return (*this)->visit(szName, CTakerVisitee<Q>(nSize, spTaker), nMinVer, nMaxVer);
     }
 

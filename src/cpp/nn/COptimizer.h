@@ -8,7 +8,7 @@
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(Optimizer)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.nn.IOptimizer", 220107)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.nn.IOptimizer", 220107)
 
         //
         // 获取用于保存输入偏导数的地址

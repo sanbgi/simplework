@@ -6,10 +6,10 @@
 #include "CAvNetwork.h"
 
 using namespace sw;
-using namespace sw::av;
-using namespace sw::math;
-using namespace sw::nn;
-using namespace sw::io;
+using namespace sw;
+using namespace sw;
+using namespace sw;
+using namespace sw;
 
 static SCtx sCtx("CAvNetwork.Test");
 void CAvNetwork::run() {

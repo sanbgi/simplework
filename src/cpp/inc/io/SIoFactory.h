@@ -9,7 +9,7 @@ class SIoArchivable;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(IoFactory, "sw.io.IoFactory")
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.io.IIoFactory", 220112)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.io.IIoFactory", 220112)
 
         //
         // 保存文件
@@ -25,7 +25,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(IoFactory, "sw.io.IoFactory")
 
 public:
     static SIoFactory& getFactory() {
-        static SIoFactory g_factory = sw::core::SObject::createObject<SIoFactory>();
+        static SIoFactory g_factory = sw::SObject::createObject<SIoFactory>();
         return g_factory;
     }
 

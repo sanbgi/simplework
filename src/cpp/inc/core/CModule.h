@@ -34,7 +34,7 @@ protected://IModule
     //
     // 框架核心模块
     //
-    //      sw框架通过唯一输出函数sw::core::getCoreModule，来让其它模块获得系统
+    //      sw框架通过唯一输出函数sw::getCoreModule，来让其它模块获得系统
     //  核心模块接口(IModule)，而实现就是这个模块。
     //
     int initModule(const char* szModuleKey, const SModule& pCaller ) {

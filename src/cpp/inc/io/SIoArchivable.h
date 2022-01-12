@@ -9,7 +9,7 @@ class SIoArchive;
 
 SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchivable)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::core::IObject, "sw.av.IIoArchivable", 220112)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IIoArchivable", 220112)
 
         //
         // 获取版本号
