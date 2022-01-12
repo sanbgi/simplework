@@ -1,6 +1,8 @@
 #include "../Av.h"
 #include <vector>
 
+using namespace sw;
+
 enum EPipeMode {
     PipeMode_Sequence,
     PipeMode_Parallel

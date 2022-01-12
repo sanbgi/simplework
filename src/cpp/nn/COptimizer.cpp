@@ -4,6 +4,7 @@
 #include <math.h>
 
 using namespace std;
+using namespace sw;
 
 SCtx sCtx("COptimizer");
 

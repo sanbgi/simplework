@@ -34,7 +34,9 @@ int CIoBinaryArWriter::visit(const char* szName, IObjectArrayVisitee* pVisitee, 
         for(int i=0; i<nEles; i++) {
             SIoArchivable spVisitee;
             pVisitee->getEleAt(i, spVisitee);
-            saveEle(spVisitee);
+            if( saveEle(spVisitee) != sCtx.success() ) {
+                return sCtx.error("保存对象失败");
+            }
         }
     }
     return sCtx.success();
@@ -50,7 +52,6 @@ int CIoBinaryArWriter::saveArchive(const char* szFileName, const SIoArchivable& 
 
     int nFileVer = 20220112;
     spOut->m_stream.write((const char*)&nFileVer, sizeof(int));
-
     if( spOut->saveEle(spAr) != sCtx.success() ) {
         return sCtx.error("序列化文件失败");
     }
@@ -86,8 +87,7 @@ void CIoBinaryArWriter::saveString(string str) {
 int CIoBinaryArWriter::saveEle(SIoArchivable spVisitee) {
     string classKey;
     if( !spVisitee ) {
-        saveString(classKey);
-        return sCtx.success();
+        return sCtx.error("无法保存空对象");
     }
 
     classKey = spVisitee->getClassKey();
