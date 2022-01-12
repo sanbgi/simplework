@@ -12,7 +12,7 @@ class SNnNetwork;
 class SNnPipe;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnFactory", 211223)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnFactory", 211223)
 
         //
         //  创建池化神经网络
