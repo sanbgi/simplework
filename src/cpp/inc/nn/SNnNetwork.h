@@ -4,9 +4,6 @@
 #include "nn.h"
 #include "SNnFactory.h"
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-
 SIMPLEWORK_NN_NAMESPACE_ENTER
 
 //

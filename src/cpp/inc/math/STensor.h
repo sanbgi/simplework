@@ -3,8 +3,6 @@
 
 #include "STensorSolver.h"
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 /**

@@ -3,9 +3,6 @@
 
 #include "nn.h"
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-
 SIMPLEWORK_NN_NAMESPACE_ENTER
 
 class SNnNetwork;
