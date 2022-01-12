@@ -2,25 +2,25 @@
 #include <math.h>
 #include <vector>
 #include <iostream>
-#include "CNeuralNetwork.h"
+#include "CNnNetwork.h"
 
 using namespace sw;
 using namespace sw::av;
 using namespace sw::math;
 using namespace sw::nn;
 
-static SCtx sCtx("CNeuralNetwork.Test");
-void CNeuralNetwork::run() {
+static SCtx sCtx("CNnNetwork.Test");
+void CNnNetwork::run() {
 
-    SNeuralPipe spImageReader = SNeuralNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
-    SNeuralPipe spLabelReader = SNeuralNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
+    SNeuralPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
+    SNeuralPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
 
     //
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNeuralNetwork nn = createNetwork();
-    //SNeuralNetwork nn = createRotNetwork();
+    SNnNetwork nn = createNetwork();
+    //SNnNetwork nn = createRotNetwork();
 
     double sumAcc = 0;
     double sumLoss = 0;
@@ -32,12 +32,12 @@ void CNeuralNetwork::run() {
         // 
         // 分类信息
         //
-        STensor spClassify = SNeuralNetwork::classifyTensor(10, spBatchLabel);
+        STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
 
         //
         // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
         //
-        STensor spIn = SNeuralNetwork::normalizeTensor(spBatchImage);
+        STensor spIn = SNnNetwork::normalizeTensor(spBatchImage);
 
         //
         // 神经网络求解
@@ -86,31 +86,31 @@ void CNeuralNetwork::run() {
     }
 }
 
-SNeuralNetwork CNeuralNetwork::createNetwork() {
-    std::vector<SNeuralNetwork> arrParallelNets;
-    arrParallelNets.push_back(SNeuralNetwork::createConv(5,5,16));
-    arrParallelNets.push_back(SNeuralNetwork::createConv(5,5,16));
+SNnNetwork CNnNetwork::createNetwork() {
+    std::vector<SNnNetwork> arrParallelNets;
+    arrParallelNets.push_back(SNnNetwork::createConv(5,5,16));
+    arrParallelNets.push_back(SNnNetwork::createConv(5,5,16));
 
-    std::vector<SNeuralNetwork> arrNets;
-    //arrNets.push_back(SNeuralNetwork::createConv(5,5,32));
-    arrNets.push_back(SNeuralNetwork::createParallel(arrParallelNets.size(),arrParallelNets.data()));
-    arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNeuralNetwork::createConv(7,7,64));
-    arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNeuralNetwork::createDense(576));
-    //arrNets.push_back(SNeuralNetwork::createDense(10));
-    arrNets.push_back(SNeuralNetwork::createDense(10, "softmax"));
-    return SNeuralNetwork::createSequence(arrNets.size(), arrNets.data());
+    std::vector<SNnNetwork> arrNets;
+    //arrNets.push_back(SNnNetwork::createConv(5,5,32));
+    arrNets.push_back(SNnNetwork::createParallel(arrParallelNets.size(),arrParallelNets.data()));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(7,7,64));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createDense(576));
+    //arrNets.push_back(SNnNetwork::createDense(10));
+    arrNets.push_back(SNnNetwork::createDense(10, "softmax"));
+    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
 }
 
-SNeuralNetwork CNeuralNetwork::createRotNetwork() {
-    std::vector<SNeuralNetwork> arrNets;
-    arrNets.push_back(SNeuralNetwork::createRotConv(7,7,8,0,0));
-    arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNeuralNetwork::createRotConv(7,7,32,0,0));
-    arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNeuralNetwork::createDense(576));
-    //arrNets.push_back(SNeuralNetwork::createDense(10));
-    arrNets.push_back(SNeuralNetwork::createDense(10, "softmax"));
-    return SNeuralNetwork::createSequence(arrNets.size(), arrNets.data());
+SNnNetwork CNnNetwork::createRotNetwork() {
+    std::vector<SNnNetwork> arrNets;
+    arrNets.push_back(SNnNetwork::createRotConv(7,7,8,0,0));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createRotConv(7,7,32,0,0));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createDense(576));
+    //arrNets.push_back(SNnNetwork::createDense(10));
+    arrNets.push_back(SNnNetwork::createDense(10, "softmax"));
+    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
 }

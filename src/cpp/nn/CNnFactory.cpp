@@ -16,42 +16,42 @@ using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
 
-class CNeuralNetworkFactory : public CObject, public SNeuralNetwork::INeuralNetworkFactory{
+class CNnFactory : public CObject, public INnFactory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(SNeuralNetwork::INeuralNetworkFactory)
+        SIMPLEWORK_INTERFACE_ENTRY(INnFactory)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int createDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
+    int createDense(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
         return CDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
     }
 
-    int createTwoPoleDense(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
+    int createTwoPoleDense(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
         return CTwoPoleDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
     }
 
-    int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) {
+    int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNnNetwork& spNetwork) {
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
-    int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNeuralNetwork& spNetwork) {
+    int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
         return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
     }
 
-    int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) {
+    int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNnNetwork& spNetwork) {
         return CTwoPoleConvNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
-    int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
+    int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
     }
 
-    int createParallel(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
+    int createParallel(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
         return CParallelNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
     }
 
-    int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
+    int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) {
         return CPoolNetwork::createNetwork(nWidth, nHeight, nStrideWidth, nStrideHeight, spNetwork);
     }
 
@@ -76,4 +76,4 @@ public:
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNeuralNetworkFactory, SNeuralNetwork::SNeuralNetworkFactory::__getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNnFactory, SNnFactory::__getClassKey())

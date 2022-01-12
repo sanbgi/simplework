@@ -8,18 +8,18 @@ using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
 
-class CPoolNetwork : public CObject, public INeuralNetwork{
+class CPoolNetwork : public CObject, public INnNetwork{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INeuralNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private://INeuralNetwork
+private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
-    static int createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork);
+    static int createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork);
 
 private:
     STensor m_spInTensor;

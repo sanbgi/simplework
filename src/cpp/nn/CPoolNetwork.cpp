@@ -2,7 +2,7 @@
 #include "iostream"
 
 SCtx CPoolNetwork::sCtx("CPoolNetwork");
-int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {
+int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) {
     CPointer<CPoolNetwork> spPool;
     CObject::createObject(spPool);
     spPool->m_nWidth = nWidth;

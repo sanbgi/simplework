@@ -3,7 +3,7 @@
 #include "iostream"
 
 static SCtx sCtx("CRotConvNetwork");
-int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNeuralNetwork& spNetwork) {
+int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
     CPointer<CRotConvNetwork> spConvolution;
     CObject::createObject(spConvolution);
     spConvolution->m_sizeConv = {

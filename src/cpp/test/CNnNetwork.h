@@ -6,11 +6,11 @@
 using namespace sw::nn;
 using namespace sw::core;
 
-class CNeuralNetwork {
+class CNnNetwork {
 public:
     static void run();
-    static SNeuralNetwork createNetwork();
-    static SNeuralNetwork createRotNetwork();
+    static SNnNetwork createNetwork();
+    static SNnNetwork createRotNetwork();
 };
 
 #endif//__SimpleWork_NeuralWork_H__

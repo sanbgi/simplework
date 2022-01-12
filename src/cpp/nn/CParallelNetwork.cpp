@@ -1,7 +1,7 @@
 #include "CParallelNetwork.h"
 
 SCtx CParallelNetwork::sCtx("CParallelNetwork");
-int CParallelNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
+int CParallelNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
     CPointer<CParallelNetwork> spSequence;
     CObject::createObject(spSequence);
     for(int i=0; i<nNetworks; i++) {
@@ -28,7 +28,7 @@ int CParallelNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     //
     // 所有节点求值，并把结果保存在m_arrOutTensors中
     //
-    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
+    std::vector<SNnNetwork>::iterator it = m_arrNetworks.begin();
     while(it != m_arrNetworks.end() ) {
         STensor spOut;
         if( int errCode = (*it)->eval(spInTensor, spOut) != sCtx.success() ){
@@ -143,7 +143,7 @@ int CParallelNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevi
     int nOutAllLayer = m_nOutLayers;
     int nOutLayerSize = m_nOutLayerSize;
     std::vector<STensor>::iterator itTensor = m_arrOutTensors.begin();
-    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
+    std::vector<SNnNetwork>::iterator it = m_arrNetworks.begin();
     while(it != m_arrNetworks.end() ) {
         STensor& spOut = *itTensor;
         STensor& spOutDim = spOut->getDimVector();

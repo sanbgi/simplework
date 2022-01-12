@@ -10,21 +10,21 @@ using namespace SIMPLEWORK_NN_NAMESPACE;
 //
 // 并行计算神经网络，其中，每一个子网络的最后一个维度是图层深度，所以，所有节点输出合并是在最后一个维度上合并
 //
-class CParallelNetwork : public CObject, public INeuralNetwork{
+class CParallelNetwork : public CObject, public INnNetwork{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INeuralNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private://INeuralNetwork
+private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
-    static int createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork);
+    static int createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork);
 
 public:
-    std::vector<SNeuralNetwork> m_arrNetworks;
+    std::vector<SNnNetwork> m_arrNetworks;
     std::vector<STensor> m_arrOutTensors;
     int m_nOutLayers;
     int m_nOutLayerSize;

@@ -3,7 +3,7 @@
 #include <iostream>
 
 SCtx CDenseNetwork::sCtx("CDenseNetwork");
-int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
+int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;

@@ -1,7 +1,7 @@
 #include "CSequenceNetwork.h"
 
 SCtx CSequenceNetwork::sCtx("CSequenceNetwork");
-int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
+int CSequenceNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
     CPointer<CSequenceNetwork> spSequence;
     CObject::createObject(spSequence);
     for(int i=0; i<nNetworks; i++) {
@@ -13,7 +13,7 @@ int CSequenceNetwork::createNetwork(int nNetworks, SNeuralNetwork* pNetworks, SN
 
 int CSequenceNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     STensor spIn = spInTensor;
-    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.begin();
+    std::vector<SNnNetwork>::iterator it = m_arrNetworks.begin();
     while(it != m_arrNetworks.end() ) {
         STensor spOut;
         if( int errCode = (*it)->eval(spIn, spOut) != sCtx.success() ){
@@ -29,7 +29,7 @@ int CSequenceNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
 int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     STensor spOut = spOutTensor;
     STensor spOutDev = spOutDeviation;
-    std::vector<SNeuralNetwork>::iterator it = m_arrNetworks.end();
+    std::vector<SNnNetwork>::iterator it = m_arrNetworks.end();
     while(it-- != m_arrNetworks.begin() ) {
         STensor spIn;
         STensor spInDev;

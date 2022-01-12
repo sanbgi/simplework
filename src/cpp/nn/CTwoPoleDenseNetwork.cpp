@@ -3,7 +3,7 @@
 #include <iostream>
 
 SCtx CTwoPoleDenseNetwork::sCtx("CTwoPoleDenseNetwork");
-int CTwoPoleDenseNetwork::createNetwork(int nCells, const char* szActivator, SNeuralNetwork& spNetwork) {
+int CTwoPoleDenseNetwork::createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
     CPointer<CTwoPoleDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;

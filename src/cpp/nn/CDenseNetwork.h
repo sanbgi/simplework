@@ -16,18 +16,18 @@ using namespace SIMPLEWORK_NN_NAMESPACE;
 //      Y = activate(Z)
 //      outputTensor = Y
 //
-class CDenseNetwork : public CObject, public INeuralNetwork{
+class CDenseNetwork : public CObject, public INnNetwork{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INeuralNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private://INeuralNetwork
+private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
-    static int createNetwork(int nCells, const char* szActivator, SNeuralNetwork& spNetwork);
+    static int createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
     int initNetwork(const STensor& spDimTensor);

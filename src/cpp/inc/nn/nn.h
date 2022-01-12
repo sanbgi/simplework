@@ -8,7 +8,8 @@
 #define SIMPLEWORK_NN_NAMESPACE_ENTER namespace sw { namespace nn {
 #define SIMPLEWORK_NN_NAMESPACE_LEAVE }}
 
-#include "SNeuralPipe.h"
-#include "SNeuralNetwork.h"
+#include "SNnPipe.h"
+#include "SNnNetwork.h"
+#include "SNnFactory.h"
 
 #endif//__SimpleWork_NN_h__

@@ -24,18 +24,18 @@ using namespace SIMPLEWORK_NN_NAMESPACE;
 //  还不能提高精度，可能与conv(a)的计算偏差大相关，毕竟两个90度卷积的加权结果，未必
 //  能表示指定角度的卷积结果。
 //
-class CRotConvNetwork : public CObject, public INeuralNetwork{
+class CRotConvNetwork : public CObject, public INnNetwork{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INeuralNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private://INeuralNetwork
+private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 public://Factory
-    static int createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNeuralNetwork& spNetwork);
+    static int createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
     int initNetwork(const STensor& inputTensor);

@@ -3,7 +3,7 @@
 #include "iostream"
 
 static SCtx sCtx("CTwoPoleConvNetwork");
-int CTwoPoleConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
+int CTwoPoleConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork) {
     CPointer<CTwoPoleConvNetwork> spConvolution;
     CObject::createObject(spConvolution);
     spConvolution->m_sizeConv = {
