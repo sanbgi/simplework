@@ -1,10 +1,10 @@
-#include "CConvolutionNetwork.h"
+#include "CRotConvNetwork.h"
 #include "math.h"
 #include "iostream"
 
-static SCtx sCtx("CConvolutionNetwork");
-int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNeuralNetwork& spNetwork) {
-    CPointer<CConvolutionNetwork> spConvolution;
+static SCtx sCtx("CRotConvNetwork");
+int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNeuralNetwork& spNetwork) {
+    CPointer<CRotConvNetwork> spConvolution;
     CObject::createObject(spConvolution);
     spConvolution->m_sizeConv = {
         nConvs,
@@ -16,6 +16,8 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     spConvolution->m_nPadingHeight = 0;
     spConvolution->m_nStrideWidth = 1;
     spConvolution->m_nStrideHeight = 1;
+    spConvolution->m_dWRotAngle = dWidthRotAngle;
+    spConvolution->m_dHRotAngle = dHeightRotAngle;
     spConvolution->m_pActivator = CActivator::getActivation(szActivator);
     if(spConvolution->m_pActivator == nullptr) {
         return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
@@ -27,7 +29,7 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     return sCtx.success();
 }
 
-int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
+int CRotConvNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     if( initNetwork(spInTensor) != sCtx.success() ) {
         return sCtx.error();
     }
@@ -43,6 +45,32 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     CBatchSize2D& stepInConv = m_stepInConv;
     CBatchSize2D& stepOut = m_stepOut;
     CBatchSize2D& stepConv = m_stepConv;
+    struct CRotConv {
+        int start;
+        int width;
+        int height;
+    };
+    CRotConv rConv0 = {
+        0,
+        m_stepConv.height,
+        m_stepConv.width,
+    };
+    CRotConv rConv90 = {
+        (sizeConv.height - 1) * stepConv.height,
+        stepConv.width,
+        -stepConv.height
+    };
+    CRotConv rConv180 = {
+        (sizeConv.height - 1) * stepConv.height + (sizeConv.width - 1 ) * stepConv.width,
+        -stepConv.height,
+        -stepConv.width
+    };
+    CRotConv rConv270 = {
+        (sizeConv.width - 1 ) * stepConv.width,
+        -stepConv.width,
+        stepConv.height
+    };
+
     struct CItOutVariables {
         double* pIn;
         double* pOut;
@@ -55,8 +83,10 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         m_spBais
     };
 
-    double dConv;
-    int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
+    double dConv, dRotConv, dAngle90, dAngle360, dRatio, dRotRatio[2];
+    int iRot, iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
+    CRotConv* pRotConv;
+    CRotConv* pRotConvArray[2];
     CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
     for(iTensor=0; iTensor<sizeIn.batch; iTensor++) {
         varTBackup = {
@@ -71,30 +101,66 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
                 varOXBackup.pOut = it.pOut;
                 varOXBackup.pWeights = it.pWeights;
                 varOXBackup.pBais = it.pBais;
+
+                dAngle360 = fmod(m_dWRotAngle * iOutY + m_dHRotAngle * iOutX, 360);
+                dAngle90 = fmod(dAngle360, 90.0);
+                switch((int)(dAngle360 / 90.0)) {
+                    case 0: // 0 - 90度
+                        pRotConvArray[0] = &rConv0;
+                        pRotConvArray[1] = &rConv90;
+                        break;
+                    case 1: // 90 - 180度
+                        pRotConvArray[0] = &rConv90;
+                        pRotConvArray[1] = &rConv180;
+                        break;
+                    case 2: // 180 - 270度
+                        pRotConvArray[0] = &rConv180;
+                        pRotConvArray[1] = &rConv270;
+                        break;
+                    case 3: // 270 - 360度
+                        pRotConvArray[0] = &rConv270;
+                        pRotConvArray[1] = &rConv0;
+                    break;
+                }
+                dRotRatio[0] = cos(dAngle90);
+                dRotRatio[0] = dRotRatio[0]*dRotRatio[0];
+                dRotRatio[1] = sin(dAngle90);
+                dRotRatio[1] = dRotRatio[1]*dRotRatio[1];
+
                 for(iConv = 0; iConv < sizeConv.batch; iConv++) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pWeights = it.pWeights;
 
-                    //初始化卷积结果
                     dConv = 0;
-                    for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                        varConvYBackup.pIn = it.pIn;
-                        varConvYBackup.pWeights = it.pWeights;
-                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                            varConvXBackup.pIn = it.pIn;
-                            varConvXBackup.pWeights = it.pWeights;
-                            for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
-                                //卷积结果为乘积结果求和
-                                dConv += (*it.pWeights) * (*it.pIn);
-                                it.pIn++;
-                                it.pWeights++;
+                    for(iRot=0; iRot<2; iRot++)
+                    {
+                        pRotConv = pRotConvArray[iRot];
+                        it.pWeights = varConvBackup.pWeights + pRotConv->start;
+                        it.pIn = varConvBackup.pIn;
+
+                        //初始化卷积结果
+                        dRotConv = 0;
+                        for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                            varConvYBackup.pIn = it.pIn;
+                            varConvYBackup.pWeights = it.pWeights;
+                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                varConvXBackup.pIn = it.pIn;
+                                varConvXBackup.pWeights = it.pWeights;
+                                for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                    //卷积结果为乘积结果求和
+                                    dRotConv += (*it.pWeights) * (*it.pIn);
+                                    it.pIn++;
+                                    it.pWeights++;
+                                }
+                                it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                it.pWeights = varConvXBackup.pWeights + pRotConv->width;
                             }
-                            it.pIn = varConvXBackup.pIn + stepInConv.width;
-                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                            it.pIn = varConvYBackup.pIn + stepInConv.height;
+                            it.pWeights = varConvYBackup.pWeights + pRotConv->height;
                         }
-                        it.pIn = varConvYBackup.pIn + stepInConv.height;
-                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                        dConv += dRotConv*dRotRatio[iRot];
                     }
+
                     //卷积结果减去偏置
                     (*it.pOut) = dConv - (*it.pBais);
 
@@ -124,7 +190,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     return sCtx.success();
 }
 
-int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+int CRotConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
@@ -141,6 +207,31 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     CBatchSize2D& stepInConv = m_stepInConv;
     CBatchSize2D& stepOut = m_stepOut;
     CBatchSize2D& stepConv = m_stepConv;
+    struct CRotConv {
+        int start;
+        int width;
+        int height;
+    };
+    CRotConv rConv0 = {
+        0,
+        m_stepConv.height,
+        m_stepConv.width,
+    };
+    CRotConv rConv90 = {
+        (sizeConv.height - 1) * stepConv.height,
+        stepConv.width,
+        -stepConv.height
+    };
+    CRotConv rConv180 = {
+        (sizeConv.height - 1) * stepConv.height + (sizeConv.width - 1 ) * stepConv.width,
+        -stepConv.height,
+        -stepConv.width
+    };
+    CRotConv rConv270 = {
+        (sizeConv.width - 1 ) * stepConv.width,
+        -stepConv.width,
+        stepConv.height
+    };
 
     int nConvs = sizeConv.batch;
     int nWeights = stepConv.batch * sizeConv.batch;
@@ -168,7 +259,10 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     };
     double derivationZ;
     double pDerivationZ[stepOut.batch];
-    int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
+    double dAngle90, dAngle360, dRatio, dRotRatio[2];
+    CRotConv* pRotConv;
+    CRotConv* pRotConvArray[2];
+    int iRot, iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
     CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
     for(iTensor=0; iTensor<sizeIn.batch; iTensor++) {
         varTBackup = {
@@ -189,6 +283,32 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                 varOXBackup.pWeightDevivation = it.pWeightDevivation;
                 varOXBackup.pBaisDeviation = it.pBaisDeviation;
                 varOXBackup.pZDeviatioin = it.pZDeviatioin;
+
+                dAngle360 = fmod(m_dWRotAngle * iOutY + m_dHRotAngle * iOutX, 360);
+                dAngle90 = fmod(dAngle360, 90.0);
+                switch(((int)(dAngle360 / 90.0))%4) {
+                    case 0: // 0 - 90度
+                        pRotConvArray[0] = &rConv0;
+                        pRotConvArray[1] = &rConv90;
+                        break;
+                    case 1: // 90 - 180度
+                        pRotConvArray[0] = &rConv90;
+                        pRotConvArray[1] = &rConv180;
+                        break;
+                    case 2: // 180 - 270度
+                        pRotConvArray[0] = &rConv180;
+                        pRotConvArray[1] = &rConv270;
+                        break;
+                    case 3: // 270 - 360度
+                        pRotConvArray[0] = &rConv270;
+                        pRotConvArray[1] = &rConv0;
+                    break;
+                }
+                dRotRatio[0] = cos(dAngle90);
+                dRotRatio[0] = dRotRatio[0]*dRotRatio[0];
+                dRotRatio[1] = sin(dAngle90);
+                dRotRatio[1] = dRotRatio[1]*dRotRatio[1];
+
                 for(iConv = 0; iConv < nConvs; iConv++) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pInDeviation = it.pInDeviation;
@@ -210,41 +330,51 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     derivationZ = (*it.pZDeviatioin);
 
-                    //
-                    //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
-                    //  
-                    for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                        varConvYBackup.pIn = it.pIn;
-                        varConvYBackup.pInDeviation = it.pInDeviation;
-                        varConvYBackup.pWeights = it.pWeights;
-                        varConvYBackup.pWeightDevivation = it.pWeightDevivation;
-                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                            varConvXBackup.pIn = it.pIn;
-                            varConvXBackup.pInDeviation = it.pInDeviation;
-                            varConvXBackup.pWeights = it.pWeights;
-                            varConvXBackup.pWeightDevivation = it.pWeightDevivation;
-                            for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
-                                
-                                //
-                                // 累计计算权重值
-                                //
-                                (*it.pInDeviation) += derivationZ * (*it.pWeights);
-                                (*it.pWeightDevivation) += derivationZ * (*it.pIn);
+                    for(iRot=0; iRot<2; iRot++)
+                    {
+                        pRotConv = pRotConvArray[iRot];
+                        dRatio = dRotRatio[iRot];
+                        it.pIn = varConvBackup.pIn;
+                        it.pInDeviation = varConvBackup.pInDeviation;
+                        it.pWeights = varConvBackup.pWeights + pRotConv->start;
+                        it.pWeightDevivation = varConvBackup.pWeightDevivation + pRotConv->start;
 
-                                it.pIn++;
-                                it.pInDeviation++;
-                                it.pWeights++;
-                                it.pWeightDevivation++;
+                        //
+                        //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
+                        //  
+                        for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                            varConvYBackup.pIn = it.pIn;
+                            varConvYBackup.pInDeviation = it.pInDeviation;
+                            varConvYBackup.pWeights = it.pWeights;
+                            varConvYBackup.pWeightDevivation = it.pWeightDevivation;
+                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                varConvXBackup.pIn = it.pIn;
+                                varConvXBackup.pInDeviation = it.pInDeviation;
+                                varConvXBackup.pWeights = it.pWeights;
+                                varConvXBackup.pWeightDevivation = it.pWeightDevivation;
+                                for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                    
+                                    //
+                                    // 累计计算权重值
+                                    //
+                                    (*it.pInDeviation) += derivationZ * (*it.pWeights) * dRatio;
+                                    (*it.pWeightDevivation) += derivationZ * (*it.pIn) * dRatio;
+
+                                    it.pIn++;
+                                    it.pInDeviation++;
+                                    it.pWeights++;
+                                    it.pWeightDevivation++;
+                                }
+                                it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
+                                it.pWeights = varConvXBackup.pWeights + pRotConv->width;
+                                it.pWeightDevivation = varConvXBackup.pWeightDevivation + pRotConv->width;
                             }
-                            it.pIn = varConvXBackup.pIn + stepInConv.width;
-                            it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
-                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
-                            it.pWeightDevivation = varConvXBackup.pWeightDevivation + stepConv.width;
+                            it.pIn = varConvYBackup.pIn + stepInConv.height;
+                            it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
+                            it.pWeights = varConvYBackup.pWeights + pRotConv->height;
+                            it.pWeightDevivation = varConvYBackup.pWeightDevivation + pRotConv->height;
                         }
-                        it.pIn = varConvYBackup.pIn + stepInConv.height;
-                        it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
-                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
-                        it.pWeightDevivation = varConvYBackup.pWeightDevivation + stepConv.height;
                     }
 
                     //
@@ -333,7 +463,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     return sCtx.success();
 }
 
-int CConvolutionNetwork::initNetwork(const STensor& spInTensor) {
+int CRotConvNetwork::initNetwork(const STensor& spInTensor) {
     if( !m_spOutDimVector ) {
         STensor& spInDimVector = spInTensor->getDimVector();
 

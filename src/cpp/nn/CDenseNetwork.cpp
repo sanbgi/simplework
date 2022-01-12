@@ -238,6 +238,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         pBaisDeviationArray++;
     }
 
+    /*
     #ifdef _DEBUG
     {
         double avgWeight = 0;
@@ -267,6 +268,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         }
     }
     #endif//_DEBUG
+    */
 
     return sCtx.success();
 }

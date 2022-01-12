@@ -176,8 +176,8 @@ int main(int argc, char *argv[]){
     //testTensor();
     //testNN();
     //testIdx();
-    //CNeuralNetwork::run();
-    CAvNetwork::runImage();
+    CNeuralNetwork::run();
+    //CAvNetwork::runImage();
 
     /*
     int i=10;

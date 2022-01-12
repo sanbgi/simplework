@@ -10,6 +10,7 @@ class CNeuralNetwork {
 public:
     static void run();
     static SNeuralNetwork createNetwork();
+    static SNeuralNetwork createRotNetwork();
 };
 
 #endif//__SimpleWork_NeuralWork_H__

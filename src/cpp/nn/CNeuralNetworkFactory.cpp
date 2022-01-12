@@ -3,8 +3,10 @@
 #include "CDenseNetwork.h"
 #include "CTwoPoleDenseNetwork.h"
 #include "CConvolutionNetwork.h"
+#include "CRotConvNetwork.h"
 #include "CTwoPoleConvNetwork.h"
 #include "CSequenceNetwork.h"
+#include "CParallelNetwork.h"
 #include "CPoolNetwork.h"
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
@@ -33,12 +35,20 @@ public:
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
+    int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNeuralNetwork& spNetwork) {
+        return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
+    }
+
     int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) {
         return CTwoPoleConvNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
     int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
+    }
+
+    int createParallel(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) {
+        return CParallelNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
     }
 
     int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNeuralNetwork& spNetwork) {

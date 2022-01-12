@@ -20,6 +20,12 @@ void CNeuralNetwork::run() {
     //
     STensor spPipeIn = STensor::createValue(10);
     SNeuralNetwork nn = createNetwork();
+    //SNeuralNetwork nn = createRotNetwork();
+
+    double sumAcc = 0;
+    double sumLoss = 0;
+    double sumX = 0.98;
+    int nHit = 0;
 
     STensor spBatchImage, spBatchLabel;
     while( spImageReader->push(spPipeIn, spBatchImage) == sCtx.success() && spLabelReader->push(spPipeIn, spBatchLabel) == sCtx.success() ) {
@@ -62,24 +68,46 @@ void CNeuralNetwork::run() {
                 if( pOutTarget[i] > 0.9 ) {
                     if(pOutDeviation[i] > -0.1) {
                         nAcc++;
+                        nHit++;
                     }
                     xAcc += abs(pOutDeviation[i]) / nOutDeviation * 10;
                 }
                 delta += abs(pOutDeviation[i]) / nOutDeviation;
             }
+            sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
+            sumLoss = sumLoss * sumX + delta * (1-sumX);
             static int t = 0;
             if( t++ % 10 == 0) {
-                std::cout << "\rtrain:" << t << ", avgDelta :" << delta <<", nAcc:" << nAcc << ", avgAccDelta:" << xAcc<< "\n";
+                std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
+                            <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
+                            << sumAcc << ",\tavgAcc:" << nHit / 10.0 / t  << "\n";
             }
         }
     }
 }
 
 SNeuralNetwork CNeuralNetwork::createNetwork() {
+    std::vector<SNeuralNetwork> arrParallelNets;
+    arrParallelNets.push_back(SNeuralNetwork::createConv(5,5,16));
+    arrParallelNets.push_back(SNeuralNetwork::createConv(5,5,16));
+
     std::vector<SNeuralNetwork> arrNets;
-    arrNets.push_back(SNeuralNetwork::createConv(5,5,32));
+    //arrNets.push_back(SNeuralNetwork::createConv(5,5,32));
+    arrNets.push_back(SNeuralNetwork::createParallel(arrParallelNets.size(),arrParallelNets.data()));
     arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNeuralNetwork::createConv(7,7,64));
+    arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNeuralNetwork::createDense(576));
+    //arrNets.push_back(SNeuralNetwork::createDense(10));
+    arrNets.push_back(SNeuralNetwork::createDense(10, "softmax"));
+    return SNeuralNetwork::createSequence(arrNets.size(), arrNets.data());
+}
+
+SNeuralNetwork CNeuralNetwork::createRotNetwork() {
+    std::vector<SNeuralNetwork> arrNets;
+    arrNets.push_back(SNeuralNetwork::createRotConv(7,7,8,0,0));
+    arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNeuralNetwork::createRotConv(7,7,32,0,0));
     arrNets.push_back(SNeuralNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNeuralNetwork::createDense(576));
     //arrNets.push_back(SNeuralNetwork::createDense(10));

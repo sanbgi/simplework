@@ -61,6 +61,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
             virtual int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
 
             //
+            //  创建旋转卷积神经网络，（卷积核每移动一步，会旋转一个角度）
+            //
+            virtual int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
+
+            //
             //  创建卷积神经网络
             //
             virtual int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNeuralNetwork& spNetwork) = 0;
@@ -69,6 +74,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NeuralNetwork)
             //  创建顺序处理神经网络
             //
             virtual int createSequence(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) = 0;
+
+            //
+            //  创建并行处理神经网络
+            //
+            virtual int createParallel(int nNetworks, SNeuralNetwork* pNetworks, SNeuralNetwork& spNetwork) = 0;
 
             //
             //  读取整个IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
@@ -128,14 +138,27 @@ public:
         return nn;
     }
 
+    static SNeuralNetwork createRotConv(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator = nullptr) {
+        SNeuralNetwork nn;
+        getFactory()->createRotConvolution(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, nn);
+        return nn;
+    }
+
     static SNeuralNetwork createTwoPoleConv(int nWidth, int nHeight, int nConv, const char* szActivator = nullptr ) {
         SNeuralNetwork nn;
         getFactory()->createTwoPoleConvolution(nWidth, nHeight, nConv, szActivator, nn);
         return nn;
     }
+    
     static SNeuralNetwork createSequence(int nNetworks, SNeuralNetwork* pNetworks) {
         SNeuralNetwork nn;
         getFactory()->createSequence(nNetworks, pNetworks, nn);
+        return nn;
+    }
+
+    static SNeuralNetwork createParallel(int nNetworks, SNeuralNetwork* pNetworks) {
+        SNeuralNetwork nn;
+        getFactory()->createParallel(nNetworks, pNetworks, nn);
         return nn;
     }
 
