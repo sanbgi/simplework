@@ -8,7 +8,7 @@ int CIoBinaryArReader::visit(const char* szName, unsigned int idType, int nByte,
     return sCtx.success();
 }
 
-int CIoBinaryArReader::visit(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
+int CIoBinaryArReader::visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         int nBuffer;
         m_stream.read((char*)&nBuffer, sizeof(int));
@@ -21,14 +21,14 @@ int CIoBinaryArReader::visit(const char* szName, IArrayVisitee* pVisitee, int nM
     return sCtx.success();
 }
 
-int CIoBinaryArReader::visit(const char* szName, SIoArchivable& spVisitee, int nMinVer, int nMaxVer){
+int CIoBinaryArReader::visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         return loadEle(spVisitee);
     }
     return sCtx.success();
 }
 
-int CIoBinaryArReader::visit(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
+int CIoBinaryArReader::visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         int nEles;
         m_stream.read((char*)&nEles, sizeof(int));

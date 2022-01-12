@@ -352,14 +352,12 @@ int CDenseNetwork::initNetwork(const STensor& spInTensor) {
 }
 
 int CDenseNetwork::toVisit(const SIoArchive& ar) {
-    //int m_nCells;
-    //int m_nInputTensor;
-    //int m_nInputCells;
-    //CTaker<double*> m_spWeights;
-    //CTaker<double*> m_spBais;
-    //CActivator* m_pActivator;
-    //SOptimizer m_spOptimizer;
-    ar.visit("nCells", m_nCells);
+    ar.visit("inSize", m_nInputCells);
+    ar.visit("outSize", m_nCells);
+    if(m_nInputCells) {
+        ar.visitTaker("weights", m_nCells*m_nInputCells, m_spWeights);
+        ar.visitTaker("bais", m_nCells, m_spBais);
+    }
     return sCtx.success();
 }
 

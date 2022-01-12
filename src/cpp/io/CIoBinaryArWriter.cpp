@@ -10,7 +10,7 @@ int CIoBinaryArWriter::visit(const char* szName, unsigned int idType, int nByte,
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visit(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
+int CIoBinaryArWriter::visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         int nEle = pVisitee->size();
         m_stream.write((const char*)&nEle, sizeof(int));
@@ -20,14 +20,14 @@ int CIoBinaryArWriter::visit(const char* szName, IArrayVisitee* pVisitee, int nM
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visit(const char* szName, SIoArchivable& spVisitee, int nMinVer, int nMaxVer){
+int CIoBinaryArWriter::visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         return saveEle(spVisitee);
     }
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visit(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
+int CIoBinaryArWriter::visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         int nEles = pVisitee->size();
         m_stream.write((const char*)&nEles, sizeof(int));

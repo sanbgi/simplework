@@ -19,9 +19,9 @@ class CIoBinaryArWriter : public CObject, public IIoArchive {
 private://IIoArchive
     bool isReading() { return false; }
     int visit(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999);
-    int visit(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999);
-    int visit(const char* szName, SIoArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
-    int visit(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999);
+    int visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999);
+    int visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
+    int visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999);
 
 private://
     void enterElement(SIoArchivable& spEle);
