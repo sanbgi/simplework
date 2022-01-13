@@ -31,8 +31,8 @@ class CRotConvNetwork : public CObject, public INnNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
-    int eval(const STensor& spInTensor, STensor& spOutTensor);
-    int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
+    int eval(const STensor& spBatchIn, STensor& spBatchOut);
+    int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
 
 public://Factory
     static int createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork);

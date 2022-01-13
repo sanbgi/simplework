@@ -9,7 +9,6 @@ int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNnNetwork
     spDense->m_nCells = nCells;
     if( szActivator!=nullptr )
         spDense->m_strActivator = szActivator;
-    //spDense->m_strOptimizer
     spNetwork.setPtr(spDense.getPtr());
     return sCtx.success();
 }
@@ -325,17 +324,18 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
 
     m_spOptimizer->updateDeviation(nBatchs);
 
-    double* pWeights = m_spWeights;
-    for(int iWeight=0;iWeight<nWeights; iWeight++) {
-        *pWeights -= *pWeightDerivationArray;
-        pWeights++;
-        pWeightDerivationArray++;
+
+    double* pWeightArray = m_spWeights;
+    double* pWeightEnd = pWeightArray+nWeights;
+    while(pWeightArray != pWeightEnd) {
+        *pWeightArray -= *pWeightDerivationArray;
+        pWeightArray++, pWeightDerivationArray++;
     }
-    double* pBais = m_spBais;
-    for(int iBais=0; iBais<m_nCells; iBais++) {
-        *pBais -= *pBaisDeviationArray;
-        pBais++;
-        pBaisDeviationArray++;
+    double* pBaisArray = m_spBais;
+    double* pBaisEnd = pBaisArray+m_nCells;
+    while(pBaisArray != pBaisEnd) {
+        *pBaisArray -= *pBaisDeviationArray;
+        pBaisArray++, pBaisDeviationArray++;
     }
     return sCtx.success();
 }

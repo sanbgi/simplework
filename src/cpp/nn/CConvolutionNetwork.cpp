@@ -1,6 +1,7 @@
 #include "CConvolutionNetwork.h"
 #include "math.h"
 
+
 static SCtx sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork) {
 
@@ -175,8 +176,8 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
 }
 
 
-int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( prepareNetwork(spInTensor) != sCtx.success() ) {
+int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+    if( prepareNetwork(spBatchIn) != sCtx.success() ) {
         return sCtx.error();
     }
 
@@ -192,89 +193,100 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pOut;
         double* pWeights;
         double* pBais;
-    }it = {
-        spInTensor->getDataPtr<double>(),
+        int index;
+    }itVars0, itVars1, itVars2, itVars3, itVars4, itVars5, itVars6, it = {
+        spBatchIn->getDataPtr<double>(),
         m_spBatchOut->getDataPtr<double>(),
         m_spWeights,
-        m_spBais
+        m_spBais,
     };
 
     double dConv;
-    int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
-    CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
-    for(iTensor=0; iTensor<sizeIn.batch; iTensor++) {
-        varTBackup = {
-            it.pIn,
-            it.pOut,
-        };
-        for(iOutY=0; iOutY < sizeOut.height; iOutY++) {
-            varOYBackup.pIn = it.pIn;
-            varOYBackup.pOut = it.pOut;
-            for(iOutX=0; iOutX < sizeOut.width; iOutX++) {
-                varOXBackup.pIn = it.pIn;
-                varOXBackup.pOut = it.pOut;
-                varOXBackup.pWeights = it.pWeights;
-                varOXBackup.pBais = it.pBais;
-                for(iConv = 0; iConv < sizeConv.batch; iConv++) {
-                    varConvBackup.pIn = it.pIn;
-                    varConvBackup.pWeights = it.pWeights;
+    for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
+        itVars0.pIn = it.pIn;
+        itVars0.pOut = it.pOut;
+        for(itVars1.index=0; itVars1.index < sizeOut.height; itVars1.index++) {
+            itVars1.pIn = it.pIn;
+            itVars1.pOut = it.pOut;
+            for(itVars2.index=0; itVars2.index < sizeOut.width; itVars2.index++) {
+                itVars2.pIn = it.pIn;
+                itVars2.pOut = it.pOut;
+                itVars2.pWeights = it.pWeights;
+                itVars2.pBais = it.pBais;
+                for(itVars3.index = 0; itVars3.index < sizeConv.batch; itVars3.index++) {
+                    itVars3.pIn = it.pIn;
+                    itVars3.pWeights = it.pWeights;
 
                     //初始化卷积结果
                     dConv = 0;
-                    for( iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                        varConvYBackup.pIn = it.pIn;
-                        varConvYBackup.pWeights = it.pWeights;
-                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                            varConvXBackup.pIn = it.pIn;
-                            varConvXBackup.pWeights = it.pWeights;
-                            for( int iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                    for( itVars4.index=0; itVars4.index<sizeConv.height; itVars4.index++) {
+                        itVars4.pIn = it.pIn;
+                        itVars4.pWeights = it.pWeights;
+                        for(itVars5.index=0; itVars5.index<sizeConv.width; itVars5.index++) {
+                            itVars5.pIn = it.pIn;
+                            itVars5.pWeights = it.pWeights;
+                            for(itVars6.index=0; itVars6.index<sizeConv.layers; itVars6.index++) {
                                 //卷积结果为乘积结果求和
                                 dConv += (*it.pWeights) * (*it.pIn);
                                 it.pIn++;
                                 it.pWeights++;
                             }
-                            it.pIn = varConvXBackup.pIn + stepInConv.width;
-                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
+                            it.pIn = itVars5.pIn + stepInConv.width;
+                            it.pWeights = itVars5.pWeights + stepConv.width;
                         }
-                        it.pIn = varConvYBackup.pIn + stepInConv.height;
-                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
+                        it.pIn = itVars4.pIn + stepInConv.height;
+                        it.pWeights = itVars4.pWeights + stepConv.height;
                     }
                     //卷积结果减去偏置
                     (*it.pOut) = dConv - (*it.pBais);
 
-                    it.pIn = varConvBackup.pIn;
+                    it.pIn = itVars3.pIn;
                     it.pOut++;
-                    it.pWeights = varConvBackup.pWeights + stepConv.batch;
+                    it.pWeights = itVars3.pWeights + stepConv.batch;
                     it.pBais++;
                 }
-                it.pWeights = varOXBackup.pWeights;
-                it.pBais = varOXBackup.pBais;
-                it.pIn = varOXBackup.pIn + stepInMove.width;
-                it.pOut = varOXBackup.pOut + stepOut.width;
+                it.pWeights = itVars2.pWeights;
+                it.pBais = itVars2.pBais;
+                it.pIn = itVars2.pIn + stepInMove.width;
+                it.pOut = itVars2.pOut + stepOut.width;
             }
-            it.pIn = varOYBackup.pIn + stepInMove.height;
-            it.pOut = varOYBackup.pOut + stepOut.height;
+            it.pIn = itVars1.pIn + stepInMove.height;
+            it.pOut = itVars1.pOut + stepOut.height;
         }
+
         //
         // 激活结果值
         //
-        m_pActivator->activate(stepOut.batch, varTBackup.pOut, varTBackup.pOut);
-        it.pIn = varTBackup.pIn + stepInMove.batch;
-        it.pOut = varTBackup.pOut + stepOut.batch;
+        m_pActivator->activate(stepOut.batch, itVars0.pOut, itVars0.pOut);
+
+        it.pIn = itVars0.pIn + stepInMove.batch;
+        it.pOut = itVars0.pOut + stepOut.batch;
     }
 
-    m_spBatchIn = spInTensor;
-    spOutTensor = m_spBatchOut;
+    m_spBatchIn = spBatchIn;
+    spBatchOut = m_spBatchOut;
     return sCtx.success();
 }
 
-int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spBatchOut.getPtr()) {
+
+/*
+    #include <sys/time.h>
+    using namespace std;
+    timeval t1, t2, t3; 
+    gettimeofday(&t1, nullptr);
+    gettimeofday(&t2, nullptr);
+    gettimeofday(&t3, nullptr);
+    long dt1 = (t2.tv_sec-t1.tv_sec)*1000000+(t2.tv_usec-t1.tv_usec);
+    long dt2 = (t3.tv_sec-t2.tv_sec)*1000000+(t3.tv_usec-t2.tv_usec);
+
+*/
+int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    spInTensor = m_spBatchIn;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
+    spBatchIn = m_spBatchIn;
+    if( int errCode = STensor::createTensor<double>(spInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
@@ -289,7 +301,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     int nConvs = sizeConv.batch;
     int nWeights = stepConv.batch * sizeConv.batch;
     double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+nConvs);
-    double* pBaisDerivationArray = pWeightDerivationArray+nWeights;
+    double* pBaisDeviationArray = pWeightDerivationArray+nWeights;
     memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+nConvs));
 
     struct CItOutVariables {
@@ -301,43 +313,44 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
         double* pWeightDevivation;
         double* pBaisDeviation;
         double* pZDeviatioin;
+        int index;
     }it = {
-        spInTensor->getDataPtr<double>(),
+        spBatchIn->getDataPtr<double>(),
         spInDeviation->getDataPtr<double>(),
-        spOutTensor->getDataPtr<double>(),
+        spBatchOut->getDataPtr<double>(),
         spOutDeviation->getDataPtr<double>(),
         m_spWeights,
         pWeightDerivationArray,
-        pBaisDerivationArray
-    };
-    double derivationZ;
-    double pDerivationZ[stepOut.batch];
-    int iTensor, iOutY, iOutX, iConv, iConvY, iConvX, iLayer;
-    CItOutVariables varTBackup, varOYBackup, varOXBackup, varConvBackup, varConvYBackup, varConvXBackup;
-    for(iTensor=0; iTensor<sizeIn.batch; iTensor++) {
-        varTBackup = {
-            it.pIn,
-            it.pInDeviation,
-            it.pOut,
-            it.pOutDeviation
-        };
+        pBaisDeviationArray
+    }, itVars, itVars0,itVars1,itVars2,itVars3,itVars4,itVars5,itVars6;
 
-        m_pActivator->deactivate(stepOut.batch, it.pOut, it.pOutDeviation, pDerivationZ);
-        it.pZDeviatioin = pDerivationZ;
-        for(iOutY=0; iOutY < sizeOut.height; iOutY++) {
-            varOYBackup.pIn = it.pIn;
-            varOYBackup.pInDeviation = it.pInDeviation;
-            varOYBackup.pZDeviatioin = it.pZDeviatioin;
-            for(iOutX=0; iOutX < sizeOut.width; iOutX++) {
-                varOXBackup.pWeights = it.pWeights;
-                varOXBackup.pWeightDevivation = it.pWeightDevivation;
-                varOXBackup.pBaisDeviation = it.pBaisDeviation;
-                varOXBackup.pZDeviatioin = it.pZDeviatioin;
-                for(iConv = 0; iConv < nConvs; iConv++) {
-                    varConvBackup.pIn = it.pIn;
-                    varConvBackup.pInDeviation = it.pInDeviation;
-                    varConvBackup.pWeights = it.pWeights;
-                    varConvBackup.pWeightDevivation = it.pWeightDevivation;
+    double derivationZ;
+    double pDeviationZArray[stepOut.batch];
+
+    itVars = it;
+    for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
+        itVars0.pIn = it.pIn;
+        itVars0.pInDeviation = it.pInDeviation;
+        itVars0.pOut = it.pOut;
+        itVars0.pOutDeviation = it.pOutDeviation; 
+
+        m_pActivator->deactivate(stepOut.batch, it.pOut, it.pOutDeviation, pDeviationZArray);
+        it.pZDeviatioin = pDeviationZArray;
+
+        for(itVars1.index=0; itVars1.index < sizeOut.height; itVars1.index++) {
+            itVars1.pIn = it.pIn;
+            itVars1.pInDeviation = it.pInDeviation;
+            itVars1.pZDeviatioin = it.pZDeviatioin;
+            for(itVars2.index=0; itVars2.index < sizeOut.width; itVars2.index++) {
+                itVars2.pWeights = it.pWeights;
+                itVars2.pWeightDevivation = it.pWeightDevivation;
+                itVars2.pBaisDeviation = it.pBaisDeviation;
+                itVars2.pZDeviatioin = it.pZDeviatioin;
+                for(itVars3.index = 0; itVars3.index < nConvs; itVars3.index++) {
+                    itVars3.pIn = it.pIn;
+                    itVars3.pInDeviation = it.pInDeviation;
+                    itVars3.pWeights = it.pWeights;
+                    itVars3.pWeightDevivation = it.pWeightDevivation;
 
                     //
                     //  计算目标函数对当前输出值的偏导数
@@ -357,17 +370,17 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                     //  
-                    for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                        varConvYBackup.pIn = it.pIn;
-                        varConvYBackup.pInDeviation = it.pInDeviation;
-                        varConvYBackup.pWeights = it.pWeights;
-                        varConvYBackup.pWeightDevivation = it.pWeightDevivation;
-                        for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                            varConvXBackup.pIn = it.pIn;
-                            varConvXBackup.pInDeviation = it.pInDeviation;
-                            varConvXBackup.pWeights = it.pWeights;
-                            varConvXBackup.pWeightDevivation = it.pWeightDevivation;
-                            for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                    for(itVars4.index=0; itVars4.index<sizeConv.height; itVars4.index++) {
+                        itVars4.pIn = it.pIn;
+                        itVars4.pInDeviation = it.pInDeviation;
+                        itVars4.pWeights = it.pWeights;
+                        itVars4.pWeightDevivation = it.pWeightDevivation;
+                        for(itVars5.index=0; itVars5.index<sizeConv.width; itVars5.index++) {
+                            itVars5.pIn = it.pIn;
+                            itVars5.pInDeviation = it.pInDeviation;
+                            itVars5.pWeights = it.pWeights;
+                            itVars5.pWeightDevivation = it.pWeightDevivation;
+                            for(itVars6.index=0; itVars6.index<sizeConv.layers; itVars6.index++) {
                                 
                                 //
                                 // 累计计算权重值
@@ -380,15 +393,16 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                                 it.pWeights++;
                                 it.pWeightDevivation++;
                             }
-                            it.pIn = varConvXBackup.pIn + stepInConv.width;
-                            it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
-                            it.pWeights = varConvXBackup.pWeights + stepConv.width;
-                            it.pWeightDevivation = varConvXBackup.pWeightDevivation + stepConv.width;
+                            it.pIn = itVars5.pIn + stepInConv.width;
+                            it.pInDeviation = itVars5.pInDeviation + stepInConv.width;
+                            it.pWeights = itVars5.pWeights + stepConv.width;
+                            it.pWeightDevivation = itVars5.pWeightDevivation + stepConv.width;
                         }
-                        it.pIn = varConvYBackup.pIn + stepInConv.height;
-                        it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
-                        it.pWeights = varConvYBackup.pWeights + stepConv.height;
-                        it.pWeightDevivation = varConvYBackup.pWeightDevivation + stepConv.height;
+
+                        it.pIn = itVars4.pIn + stepInConv.height;
+                        it.pInDeviation = itVars4.pInDeviation + stepInConv.height;
+                        it.pWeights = itVars4.pWeights + stepConv.height;
+                        it.pWeightDevivation = itVars4.pWeightDevivation + stepConv.height;
                     }
 
                     //
@@ -396,36 +410,37 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
                     //
                     (*it.pBaisDeviation) += (-derivationZ);
 
-                    it.pIn = varConvBackup.pIn;
-                    it.pInDeviation = varConvBackup.pInDeviation;
-                    it.pWeights = varConvBackup.pWeights + stepConv.batch;
-                    it.pWeightDevivation = varConvBackup.pWeightDevivation + stepConv.batch;
+                    it.pIn = itVars3.pIn;
+                    it.pInDeviation = itVars3.pInDeviation;
+                    it.pWeights = itVars3.pWeights + stepConv.batch;
+                    it.pWeightDevivation = itVars3.pWeightDevivation + stepConv.batch;
                     it.pBaisDeviation++;
                     it.pZDeviatioin++;
                 }
 
-                it.pWeights = varOXBackup.pWeights;
-                it.pWeightDevivation = varOXBackup.pWeightDevivation;
-                it.pBaisDeviation = varOXBackup.pBaisDeviation;
-                it.pZDeviatioin = varOXBackup.pZDeviatioin;
+                it.pWeights = itVars2.pWeights;
+                it.pWeightDevivation = itVars2.pWeightDevivation;
+                it.pBaisDeviation = itVars2.pBaisDeviation;
+                it.pZDeviatioin = itVars2.pZDeviatioin;
 
                 it.pIn += stepInMove.width;
                 it.pInDeviation += stepInMove.width;
                 it.pZDeviatioin += stepOut.width;
             }
 
-            it.pIn = varOYBackup.pIn + stepInMove.height;
-            it.pInDeviation = varOYBackup.pInDeviation + stepInMove.height;
-            it.pZDeviatioin = varOYBackup.pZDeviatioin + stepOut.height;
+            it.pIn = itVars1.pIn + stepInMove.height;
+            it.pInDeviation = itVars1.pInDeviation + stepInMove.height;
+            it.pZDeviatioin = itVars1.pZDeviatioin + stepOut.height;
         }
 
         //  更新迭代参数
-        it.pIn = varTBackup.pIn + stepInMove.batch;
-        it.pInDeviation = varTBackup.pInDeviation + stepInMove.batch;
-        it.pOut = varTBackup.pOut + stepOut.batch;
-        it.pOutDeviation = varTBackup.pOutDeviation + stepOut.batch;
+        it.pIn = itVars0.pIn + stepInMove.batch;
+        it.pInDeviation = itVars0.pInDeviation + stepInMove.batch;
+        it.pOut = itVars0.pOut + stepOut.batch;
+        it.pOutDeviation = itVars0.pOutDeviation + stepOut.batch;
     }
-
+    it = itVars;
+    
     //
     // 用优化器优化偏差值
     //
@@ -434,13 +449,16 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     // 
     // 权重值更新，需要在输入偏导数计算完成后进行，否则，中间会影响输入偏导数值
     //
-    double* pWeightArray = m_spWeights;
-    for(int iWeight=0;iWeight<nWeights; iWeight++) {
-        DVV(pWeightArray, iWeight, nWeights) -= DVV(pWeightDerivationArray, iWeight, nWeights);
+    double* pWeightEnd = it.pWeights+nWeights;
+    while(it.pWeights != pWeightEnd) {
+        *it.pWeights -= *it.pWeightDevivation;
+        it.pWeights++, it.pWeightDevivation++;
     }
-    double* pBaisArray = m_spBais;
-    for(int iBais=0; iBais<nConvs; iBais++) {
-        DVV(pBaisArray, iBais, nConvs) -= DVV(pBaisDerivationArray, iBais, nConvs);
+    double* pBais = m_spBais;
+    double* pBaisEnd = pBais+nConvs;
+    while(pBais != pBaisEnd) {
+        *pBais -= *it.pBaisDeviation;
+        pBais++, it.pBaisDeviation++;
     }
 
     /*
