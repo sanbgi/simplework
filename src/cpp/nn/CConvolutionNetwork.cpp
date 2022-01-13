@@ -1,6 +1,5 @@
 #include "CConvolutionNetwork.h"
 #include "math.h"
-#include "iostream"
 
 static SCtx sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork) {
