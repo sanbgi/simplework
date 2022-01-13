@@ -86,19 +86,19 @@ void CIoBinaryArWriter::saveString(string str) {
 
 int CIoBinaryArWriter::saveEle(SIoArchivable spVisitee) {
     string classKey;
-    if( !spVisitee ) {
-        return sCtx.error("无法保存空对象");
+    if( spVisitee ) {
+        classKey = spVisitee->getClassKey();
     }
-
-    classKey = spVisitee->getClassKey();
     saveString(classKey);
 
-    int nVer = spVisitee->getVer();
-    m_stream.write((const char*)&nVer, sizeof(int));
-
     int retCode = sCtx.success();
-    enterElement(spVisitee);
-    retCode = spVisitee->toArchive(SIoArchive((IIoArchive*)this));
-    leaveElement(spVisitee);
+    if(classKey.length() > 0) {
+        int nVer = spVisitee->getVer();
+        m_stream.write((const char*)&nVer, sizeof(int));
+
+        enterElement(spVisitee);
+        retCode = spVisitee->toArchive(SIoArchive((IIoArchive*)this));
+        leaveElement(spVisitee);
+    }
     return retCode;
 }
