@@ -44,7 +44,6 @@ private:
     string m_strOptimizer;
     string m_strPadding;
 
-
     //网络参数
     int m_nLayers;
     CTaker<double*> m_spWeights;
@@ -52,13 +51,8 @@ private:
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
 
-
     //缓存参数
-    int m_nBatchs;
-    int m_nBatchInSize;
-    STensor m_spBatchIn;
-    STensor m_spBatchOut;
-    STensor m_spOutDimVector;
+    int m_nInputSize;
 
     //输入、输出、卷积尺寸
     CBatchSize3D m_sizeIn;
@@ -70,12 +64,18 @@ private:
     CBatchSize2D m_stepOut;
     CBatchSize2D m_stepConv;
 
+    STensor m_spBatchIn;
+    STensor m_spBatchOut;
+    STensor m_spOutDimVector;
+
 public:
     CConvolutionNetwork(){
+        //卷积核数
         m_sizeConv.batch = 0;
+        //卷积层数
         m_nLayers = 0;
-        m_nBatchs = 0;
-        m_nBatchInSize = -1;
+        //输入尺寸
+        m_nInputSize = 0;
     }
 };
 
