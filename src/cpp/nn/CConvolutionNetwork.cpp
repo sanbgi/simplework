@@ -32,7 +32,7 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
     //
     int nInputSize = spBatchIn->getDataSize();
-    if( nInputSize == m_nBatchInSize ) {
+    if( nInputSize == m_nInputSize ) {
         return sCtx.success();
     }
 
@@ -111,16 +111,19 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             pBais[i] = 0;
         }
 
-        m_nBatchs = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
+        m_sizeIn.batch = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
         m_nLayers = nLayers;
-    }else if(nLayers != m_nLayers) {
-        return sCtx.error("当前输入的参数，与神经网络需要的参数不符");
+    }else {
+        if( m_nLayers != nLayers ) {
+            return sCtx.error("输出张量的层数与初始化时不一致");
+        }
     }
 
     //
     // 判断是否需要初始化运行时参数
     //
-    if(m_nBatchs != nBatchs) {
+    if( m_nInputSize != nInputSize ) {
+        
         m_sizeConv.layers = nLayers;
         m_sizeIn = {
             nBatchs,
@@ -168,8 +171,7 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("创建输出张量失败");
         }
 
-        m_nBatchs = nBatchs;
-        m_nBatchInSize = nBatchs * nInputCells;
+        m_nInputSize = nInputSize;
     }
     return sCtx.success();
 }
