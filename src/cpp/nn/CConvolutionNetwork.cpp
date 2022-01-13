@@ -478,6 +478,7 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
 }
 
 int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
+    //基础参数
     ar.visit("nConvs", m_sizeConv.batch);
     ar.visit("nConvWidth", m_sizeConv.width);
     ar.visit("nConvHeight", m_sizeConv.height);
@@ -487,6 +488,7 @@ int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
     ar.visitString("optimizer", m_strOptimizer);
     ar.visitString("padding", m_strPadding);
 
+    //运行参数
     ar.visit("nInputLayers", m_nLayers);
     if(m_nLayers) {
         ar.visitTaker("weights", m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);

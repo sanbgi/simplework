@@ -341,10 +341,12 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
 }
 
 int CDenseNetwork::toArchive(const SIoArchive& ar) {
+    //基础参数
     ar.visit("nCells", m_nCells);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
 
+    //运行参数
     ar.visit("nInputCells", m_nInputCells);
     if(m_nInputCells) {
         ar.visitTaker("weights", m_nCells*m_nInputCells, m_spWeights);
