@@ -64,7 +64,6 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             nLayers *= pInDimSizes[i];
         }
         nInputCells = nInputWidth*nInputHeight*nLayers;
-
         if(nBatchs * nInputCells != nInputSize ) {
             return sCtx.error("输入张量的维度信息核实际数据量不一致，输入张量非法");
         }
@@ -75,8 +74,8 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     if(m_nLayers == 0) {
 
-        if( m_sizeConv.batch <= 0 || nInputCells <= 0 ) {
-            return sCtx.error("卷积核与输出数据不能同时个数为零");
+        if( m_sizeConv.batch <= 0 || m_sizeConv.width < 1 || m_sizeConv.height < 1 ) {
+            return sCtx.error("卷积核参数错误");
         }
         
         m_pActivator = CActivator::getActivation(m_strActivator.c_str());
