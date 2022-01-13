@@ -61,7 +61,7 @@ int CIoBinaryArWriter::saveArchive(const char* szFileName, const SIoArchivable& 
 }
 
 void CIoBinaryArWriter::enterElement(SIoArchivable& spEle) {
-    m_arrEles.push_back(spEle);
+    m_arrEles.push_back(spEle);                                        
     m_nEleVer = spEle->getVer();
 }
 
