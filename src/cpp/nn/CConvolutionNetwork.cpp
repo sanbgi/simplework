@@ -4,6 +4,11 @@
 
 static SCtx sCtx("CConvolutionNetwork");
 int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork) {
+
+    if(nWidth < 1 || nHeight < 1 || nConvs < 1) {
+        return sCtx.error("卷积核参数错误");
+    }
+
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);
     spConvolution->m_sizeConv = {
@@ -14,13 +19,8 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     };
     spConvolution->m_nStrideWidth = 1;
     spConvolution->m_nStrideHeight = 1;
-    spConvolution->m_pActivator = CActivator::getActivation(szActivator);
-    if(spConvolution->m_pActivator == nullptr) {
-        return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
-    }
-    if( COptimizer::getOptimizer(nullptr, spConvolution->m_spOptimizer) != sCtx.success()) {
-        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-    }
+    if( szActivator!=nullptr )
+        spConvolution->m_strActivator = szActivator;
     spNetwork.setPtr(spConvolution.getPtr());
     return sCtx.success();
 }
