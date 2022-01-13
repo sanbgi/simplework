@@ -5,45 +5,64 @@
 #include "CActivator.h"
 #include "COptimizer.h"
 #include "CSize.h"
+#include <string>
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-using namespace SIMPLEWORK_NN_NAMESPACE;
+using namespace sw;
+using namespace std;
 
-class CConvolutionNetwork : public CObject, public INnNetwork{
+class CConvolutionNetwork : public CObject, public INnNetwork, public IIoArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
+
+private://IIoArchivable
+    int getVer() { return 220112; }
+    const char* getName() { return "ConvNetwork"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SIoArchive& ar);
+
 public://Factory
+    static const char* __getClassKey() { return "sw.nn.ConvNetwork"; }
     static int createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
-    int initNetwork(const STensor& inputTensor);
+    int prepareNetwork(const STensor& inputTensor);
 
 private:
-    STensor m_spInTensor;
-    STensor m_spOutTensor;
-    STensor m_spOutDimVector;
-
     //基础参数
-    int m_nPadingWidth;
-    int m_nPadingHeight;
+    CBatchSize3D m_sizeConv;
     int m_nStrideWidth;
     int m_nStrideHeight;
+    string m_strActivator;
+    string m_strOptimizer;
+    string m_strPadding;
 
-    //数据计算参数
-    int m_nInData;
+
+    //网络参数
+    int m_nLayers;
+    CTaker<double*> m_spWeights;
+    CTaker<double*> m_spBais;
+    CActivator* m_pActivator;
+    SOptimizer m_spOptimizer;
+
+
+    //缓存参数
+    int m_nBatchs;
+    int m_nBatchInSize;
+    STensor m_spBatchIn;
+    STensor m_spBatchOut;
+    STensor m_spOutDimVector;
 
     //输入、输出、卷积尺寸
     CBatchSize3D m_sizeIn;
     CBatchSize3D m_sizeOut;
-    CBatchSize3D m_sizeConv;
 
     //输入、输出、卷积步长
     CBatchSize2D m_stepInMove;
@@ -51,10 +70,13 @@ private:
     CBatchSize2D m_stepOut;
     CBatchSize2D m_stepConv;
 
-    CTaker<double*> m_spWeights;
-    CTaker<double*> m_spBais;
-    CActivator* m_pActivator;
-    SOptimizer m_spOptimizer;
+public:
+    CConvolutionNetwork(){
+        m_sizeConv.batch = 0;
+        m_nLayers = 0;
+        m_nBatchs = 0;
+        m_nBatchInSize = -1;
+    }
 };
 
 #endif//__SimpleWork_NN_CConvNetwork_H__

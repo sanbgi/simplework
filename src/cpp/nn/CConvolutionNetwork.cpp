@@ -12,8 +12,6 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
         nWidth,
         0
     };
-    spConvolution->m_nPadingWidth = 0;
-    spConvolution->m_nPadingHeight = 0;
     spConvolution->m_nStrideWidth = 1;
     spConvolution->m_nStrideHeight = 1;
     spConvolution->m_pActivator = CActivator::getActivation(szActivator);
@@ -27,12 +25,158 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     return sCtx.success();
 }
 
-int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( initNetwork(spInTensor) != sCtx.success() ) {
-        return sCtx.error();
+
+int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
+    //
+    // 快速检查数量（非严格检查）, 如果严格对比长宽高的化，有点浪费性能，相当于如果
+    // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
+    //
+    int nInputSize = spBatchIn->getDataSize();
+    if( nInputSize == m_nBatchInSize ) {
+        return sCtx.success();
     }
 
-    if(spInTensor->getDataSize() != m_nInData) {
+    //
+    // 计算参数
+    //
+    int nBatchs, nInputCells, nInputWidth, nInputHeight, nLayers;
+    {
+        STensor& spInDimVector = spBatchIn->getDimVector();
+        int nInDims = spInDimVector->getDataSize();
+        int* pInDimSizes = spInDimVector->getDataPtr<int>();
+
+        //
+        // 维度小于3的张量，无法进行卷积运算
+        //
+        if(nInDims < 3) {
+            return sCtx.error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
+        }
+
+        nBatchs = pInDimSizes[0];
+        nInputHeight = pInDimSizes[1];
+        nInputWidth = pInDimSizes[2];
+        if( nInputHeight < m_sizeConv.height || nInputWidth < m_sizeConv.width ) {
+            return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
+        }
+
+        nLayers = 1;
+        for( int i=3; i<nInDims; i++ ) {
+            nLayers *= pInDimSizes[i];
+        }
+        nInputCells = nInputWidth*nInputHeight*nLayers;
+
+        if(nBatchs * nInputCells != nInputSize ) {
+            return sCtx.error("输入张量的维度信息核实际数据量不一致，输入张量非法");
+        }
+    }
+
+    //
+    // 判断是否需要初始化网络
+    //
+    if(m_nLayers == 0) {
+
+        if( m_sizeConv.batch <= 0 || nInputCells <= 0 ) {
+            return sCtx.error("卷积核与输出数据不能同时个数为零");
+        }
+        
+        m_pActivator = CActivator::getActivation(m_strActivator.c_str());
+        if(m_pActivator == nullptr) {
+            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+        }
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), m_spOptimizer) != sCtx.success()) {
+            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+        }
+
+        int nConvs = m_sizeConv.batch;
+        int nWeights = nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch;
+        double* pWeights = new double[nWeights];
+        double* pBais = new double[nConvs];
+        m_spWeights.take(pWeights, [](double* pWeights){
+            delete[] pWeights;
+        });
+        m_spBais.take(pBais, [](double* pBais){
+            delete[] pBais;
+        });
+
+        //
+        // TODO：权重初始化采用什么策略？nadam优化算法下，即便所有权重初始值为零，仍然不影响迭代
+        //
+        double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
+        for(int i=0; i<nWeights; i++) {
+            //pWeights[i] = 0;
+            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
+        }
+
+        for(int i=0; i<m_sizeConv.batch; i++ ){
+            pBais[i] = 0;
+        }
+
+        m_nBatchs = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
+        m_nLayers = nLayers;
+    }else if(nLayers != m_nLayers) {
+        return sCtx.error("当前输入的参数，与神经网络需要的参数不符");
+    }
+
+    //
+    // 判断是否需要初始化运行时参数
+    //
+    if(m_nBatchs != nBatchs) {
+        m_sizeConv.layers = nLayers;
+        m_sizeIn = {
+            nBatchs,
+            nInputHeight,
+            nInputWidth,
+            nLayers
+        };
+
+        m_sizeOut = {
+            m_sizeIn.batch,
+            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+            m_sizeConv.batch
+        };
+
+        m_stepInConv = {
+            m_sizeIn.height * m_sizeIn.width * nLayers,
+            m_sizeIn.width * nLayers,
+            nLayers
+        };
+
+        m_stepInMove = {  
+            m_stepInConv.batch,
+            m_stepInConv.height * m_nStrideHeight,
+            m_stepInConv.width * m_nStrideWidth
+        };
+
+        m_stepOut = {
+            m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
+            m_sizeOut.width * m_sizeConv.batch,
+            m_sizeConv.batch
+        };
+
+        m_stepConv = {
+            m_sizeConv.height * m_sizeConv.width * nLayers,
+            m_sizeConv.width * nLayers,
+            nLayers
+        };
+
+        if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
+            return sCtx.error("创建输出张量的维度向量失败");
+        }
+
+        if( STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+            return sCtx.error("创建输出张量失败");
+        }
+
+        m_nBatchs = nBatchs;
+        m_nBatchInSize = nBatchs * nInputCells;
+    }
+    return sCtx.success();
+}
+
+
+int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
+    if( prepareNetwork(spInTensor) != sCtx.success() ) {
         return sCtx.error();
     }
 
@@ -50,7 +194,7 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pBais;
     }it = {
         spInTensor->getDataPtr<double>(),
-        m_spOutTensor->getDataPtr<double>(),
+        m_spBatchOut->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
@@ -119,17 +263,17 @@ int CConvolutionNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         it.pOut = varTBackup.pOut + stepOut.batch;
     }
 
-    m_spInTensor = spInTensor;
-    spOutTensor = m_spOutTensor;
+    m_spBatchIn = spInTensor;
+    spOutTensor = m_spBatchOut;
     return sCtx.success();
 }
 
 int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+    if(spOutTensor.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    spInTensor = m_spInTensor;
+    spInTensor = m_spBatchIn;
     if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
@@ -333,102 +477,22 @@ int CConvolutionNetwork::learn(const STensor& spOutTensor, const STensor& spOutD
     return sCtx.success();
 }
 
-int CConvolutionNetwork::initNetwork(const STensor& spInTensor) {
-    if( !m_spOutDimVector ) {
-        STensor& spInDimVector = spInTensor->getDimVector();
+int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
+    ar.visit("nConvs", m_sizeConv.batch);
+    ar.visit("nConvWidth", m_sizeConv.width);
+    ar.visit("nConvHeight", m_sizeConv.height);
+    ar.visit("nStrideWidth", m_nStrideWidth);
+    ar.visit("nStrideHeight", m_nStrideHeight);
+    ar.visitString("activator", m_strActivator);
+    ar.visitString("optimizer", m_strOptimizer);
+    ar.visitString("padding", m_strPadding);
 
-        int nInDims = spInDimVector->getDataSize();
-        int* pInDimSizes = spInDimVector->getDataPtr<int>();
-
-        //
-        // 维度小于3的张量，无法进行卷积运算
-        //
-        if(nInDims < 3) {
-            return sCtx.error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
-        }
-
-        int nTensor = pInDimSizes[0];
-        int nInHeight = pInDimSizes[1];
-        int nInWidth = pInDimSizes[2];
-        if( nInHeight < m_sizeConv.height || nInWidth < m_sizeConv.width ) {
-            return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
-        }
-
-        int nInLayers = 1;
-        for( int i=3; i<nInDims; i++ ) {
-            nInLayers *= pInDimSizes[i];
-        }
-        m_nInData = nTensor*nInHeight*nInWidth*nInLayers;
-        m_sizeConv.layers = nInLayers;
-        m_sizeIn = {
-            nTensor,
-            nInHeight,
-            nInWidth,
-            nInLayers
-        };
-
-        m_sizeOut = {
-            m_sizeIn.batch,
-            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-            m_sizeConv.batch
-        };
-
-        m_stepInConv = {
-            m_sizeIn.height * m_sizeIn.width * nInLayers,
-            m_sizeIn.width * nInLayers,
-            nInLayers
-        };
-
-        m_stepInMove = {  
-            m_stepInConv.batch,
-            m_stepInConv.height * m_nStrideHeight,
-            m_stepInConv.width * m_nStrideWidth
-        };
-
-        m_stepOut = {
-            m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
-            m_sizeOut.width * m_sizeConv.batch,
-            m_sizeConv.batch
-        };
-
-        m_stepConv = {
-            m_sizeConv.height * m_sizeConv.width * nInLayers,
-            m_sizeConv.width * nInLayers,
-            nInLayers
-        };
-
-        if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度向量失败");
-        }
-
-        if( STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
-            return sCtx.error("创建输出张量失败");
-        }
-
-        int nWeights = m_stepConv.batch * m_sizeConv.batch;
-        int nConvs = m_sizeConv.batch;
-        double* pWeights = new double[nWeights];
-        double* pBais = new double[nConvs];
-        m_spWeights.take(pWeights, [](double* pWeights){
-            delete[] pWeights;
-        });
-        m_spBais.take(pBais, [](double* pBais){
-            delete[] pBais;
-        });
-
-        //
-        // TODO：权重初始化采用什么策略？nadam优化算法下，即便所有权重初始值为零，仍然不影响迭代
-        //
-        double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
-        for(int i=0; i<nWeights; i++) {
-            //pWeights[i] = 0;
-            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
-        }
-
-        for(int i=0; i<m_sizeConv.batch; i++ ){
-            pBais[i] = 0;
-        }
+    ar.visit("nInputLayers", m_nLayers);
+    if(m_nLayers) {
+        ar.visitTaker("weights", m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);
+        ar.visitTaker("bais", m_sizeConv.batch, m_spBais);
     }
     return sCtx.success();
 }
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CConvolutionNetwork, CConvolutionNetwork::__getClassKey())

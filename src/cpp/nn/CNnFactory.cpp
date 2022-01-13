@@ -1,5 +1,6 @@
 
 #include "nn.h"
+#include "CNnNetwork.h"
 #include "CDenseNetwork.h"
 #include "CTwoPoleDenseNetwork.h"
 #include "CConvolutionNetwork.h"
@@ -73,6 +74,14 @@ public:
 
     int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) {
         return CTensorSolver::classify(nClassify, spIn, spOut);
+    }
+
+    int saveNetwork(const char* szFileName, const SNnNetwork& spNet) {
+        return CNnNetwork::saveNetwork(szFileName, spNet);
+    }
+
+    int loadNetwork(const char* szFileName, SNnNetwork& spNet) {
+        return CNnNetwork::loadNetwork(szFileName, spNet);
     }
 };
 

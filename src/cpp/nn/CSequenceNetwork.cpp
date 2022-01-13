@@ -43,3 +43,10 @@ int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevi
     spInDeviation = spOutDev;
     return sCtx.success();
 }
+
+int CSequenceNetwork::toArchive(const SIoArchive& ar) {
+    ar.visitObjectArray("nodes", m_arrNetworks);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CSequenceNetwork, CSequenceNetwork::__getClassKey())

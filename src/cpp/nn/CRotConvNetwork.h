@@ -38,11 +38,11 @@ public://Factory
     static int createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
-    int initNetwork(const STensor& inputTensor);
+    int prepareNetwork(const STensor& inputTensor);
 
 private:
-    STensor m_spInTensor;
-    STensor m_spOutTensor;
+    STensor m_spBatchIn;
+    STensor m_spBatchOut;
     STensor m_spOutDimVector;
 
     //基础参数

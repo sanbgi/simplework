@@ -30,7 +30,7 @@ int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double d
 }
 
 int CRotConvNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( initNetwork(spInTensor) != sCtx.success() ) {
+    if( prepareNetwork(spInTensor) != sCtx.success() ) {
         return sCtx.error();
     }
 
@@ -78,7 +78,7 @@ int CRotConvNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pBais;
     }it = {
         spInTensor->getDataPtr<double>(),
-        m_spOutTensor->getDataPtr<double>(),
+        m_spBatchOut->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
@@ -185,17 +185,17 @@ int CRotConvNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         it.pOut = varTBackup.pOut + stepOut.batch;
     }
 
-    m_spInTensor = spInTensor;
-    spOutTensor = m_spOutTensor;
+    m_spBatchIn = spInTensor;
+    spOutTensor = m_spBatchOut;
     return sCtx.success();
 }
 
 int CRotConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+    if(spOutTensor.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    spInTensor = m_spInTensor;
+    spInTensor = m_spBatchIn;
     if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
@@ -463,7 +463,7 @@ int CRotConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevia
     return sCtx.success();
 }
 
-int CRotConvNetwork::initNetwork(const STensor& spInTensor) {
+int CRotConvNetwork::prepareNetwork(const STensor& spInTensor) {
     if( !m_spOutDimVector ) {
         STensor& spInDimVector = spInTensor->getDimVector();
 
@@ -532,7 +532,7 @@ int CRotConvNetwork::initNetwork(const STensor& spInTensor) {
             return sCtx.error("创建输出张量的维度向量失败");
         }
 
-        if( STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+        if( STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
             return sCtx.error("创建输出张量失败");
         }
 

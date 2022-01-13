@@ -68,7 +68,7 @@ void CIoBinaryArWriter::enterElement(SIoArchivable& spEle) {
 void CIoBinaryArWriter::leaveElement(SIoArchivable& spEle) {
     m_arrEles.pop_back();
     if(m_arrEles.size() > 0) {
-        m_nEleVer = (*m_arrEles.rend())->getVer();
+        m_nEleVer = (*m_arrEles.rbegin())->getVer();
     }else{
         m_nEleVer = -1;
     }
@@ -98,7 +98,7 @@ int CIoBinaryArWriter::saveEle(SIoArchivable spVisitee) {
 
     int retCode = sCtx.success();
     enterElement(spVisitee);
-    retCode = spVisitee->toVisit(SIoArchive((IIoArchive*)this));
+    retCode = spVisitee->toArchive(SIoArchive((IIoArchive*)this));
     leaveElement(spVisitee);
     return retCode;
 }

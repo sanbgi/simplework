@@ -119,7 +119,7 @@ int CIoBinaryArReader::loadEle(SIoArchivable& spVisitee) {
 
     int retCode = sCtx.success();
     enterElement(nVer);
-    retCode = spVisitee->toVisit(SIoArchive((IIoArchive*)this));
+    retCode = spVisitee->toArchive(SIoArchive((IIoArchive*)this));
     leaveElement();
     return retCode;
 }

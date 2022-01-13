@@ -19,16 +19,16 @@ int CTwoPoleDenseNetwork::createNetwork(int nCells, const char* szActivator, SNn
 }
 
 int CTwoPoleDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( int errCode = initNetwork(spInTensor) != sCtx.success() ) {
+    if( int errCode = prepareNetwork(spInTensor) != sCtx.success() ) {
         return errCode;
     }
 
     int nInData = spInTensor->getDataSize();
-    if(nInData != m_nInputCells * m_nInputTensor) {
+    if(nInData != m_nInputCells * m_nBatchs) {
         return sCtx.error("不支持输入张量尺寸与第一次的张量尺寸不同");
     }
 
-    int nTensor = m_nInputTensor;
+    int nTensor = m_nBatchs;
     int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
     int nInCells = m_nInputCells;
@@ -40,7 +40,7 @@ int CTwoPoleDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) 
         double* pBais;
     }it = {
         spInTensor->getDataPtr<double>(),
-        m_spOutTensor->getDataPtr<double>(),
+        m_spBatchOut->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
@@ -96,22 +96,22 @@ int CTwoPoleDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) 
         it.pBais = varTBackup.pBais;
     }
 
-    m_spInTensor = spInTensor;
-    spOutTensor = m_spOutTensor;
+    m_spBatchInTensor = spInTensor;
+    spOutTensor = m_spBatchOut;
     return sCtx.success();
 }
 
 int CTwoPoleDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+    if(spOutTensor.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    spInTensor = m_spInTensor;
+    spInTensor = m_spBatchInTensor;
     if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
-    int nTensor = m_nInputTensor;
+    int nTensor = m_nBatchs;
     int nInCells = m_nInputCells;
     int nOutputTensorSize = m_nCells;
     int nWeights = m_nCells * m_nInputCells;
@@ -300,7 +300,7 @@ int CTwoPoleDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOut
     return sCtx.success();
 }
 
-int CTwoPoleDenseNetwork::initNetwork(const STensor& spInTensor) {
+int CTwoPoleDenseNetwork::prepareNetwork(const STensor& spInTensor) {
     if(m_spOutDimVector) {
         return sCtx.success();
     }
@@ -330,7 +330,7 @@ int CTwoPoleDenseNetwork::initNetwork(const STensor& spInTensor) {
         return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
     }
 
-    if( int errCode = STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, nTensor * m_nCells) != sCtx.success() ) {
+    if( int errCode = STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, nTensor * m_nCells) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输出张量失败");
     }
 
@@ -374,6 +374,6 @@ int CTwoPoleDenseNetwork::initNetwork(const STensor& spInTensor) {
     }
 
     m_nInputCells = nInputCells;
-    m_nInputTensor = nTensor;
+    m_nBatchs = nTensor;
     return sCtx.success();
 }

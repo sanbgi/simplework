@@ -16,7 +16,7 @@ map<string, CActivator*> s_mapActivators = {
 };
 
 CActivator* CActivator::getActivation(const char* szActivator) {
-    if(szActivator) {
+    if( szActivator != nullptr && *szActivator > 0) {
         map<string, CActivator*>::iterator it = s_mapActivators.find(szActivator);
         if( it != s_mapActivators.end() ) {
             return it->second;

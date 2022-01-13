@@ -176,7 +176,8 @@ int main(int argc, char *argv[]){
     //testTensor();
     //testNN();
     //testIdx();
-    CNnNetwork::runFile();
+    //CNnNetwork::runFile();
+    CNnNetwork::run();
     //CAvNetwork::runImage();
 
     /*

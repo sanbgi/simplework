@@ -3,35 +3,41 @@
 
 #include "nn.h"
 #include "CActivator.h"
+#include <string>
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-using namespace SIMPLEWORK_NN_NAMESPACE;
+using namespace sw;
+using namespace std;
 
-class CPoolNetwork : public CObject, public INnNetwork{
+class CPoolNetwork : public CObject, public INnNetwork, public IIoArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
+private://IIoArchivable
+    int getVer() { return 220112; }
+    const char* getName() { return "PoolNetwork"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SIoArchive& ar);
+
 public://Factory
+    static const char* __getClassKey() { return "sw.nn.PoolNetwork"; }
     static int createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork);
 
 private:
-    STensor m_spInTensor;
-    STensor m_spOutTensor;
-    STensor m_spOutDimVector;
-
-    int m_nWidth;
-    int m_nHeight;
+    int m_nPoolWidth;
+    int m_nPoolHeight;
     int m_nStrideWidth;
     int m_nStrideHeight;
+    string m_strPadding;
 
-    int m_nTensor;
+    int m_nBatchInSize;
+    int m_nBatchs;
     int m_nInputTensorSize;
     int m_nInputWidth;
     int m_nInputHeight;
@@ -40,18 +46,21 @@ private:
     int m_nOutWidth;
     int m_nOutHeight;
     int m_nOutTensorSize;
-    bool m_isTransparent;
+
+    STensor m_spBatchIn;
+    STensor m_spBatchOut;
+    STensor m_spOutDimVector;
 
     static SCtx sCtx;
 
 protected:
     CPoolNetwork() {
-        m_nInputWidth = 0;
-        m_nInputHeight = 0;
-        m_isTransparent = false;
+        m_nPoolWidth = -1;
+        m_nPoolHeight = -1;
+        m_nBatchInSize = -1;
     }
 
-    int initNetwork(const STensor& inputTensor);
+    int prepareNetwork(const STensor& inputTensor);
 };
 
 #endif//__SimpleWork_NN_CPoolNetwork_H__

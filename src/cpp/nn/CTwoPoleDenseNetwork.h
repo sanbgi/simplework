@@ -30,14 +30,14 @@ public://Factory
     static int createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
-    int initNetwork(const STensor& spDimTensor);
+    int prepareNetwork(const STensor& spDimTensor);
 
 private:
-    STensor m_spInTensor;
-    STensor m_spOutTensor;
+    STensor m_spBatchInTensor;
+    STensor m_spBatchOut;
     STensor m_spOutDimVector;
     int m_nCells;
-    int m_nInputTensor;
+    int m_nBatchs;
     int m_nInputCells;
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;

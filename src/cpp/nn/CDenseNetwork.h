@@ -4,11 +4,10 @@
 #include "nn.h"
 #include "CActivator.h"
 #include "COptimizer.h"
+#include <string>
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-using namespace SIMPLEWORK_NN_NAMESPACE;
-using namespace SIMPLEWORK_IO_NAMESPACE;
+using namespace sw;
+using namespace std;
 
 //
 //  网络定义：
@@ -25,38 +24,49 @@ class CDenseNetwork : public CObject, public INnNetwork, public IIoArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
-    int eval(const STensor& spInTensor, STensor& spOutTensor);
-    int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
+    int eval(const STensor& spBatchIn, STensor& spBatchOut);
+    int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
 private://IIoArchivable
     int getVer() { return 220112; }
     const char* getName() { return "DenseNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toVisit(const SIoArchive& ar);
+    int toArchive(const SIoArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.DenseNetwork"; }
     static int createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
-    int initNetwork(const STensor& spDimTensor);
+    int prepareNetwork(const STensor& spBatchIn);
 
 private:
-    STensor m_spInTensor;
-    STensor m_spOutTensor;
-    STensor m_spOutDimVector;
+    //基础参数
     int m_nCells;
-    int m_nInputTensor;
+    string m_strActivator;
+    string m_strOptimizer;
+
+    //运行参数
     int m_nInputCells;
     CTaker<double*> m_spWeights;
     CTaker<double*> m_spBais;
+
+    //缓存参数
+    int m_nBatchs;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
+    STensor m_spBatchIn;
+    STensor m_spBatchOut;
+    STensor m_spOutDimVector;
+
+    //环境变量
     static SCtx sCtx;
     
 public:
     CDenseNetwork() {
+        m_nCells = 0;
         m_nInputCells = 0;
+        m_nBatchs = 0;
     }
 };
 

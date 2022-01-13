@@ -76,6 +76,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         virtual int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) = 0;
 
+        //
+        //  网络序列化
+        //
+        virtual int saveNetwork(const char* szFileName, const SNnNetwork& spNet) = 0;
+        virtual int loadNetwork(const char* szFileName, SNnNetwork& spNet) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
     static SNnFactory& getFactory() {

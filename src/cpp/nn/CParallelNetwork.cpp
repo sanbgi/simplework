@@ -59,7 +59,7 @@ int CParallelNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     //
     // 创建合并的输出张量
     //
-    if(!m_spOutTensor) {
+    if(!m_spBatchOut) {
         int nDims = spSumDimTensor->getDataSize();
         int* pDimSize = spSumDimTensor->getDataPtr<int>();
         int pNewDimSize[nDims];
@@ -72,13 +72,13 @@ int CParallelNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
             return sCtx.error("创建输出张量的维度尺寸张量失败");
         }
 
-        if( STensor::createTensor<double>(m_spOutTensor, spDimTensor, nSumLayers * nSumLayerSize) != sCtx.success()) {
+        if( STensor::createTensor<double>(m_spBatchOut, spDimTensor, nSumLayers * nSumLayerSize) != sCtx.success()) {
             return sCtx.error("创建输出张量失败");
         }
         m_nOutLayers = nSumLayers;
         m_nOutLayerSize = nSumLayerSize;
     }else{
-        if( m_spOutTensor->getDataSize() != nSumLayers * nSumLayerSize ) {
+        if( m_spBatchOut->getDataSize() != nSumLayers * nSumLayerSize ) {
             return sCtx.error("两次计算的输出张量尺寸不一致，计算错误");
         }
     }
@@ -86,7 +86,7 @@ int CParallelNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     //
     // 拷贝所有节点输出数据到统一的输出张量中
     //
-    double* pAllOutData = m_spOutTensor->getDataPtr<double>();
+    double* pAllOutData = m_spBatchOut->getDataPtr<double>();
     std::vector<STensor>::iterator itTensor = arrOuts.begin();
     while(itTensor != arrOuts.end()) {
         STensor spOut = *itTensor;
@@ -112,19 +112,19 @@ int CParallelNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         itTensor++;
     }
 
-    spOutTensor = m_spOutTensor;
-    m_spInTensor = spInTensor;
+    spOutTensor = m_spBatchOut;
+    m_spBatchIn = spInTensor;
     return sCtx.success();
 }
 
 int CParallelNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+    if(spOutTensor.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
     if(!m_spInDeviation) {
-        int nIn = m_spInTensor->getDataSize();
-        if( STensor::createTensor<double>(m_spInDeviation, m_spInTensor->getDimVector(), nIn) != sCtx.success()) {
+        int nIn = m_spBatchIn->getDataSize();
+        if( STensor::createTensor<double>(m_spInDeviation, m_spBatchIn->getDimVector(), nIn) != sCtx.success()) {
             return sCtx.error("创建输入偏差张量失败");
         }
     }
@@ -194,7 +194,14 @@ int CParallelNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevi
         itTensor++;
         iOutLayer += nOutLayer;
     }
-    spInTensor = m_spInTensor;
+    spInTensor = m_spBatchIn;
     spInDeviation = m_spInDeviation;
     return sCtx.success();
 }
+
+int CParallelNetwork::toArchive(const SIoArchive& ar) {
+    ar.visitObjectArray("nodes", m_arrNetworks);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CParallelNetwork, CParallelNetwork::__getClassKey())

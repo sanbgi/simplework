@@ -16,22 +16,22 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
 
         //
         //  计算
-        //      @spInTensor 输入张量，多维张量，其中第一个维度为实际张量的个数
-        //      @spOutTensor 输出张量
+        //      @spBatchIn 输入张量，多维张量，其中第一个维度为实际张量的个数
+        //      @spBatchOut 输出张量
         //
-        virtual int eval(const STensor& spInTensor, STensor& spOutTensor) = 0;
+        virtual int eval(const STensor& spBatchIn, STensor& spBatchOut) = 0;
 
         //
         //  学习
-        //      @spOutTensor 由eval计算输出的结果
-        //      @spOutDeviation 计算结果与实际期望的偏差 = 计算值 - 期望值
-        //      @spInTensor 返回上次计算的输入值
-        //      @spInDeviation 输入值与期望输入值的偏差 = 输入值 - 期望值
+        //      @spBatchOut 由eval计算输出的结果
+        //      @spBatchOutDeviation 计算结果与实际期望的偏差 = 计算值 - 期望值
+        //      @spBatchIn 返回上次计算的输入值
+        //      @spBatchInDeviation 输入值与期望输入值的偏差 = 输入值 - 期望值
         //
         //  注意：
         //      spOutTensor必须是由eval最有一次计算出来的张量，否则，学习会失败；
         //
-        virtual int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) = 0;
+        virtual int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -113,6 +113,17 @@ public:
         SNnFactory::getFactory()->classifyTensor(nClassify, spIn, spOut);
         return spOut;
     }
+
+    static int saveFile(const char* szFileName, const SNnNetwork& spNet) {
+        return SNnFactory::getFactory()->saveNetwork(szFileName, spNet);
+    }
+
+    static SNnNetwork loadFile(const char* szFileName) {
+        SNnNetwork spNet;
+        SNnFactory::getFactory()->loadNetwork(szFileName, spNet);
+        return spNet;
+    }
+
 
 public:
     STensor eval(const STensor& spIn) {

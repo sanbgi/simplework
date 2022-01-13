@@ -7,28 +7,128 @@ int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNnNetwork
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
-    spDense->m_pActivator = CActivator::getActivation(szActivator);
-    if(spDense->m_pActivator == nullptr) {
-        return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
-    }
-    if( COptimizer::getOptimizer(nullptr, spDense->m_spOptimizer) != sCtx.success()) {
-        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-    }
+    if( szActivator!=nullptr )
+        spDense->m_strActivator = szActivator;
+    //spDense->m_strOptimizer
     spNetwork.setPtr(spDense.getPtr());
     return sCtx.success();
 }
 
-int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if( int errCode = initNetwork(spInTensor) != sCtx.success() ) {
+int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
+    //
+    // 快速检查数量（非严格检查）, 如果严格对比长宽高的化，有点浪费性能，相当于如果
+    // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
+    //
+    int nInputSize = spBatchIn->getDataSize();
+    if( nInputSize == m_nInputCells * m_nBatchs ) {
+        return sCtx.success();
+    }
+
+    //
+    // 计算详细维度尺寸
+    //
+    int nBatchs = 0;
+    int nInputCells = 0;
+    {
+        //
+        // 检查输入张量维度
+        //
+        STensor& spInDimTensor = spBatchIn->getDimVector();
+        int nInputDims = spInDimTensor->getDataSize();
+        if(nInputDims < 2) {
+            return sCtx.error("输入张量维度需要大于1，其中第一个维度是批量张量个数");
+        }
+
+        //
+        // 计算输入参数
+        //
+        int* pDimSizes = spInDimTensor->getDataPtr<int>();
+        nBatchs = pDimSizes[0];
+        nInputCells = pDimSizes[1];
+        for( int i=2; i<nInputDims; i++) {
+            nInputCells *= pDimSizes[i];
+        }
+        if(nBatchs * nInputCells != nInputSize ) {
+            return sCtx.error("输入张量的维度信息核实际数据量不一致，输入张量非法");
+        }
+    }
+
+    //
+    // 判断是否需要重新初始化网络
+    //
+    if(m_nInputCells==0) {
+        //
+        //
+        //
+        if( m_nCells <= 0 || nInputCells <= 0 ) {
+            return sCtx.error("不允许全连接网络细胞数或输入细胞数为零");
+        }
+        
+        m_pActivator = CActivator::getActivation(m_strActivator.c_str());
+        if(m_pActivator == nullptr) {
+            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+        }
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), m_spOptimizer) != sCtx.success()) {
+            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+        }
+
+        int nWeight = m_nCells*nInputCells;
+        double* pWeights = new double[nWeight];
+        double* pBais = new double[m_nCells];
+        m_spWeights.take(pWeights, [](double* pWeights){
+            delete[] pWeights;
+        });
+        m_spBais.take(pBais, [](double* pBais){
+            delete[] pBais;
+        });
+
+        //
+        // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
+        //
+        /*
+        double xWeight = 1.0/nInputCells;
+        for(int i=0; i<nWeight; i++) {
+            *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
+        }*/
+        double xWeight = 0.1;//sqrt(1.0/nInputCells);
+        for(int i=0; i<nWeight; i++) {
+            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
+        }
+        for(int i=0; i<m_nCells; i++ ){
+            pBais[i] = 0;
+        }
+
+        m_nBatchs = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
+        m_nInputCells = nInputCells;
+    }else if(m_nInputCells != nInputCells) {
+        return sCtx.error("当前输入的参数，与神经网络需要的参数不符");
+    }
+
+    if(m_nBatchs != nBatchs) {
+        //
+        // 检查细胞数量是否合法
+        //
+        int pOutDimSizes[2] = { nBatchs, m_nCells };
+        if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
+            return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
+        }
+
+        if( int errCode = STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, nBatchs * m_nCells) != sCtx.success() ) {
+            return sCtx.error(errCode, "创建输出张量失败");
+        }
+
+        m_nBatchs = nBatchs;
+    }
+    return sCtx.success();
+}
+
+
+int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+    if( int errCode = prepareNetwork(spBatchIn) != sCtx.success() ) {
         return errCode;
     }
 
-    int nInData = spInTensor->getDataSize();
-    if(nInData != m_nInputCells * m_nInputTensor) {
-        return sCtx.error("不支持输入张量尺寸与第一次的张量尺寸不同");
-    }
-
-    int nTensor = m_nInputTensor;
+    int nBatchs = m_nBatchs;
     int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
     int nInCells = m_nInputCells;
@@ -39,12 +139,12 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         double* pWeight;
         double* pBais;
     }it = {
-        spInTensor->getDataPtr<double>(),
-        m_spOutTensor->getDataPtr<double>(),
+        spBatchIn->getDataPtr<double>(),
+        m_spBatchOut->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
-    for(int iTensor=0; iTensor<nTensor; iTensor++) {
+    for(int iTensor=0; iTensor<nBatchs; iTensor++) {
         CItOutVariables varTBackup = {
             it.pIn,
             it.pOut,
@@ -88,22 +188,22 @@ int CDenseNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         it.pBais = varTBackup.pBais;
     }
 
-    m_spInTensor = spInTensor;
-    spOutTensor = m_spOutTensor;
+    m_spBatchIn = spBatchIn;
+    spBatchOut = m_spBatchOut;
     return sCtx.success();
 }
 
-int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spOutTensor.getPtr()) {
+int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    spInTensor = m_spInTensor;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
+    spBatchIn = m_spBatchIn;
+    if( int errCode = STensor::createTensor<double>(spBatchInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
-    int nTensor = m_nInputTensor;
+    int nBatchs = m_nBatchs;
     int nInCells = m_nInputCells;
     int nOutputTensorSize = m_nCells;
     int nWeights = m_nCells * m_nInputCells;
@@ -122,15 +222,15 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         double* pBaisDeviation;
         double* pZDeviatioin;
     }it = {
-        spInTensor->getDataPtr<double>(),
-        spInDeviation->getDataPtr<double>(),
-        spOutTensor->getDataPtr<double>(),
-        spOutDeviation->getDataPtr<double>(),
+        spBatchIn->getDataPtr<double>(),
+        spBatchInDeviation->getDataPtr<double>(),
+        spBatchOut->getDataPtr<double>(),
+        spBatchOutDeviation->getDataPtr<double>(),
         m_spWeights,
         pWeightDerivationArray,
         pBaisDeviationArray
     };
-    for(int iTensor=0; iTensor<nTensor; iTensor++) {
+    for(int iTensor=0; iTensor<nBatchs; iTensor++) {
         CItOutVariables varTBackup = {
             it.pIn,
             it.pInDeviation,
@@ -223,7 +323,7 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         it.pBaisDeviation = varTBackup.pBaisDeviation;
     }
 
-    m_spOptimizer->updateDeviation(nTensor);
+    m_spOptimizer->updateDeviation(nBatchs);
 
     double* pWeights = m_spWeights;
     for(int iWeight=0;iWeight<nWeights; iWeight++) {
@@ -237,123 +337,15 @@ int CDenseNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviati
         pBais++;
         pBaisDeviationArray++;
     }
-
-    /*
-    #ifdef _DEBUG
-    {
-        double avgWeight = 0;
-        double maxW = -100000;
-        double minW = 100000;
-        double avgDerivation = 0;
-        double avgBais = 0;
-        double* pWeightArray = m_spWeights;
-        for(int iWeight=0;iWeight<nWeights; iWeight++) {
-            avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-            avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
-            if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
-                maxW = DVV(pWeightArray,iWeight,nWeights);
-            }else
-            if(minW > DVV(pWeightArray,iWeight,nWeights)) {
-                minW = DVV(pWeightArray,iWeight,nWeights);
-            }
-        }
-        double* pBaisArray = m_spBais;
-        for(int iBais = 0; iBais<m_nCells; iBais++) {
-            avgBais += abs(DVV(pBaisArray, iBais, m_nCells)) / m_nCells;
-        }
-
-        static int t = 0;
-        if( (t++ / 2) % 10 == 0) {
-            std::cout << "Dense: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << "\n";
-        }
-    }
-    #endif//_DEBUG
-    */
-
     return sCtx.success();
 }
 
-int CDenseNetwork::initNetwork(const STensor& spInTensor) {
-    if(m_spOutDimVector) {
-        return sCtx.success();
-    }
+int CDenseNetwork::toArchive(const SIoArchive& ar) {
+    ar.visit("nCells", m_nCells);
+    ar.visitString("activator", m_strActivator);
+    ar.visitString("optimizer", m_strOptimizer);
 
-    STensor& spDimVector = spInTensor->getDimVector();
-    int nDims = spDimVector->getDataSize();
-    int* pDimSizes = spDimVector->getDataPtr<int>();
-    if(nDims < 2) {
-        return sCtx.error("输入张量维度需要大于1，其中第一个维度是张量个数");
-    }
-
-    int nTensor = pDimSizes[0];
-    int nInputCells = pDimSizes[1];
-    for( int i=2; i<nDims; i++) {
-        nInputCells *= pDimSizes[i];
-    }
-
-    //
-    // 检查细胞数量是否合法
-    //
-    if( m_nCells <= 0 || nInputCells <= 0 ) {
-        return sCtx.error("不允许全连接网络细胞数或输入细胞数为零");
-    }
-
-    int pOutDimSizes[2] = { nTensor, m_nCells };
-    if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
-        return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
-    }
-
-    if( int errCode = STensor::createTensor<double>(m_spOutTensor, m_spOutDimVector, nTensor * m_nCells) != sCtx.success() ) {
-        return sCtx.error(errCode, "创建输出张量失败");
-    }
-
-    //
-    // 如果当前权重数量大于等于目标权重数量，则无需调整
-    //
-    if( m_nInputCells >= nInputCells ) {
-        m_nInputCells = nInputCells;
-        return sCtx.success();
-    }
-
-    if(m_nInputCells != 0) {
-        m_nInputCells = 0;
-        m_spWeights.release();
-    }
-
-    int nWeight = m_nCells*nInputCells;
-    double* pWeights = new double[nWeight];
-    double* pBais = new double[m_nCells];
-    m_spWeights.take(pWeights, [](double* pWeights){
-        delete[] pWeights;
-    });
-    m_spBais.take(pBais, [](double* pBais){
-        delete[] pBais;
-    });
-
-    //
-    // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
-    //
-    /*
-    double xWeight = 1.0/nInputCells;
-    for(int i=0; i<nWeight; i++) {
-        *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
-    }*/
-    double xWeight = 0.1;//sqrt(1.0/nInputCells);
-    for(int i=0; i<nWeight; i++) {
-        pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
-    }
-    for(int i=0; i<m_nCells; i++ ){
-        pBais[i] = 0;
-    }
-
-    m_nInputCells = nInputCells;
-    m_nInputTensor = nTensor;
-    return sCtx.success();
-}
-
-int CDenseNetwork::toVisit(const SIoArchive& ar) {
-    ar.visit("inSize", m_nInputCells);
-    ar.visit("outSize", m_nCells);
+    ar.visit("nInputCells", m_nInputCells);
     if(m_nInputCells) {
         ar.visitTaker("weights", m_nCells*m_nInputCells, m_spWeights);
         ar.visitTaker("bais", m_nCells, m_spBais);

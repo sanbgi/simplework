@@ -26,7 +26,7 @@ map<string, FCreateOptimizer> s_mapOptimizerFs = {
 };
 
 int COptimizer::getOptimizer(const char* szOptimizer, SOptimizer& spOptimizer) {
-    if(szOptimizer) {
+    if(szOptimizer != nullptr && *szOptimizer != 0) {
         map<string, FCreateOptimizer>::iterator it = s_mapOptimizerFs.find(szOptimizer);
         if( it != s_mapOptimizerFs.end() ) {
             return (*it->second)(spOptimizer);
