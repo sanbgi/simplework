@@ -135,6 +135,9 @@ public:
         return (*this)->visitArray(szName, CTakerVisitee(nSize, spTaker), nMinVer, nMaxVer);
     }
 
+    //
+    //
+    //
     template<typename Q> int visitString(const char* szName, Q& str, int nMinVer=0, int nMaxVer = 999999999) const {
         class CStringVisitee : IArrayVisitee {
         public:
@@ -160,7 +163,6 @@ public:
         return (*this)->visitArray(szName, CStringVisitee(str), nMinVer, nMaxVer);
     }
 
-
     //
     //
     //
@@ -175,6 +177,9 @@ public:
         return (*this)->visitObjectArray(szName, pVisitee, nMinVer, nMaxVer);
     }
 
+    //
+    //
+    //
     template<typename Q> int visitObjectArray(const char* szName, Q& arrEles, int nMinVer=0, int nMaxVer=999999999 ) const  {
         
         class CEleArrayVisitee : IObjectArrayVisitee {
@@ -203,8 +208,6 @@ public:
         };
         return (*this)->visitObjectArray(szName, CEleArrayVisitee(arrEles), nMinVer, nMaxVer);
     }
-
-
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(IoArchive)
 
