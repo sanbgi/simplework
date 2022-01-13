@@ -324,7 +324,7 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
         pBaisDeviationArray
     }, itVars, itVars0,itVars1,itVars2,itVars3,itVars4,itVars5,itVars6;
 
-    double derivationZ;
+    double deviationZ;
     double pDeviationZArray[stepOut.batch];
 
     itVars = it;
@@ -359,56 +359,58 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
                     //      Y = activation(Z)
                     //      delta = 目标 - Y
                     //      E = delta*delta/2 目标函数
-                    //      derivationZ = d(E) / d(Z) = d(E)/d(delta) * d(delta)/d(Y) * d(F)/d(Z)
+                    //      deviationZ = d(E) / d(Z) = d(E)/d(delta) * d(delta)/d(Y) * d(F)/d(Z)
                     //      其中：
                     //          d(E)/d(delta) = pOutDeviation[iOutput]
                     //          d(delta)/d(Y) = 1
                     //          d(Y)/d(Z) = deactivate(Y)
                     //
-                    derivationZ = (*it.pZDeviatioin);
+                    deviationZ = (*it.pZDeviatioin);
+                    if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) 
+                    {
+                        //
+                        //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
+                        //  
+                        for(itVars4.index=0; itVars4.index<sizeConv.height; itVars4.index++) {
+                            itVars4.pIn = it.pIn;
+                            itVars4.pInDeviation = it.pInDeviation;
+                            itVars4.pWeights = it.pWeights;
+                            itVars4.pWeightDevivation = it.pWeightDevivation;
+                            for(itVars5.index=0; itVars5.index<sizeConv.width; itVars5.index++) {
+                                itVars5.pIn = it.pIn;
+                                itVars5.pInDeviation = it.pInDeviation;
+                                itVars5.pWeights = it.pWeights;
+                                itVars5.pWeightDevivation = it.pWeightDevivation;
+                                for(itVars6.index=0; itVars6.index<sizeConv.layers; itVars6.index++) {
+                                    
+                                    //
+                                    // 累计计算权重值
+                                    //
+                                    (*it.pInDeviation) += deviationZ * (*it.pWeights);
+                                    (*it.pWeightDevivation) += deviationZ * (*it.pIn);
 
-                    //
-                    //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
-                    //  
-                    for(itVars4.index=0; itVars4.index<sizeConv.height; itVars4.index++) {
-                        itVars4.pIn = it.pIn;
-                        itVars4.pInDeviation = it.pInDeviation;
-                        itVars4.pWeights = it.pWeights;
-                        itVars4.pWeightDevivation = it.pWeightDevivation;
-                        for(itVars5.index=0; itVars5.index<sizeConv.width; itVars5.index++) {
-                            itVars5.pIn = it.pIn;
-                            itVars5.pInDeviation = it.pInDeviation;
-                            itVars5.pWeights = it.pWeights;
-                            itVars5.pWeightDevivation = it.pWeightDevivation;
-                            for(itVars6.index=0; itVars6.index<sizeConv.layers; itVars6.index++) {
-                                
-                                //
-                                // 累计计算权重值
-                                //
-                                (*it.pInDeviation) += derivationZ * (*it.pWeights);
-                                (*it.pWeightDevivation) += derivationZ * (*it.pIn);
-
-                                it.pIn++;
-                                it.pInDeviation++;
-                                it.pWeights++;
-                                it.pWeightDevivation++;
+                                    it.pIn++;
+                                    it.pInDeviation++;
+                                    it.pWeights++;
+                                    it.pWeightDevivation++;
+                                }
+                                it.pIn = itVars5.pIn + stepInConv.width;
+                                it.pInDeviation = itVars5.pInDeviation + stepInConv.width;
+                                it.pWeights = itVars5.pWeights + stepConv.width;
+                                it.pWeightDevivation = itVars5.pWeightDevivation + stepConv.width;
                             }
-                            it.pIn = itVars5.pIn + stepInConv.width;
-                            it.pInDeviation = itVars5.pInDeviation + stepInConv.width;
-                            it.pWeights = itVars5.pWeights + stepConv.width;
-                            it.pWeightDevivation = itVars5.pWeightDevivation + stepConv.width;
+
+                            it.pIn = itVars4.pIn + stepInConv.height;
+                            it.pInDeviation = itVars4.pInDeviation + stepInConv.height;
+                            it.pWeights = itVars4.pWeights + stepConv.height;
+                            it.pWeightDevivation = itVars4.pWeightDevivation + stepConv.height;
                         }
 
-                        it.pIn = itVars4.pIn + stepInConv.height;
-                        it.pInDeviation = itVars4.pInDeviation + stepInConv.height;
-                        it.pWeights = itVars4.pWeights + stepConv.height;
-                        it.pWeightDevivation = itVars4.pWeightDevivation + stepConv.height;
+                        //
+                        //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-deviationZ)
+                        //
+                        (*it.pBaisDeviation) += (-deviationZ);
                     }
-
-                    //
-                    //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
-                    //
-                    (*it.pBaisDeviation) += (-derivationZ);
 
                     it.pIn = itVars3.pIn;
                     it.pInDeviation = itVars3.pInDeviation;
@@ -497,17 +499,18 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
 
 int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
     //基础参数
-    ar.visit("nConvs", m_sizeConv.batch);
-    ar.visit("nConvWidth", m_sizeConv.width);
-    ar.visit("nConvHeight", m_sizeConv.height);
-    ar.visit("nStrideWidth", m_nStrideWidth);
-    ar.visit("nStrideHeight", m_nStrideHeight);
+    ar.visit("convs", m_sizeConv.batch);
+    ar.visit("dropout", m_sizeConv.batch);
+    ar.visit("width", m_sizeConv.width);
+    ar.visit("height", m_sizeConv.height);
+    ar.visit("strideWidth", m_nStrideWidth);
+    ar.visit("strideHeight", m_nStrideHeight);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
     ar.visitString("padding", m_strPadding);
 
     //运行参数
-    ar.visit("nInputLayers", m_nLayers);
+    ar.visit("inputLayers", m_nLayers);
     if(m_nLayers) {
         ar.visitTaker("weights", m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);
         ar.visitTaker("bais", m_sizeConv.batch, m_spBais);

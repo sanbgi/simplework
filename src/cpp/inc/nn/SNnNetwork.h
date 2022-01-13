@@ -36,9 +36,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    static SNnNetwork createDense(int nCells, const char* szActivator = nullptr) {
+    static SNnNetwork createDense(int nCells, double dDropoutRate = 0, const char* szActivator = nullptr) {
         SNnNetwork nn;
-        SNnFactory::getFactory()->createDense(nCells,szActivator,nn);
+        SNnFactory::getFactory()->createDense(nCells,dDropoutRate,szActivator,nn);
         return nn;
     }
 

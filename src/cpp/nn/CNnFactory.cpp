@@ -24,8 +24,8 @@ class CNnFactory : public CObject, public INnFactory{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int createDense(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
-        return CDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
+    int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
+        return CDenseNetwork::createNetwork(nCells, dDropoutRate, szActivator, spNetwork);
     }
 
     int createTwoPoleDense(int nCells, const char* szActivator, SNnNetwork& spNetwork) {

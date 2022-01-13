@@ -99,8 +99,7 @@ SNnNetwork CNnNetwork::createNetwork() {
     arrNets.push_back(SNnNetwork::createConv(7,7,64));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createDense(576));
-    //arrNets.push_back(SNnNetwork::createDense(10));
-    arrNets.push_back(SNnNetwork::createDense(10, "softmax"));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
     return SNnNetwork::loadFile("D://snetwork.bin");
@@ -114,8 +113,10 @@ SNnNetwork CNnNetwork::createRotNetwork() {
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createDense(576));
     //arrNets.push_back(SNnNetwork::createDense(10));
-    arrNets.push_back(SNnNetwork::createDense(10, "softmax"));
-    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    return SNnNetwork::loadFile("D://snetwork.bin");
 }
 
 void CNnNetwork::runFile() {

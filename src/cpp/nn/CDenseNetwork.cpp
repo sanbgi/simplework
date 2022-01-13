@@ -1,12 +1,14 @@
 #include "CDenseNetwork.h"
 #include <math.h>
 #include <iostream>
+#include <time.h>
 
 SCtx CDenseNetwork::sCtx("CDenseNetwork");
-int CDenseNetwork::createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
+int CDenseNetwork::createNetwork(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = nCells;
+    spDense->m_dDropoutRate = dDropoutRate;
     if( szActivator!=nullptr )
         spDense->m_strActivator = szActivator;
     spNetwork.setPtr(spDense.getPtr());
@@ -108,12 +110,22 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
         // 检查细胞数量是否合法
         //
         int pOutDimSizes[2] = { nBatchs, m_nCells };
-        if( int errCode = STensor::createVector(m_spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
+        STensor spOutDimVector;
+        if( int errCode = STensor::createVector(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
             return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
         }
 
-        if( int errCode = STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, nBatchs * m_nCells) != sCtx.success() ) {
+        if( int errCode = STensor::createTensor<double>(m_spBatchOut, spOutDimVector, nBatchs * m_nCells) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输出张量失败");
+        }
+
+        //
+        //  如果抛弃比率大于2个神经元，则dropout机制有效
+        //
+        if(m_dDropoutRate > 2.0 / m_nCells) {
+            m_spDropout.take(new bool[m_nCells], [](bool* ptr){
+                delete[] ptr;
+            });
         }
 
         m_nBatchs = nBatchs;
@@ -131,20 +143,40 @@ int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
     int nInCells = m_nInputCells;
-    
+
+    bool* pDropout = m_spDropout, *pDrop;
+    int nDropout = 0;
+    if(pDropout) {
+        srand(time(nullptr));
+        bool* ptr = pDropout;
+        for(int i=0; i<nOutCells; i++) {
+            bool bDropout = (rand() * 1.0 / RAND_MAX) < m_dDropoutRate;
+            if(bDropout) {
+                nDropout++;
+            }
+            *ptr = bDropout;
+            ptr++;
+        }
+    }
+    m_nEvalDropout = nDropout;
+    double xDropScale = nOutCells / (double)(nOutCells-nDropout);
+
     struct CItOutVariables {
         double* pIn;
         double* pOut;
         double* pWeight;
         double* pBais;
-    }it = {
+    }varTBackup, varOBackup, it = {
         spBatchIn->getDataPtr<double>(),
         m_spBatchOut->getDataPtr<double>(),
         m_spWeights,
         m_spBais
     };
-    for(int iTensor=0; iTensor<nBatchs; iTensor++) {
-        CItOutVariables varTBackup = {
+
+    double dOut;
+    int iTensor, iOutput, iInput;
+    for(iTensor=0; iTensor<nBatchs; iTensor++) {
+        varTBackup = {
             it.pIn,
             it.pOut,
             it.pWeight,
@@ -154,28 +186,58 @@ int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         //
         //  调整权重
         //
-        for(int iOutput=0; iOutput<nOutCells; iOutput++) {
+        if(nDropout > 1) {
+            pDrop = pDropout;
+            for(iOutput=0; iOutput<nOutCells; iOutput++) {
+                varOBackup = {
+                    it.pIn,
+                    it.pOut,
+                    it.pWeight,
+                };
 
-            CItOutVariables varOBackup = {
-                it.pIn,
-                it.pOut,
-                it.pWeight,
-            };
+                if(*pDrop) {
+                    (*it.pOut) = 0;
+                }else{
+                    dOut = 0;
+                    for(iInput=0; iInput<nInCells; iInput++ ) {
+                        dOut += (*it.pWeight) * (*it.pIn);
+                        it.pIn++;
+                        it.pWeight++;
+                    }
+                    (*it.pOut) = (dOut - (*it.pBais))*xDropScale;
+                }
 
-            double dOut = 0;
-            for(int iInput=0; iInput<nInCells; iInput++ ) {
-                dOut += (*it.pWeight) * (*it.pIn);
-                it.pIn++;
-                it.pWeight++;
+                //  更新迭代参数
+                pDrop++;
+                it.pOut++;
+                it.pBais++;
+                it.pIn = varOBackup.pIn;
+                it.pWeight = varOBackup.pWeight + nInCells;
             }
+        }else{
+            for(iOutput=0; iOutput<nOutCells; iOutput++) {
 
-            (*it.pOut) = dOut - (*it.pBais);
+                varOBackup = {
+                    it.pIn,
+                    it.pOut,
+                    it.pWeight,
+                };
 
-            //  更新迭代参数
-            it.pOut++;
-            it.pBais++;
-            it.pIn = varOBackup.pIn;
-            it.pWeight = varOBackup.pWeight + nInCells;
+                dOut = 0;
+                for(iInput=0; iInput<nInCells; iInput++ ) {
+                    dOut += (*it.pWeight) * (*it.pIn);
+                    it.pIn++;
+                    it.pWeight++;
+                }
+
+                (*it.pOut) = dOut - (*it.pBais);
+
+                //  更新迭代参数
+                it.pOut++;
+                it.pBais++;
+                it.pIn = varOBackup.pIn;
+                it.pWeight = varOBackup.pWeight + nInCells;
+            }
         }
 
         m_pActivator->activate(nOutCells, varTBackup.pOut, varTBackup.pOut);
@@ -202,6 +264,12 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
+    bool* pDropout = m_spDropout;
+    int nDropout = m_nEvalDropout;
+    double xScaleDropout = (m_nCells - nDropout) / (double) m_nCells;
+    double* pDev;
+    bool* pDrop;
+
     int nBatchs = m_nBatchs;
     int nInCells = m_nInputCells;
     int nOutputTensorSize = m_nCells;
@@ -220,7 +288,7 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
         double* pWeightDeviation;
         double* pBaisDeviation;
         double* pZDeviatioin;
-    }it = {
+    }varTBackup, varOBackup, it = {
         spBatchIn->getDataPtr<double>(),
         spBatchInDeviation->getDataPtr<double>(),
         spBatchOut->getDataPtr<double>(),
@@ -229,8 +297,10 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
         pWeightDerivationArray,
         pBaisDeviationArray
     };
-    for(int iTensor=0; iTensor<nBatchs; iTensor++) {
-        CItOutVariables varTBackup = {
+    double pZDerivationArray[m_nCells], deviationZ;
+    int iTensor, iOutput, iInput;
+    for(iTensor=0; iTensor<nBatchs; iTensor++) {
+        varTBackup = {
             it.pIn,
             it.pInDeviation,
             it.pOut,
@@ -243,16 +313,27 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
         //
         //  计算目标函数相对于Y值的偏导数
         //
-        double pZDerivationArray[m_nCells];
         m_pActivator->deactivate(m_nCells, it.pOut, it.pOutDeviation, pZDerivationArray);
         it.pZDeviatioin = pZDerivationArray;
+
+        if(nDropout > 0) {
+            pDrop = pDropout;
+            pDev = pZDerivationArray;
+            for(iOutput=0; iOutput<m_nCells; iOutput++) {
+                if(*pDrop) {
+                    *pDev = 0;
+                }else{
+                    *pDev *= xScaleDropout;
+                }
+                pDrop++, pDev++;
+            }
+        }
 
         //
         //  调整权重
         //
-        for(int iOutput=0; iOutput<m_nCells; iOutput++) {
-
-            CItOutVariables varOBackup = {
+        for(iOutput=0; iOutput<m_nCells; iOutput++) {
+            varOBackup = {
                 it.pIn,
                 it.pInDeviation,
                 it.pOut,
@@ -268,40 +349,41 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
             //      F = activation(Y)
             //      delta = F - F0(目标)
             //      E = delta*delta/2 目标函数
-            //      derivationZ = d(E)/d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(Y)
+            //      deviationZ = d(E)/d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(Y)
             //      其中：
             //          d(E)/d(delta) = pOutDeviation[iOutput]
             //          d(delta)/d(F) = 1
             //          d(F)/d(Y) = deactivate(Y)
             //
-            double derivationZ = *(it.pZDeviatioin);
+            deviationZ = *(it.pZDeviatioin);
+            if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) {
+                //
+                // 更新权重，权重值的偏导数=输出值偏导数*数入值
+                //
+                for(iInput=0; iInput<m_nInputCells; iInput++ ) {
 
-            //
-            // 更新权重，权重值的偏导数=输出值偏导数*数入值
-            //
-            for(int iInput=0; iInput<m_nInputCells; iInput++ ) {
+                    //
+                    // 输入对实际目标的偏差值，反向传递给上一层，其实就是相对于输入的偏导数
+                    //
+                    // 注意：这里是否要乘以学习率？
+                    //      如果乘以学习率后，相当于向前传递的不是偏导数，而是偏导数 * 学习率，与现有神经网络BP算法不一致
+                    //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
+                    //
+                    //pInDeviation[iInput] += deviationZ * pWeights[iWeight] * dLearnRate;
+                    (*it.pInDeviation) += deviationZ * (*it.pWeight);
+                    (*it.pWeightDeviation) += deviationZ * (*it.pIn);
+
+                    it.pIn++;
+                    it.pInDeviation++;
+                    it.pWeight++;
+                    it.pWeightDeviation++;
+                }
 
                 //
-                // 输入对实际目标的偏差值，反向传递给上一层，其实就是相对于输入的偏导数
+                // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
                 //
-                // 注意：这里是否要乘以学习率？
-                //      如果乘以学习率后，相当于向前传递的不是偏导数，而是偏导数 * 学习率，与现有神经网络BP算法不一致
-                //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
-                //
-                //pInDeviation[iInput] += derivationZ * pWeights[iWeight] * dLearnRate;
-                (*it.pInDeviation) += derivationZ * (*it.pWeight);
-                (*it.pWeightDeviation) += derivationZ * (*it.pIn);
-
-                it.pIn++;
-                it.pInDeviation++;
-                it.pWeight++;
-                it.pWeightDeviation++;
+                *it.pBaisDeviation += (-deviationZ);
             }
-
-            //
-            // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
-            //
-            *it.pBaisDeviation += (-derivationZ);
 
             //  更新迭代参数
             it.pBaisDeviation++;
@@ -324,7 +406,6 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
 
     m_spOptimizer->updateDeviation(nBatchs);
 
-
     double* pWeightArray = m_spWeights;
     double* pWeightEnd = pWeightArray+nWeights;
     while(pWeightArray != pWeightEnd) {
@@ -343,6 +424,7 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
 int CDenseNetwork::toArchive(const SIoArchive& ar) {
     //基础参数
     ar.visit("nCells", m_nCells);
+    ar.visit("dDropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
 

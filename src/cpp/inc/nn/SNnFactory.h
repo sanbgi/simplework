@@ -19,7 +19,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         //  创建直连神经网络
         //
-        virtual int createDense(int nCells, const char* szActivator, SNnNetwork& spNetwork) = 0;
+        virtual int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) = 0;
 
         //
         //  创建直连神经网络

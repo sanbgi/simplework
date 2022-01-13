@@ -23,7 +23,7 @@ CActivator* CActivator::getActivation(const char* szActivator) {
         }
         return nullptr;
     }
-    return getELU();
+    return getNeuralActivator();
 }
 
 

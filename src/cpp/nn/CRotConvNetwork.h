@@ -5,10 +5,10 @@
 #include "CActivator.h"
 #include "COptimizer.h"
 #include "CSize.h"
+#include <string>
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-using namespace SIMPLEWORK_NN_NAMESPACE;
+using namespace sw;
+using namespace std;
 
 //
 // 旋转卷积，相当于卷积核在平面每移动一个距离，就旋转一个角度进行卷积。模仿人类大脑
@@ -24,42 +24,55 @@ using namespace SIMPLEWORK_NN_NAMESPACE;
 //  还不能提高精度，可能与conv(a)的计算偏差大相关，毕竟两个90度卷积的加权结果，未必
 //  能表示指定角度的卷积结果。
 //
-class CRotConvNetwork : public CObject, public INnNetwork{
+class CRotConvNetwork : public CObject, public INnNetwork, public IIoArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
+        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
 
+private://IIoArchivable
+    int getVer() { return 220112; }
+    const char* getName() { return "RotConvNetwork"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SIoArchive& ar);
+
 public://Factory
+    static const char* __getClassKey() { return "sw.nn.RotConvNetwork"; }
     static int createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
     int prepareNetwork(const STensor& inputTensor);
 
 private:
-    STensor m_spBatchIn;
-    STensor m_spBatchOut;
-    STensor m_spOutDimVector;
-
     //基础参数
-    int m_nPadingWidth;
-    int m_nPadingHeight;
+    CBatchSize3D m_sizeConv;
+    double m_dDropoutRate;
     int m_nStrideWidth;
     int m_nStrideHeight;
     double m_dWRotAngle;
     double m_dHRotAngle;
+    string m_strActivator;
+    string m_strOptimizer;
+    string m_strPadding;
 
-    //数据计算参数
-    int m_nInData;
+    //网络参数
+    int m_nLayers;
+    CTaker<double*> m_spWeights;
+    CTaker<double*> m_spBais;
+    CActivator* m_pActivator;
+    SOptimizer m_spOptimizer;
+
+    //缓存参数
+    int m_nInputSize;
 
     //输入、输出、卷积尺寸
     CBatchSize3D m_sizeIn;
     CBatchSize3D m_sizeOut;
-    CBatchSize3D m_sizeConv;
 
     //输入、输出、卷积步长
     CBatchSize2D m_stepInMove;
@@ -67,10 +80,21 @@ private:
     CBatchSize2D m_stepOut;
     CBatchSize2D m_stepConv;
 
-    CTaker<double*> m_spWeights;
-    CTaker<double*> m_spBais;
-    CActivator* m_pActivator;
-    SOptimizer m_spOptimizer;
+    STensor m_spBatchIn;
+    STensor m_spBatchOut;
+    STensor m_spOutDimVector;
+
+public:
+    CRotConvNetwork(){
+        //卷积核数
+        m_sizeConv.batch = 0;
+        //
+        m_dDropoutRate = 0;
+        //卷积层数
+        m_nLayers = 0;
+        //输入尺寸
+        m_nInputSize = 0;
+    }
 };
 
 #endif//__SimpleWork_NN_CRotConvNetwork_H__

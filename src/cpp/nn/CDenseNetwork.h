@@ -35,7 +35,7 @@ private://IIoArchivable
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.DenseNetwork"; }
-    static int createNetwork(int nCells, const char* szActivator, SNnNetwork& spNetwork);
+    static int createNetwork(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
     int prepareNetwork(const STensor& spBatchIn);
@@ -43,6 +43,7 @@ private:
 private:
     //基础参数
     int m_nCells;
+    double m_dDropoutRate;
     string m_strActivator;
     string m_strOptimizer;
 
@@ -57,7 +58,8 @@ private:
     SOptimizer m_spOptimizer;
     STensor m_spBatchIn;
     STensor m_spBatchOut;
-    STensor m_spOutDimVector;
+    CTaker<bool*> m_spDropout;
+    int m_nEvalDropout;
 
     //环境变量
     static SCtx sCtx;
@@ -67,6 +69,7 @@ public:
         m_nCells = 0;
         m_nInputCells = 0;
         m_nBatchs = 0;
+        m_nEvalDropout = 0;
     }
 };
 

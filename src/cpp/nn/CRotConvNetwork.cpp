@@ -12,29 +12,18 @@ int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double d
         nWidth,
         0
     };
-    spConvolution->m_nPadingWidth = 0;
-    spConvolution->m_nPadingHeight = 0;
     spConvolution->m_nStrideWidth = 1;
     spConvolution->m_nStrideHeight = 1;
     spConvolution->m_dWRotAngle = dWidthRotAngle;
     spConvolution->m_dHRotAngle = dHeightRotAngle;
-    spConvolution->m_pActivator = CActivator::getActivation(szActivator);
-    if(spConvolution->m_pActivator == nullptr) {
-        return sCtx.error((std::string("不支持的激活函数名: ") + szActivator).c_str());
-    }
-    if( COptimizer::getOptimizer(nullptr, spConvolution->m_spOptimizer) != sCtx.success()) {
-        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-    }
+    if( szActivator!=nullptr )
+        spConvolution->m_strActivator = szActivator;
     spNetwork.setPtr(spConvolution.getPtr());
     return sCtx.success();
 }
 
 int CRotConvNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     if( prepareNetwork(spInTensor) != sCtx.success() ) {
-        return sCtx.error();
-    }
-
-    if(spInTensor->getDataSize() != m_nInData) {
         return sCtx.error();
     }
 
@@ -257,7 +246,7 @@ int CRotConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevia
         pWeightDerivationArray,
         pBaisDerivationArray
     };
-    double derivationZ;
+    double deviationZ;
     double pDerivationZ[stepOut.batch];
     double dAngle90, dAngle360, dRatio, dRotRatio[2];
     CRotConv* pRotConv;
@@ -322,65 +311,67 @@ int CRotConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevia
                     //      Y = activation(Z)
                     //      delta = 目标 - Y
                     //      E = delta*delta/2 目标函数
-                    //      derivationZ = d(E) / d(Z) = d(E)/d(delta) * d(delta)/d(Y) * d(F)/d(Z)
+                    //      deviationZ = d(E) / d(Z) = d(E)/d(delta) * d(delta)/d(Y) * d(F)/d(Z)
                     //      其中：
                     //          d(E)/d(delta) = pOutDeviation[iOutput]
                     //          d(delta)/d(Y) = 1
                     //          d(Y)/d(Z) = deactivate(Y)
                     //
-                    derivationZ = (*it.pZDeviatioin);
+                    deviationZ = (*it.pZDeviatioin);
+                    if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) {
 
-                    for(iRot=0; iRot<2; iRot++)
-                    {
-                        pRotConv = pRotConvArray[iRot];
-                        dRatio = dRotRatio[iRot];
-                        it.pIn = varConvBackup.pIn;
-                        it.pInDeviation = varConvBackup.pInDeviation;
-                        it.pWeights = varConvBackup.pWeights + pRotConv->start;
-                        it.pWeightDevivation = varConvBackup.pWeightDevivation + pRotConv->start;
+                        for(iRot=0; iRot<2; iRot++)
+                        {
+                            pRotConv = pRotConvArray[iRot];
+                            dRatio = dRotRatio[iRot];
+                            it.pIn = varConvBackup.pIn;
+                            it.pInDeviation = varConvBackup.pInDeviation;
+                            it.pWeights = varConvBackup.pWeights + pRotConv->start;
+                            it.pWeightDevivation = varConvBackup.pWeightDevivation + pRotConv->start;
+
+                            //
+                            //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
+                            //  
+                            for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
+                                varConvYBackup.pIn = it.pIn;
+                                varConvYBackup.pInDeviation = it.pInDeviation;
+                                varConvYBackup.pWeights = it.pWeights;
+                                varConvYBackup.pWeightDevivation = it.pWeightDevivation;
+                                for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
+                                    varConvXBackup.pIn = it.pIn;
+                                    varConvXBackup.pInDeviation = it.pInDeviation;
+                                    varConvXBackup.pWeights = it.pWeights;
+                                    varConvXBackup.pWeightDevivation = it.pWeightDevivation;
+                                    for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
+                                        
+                                        //
+                                        // 累计计算权重值
+                                        //
+                                        (*it.pInDeviation) += deviationZ * (*it.pWeights) * dRatio;
+                                        (*it.pWeightDevivation) += deviationZ * (*it.pIn) * dRatio;
+
+                                        it.pIn++;
+                                        it.pInDeviation++;
+                                        it.pWeights++;
+                                        it.pWeightDevivation++;
+                                    }
+                                    it.pIn = varConvXBackup.pIn + stepInConv.width;
+                                    it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
+                                    it.pWeights = varConvXBackup.pWeights + pRotConv->width;
+                                    it.pWeightDevivation = varConvXBackup.pWeightDevivation + pRotConv->width;
+                                }
+                                it.pIn = varConvYBackup.pIn + stepInConv.height;
+                                it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
+                                it.pWeights = varConvYBackup.pWeights + pRotConv->height;
+                                it.pWeightDevivation = varConvYBackup.pWeightDevivation + pRotConv->height;
+                            }
+                        }
 
                         //
-                        //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
-                        //  
-                        for(iConvY=0; iConvY<sizeConv.height; iConvY++) {
-                            varConvYBackup.pIn = it.pIn;
-                            varConvYBackup.pInDeviation = it.pInDeviation;
-                            varConvYBackup.pWeights = it.pWeights;
-                            varConvYBackup.pWeightDevivation = it.pWeightDevivation;
-                            for(iConvX=0; iConvX<sizeConv.width; iConvX++) {
-                                varConvXBackup.pIn = it.pIn;
-                                varConvXBackup.pInDeviation = it.pInDeviation;
-                                varConvXBackup.pWeights = it.pWeights;
-                                varConvXBackup.pWeightDevivation = it.pWeightDevivation;
-                                for(iLayer=0; iLayer<sizeConv.layers; iLayer++) {
-                                    
-                                    //
-                                    // 累计计算权重值
-                                    //
-                                    (*it.pInDeviation) += derivationZ * (*it.pWeights) * dRatio;
-                                    (*it.pWeightDevivation) += derivationZ * (*it.pIn) * dRatio;
-
-                                    it.pIn++;
-                                    it.pInDeviation++;
-                                    it.pWeights++;
-                                    it.pWeightDevivation++;
-                                }
-                                it.pIn = varConvXBackup.pIn + stepInConv.width;
-                                it.pInDeviation = varConvXBackup.pInDeviation + stepInConv.width;
-                                it.pWeights = varConvXBackup.pWeights + pRotConv->width;
-                                it.pWeightDevivation = varConvXBackup.pWeightDevivation + pRotConv->width;
-                            }
-                            it.pIn = varConvYBackup.pIn + stepInConv.height;
-                            it.pInDeviation = varConvYBackup.pInDeviation + stepInConv.height;
-                            it.pWeights = varConvYBackup.pWeights + pRotConv->height;
-                            it.pWeightDevivation = varConvYBackup.pWeightDevivation + pRotConv->height;
-                        }
+                        //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-deviationZ)
+                        //
+                        (*it.pBaisDeviation) += (-deviationZ);
                     }
-
-                    //
-                    //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-derivationZ)
-                    //
-                    (*it.pBaisDeviation) += (-derivationZ);
 
                     it.pIn = varConvBackup.pIn;
                     it.pInDeviation = varConvBackup.pInDeviation;
@@ -429,44 +420,25 @@ int CRotConvNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevia
         DVV(pBaisArray, iBais, nConvs) -= DVV(pBaisDerivationArray, iBais, nConvs);
     }
 
-    /*
-    #ifdef _DEBUG
-    {
-        double avgWeight = 0;
-        double maxW = -100000;
-        double minW = 100000;
-        double avgDerivation = 0;
-        double avgBais = 0;
-        for(int iWeight=0;iWeight<nWeights; iWeight++) {
-            avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-            avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
-
-            if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
-                maxW = DVV(pWeightArray,iWeight,nWeights);
-            }
-            if(minW > DVV(pWeightArray,iWeight,nWeights)) {
-                minW = DVV(pWeightArray,iWeight,nWeights);
-            }
-        }
-        for(int iConv = 0; iConv<nConvs; iConv++) {
-            avgBais += abs(DVV(pBaisArray, iConv, nConvs)) / nConvs;
-        }
-        
-        static int t = 0;
-        if( (t++ / 2) % 10 == 0) {
-            std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << "\n";
-        }
-    }
-    #endif//_DEBUG
-    */
-
     return sCtx.success();
 }
 
-int CRotConvNetwork::prepareNetwork(const STensor& spInTensor) {
-    if( !m_spOutDimVector ) {
-        STensor& spInDimVector = spInTensor->getDimVector();
+int CRotConvNetwork::prepareNetwork(const STensor& spBatchIn) {
+    //
+    // 快速检查数量（非严格检查）, 如果严格对比长宽高的化，有点浪费性能，相当于如果
+    // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
+    //
+    int nInputSize = spBatchIn->getDataSize();
+    if( nInputSize == m_nInputSize ) {
+        return sCtx.success();
+    }
 
+    //
+    // 计算参数
+    //
+    int nBatchs, nInputCells, nInputWidth, nInputHeight, nLayers;
+    {
+        STensor& spInDimVector = spBatchIn->getDimVector();
         int nInDims = spInDimVector->getDataSize();
         int* pInDimSizes = spInDimVector->getDataPtr<int>();
 
@@ -477,67 +449,42 @@ int CRotConvNetwork::prepareNetwork(const STensor& spInTensor) {
             return sCtx.error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
         }
 
-        int nTensor = pInDimSizes[0];
-        int nInHeight = pInDimSizes[1];
-        int nInWidth = pInDimSizes[2];
-        if( nInHeight < m_sizeConv.height || nInWidth < m_sizeConv.width ) {
+        nBatchs = pInDimSizes[0];
+        nInputHeight = pInDimSizes[1];
+        nInputWidth = pInDimSizes[2];
+        if( nInputHeight < m_sizeConv.height || nInputWidth < m_sizeConv.width ) {
             return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
         }
 
-        int nInLayers = 1;
+        nLayers = 1;
         for( int i=3; i<nInDims; i++ ) {
-            nInLayers *= pInDimSizes[i];
+            nLayers *= pInDimSizes[i];
         }
-        m_nInData = nTensor*nInHeight*nInWidth*nInLayers;
-        m_sizeConv.layers = nInLayers;
-        m_sizeIn = {
-            nTensor,
-            nInHeight,
-            nInWidth,
-            nInLayers
-        };
+        nInputCells = nInputWidth*nInputHeight*nLayers;
+        if(nBatchs * nInputCells != nInputSize ) {
+            return sCtx.error("输入张量的维度信息核实际数据量不一致，输入张量非法");
+        }
+    }
 
-        m_sizeOut = {
-            m_sizeIn.batch,
-            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-            m_sizeConv.batch
-        };
+    //
+    // 判断是否需要初始化网络
+    //
+    if(m_nLayers == 0) {
 
-        m_stepInConv = {
-            m_sizeIn.height * m_sizeIn.width * nInLayers,
-            m_sizeIn.width * nInLayers,
-            nInLayers
-        };
-
-        m_stepInMove = {  
-            m_stepInConv.batch,
-            m_stepInConv.height * m_nStrideHeight,
-            m_stepInConv.width * m_nStrideWidth
-        };
-
-        m_stepOut = {
-            m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
-            m_sizeOut.width * m_sizeConv.batch,
-            m_sizeConv.batch
-        };
-
-        m_stepConv = {
-            m_sizeConv.height * m_sizeConv.width * nInLayers,
-            m_sizeConv.width * nInLayers,
-            nInLayers
-        };
-
-        if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度向量失败");
+        if( m_sizeConv.batch <= 0 || m_sizeConv.width < 1 || m_sizeConv.height < 1 ) {
+            return sCtx.error("卷积核参数错误");
+        }
+        
+        m_pActivator = CActivator::getActivation(m_strActivator.c_str());
+        if(m_pActivator == nullptr) {
+            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+        }
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), m_spOptimizer) != sCtx.success()) {
+            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
         }
 
-        if( STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
-            return sCtx.error("创建输出张量失败");
-        }
-
-        int nWeights = m_stepConv.batch * m_sizeConv.batch;
         int nConvs = m_sizeConv.batch;
+        int nWeights = nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch;
         double* pWeights = new double[nWeights];
         double* pBais = new double[nConvs];
         m_spWeights.take(pWeights, [](double* pWeights){
@@ -559,6 +506,95 @@ int CRotConvNetwork::prepareNetwork(const STensor& spInTensor) {
         for(int i=0; i<m_sizeConv.batch; i++ ){
             pBais[i] = 0;
         }
+
+        m_sizeIn.batch = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
+        m_nLayers = nLayers;
+    }else {
+        if( m_nLayers != nLayers ) {
+            return sCtx.error("输出张量的层数与初始化时不一致");
+        }
+    }
+
+    //
+    // 判断是否需要初始化运行时参数
+    //
+    if( m_nInputSize != nInputSize ) {
+        
+        m_sizeConv.layers = nLayers;
+        m_sizeIn = {
+            nBatchs,
+            nInputHeight,
+            nInputWidth,
+            nLayers
+        };
+
+        m_sizeOut = {
+            m_sizeIn.batch,
+            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+            m_sizeConv.batch
+        };
+
+        m_stepInConv = {
+            m_sizeIn.height * m_sizeIn.width * nLayers,
+            m_sizeIn.width * nLayers,
+            nLayers
+        };
+
+        m_stepInMove = {  
+            m_stepInConv.batch,
+            m_stepInConv.height * m_nStrideHeight,
+            m_stepInConv.width * m_nStrideWidth
+        };
+
+        m_stepOut = {
+            m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
+            m_sizeOut.width * m_sizeConv.batch,
+            m_sizeConv.batch
+        };
+
+        m_stepConv = {
+            m_sizeConv.height * m_sizeConv.width * nLayers,
+            m_sizeConv.width * nLayers,
+            nLayers
+        };
+
+        if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
+            return sCtx.error("创建输出张量的维度向量失败");
+        }
+
+        if( STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+            return sCtx.error("创建输出张量失败");
+        }
+
+        m_nInputSize = nInputSize;
     }
     return sCtx.success();
 }
+
+
+
+int CRotConvNetwork::toArchive(const SIoArchive& ar) {
+    //基础参数
+    ar.visit("convs", m_sizeConv.batch);
+    ar.visit("dropout", m_dDropoutRate);
+    ar.visit("width", m_sizeConv.width);
+    ar.visit("height", m_sizeConv.height);
+    ar.visit("strideWidth", m_nStrideWidth);
+    ar.visit("strideHeight", m_nStrideHeight);
+    ar.visit("widthRotAngle", m_dWRotAngle);
+    ar.visit("heightRotAngle", m_dHRotAngle);
+    ar.visitString("activator", m_strActivator);
+    ar.visitString("optimizer", m_strOptimizer);
+    ar.visitString("padding", m_strPadding);
+
+    //运行参数
+    ar.visit("nInputLayers", m_nLayers);
+    if(m_nLayers) {
+        ar.visitTaker("weights", m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);
+        ar.visitTaker("bais", m_sizeConv.batch, m_spBais);
+    }
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CRotConvNetwork, CRotConvNetwork::__getClassKey())

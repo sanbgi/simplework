@@ -21,7 +21,6 @@ private://INnNetwork
     int eval(const STensor& spInTensor, STensor& spOutTensor);
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
-
 private://IIoArchivable
     int getVer() { return 220112; }
     const char* getName() { return "ConvNetwork"; } 
@@ -40,6 +39,7 @@ private:
     CBatchSize3D m_sizeConv;
     int m_nStrideWidth;
     int m_nStrideHeight;
+    double m_dDropoutRate;
     string m_strActivator;
     string m_strOptimizer;
     string m_strPadding;
@@ -72,6 +72,8 @@ public:
     CConvolutionNetwork(){
         //卷积核数
         m_sizeConv.batch = 0;
+        //丢弃率
+        m_dDropoutRate = 0;
         //卷积层数
         m_nLayers = 0;
         //输入尺寸
