@@ -162,11 +162,12 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             nLayers
         };
 
-        if( STensor::createVector<int>(m_spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
+        STensor spOutDimVector;
+        if( STensor::createVector<int>(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
             return sCtx.error("创建输出张量的维度向量失败");
         }
 
-        if( STensor::createTensor(m_spBatchOut, m_spOutDimVector, idType, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+        if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
             return sCtx.error("创建输出张量失败");
         }
 
@@ -318,10 +319,13 @@ int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 */
 template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
 
-    spBatchIn = m_spBatchIn;
-    if( int errCode = STensor::createTensor<Q>(spInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
-        return sCtx.error(errCode, "创建输入偏差张量失败");
+    if(!m_spBatchInDeviation) {
+        if( int errCode = STensor::createTensor<Q>(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_spBatchIn.size()) != sCtx.success() ) {
+            return sCtx.error(errCode, "创建输入偏差张量失败");
+        }
     }
+    spBatchIn = m_spBatchIn;
+    spInDeviation = m_spBatchInDeviation;
 
     CBatchSize3D& sizeIn = m_sizeIn;
     CBatchSize3D& sizeOut = m_sizeOut;
@@ -356,6 +360,7 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         pWeightDerivationArray,
         pBaisDeviationArray
     }, itVars, itVars0,itVars1,itVars2,itVars3,itVars4,itVars5,itVars6;
+    memset(it.pInDeviation, 0, sizeof(Q)*stepInConv.batch * sizeIn.batch);
 
     Q deviationZ;
     Q pDeviationZArray[stepOut.batch];

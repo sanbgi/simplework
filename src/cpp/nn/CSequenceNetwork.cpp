@@ -29,8 +29,8 @@ int CSequenceNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
 int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
     STensor spOut = spOutTensor;
     STensor spOutDev = spOutDeviation;
-    std::vector<SNnNetwork>::iterator it = m_arrNetworks.end();
-    while(it-- != m_arrNetworks.begin() ) {
+    std::vector<SNnNetwork>::reverse_iterator it = m_arrNetworks.rbegin();
+    while(it != m_arrNetworks.rend() ) {
         STensor spIn;
         STensor spInDev;
         if( int errCode = (*it)->learn(spOut, spOutDev, spIn, spInDev) != sCtx.success() ) {
@@ -38,6 +38,7 @@ int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevi
         }
         spOut = spIn;
         spOutDev = spInDev;
+        it++;
     }
     spInTensor = spOut;
     spInDeviation = spOutDev;

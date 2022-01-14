@@ -88,7 +88,7 @@ private:
 
     STensor m_spBatchIn;
     STensor m_spBatchOut;
-    STensor m_spOutDimVector;
+    STensor m_spBatchInDeviation;
 
 public:
     CRotConvNetwork(){

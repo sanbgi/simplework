@@ -156,6 +156,7 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
             });
         }
 
+        m_spBatchInDeviation.release();
         m_nBatchs = nBatchs;
     }
     return sCtx.success();
@@ -294,11 +295,13 @@ int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 }
 
 template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
-    
-    spBatchIn = m_spBatchIn;
-    if( int errCode = STensor::createTensor(spBatchInDeviation, spBatchIn->getDimVector(), m_idDataType, spBatchIn->getDataSize()) != sCtx.success() ) {
-        return sCtx.error(errCode, "创建输入偏差张量失败");
+    if( !m_spBatchInDeviation ) {
+        if( int errCode = STensor::createTensor(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_idDataType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
+            return sCtx.error(errCode, "创建输入偏差张量失败");
+        }
     }
+    spBatchIn = m_spBatchIn;
+    spBatchInDeviation = m_spBatchInDeviation;
 
     bool* pDropout = m_spDropout;
     int nDropout = m_nEvalDropout;
@@ -333,6 +336,8 @@ template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const 
         pWeightDerivationArray,
         pBaisDeviationArray
     };
+    memset(it.pInDeviation, 0, sizeof(Q)*nBatchs*nInCells);
+
     Q pZDerivationArray[m_nCells], deviationZ;
     int iTensor, iOutput, iInput;
     for(iTensor=0; iTensor<nBatchs; iTensor++) {

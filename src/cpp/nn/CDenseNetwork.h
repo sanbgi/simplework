@@ -64,6 +64,7 @@ private:
     SOptimizer m_spOptimizer;
     STensor m_spBatchIn;
     STensor m_spBatchOut;
+    STensor m_spBatchInDeviation;
     CTaker<bool*> m_spDropout;
     int m_nEvalDropout;
 
