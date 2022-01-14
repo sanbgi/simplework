@@ -23,7 +23,7 @@ int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double d
     return sCtx.success();
 }
 
-template<typename Q> int CRotConvNetwork::evalT(const STensor& spInTensor, STensor& spOutTensor) {
+template<typename Q> int CRotConvNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     CBatchSize3D& sizeIn = m_sizeIn;
     CBatchSize3D& sizeOut = m_sizeOut;
     CBatchSize3D& sizeConv = m_sizeConv;
@@ -63,7 +63,7 @@ template<typename Q> int CRotConvNetwork::evalT(const STensor& spInTensor, STens
         Q* pWeights;
         Q* pBais;
     }it = {
-        spInTensor->getDataPtr<Q>(),
+        spBatchIn->getDataPtr<Q>(),
         m_spBatchOut->getDataPtr<Q>(),
         (Q*)(void*)m_spWeights,
         (Q*)(void*)m_spBais
@@ -171,8 +171,8 @@ template<typename Q> int CRotConvNetwork::evalT(const STensor& spInTensor, STens
         it.pOut = varTBackup.pOut + stepOut.batch;
     }
 
-    m_spBatchIn = spInTensor;
-    spOutTensor = m_spBatchOut;
+    m_spBatchIn = spBatchIn;
+    spBatchOut = m_spBatchOut;
     return sCtx.success();
 }
 
@@ -192,7 +192,11 @@ int CRotConvNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 }
 
 
-template<typename Q> int CRotConvNetwork::learnT(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
+template<typename Q> int CRotConvNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
+    spBatchIn = m_spBatchIn;
+    if( int errCode = STensor::createTensor<Q>(spInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输入偏差张量失败");
+    }
 
     CBatchSize3D& sizeIn = m_sizeIn;
     CBatchSize3D& sizeOut = m_sizeOut;
@@ -243,9 +247,9 @@ template<typename Q> int CRotConvNetwork::learnT(const STensor& spOutTensor, con
         Q* pBaisDeviation;
         Q* pZDeviatioin;
     }it = {
-        spInTensor->getDataPtr<Q>(),
+        spBatchIn->getDataPtr<Q>(),
         spInDeviation->getDataPtr<Q>(),
-        spOutTensor->getDataPtr<Q>(),
+        spBatchOut->getDataPtr<Q>(),
         spOutDeviation->getDataPtr<Q>(),
         (Q*)(void*)m_spWeights,
         pWeightDerivationArray,

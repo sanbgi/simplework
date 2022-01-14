@@ -20,8 +20,8 @@ void CNnNetwork::run() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createNetwork();
-    //SNnNetwork nn = createRotNetwork();
+    //SNnNetwork nn = createNetwork();
+    SNnNetwork nn = createRotNetwork();
 
     double sumAcc = 0;
     double sumLoss = 0;
@@ -107,7 +107,7 @@ SNnNetwork CNnNetwork::createNetwork() {
 
 SNnNetwork CNnNetwork::createRotNetwork() {
     std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createRotConv(7,7,8,0,15));
+    arrNets.push_back(SNnNetwork::createRotConv(7,7,8,0,20));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createConv(7,7,64));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
