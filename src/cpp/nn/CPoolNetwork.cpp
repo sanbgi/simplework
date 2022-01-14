@@ -20,7 +20,8 @@ int CPoolNetwork::prepareNetwork(const STensor& spBatchIn) {
     // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
     //
     int nInputSize = spBatchIn->getDataSize();
-    if( nInputSize == m_nBatchInSize ) {
+    unsigned int idType = spBatchIn.type();
+    if( nInputSize == m_nBatchInSize && m_idDataType == idType ) {
         return sCtx.success();
     }
 
@@ -71,16 +72,32 @@ int CPoolNetwork::prepareNetwork(const STensor& spBatchIn) {
         return sCtx.error("创建输出张量的维度张量失败");
     }
 
-    if( STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, m_nOutTensorSize * m_nBatchs) != sCtx.success() ) {
+    if( STensor::createTensor(m_spBatchOut, m_spOutDimVector, idType, m_nOutTensorSize * m_nBatchs) != sCtx.success() ) {
         return sCtx.error("创建输出张量失败");
     }
     
+    m_idDataType = idType;
     m_nBatchInSize = nInputCells * nBatchs;
     return sCtx.success();
 }
 
-int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    if(prepareNetwork(spInTensor) != sCtx.success()) {
+int CPoolNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+    if( prepareNetwork(spBatchIn) != sCtx.success() ) {
+        return sCtx.error();
+    }
+
+    if(m_idDataType == CBasicData<double>::getStaticType()) {
+        return evalT<double>(spBatchIn, spBatchOut);
+    }else
+    if(m_idDataType == CBasicData<float>::getStaticType()) {
+        return evalT<float>(spBatchIn, spBatchOut);
+    }
+
+    return sCtx.error("数据类型不支持");
+}
+
+template<typename Q> int CPoolNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
+    if(prepareNetwork(spBatchIn) != sCtx.success()) {
         return sCtx.error();
     }
 
@@ -103,11 +120,11 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
     int nOutWstep = nLayer;
 
     struct CItOutVariables {
-        double* pIn;
-        double* pOut;
+        Q* pIn;
+        Q* pOut;
     }it = {
-        spInTensor->getDataPtr<double>(),
-        m_spBatchOut->getDataPtr<double>(),
+        spBatchIn->getDataPtr<Q>(),
+        m_spBatchOut->getDataPtr<Q>(),
     };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         CItOutVariables varTBackup = {
@@ -127,7 +144,7 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
                     varConvBackup.pIn = it.pIn;
                     varConvBackup.pOut = it.pOut;
 
-                    double dMax = (*it.pIn);
+                    Q dMax = (*it.pIn);
 
                     //
                     //  从输入中找到最大的那个值
@@ -159,23 +176,42 @@ int CPoolNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         it.pOut = varTBackup.pOut + nOutputTensorSize;
     }
     
-    m_spBatchIn = spInTensor;
-    spOutTensor = m_spBatchOut;
+    m_spBatchIn = spBatchIn;
+    spBatchOut = m_spBatchOut;
     return sCtx.success();
 }
 
-int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    if(spOutTensor.getPtr() != m_spBatchOut.getPtr()) {
+int CPoolNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    spInTensor = m_spBatchIn;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spInTensor->getDimVector(), spInTensor->getDataSize()) != sCtx.success() ) {
+    if(spOutDeviation.type() != m_idDataType) {
+        return sCtx.error("数据类型错误");
+    }
+
+    if(m_idDataType == CBasicData<double>::getStaticType()) {
+        return learnT<double>(spBatchOut, spOutDeviation, spBatchIn, spInDeviation);
+    }else
+    if(m_idDataType == CBasicData<float>::getStaticType()) {
+        return learnT<float>(spBatchOut, spOutDeviation, spBatchIn, spInDeviation);
+    }
+    return sCtx.error("数据类型不支持");
+}
+
+template<typename Q>
+int CPoolNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
+        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
+    }
+
+    spBatchIn = m_spBatchIn;
+    if( int errCode = STensor::createTensor(spInDeviation, spBatchIn->getDimVector(), m_idDataType, spBatchIn->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
-    double* pDeviationInputArray = spInDeviation->getDataPtr<double>();
-    memset(pDeviationInputArray,0,sizeof(double)*spInTensor->getDataSize());
+    Q* pDeviationInputArray = spInDeviation->getDataPtr<Q>();
+    memset(pDeviationInputArray,0,sizeof(Q)*spBatchIn->getDataSize());
 
     int nLayer = m_nInputLayer;
     int nInputWidth = m_nInputWidth;
@@ -200,13 +236,13 @@ int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviatio
     int nOutWstep = nLayer;
 
     struct CItOutVariables {
-        double* pIn;
-        double* pInDeviation;
-        double* pOutDeviation;
+        Q* pIn;
+        Q* pInDeviation;
+        Q* pOutDeviation;
     }it = {
-        spInTensor->getDataPtr<double>(),
-        spInDeviation->getDataPtr<double>(),
-        spOutDeviation->getDataPtr<double>(),
+        spBatchIn->getDataPtr<Q>(),
+        spInDeviation->getDataPtr<Q>(),
+        spOutDeviation->getDataPtr<Q>(),
     };
     for(int iTensor=0; iTensor<nTensor; iTensor++) {
         CItOutVariables varTBackup = {
@@ -230,8 +266,8 @@ int CPoolNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviatio
                     varConvBackup.pInDeviation = it.pInDeviation;
                     varConvBackup.pOutDeviation = it.pOutDeviation;
 
-                    double dMax = (*it.pIn);
-                    double* pExpectDelta = it.pInDeviation;
+                    Q dMax = (*it.pIn);
+                    Q* pExpectDelta = it.pInDeviation;
 
                     //
                     //  从输入中找到最大的那个点，作为反向传到的点

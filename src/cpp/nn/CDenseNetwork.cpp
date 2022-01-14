@@ -117,8 +117,20 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
         m_nBatchs = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
         m_nInputCells = nInputCells;
         m_idDataType = idType;
-    }else if(m_nInputCells != nInputCells) {
-        return sCtx.error("当前输入的参数，与神经网络需要的参数不符");
+    }else{
+        if(m_nInputCells != nInputCells) {
+            //
+            // TODO: 重新初始化权值?(如果重新初始化，则已有权值将被清空，需要小心)
+            //
+            return sCtx.error("当前输入的参数，与神经网络需要的参数不符");
+        }
+
+        if(m_idDataType != idType) {
+            //
+            // TODO：权值类型改变？
+            //
+            return sCtx.error("输入张量的类型与初始化时不一致");
+        }
     }
 
     if(m_nBatchs != nBatchs) {

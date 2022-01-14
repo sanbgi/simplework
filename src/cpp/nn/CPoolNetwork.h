@@ -25,6 +25,10 @@ private://IIoArchivable
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
+private:
+    template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);
+    template<typename Q> int learnT(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
+
 public://Factory
     static const char* __getClassKey() { return "sw.nn.PoolNetwork"; }
     static int createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork);
@@ -37,6 +41,7 @@ private:
     string m_strPadding;
 
     int m_nBatchInSize;
+    unsigned int m_idDataType;
     int m_nBatchs;
     int m_nInputTensorSize;
     int m_nInputWidth;
@@ -58,6 +63,7 @@ protected:
         m_nPoolWidth = -1;
         m_nPoolHeight = -1;
         m_nBatchInSize = -1;
+        m_idDataType = -1;
     }
 
     int prepareNetwork(const STensor& inputTensor);
