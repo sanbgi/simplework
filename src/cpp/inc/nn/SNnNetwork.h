@@ -42,12 +42,6 @@ public:
         return nn;
     }
 
-    static SNnNetwork createTwoPoleDense(int nCells, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createTwoPoleDense(nCells,szActivator,nn);
-        return nn;
-    }
-
     static SNnNetwork createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createPool(nWidth, nHeight, nStrideWidth, nStrideHeight, nn);
@@ -63,12 +57,6 @@ public:
     static SNnNetwork createRotConv(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator = nullptr) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createRotConvolution(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, nn);
-        return nn;
-    }
-
-    static SNnNetwork createTwoPoleConv(int nWidth, int nHeight, int nConv, const char* szActivator = nullptr ) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createTwoPoleConvolution(nWidth, nHeight, nConv, szActivator, nn);
         return nn;
     }
 

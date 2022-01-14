@@ -26,21 +26,11 @@ public:
     //      对于Softmax(交叉熵):
     //          E = -求和((Yi-Delta)*log(Yi))
     //
-    virtual void activate( int nData, double* pZArray, double* pYArray);
-    virtual void deactivate( int nData, double* pYArray, double* pYDeltaArray, double* pDzArray);
+    virtual void activate( int nData, void* pZArray, void* pYArray);
+    virtual void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray);
 
 public:
-    static CActivator* getActivation(const char* szActivator = nullptr);
-
-public:
-    static CActivator* getReLU();
-    static CActivator* getLeakyReLU();
-    static CActivator* getELU();
-    static CActivator* getSigmod();
-    static CActivator* getTanh();
-    static CActivator* getSoftmax();
-    static CActivator* getNeuralActivator();
-    static CActivator* getNoneActivator();
+    static CActivator* getActivation(unsigned int idType, const char* szActivator = nullptr);
 };
 
 #endif//__SimpleWork_NN_CActivation_H__

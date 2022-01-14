@@ -13,7 +13,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Optimizer)
         //
         // 获取用于保存输入偏导数的地址
         //
-        virtual double* getDeviationPtr(int nDeviations) = 0;
+        virtual void* getDeviationPtr(int nDeviations) = 0;
 
         //
         // 更新偏差值
@@ -26,7 +26,7 @@ SIMPLEWORK_INTERFACECLASS_LEAVE(Optimizer)
 
 class COptimizer {
 public:
-    static int getOptimizer(const char* szOptimizer, SOptimizer& spOptimizer); 
+    static int getOptimizer(const char* szOptimizer, unsigned int idType, SOptimizer& spOptimizer); 
 };
 
 #endif//__SimpleWork_NN_COptmizer_H__

@@ -27,6 +27,11 @@ private://IIoArchivable
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
+private:
+    template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);
+    template<typename Q> int learnT(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
+    template<typename Q> int initWeightT(int nWeights, int nConvs);
+
 public://Factory
     static const char* __getClassKey() { return "sw.nn.ConvNetwork"; }
     static int createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork);
@@ -46,8 +51,9 @@ private:
 
     //网络参数
     int m_nLayers;
-    CTaker<double*> m_spWeights;
-    CTaker<double*> m_spBais;
+    unsigned int m_idDataType;
+    CTaker<char*> m_spWeights;
+    CTaker<char*> m_spBais;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
 
@@ -78,6 +84,8 @@ public:
         m_nLayers = 0;
         //输入尺寸
         m_nInputSize = 0;
+        //
+        m_idDataType = 0;
     }
 };
 

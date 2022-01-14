@@ -6,6 +6,7 @@
 //
 // 参考：https://www.cnblogs.com/rinroll/p/12162342.html
 //
+template<typename Q>
 class CRMSPropOptimizer : CObject, IOptimizer {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -13,29 +14,29 @@ class CRMSPropOptimizer : CObject, IOptimizer {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private:
-    double* getDeviationPtr(int nDeviations){
+    void* getDeviationPtr(int nDeviations){
         if(nDeviations == 0) {
             return nullptr;
         }
 
         if(m_nDeviations != nDeviations) {
-            m_spDeviations.take(new double[nDeviations*2], [](double* ptr) {
+            m_spDeviations.take(new Q[nDeviations*2], [](Q* ptr) {
                 delete[] ptr;
             });
             m_nDeviations = nDeviations;
             m_pDeviation = m_spDeviations;
             m_pVelocity = m_pDeviation + nDeviations;
-            memset(m_pDeviation, 0, sizeof(double) * nDeviations * 2);
+            memset(m_pDeviation, 0, sizeof(Q) * nDeviations * 2);
         }
         return m_pDeviation;
     }
 
     int updateDeviation(int nBatchSize){
-        const double esp = 1e-6;
-        const double learnRate = 0.001;
-        const double decayRate = 0.99;
-        double* pDeviation = m_pDeviation;
-        double* pVelocity = m_pVelocity;
+        const Q esp = 1e-6;
+        const Q learnRate = 0.001;
+        const Q decayRate = 0.99;
+        Q* pDeviation = m_pDeviation;
+        Q* pVelocity = m_pVelocity;
         int nDeviation = m_nDeviations;
         for( int i=0; i<nDeviation; i++) {
             (*pDeviation) = (*pDeviation) / nBatchSize;
@@ -61,9 +62,9 @@ public:
 
 private:
     int m_nDeviations;
-    CTaker<double*> m_spDeviations;
-    double* m_pDeviation;
-    double* m_pVelocity;
+    CTaker<Q*> m_spDeviations;
+    Q* m_pDeviation;
+    Q* m_pVelocity;
 };
 
 

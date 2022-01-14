@@ -1,4 +1,5 @@
 #include "CConvolutionNetwork.h"
+#include "CType.h"
 #include "math.h"
 
 
@@ -31,8 +32,9 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     // 快速检查数量（非严格检查）, 如果严格对比长宽高的化，有点浪费性能，相当于如果
     // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
     //
-    int nInputSize = spBatchIn->getDataSize();
-    if( nInputSize == m_nInputSize ) {
+    int nInputSize = spBatchIn.size();
+    unsigned int idType = spBatchIn.type();
+    if( nInputSize == m_nInputSize && m_idDataType == idType) {
         return sCtx.success();
     }
 
@@ -78,42 +80,30 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("卷积核参数错误");
         }
         
-        m_pActivator = CActivator::getActivation(m_strActivator.c_str());
+        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
         if(m_pActivator == nullptr) {
             return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
         }
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), m_spOptimizer) != sCtx.success()) {
+
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
             return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
         }
 
         int nConvs = m_sizeConv.batch;
         int nWeights = nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch;
-        double* pWeights = new double[nWeights];
-        double* pBais = new double[nConvs];
-        m_spWeights.take(pWeights, [](double* pWeights){
-            delete[] pWeights;
-        });
-        m_spBais.take(pBais, [](double* pBais){
-            delete[] pBais;
-        });
-
-        //
-        // TODO：权重初始化采用什么策略？nadam优化算法下，即便所有权重初始值为零，仍然不影响迭代
-        //
-        double xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
-        for(int i=0; i<nWeights; i++) {
-            //pWeights[i] = 0;
-            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
-        }
-
-        for(int i=0; i<m_sizeConv.batch; i++ ){
-            pBais[i] = 0;
+        if(idType == CBasicData<double>::getStaticType()) {
+            initWeightT<double>(nWeights, nConvs);
+        }else if(idType == CBasicData<float>::getStaticType()) {
+            initWeightT<float>(nWeights, nConvs);
+        }else{
+            return sCtx.error("不支持的数据类型");
         }
 
         m_sizeIn.batch = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
         m_nLayers = nLayers;
+        m_idDataType = idType;
     }else {
-        if( m_nLayers != nLayers ) {
+        if( m_nLayers != nLayers || m_idDataType != idType ) {
             return sCtx.error("输出张量的层数与初始化时不一致");
         }
     }
@@ -166,7 +156,7 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("创建输出张量的维度向量失败");
         }
 
-        if( STensor::createTensor<double>(m_spBatchOut, m_spOutDimVector, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+        if( STensor::createTensor(m_spBatchOut, m_spOutDimVector, idType, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
             return sCtx.error("创建输出张量失败");
         }
 
@@ -175,11 +165,33 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     return sCtx.success();
 }
 
+template<typename Q> int CConvolutionNetwork::initWeightT(int nWeights, int nConvs) {
+    Q* pWeights = new Q[nWeights];
+    Q* pBais = new Q[nConvs];
+    m_spWeights.take( (char*)pWeights, [](char* pWeights){
+        delete[] (Q*)pWeights;
+    });
+    m_spBais.take((char*)pBais, [](char* pBais){
+        delete[] (Q*)pBais;
+    });
 
-int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
-    if( prepareNetwork(spBatchIn) != sCtx.success() ) {
-        return sCtx.error();
+    //
+    // TODO：权重初始化采用什么策略？nadam优化算法下，即便所有权重初始值为零，仍然不影响迭代
+    //
+    Q xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
+    for(int i=0; i<nWeights; i++) {
+        //pWeights[i] = 0;
+        pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
     }
+
+    for(int i=0; i<m_sizeConv.batch; i++ ){
+        pBais[i] = 0;
+    }
+
+    return 0;
+}
+
+template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
     CBatchSize3D& sizeIn = m_sizeIn;
     CBatchSize3D& sizeOut = m_sizeOut;
@@ -189,19 +201,19 @@ int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     CBatchSize2D& stepOut = m_stepOut;
     CBatchSize2D& stepConv = m_stepConv;
     struct CItOutVariables {
-        double* pIn;
-        double* pOut;
-        double* pWeights;
-        double* pBais;
+        Q* pIn;
+        Q* pOut;
+        Q* pWeights;
+        Q* pBais;
         int index;
     }itVars0, itVars1, itVars2, itVars3, itVars4, itVars5, itVars6, it = {
-        spBatchIn->getDataPtr<double>(),
-        m_spBatchOut->getDataPtr<double>(),
-        m_spWeights,
-        m_spBais,
+        spBatchIn->getDataPtr<Q>(),
+        m_spBatchOut->getDataPtr<Q>(),
+        (Q*)(void*)m_spWeights,
+        (Q*)(void*)m_spBais,
     };
 
-    double dConv;
+    Q dConv;
     for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
         itVars0.pOut = it.pOut;
@@ -268,6 +280,21 @@ int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     return sCtx.success();
 }
 
+int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+    if( prepareNetwork(spBatchIn) != sCtx.success() ) {
+        return sCtx.error();
+    }
+
+    if(m_idDataType == CBasicData<double>::getStaticType()) {
+        return evalT<double>(spBatchIn, spBatchOut);
+    }else
+    if(m_idDataType == CBasicData<float>::getStaticType()) {
+        return evalT<float>(spBatchIn, spBatchOut);
+    }
+
+    return sCtx.error("数据类型不支持");
+}
+
 
 /*
     #include <sys/time.h>
@@ -278,15 +305,11 @@ int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     gettimeofday(&t3, nullptr);
     long dt1 = (t2.tv_sec-t1.tv_sec)*1000000+(t2.tv_usec-t1.tv_usec);
     long dt2 = (t3.tv_sec-t2.tv_sec)*1000000+(t3.tv_usec-t2.tv_usec);
-
 */
-int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
-    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
-        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
-    }
+template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
 
     spBatchIn = m_spBatchIn;
-    if( int errCode = STensor::createTensor<double>(spInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
+    if( int errCode = STensor::createTensor<Q>(spInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
@@ -300,32 +323,32 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
 
     int nConvs = sizeConv.batch;
     int nWeights = stepConv.batch * sizeConv.batch;
-    double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+nConvs);
-    double* pBaisDeviationArray = pWeightDerivationArray+nWeights;
-    memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+nConvs));
+    Q* pWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nWeights+nConvs);
+    Q* pBaisDeviationArray = pWeightDerivationArray+nWeights;
+    memset(pWeightDerivationArray, 0 ,sizeof(Q)*(nWeights+nConvs));
 
     struct CItOutVariables {
-        double* pIn;
-        double* pInDeviation;
-        double* pOut;
-        double* pOutDeviation;
-        double* pWeights;
-        double* pWeightDevivation;
-        double* pBaisDeviation;
-        double* pZDeviatioin;
+        Q* pIn;
+        Q* pInDeviation;
+        Q* pOut;
+        Q* pOutDeviation;
+        Q* pWeights;
+        Q* pWeightDevivation;
+        Q* pBaisDeviation;
+        Q* pZDeviatioin;
         int index;
     }it = {
-        spBatchIn->getDataPtr<double>(),
-        spInDeviation->getDataPtr<double>(),
-        spBatchOut->getDataPtr<double>(),
-        spOutDeviation->getDataPtr<double>(),
-        m_spWeights,
+        spBatchIn->getDataPtr<Q>(),
+        spInDeviation->getDataPtr<Q>(),
+        spBatchOut->getDataPtr<Q>(),
+        spOutDeviation->getDataPtr<Q>(),
+        (Q*)(void*)m_spWeights,
         pWeightDerivationArray,
         pBaisDeviationArray
     }, itVars, itVars0,itVars1,itVars2,itVars3,itVars4,itVars5,itVars6;
 
-    double deviationZ;
-    double pDeviationZArray[stepOut.batch];
+    Q deviationZ;
+    Q pDeviationZArray[stepOut.batch];
 
     itVars = it;
     for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
@@ -451,13 +474,13 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
     // 
     // 权重值更新，需要在输入偏导数计算完成后进行，否则，中间会影响输入偏导数值
     //
-    double* pWeightEnd = it.pWeights+nWeights;
+    Q* pWeightEnd = it.pWeights+nWeights;
     while(it.pWeights != pWeightEnd) {
         *it.pWeights -= *it.pWeightDevivation;
         it.pWeights++, it.pWeightDevivation++;
     }
-    double* pBais = m_spBais;
-    double* pBaisEnd = pBais+nConvs;
+    Q* pBais = (Q*)(void*)m_spBais;
+    Q* pBaisEnd = pBais+nConvs;
     while(pBais != pBaisEnd) {
         *pBais -= *it.pBaisDeviation;
         pBais++, it.pBaisDeviation++;
@@ -497,6 +520,24 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
     return sCtx.success();
 }
 
+int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
+        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
+    }
+
+    if(spOutDeviation.type() != m_idDataType) {
+        return sCtx.error("数据类型错误");
+    }
+
+    if(m_idDataType == CBasicData<double>::getStaticType()) {
+        return learnT<double>(spBatchOut, spOutDeviation, spBatchIn, spInDeviation);
+    }else
+    if(m_idDataType == CBasicData<float>::getStaticType()) {
+        return learnT<float>(spBatchOut, spOutDeviation, spBatchIn, spInDeviation);
+    }
+    return sCtx.error("数据类型不支持");
+}
+
 int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
     //基础参数
     ar.visit("convs", m_sizeConv.batch);
@@ -511,9 +552,11 @@ int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
 
     //运行参数
     ar.visit("inputLayers", m_nLayers);
+    ar.visit("dataType", m_idDataType);
     if(m_nLayers) {
-        ar.visitTaker("weights", m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);
-        ar.visitTaker("bais", m_sizeConv.batch, m_spBais);
+        int nBytes = CType::getTypeBytes(m_idDataType);
+        ar.visitTaker("weights", nBytes * m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);
+        ar.visitTaker("bais", nBytes * m_sizeConv.batch, m_spBais);
     }
     return sCtx.success();
 }

@@ -46,6 +46,11 @@ public://Factory
     static int createNetwork(int nWidth, int nHeight, int nConvs, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
+    template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);
+    template<typename Q> int learnT(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
+    template<typename Q> int initWeightT(int nWeights, int nConvs);
+
+private:
     int prepareNetwork(const STensor& inputTensor);
 
 private:
@@ -62,8 +67,9 @@ private:
 
     //网络参数
     int m_nLayers;
-    CTaker<double*> m_spWeights;
-    CTaker<double*> m_spBais;
+    unsigned int m_idDataType;
+    CTaker<char*> m_spWeights;
+    CTaker<char*> m_spBais;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
 

@@ -6,27 +6,28 @@
 //
 // 参考：https://cloud.tencent.com/developer/article/1468547
 //
+template<typename Q>
 class CAdaMaxOptimizer : CObject, IOptimizer {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IOptimizer)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private:
-    double* getDeviationPtr(int nDeviations){
+private: 
+    void* getDeviationPtr(int nDeviations){
         if(nDeviations == 0) {
             return nullptr;
         }
 
         if(m_nDeviations != nDeviations) {
-            m_spDeviations.take(new double[nDeviations*3], [](double* ptr) {
+            m_spDeviations.take(new Q[nDeviations*3], [](Q* ptr) {
                 delete[] ptr;
             });
             m_nDeviations = nDeviations;
             m_pDeviation = m_spDeviations;
             m_pMomentum = m_pDeviation + nDeviations;
             m_pS = m_pMomentum + nDeviations;
-            memset(m_pDeviation, 0, sizeof(double) * nDeviations * 3);
+            memset(m_pDeviation, 0, sizeof(Q) * nDeviations * 3);
             resetVars();
         }
         return m_pDeviation;
@@ -34,21 +35,21 @@ private:
 
     int updateDeviation(int nBatchSize){
 
-        const double esp = 1e-8;
-        const double learnRate = 0.001;
-        const double beta1 = 0.9;
-        const double beta2 = 0.999;
+        const Q esp = 1e-8;
+        const Q learnRate = 0.001;
+        const Q beta1 = 0.9;
+        const Q beta2 = 0.999;
 
         //
         // 更新一阶、二阶动量校正参数
         //
         m_dBeta1Bais *= beta1;
 
-        double momentum, velocity;
-        double beta1Bais = m_dBeta1Bais;
-        double* pDeviation = m_pDeviation;
-        double* pMomentum = m_pMomentum;
-        double* pS = m_pS;
+        Q momentum, velocity;
+        Q beta1Bais = m_dBeta1Bais;
+        Q* pDeviation = m_pDeviation;
+        Q* pMomentum = m_pMomentum;
+        Q* pS = m_pS;
         int nDeviation = m_nDeviations;
         for( int i=0; i<nDeviation; i++) {
             (*pDeviation) = (*pDeviation) / nBatchSize;
@@ -79,11 +80,11 @@ public:
 
 private:
     int m_nDeviations;
-    CTaker<double*> m_spDeviations;
-    double* m_pDeviation;
-    double* m_pMomentum;
-    double* m_pS;
-    double m_dBeta1Bais;
+    CTaker<Q*> m_spDeviations;
+    Q* m_pDeviation;
+    Q* m_pMomentum;
+    Q* m_pS;
+    Q m_dBeta1Bais;
 };
 
 

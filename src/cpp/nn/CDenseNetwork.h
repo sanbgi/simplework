@@ -33,6 +33,11 @@ private://IIoArchivable
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
+private:
+    template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);
+    template<typename Q> int learnT(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
+    template<typename Q> int initWeightT(int nWeights, int nConvs);
+
 public://Factory
     static const char* __getClassKey() { return "sw.nn.DenseNetwork"; }
     static int createNetwork(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork);
@@ -49,8 +54,9 @@ private:
 
     //运行参数
     int m_nInputCells;
-    CTaker<double*> m_spWeights;
-    CTaker<double*> m_spBais;
+    unsigned int m_idDataType;
+    CTaker<char*> m_spWeights;
+    CTaker<char*> m_spBais;
 
     //缓存参数
     int m_nBatchs;

@@ -1,4 +1,5 @@
 #include "CDenseNetwork.h"
+#include "CType.h"
 #include <math.h>
 #include <iostream>
 #include <time.h>
@@ -15,13 +16,43 @@ int CDenseNetwork::createNetwork(int nCells, double dDropoutRate, const char* sz
     return sCtx.success();
 }
 
+template<typename Q> int CDenseNetwork::initWeightT(int nWeights, int nCells) {
+    Q* pWeights = new Q[nWeights];
+    Q* pBais = new Q[nCells];
+    m_spWeights.take((char*)pWeights, [](char* pWeights){
+        delete[] (Q*)pWeights;
+    });
+    m_spBais.take((char*)pBais, [](char* pBais){
+        delete[] (Q*)pBais;
+    });
+
+    //
+    // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
+    //
+    /*
+    Q xWeight = 1.0/nInputCells;
+    for(int i=0; i<nWeight; i++) {
+        *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
+    }*/
+    Q xWeight = 0.1;//sqrt(1.0/nInputCells);
+    for(int i=0; i<nWeights; i++) {
+        pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
+    }
+    for(int i=0; i<nCells; i++ ){
+        pBais[i] = 0;
+    }
+
+    return 0;
+}
+
 int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     // 快速检查数量（非严格检查）, 如果严格对比长宽高的化，有点浪费性能，相当于如果
     // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
     //
     int nInputSize = spBatchIn->getDataSize();
-    if( nInputSize == m_nInputCells * m_nBatchs ) {
+    unsigned int idType = spBatchIn.type();
+    if( nInputSize == m_nInputCells * m_nBatchs  && m_idDataType == idType) {
         return sCtx.success();
     }
 
@@ -65,42 +96,27 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("不允许全连接网络细胞数或输入细胞数为零");
         }
         
-        m_pActivator = CActivator::getActivation(m_strActivator.c_str());
+        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
         if(m_pActivator == nullptr) {
             return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
         }
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), m_spOptimizer) != sCtx.success()) {
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
             return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
         }
 
-        int nWeight = m_nCells*nInputCells;
-        double* pWeights = new double[nWeight];
-        double* pBais = new double[m_nCells];
-        m_spWeights.take(pWeights, [](double* pWeights){
-            delete[] pWeights;
-        });
-        m_spBais.take(pBais, [](double* pBais){
-            delete[] pBais;
-        });
+        int nWeights = m_nCells*nInputCells;
 
-        //
-        // 初始化权重值，从[0-1]均匀分布（注意不是随机值）
-        //
-        /*
-        double xWeight = 1.0/nInputCells;
-        for(int i=0; i<nWeight; i++) {
-            *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
-        }*/
-        double xWeight = 0.1;//sqrt(1.0/nInputCells);
-        for(int i=0; i<nWeight; i++) {
-            pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
-        }
-        for(int i=0; i<m_nCells; i++ ){
-            pBais[i] = 0;
+        if(idType == CBasicData<double>::getStaticType()) {
+            initWeightT<double>(nWeights, m_nCells);
+        }else if(idType == CBasicData<float>::getStaticType()) {
+            initWeightT<float>(nWeights, m_nCells);
+        }else{
+            return sCtx.error("不支持的数据类型");
         }
 
         m_nBatchs = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
         m_nInputCells = nInputCells;
+        m_idDataType = idType;
     }else if(m_nInputCells != nInputCells) {
         return sCtx.error("当前输入的参数，与神经网络需要的参数不符");
     }
@@ -115,7 +131,7 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
         }
 
-        if( int errCode = STensor::createTensor<double>(m_spBatchOut, spOutDimVector, nBatchs * m_nCells) != sCtx.success() ) {
+        if( int errCode = STensor::createTensor(m_spBatchOut, spOutDimVector, idType, nBatchs * m_nCells) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输出张量失败");
         }
 
@@ -133,12 +149,8 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
     return sCtx.success();
 }
 
-
-int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
-    if( int errCode = prepareNetwork(spBatchIn) != sCtx.success() ) {
-        return errCode;
-    }
-
+template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut)
+{
     int nBatchs = m_nBatchs;
     int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
@@ -159,21 +171,21 @@ int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         }
     }
     m_nEvalDropout = nDropout;
-    double xDropScale = nOutCells / (double)(nOutCells-nDropout);
+    Q xDropScale = nOutCells / (Q)(nOutCells-nDropout);
 
     struct CItOutVariables {
-        double* pIn;
-        double* pOut;
-        double* pWeight;
-        double* pBais;
+        Q* pIn;
+        Q* pOut;
+        Q* pWeight;
+        Q* pBais;
     }varTBackup, varOBackup, it = {
-        spBatchIn->getDataPtr<double>(),
-        m_spBatchOut->getDataPtr<double>(),
-        m_spWeights,
-        m_spBais
+        spBatchIn->getDataPtr<Q>(),
+        m_spBatchOut->getDataPtr<Q>(),
+        (Q*)(void*)m_spWeights,
+        (Q*)(void*)m_spBais
     };
 
-    double dOut;
+    Q dOut;
     int iTensor, iOutput, iInput;
     for(iTensor=0; iTensor<nBatchs; iTensor++) {
         varTBackup = {
@@ -254,20 +266,32 @@ int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     return sCtx.success();
 }
 
-int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
-    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
-        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
+int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+    if( int errCode = prepareNetwork(spBatchIn) != sCtx.success() ) {
+        return errCode;
     }
 
+    if(m_idDataType == CBasicData<double>::getStaticType()) {
+        return evalT<double>(spBatchIn, spBatchOut);
+    }else
+    if(m_idDataType == CBasicData<float>::getStaticType()) {
+        return evalT<float>(spBatchIn, spBatchOut);
+    }
+
+    return sCtx.error("数据类型不支持");
+}
+
+template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+    
     spBatchIn = m_spBatchIn;
-    if( int errCode = STensor::createTensor<double>(spBatchInDeviation, spBatchIn->getDimVector(), spBatchIn->getDataSize()) != sCtx.success() ) {
+    if( int errCode = STensor::createTensor(spBatchInDeviation, spBatchIn->getDimVector(), m_idDataType, spBatchIn->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 
     bool* pDropout = m_spDropout;
     int nDropout = m_nEvalDropout;
-    double xScaleDropout = (m_nCells - nDropout) / (double) m_nCells;
-    double* pDev;
+    Q xScaleDropout = (m_nCells - nDropout) / (Q) m_nCells;
+    Q* pDev;
     bool* pDrop;
 
     int nBatchs = m_nBatchs;
@@ -275,29 +299,29 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
     int nOutputTensorSize = m_nCells;
     int nWeights = m_nCells * m_nInputCells;
     
-    double* pWeightDerivationArray = m_spOptimizer->getDeviationPtr(nWeights+m_nCells);
-    double* pBaisDeviationArray = pWeightDerivationArray+nWeights;
-    memset(pWeightDerivationArray, 0 ,sizeof(double)*(nWeights+m_nCells));
+    Q* pWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nWeights+m_nCells);
+    Q* pBaisDeviationArray = pWeightDerivationArray+nWeights;
+    memset(pWeightDerivationArray, 0 ,sizeof(Q)*(nWeights+m_nCells));
 
     struct CItOutVariables {
-        double* pIn;
-        double* pInDeviation;
-        double* pOut;
-        double* pOutDeviation;
-        double* pWeight;
-        double* pWeightDeviation;
-        double* pBaisDeviation;
-        double* pZDeviatioin;
+        Q* pIn;
+        Q* pInDeviation;
+        Q* pOut;
+        Q* pOutDeviation;
+        Q* pWeight;
+        Q* pWeightDeviation;
+        Q* pBaisDeviation;
+        Q* pZDeviatioin;
     }varTBackup, varOBackup, it = {
-        spBatchIn->getDataPtr<double>(),
-        spBatchInDeviation->getDataPtr<double>(),
-        spBatchOut->getDataPtr<double>(),
-        spBatchOutDeviation->getDataPtr<double>(),
-        m_spWeights,
+        spBatchIn->getDataPtr<Q>(),
+        spBatchInDeviation->getDataPtr<Q>(),
+        spBatchOut->getDataPtr<Q>(),
+        spBatchOutDeviation->getDataPtr<Q>(),
+        (Q*)(void*)m_spWeights,
         pWeightDerivationArray,
         pBaisDeviationArray
     };
-    double pZDerivationArray[m_nCells], deviationZ;
+    Q pZDerivationArray[m_nCells], deviationZ;
     int iTensor, iOutput, iInput;
     for(iTensor=0; iTensor<nBatchs; iTensor++) {
         varTBackup = {
@@ -406,19 +430,37 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
 
     m_spOptimizer->updateDeviation(nBatchs);
 
-    double* pWeightArray = m_spWeights;
-    double* pWeightEnd = pWeightArray+nWeights;
+    Q* pWeightArray = (Q*)(void*)m_spWeights;
+    Q* pWeightEnd = pWeightArray+nWeights;
     while(pWeightArray != pWeightEnd) {
         *pWeightArray -= *pWeightDerivationArray;
         pWeightArray++, pWeightDerivationArray++;
     }
-    double* pBaisArray = m_spBais;
-    double* pBaisEnd = pBaisArray+m_nCells;
+    Q* pBaisArray = (Q*)(void*)m_spBais;
+    Q* pBaisEnd = pBaisArray+m_nCells;
     while(pBaisArray != pBaisEnd) {
         *pBaisArray -= *pBaisDeviationArray;
         pBaisArray++, pBaisDeviationArray++;
     }
     return sCtx.success();
+}
+
+int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
+        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
+    }
+
+    if(spBatchOut.type() != m_idDataType) {
+        return sCtx.error("数据类型错误");
+    }
+
+    if(m_idDataType == CBasicData<double>::getStaticType()) {
+        return learnT<double>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
+    }else
+    if(m_idDataType == CBasicData<float>::getStaticType()) {
+        return learnT<float>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
+    }
+    return sCtx.error("数据类型不支持");
 }
 
 int CDenseNetwork::toArchive(const SIoArchive& ar) {
@@ -430,9 +472,11 @@ int CDenseNetwork::toArchive(const SIoArchive& ar) {
 
     //运行参数
     ar.visit("nInputCells", m_nInputCells);
+    ar.visit("dataType", m_idDataType);
     if(m_nInputCells) {
-        ar.visitTaker("weights", m_nCells*m_nInputCells, m_spWeights);
-        ar.visitTaker("bais", m_nCells, m_spBais);
+        int nBytes = CType::getTypeBytes(m_idDataType);
+        ar.visitTaker("weights", nBytes*m_nCells*m_nInputCells, m_spWeights);
+        ar.visitTaker("bais", nBytes*m_nCells, m_spBais);
     }
     return sCtx.success();
 }

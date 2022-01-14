@@ -2,10 +2,8 @@
 #include "nn.h"
 #include "CNnNetwork.h"
 #include "CDenseNetwork.h"
-#include "CTwoPoleDenseNetwork.h"
 #include "CConvolutionNetwork.h"
 #include "CRotConvNetwork.h"
-#include "CTwoPoleConvNetwork.h"
 #include "CSequenceNetwork.h"
 #include "CParallelNetwork.h"
 #include "CPoolNetwork.h"
@@ -28,20 +26,12 @@ public:
         return CDenseNetwork::createNetwork(nCells, dDropoutRate, szActivator, spNetwork);
     }
 
-    int createTwoPoleDense(int nCells, const char* szActivator, SNnNetwork& spNetwork) {
-        return CTwoPoleDenseNetwork::createNetwork(nCells, szActivator, spNetwork);
-    }
-
     int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNnNetwork& spNetwork) {
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
     int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
         return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
-    }
-
-    int createTwoPoleConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNnNetwork& spNetwork) {
-        return CTwoPoleConvNetwork::createNetwork(nWidth, nHeight, nConv, szActivator, spNetwork);
     }
 
     int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {

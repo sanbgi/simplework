@@ -82,6 +82,21 @@ public:
         return spOut;
     }
 
+    int size() const{
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->getDataSize() : 0;
+    }
+
+    unsigned int type() const {
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->getDataType() : 0;
+    }
+
+    template<typename Q> Q* data(int iPos = 0) const{
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->getDataPtr<Q>(iPos) : nullptr;
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

@@ -21,6 +21,9 @@ public:
     }
 
     unsigned int getTypeIdentifier(const char* szDataTypeKey) {
+        if(szDataTypeKey == nullptr) {
+            return 0;
+        }
         return std::hash<std::string>()(szDataTypeKey);
     }
 };

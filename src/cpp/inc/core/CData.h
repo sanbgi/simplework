@@ -117,6 +117,8 @@ private:
             return "sw.core.UChar";
         } else if(typeid(TValue) == typeid(int)) {
             return "sw.core.Int";
+        } else if(typeid(TValue) == typeid(unsigned int)) {
+            return "sw.core.UInt";
         } else if(typeid(TValue) == typeid(short)) {
             return "sw.core.Short";
         } else if(typeid(TValue) == typeid(long)) {
