@@ -167,7 +167,7 @@ template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor&
     int nBatchs = m_nBatchs;
     int nOutCells = m_nCells;
     int nWeights = m_nInputCells*m_nCells;
-    int nInCells = m_nInputCells;
+    int nInputCells = m_nInputCells;
 
     bool* pDropout = m_spDropout, *pDrop;
     int nDropout = 0;
@@ -224,7 +224,7 @@ template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor&
                     (*it.pOut) = 0;
                 }else{
                     dOut = 0;
-                    for(iInput=0; iInput<nInCells; iInput++ ) {
+                    for(iInput=0; iInput<nInputCells; iInput++ ) {
                         dOut += (*it.pWeight) * (*it.pIn);
                         it.pIn++;
                         it.pWeight++;
@@ -237,7 +237,7 @@ template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor&
                 it.pOut++;
                 it.pBais++;
                 it.pIn = varOBackup.pIn;
-                it.pWeight = varOBackup.pWeight + nInCells;
+                it.pWeight = varOBackup.pWeight + nInputCells;
             }
         }else{
             for(iOutput=0; iOutput<nOutCells; iOutput++) {
@@ -249,7 +249,7 @@ template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor&
                 };
 
                 dOut = 0;
-                for(iInput=0; iInput<nInCells; iInput++ ) {
+                for(iInput=0; iInput<nInputCells; iInput++ ) {
                     dOut += (*it.pWeight) * (*it.pIn);
                     it.pIn++;
                     it.pWeight++;
@@ -261,14 +261,14 @@ template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor&
                 it.pOut++;
                 it.pBais++;
                 it.pIn = varOBackup.pIn;
-                it.pWeight = varOBackup.pWeight + nInCells;
+                it.pWeight = varOBackup.pWeight + nInputCells;
             }
         }
 
         m_pActivator->activate(nOutCells, varTBackup.pOut, varTBackup.pOut);
 
         //  更新迭代参数
-        it.pIn = varTBackup.pIn + nInCells;
+        it.pIn = varTBackup.pIn + nInputCells;
         it.pOut = varTBackup.pOut + nOutCells;
         it.pWeight = varTBackup.pWeight;
         it.pBais = varTBackup.pBais;
@@ -310,8 +310,8 @@ template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const 
     bool* pDrop;
 
     int nBatchs = m_nBatchs;
-    int nInCells = m_nInputCells;
-    int nOutputTensorSize = m_nCells;
+    int nInputCells = m_nInputCells;
+    int nCells = m_nCells;
     int nWeights = m_nCells * m_nInputCells;
     
     Q* pWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nWeights+m_nCells);
@@ -336,7 +336,7 @@ template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const 
         pWeightDerivationArray,
         pBaisDeviationArray
     };
-    memset(it.pInDeviation, 0, sizeof(Q)*nBatchs*nInCells);
+    memset(it.pInDeviation, 0, sizeof(Q)*nBatchs*nInputCells);
 
     Q pZDerivationArray[m_nCells], deviationZ;
     int iTensor, iOutput, iInput;
@@ -373,7 +373,7 @@ template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const 
         //
         //  调整权重
         //
-        for(iOutput=0; iOutput<m_nCells; iOutput++) {
+        for(iOutput=0; iOutput<nCells; iOutput++) {
             varOBackup = {
                 it.pIn,
                 it.pInDeviation,
@@ -401,7 +401,7 @@ template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const 
                 //
                 // 更新权重，权重值的偏导数=输出值偏导数*数入值
                 //
-                for(iInput=0; iInput<m_nInputCells; iInput++ ) {
+                for(iInput=0; iInput<nInputCells; iInput++ ) {
 
                     //
                     // 输入对实际目标的偏差值，反向传递给上一层，其实就是相对于输入的偏导数
@@ -431,15 +431,15 @@ template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const 
             it.pZDeviatioin++;
             it.pIn = varOBackup.pIn;
             it.pInDeviation = varOBackup.pInDeviation;
-            it.pWeight = varOBackup.pWeight + nInCells;
-            it.pWeightDeviation = varOBackup.pWeightDeviation + nInCells;
+            it.pWeight = varOBackup.pWeight + nInputCells;
+            it.pWeightDeviation = varOBackup.pWeightDeviation + nInputCells;
         }
 
         //  更新迭代参数
-        it.pIn = varTBackup.pIn + nInCells;
-        it.pInDeviation = varTBackup.pInDeviation + nInCells;
-        it.pOut = varTBackup.pOut + nOutputTensorSize;
-        it.pOutDeviation = varTBackup.pOutDeviation + nOutputTensorSize;
+        it.pIn = varTBackup.pIn + nInputCells;
+        it.pInDeviation = varTBackup.pInDeviation + nInputCells;
+        it.pOut = varTBackup.pOut + nCells;
+        it.pOutDeviation = varTBackup.pOutDeviation + nCells;
         it.pWeight = varTBackup.pWeight;
         it.pWeightDeviation = varTBackup.pWeightDeviation;
         it.pBaisDeviation = varTBackup.pBaisDeviation;

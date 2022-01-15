@@ -4,6 +4,7 @@
 #include "CDenseNetwork.h"
 #include "CConvolutionNetwork.h"
 #include "CRotConvNetwork.h"
+#include "CShiftConvNetwork.h"
 #include "CSequenceNetwork.h"
 #include "CParallelNetwork.h"
 #include "CPoolNetwork.h"
@@ -33,6 +34,11 @@ public:
     int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
         return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
     }
+
+    int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator, SNnNetwork& spNetwork) {
+        return CShiftConvNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, szActivator, spNetwork);
+    }
+
 
     int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);

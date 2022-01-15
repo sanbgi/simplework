@@ -21,7 +21,8 @@ void CNnNetwork::run() {
     //
     STensor spPipeIn = STensor::createValue(10);
     //SNnNetwork nn = createNetwork();
-    SNnNetwork nn = createRotNetwork();
+    //SNnNetwork nn = createRotNetwork();
+    SNnNetwork nn = createShiftNetwork();
 
     double sumAcc = 0;
     double sumLoss = 0;
@@ -104,6 +105,21 @@ SNnNetwork CNnNetwork::createNetwork() {
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
     return SNnNetwork::loadFile("D://snetwork.bin");
 }
+
+
+SNnNetwork CNnNetwork::createShiftNetwork() {
+    std::vector<SNnNetwork> arrNets;
+    arrNets.push_back(SNnNetwork::createConv(5,5,8,8));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(7,7,16,8));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createDense(576));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    return SNnNetwork::loadFile("D://snetwork.bin");
+}
+
 
 SNnNetwork CNnNetwork::createRotNetwork() {
     std::vector<SNnNetwork> arrNets;

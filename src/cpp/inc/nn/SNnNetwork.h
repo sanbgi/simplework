@@ -54,6 +54,12 @@ public:
         return nn;
     }
 
+    static SNnNetwork createConv(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator = nullptr ) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createShiftConvolution(nWidth, nHeight, nLayers, nShiftConvs, szActivator, nn);
+        return nn;
+    }
+
     static SNnNetwork createRotConv(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator = nullptr) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createRotConvolution(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, nn);

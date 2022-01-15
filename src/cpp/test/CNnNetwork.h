@@ -11,6 +11,7 @@ public:
     static void run();
     static SNnNetwork createNetwork();
     static SNnNetwork createRotNetwork();
+    static SNnNetwork createShiftNetwork();
     static void runFile();
 };
 

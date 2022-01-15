@@ -24,13 +24,13 @@ int CRotConvNetwork::createNetwork(int nWidth, int nHeight, int nConvs, double d
 }
 
 template<typename Q> int CRotConvNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
-    CBatchSize3D& sizeIn = m_sizeIn;
-    CBatchSize3D& sizeOut = m_sizeOut;
-    CBatchSize3D& sizeConv = m_sizeConv;
-    CBatchSize2D& stepInMove = m_stepInMove;
-    CBatchSize2D& stepInConv = m_stepInConv;
-    CBatchSize2D& stepOut = m_stepOut;
-    CBatchSize2D& stepConv = m_stepConv;
+    CBatchSize3D sizeIn = m_sizeIn;
+    CBatchSize3D sizeOut = m_sizeOut;
+    CBatchSize3D sizeConv = m_sizeConv;
+    CBatchSize2D stepInMove = m_stepInMove;
+    CBatchSize2D stepInConv = m_stepInConv;
+    CBatchSize2D stepOut = m_stepOut;
+    CBatchSize2D stepConv = m_stepConv;
     struct CRotConv {
         int start;
         int width;
@@ -201,13 +201,13 @@ template<typename Q> int CRotConvNetwork::learnT(const STensor& spBatchOut, cons
     spBatchIn = m_spBatchIn;
     spInDeviation = m_spBatchInDeviation;
 
-    CBatchSize3D& sizeIn = m_sizeIn;
-    CBatchSize3D& sizeOut = m_sizeOut;
-    CBatchSize3D& sizeConv = m_sizeConv;
-    CBatchSize2D& stepInMove = m_stepInMove;
-    CBatchSize2D& stepInConv = m_stepInConv;
-    CBatchSize2D& stepOut = m_stepOut;
-    CBatchSize2D& stepConv = m_stepConv;
+    CBatchSize3D sizeIn = m_sizeIn;
+    CBatchSize3D sizeOut = m_sizeOut;
+    CBatchSize3D sizeConv = m_sizeConv;
+    CBatchSize2D stepInMove = m_stepInMove;
+    CBatchSize2D stepInConv = m_stepInConv;
+    CBatchSize2D stepOut = m_stepOut;
+    CBatchSize2D stepConv = m_stepConv;
     struct CRotConv {
         int start;
         int width;
@@ -234,6 +234,15 @@ template<typename Q> int CRotConvNetwork::learnT(const STensor& spBatchOut, cons
         stepConv.height
     };
 
+    /*是否要尝试 0 - 45度中间的值，有0 - 45度加权来计算？
+    int convInOffsets[8][9] = {
+
+    };
+    int convWeightOffset[8][9] = {
+
+    };
+    */
+
     int nConvs = sizeConv.batch;
     int nWeights = stepConv.batch * sizeConv.batch;
     Q* pWeightDerivationArray = (Q*)(void*)m_spOptimizer->getDeviationPtr(nWeights+nConvs);
@@ -259,7 +268,7 @@ template<typename Q> int CRotConvNetwork::learnT(const STensor& spBatchOut, cons
         pBaisDerivationArray
     };
     memset(it.pInDeviation, 0, sizeof(Q)*stepInConv.batch * sizeIn.batch);
-    
+
     Q deviationZ;
     Q pDerivationZ[stepOut.batch];
     Q dAngle90, dAngle360, dRatio, dRotRatio[2];
