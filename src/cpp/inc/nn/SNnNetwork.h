@@ -54,7 +54,7 @@ public:
         return nn;
     }
 
-    static SNnNetwork createConv(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator = nullptr ) {
+    static SNnNetwork createShiftConv(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator = nullptr ) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createShiftConvolution(nWidth, nHeight, nLayers, nShiftConvs, szActivator, nn);
         return nn;

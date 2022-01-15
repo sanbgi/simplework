@@ -67,7 +67,7 @@ void CNnNetwork::run() {
             double xAcc = 0;
             double delta = 0;
             for(int i=0; i<nOutDeviation; i++) {
-                if( pOutTarget[i] > 0.9 ) {
+                if( pOutTarget[i] > 0.8 ) {
                     if(pOutDeviation[i] > -0.1) {
                         nAcc++;
                         nHit++;
@@ -109,9 +109,9 @@ SNnNetwork CNnNetwork::createNetwork() {
 
 SNnNetwork CNnNetwork::createShiftNetwork() {
     std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createConv(5,5,8,8));
+    arrNets.push_back(SNnNetwork::createShiftConv(5,5,8,8));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createConv(7,7,16,8));
+    arrNets.push_back(SNnNetwork::createShiftConv(7,7,32,8));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createDense(576));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));

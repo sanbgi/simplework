@@ -2,6 +2,57 @@
 #include "CType.h"
 #include "math.h"
 
+//
+// 卷积核切换策略数组，w为宽度方向一步切换多少个卷积核
+//
+// 疑问？是否可以多少步切换一个卷积核呢？目前还无法确定哪个策略好
+//
+const int s_nShiftPolicy = 4;
+struct CShiftPolicy {
+    int wBais;
+    int hBais;
+    int wWeight;
+    int hWeight;
+};
+struct CShiftPolicies {
+    CShiftPolicy s[s_nShiftPolicy];
+};
+
+static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nConvSize) {
+    /*
+    s_shiftPolicies[] = {
+        { 1,  1 },  // 45度，右下方向切换卷积核
+        { 1, -1 },  //-45度，右上方向切换卷积核
+        { 1,  0 },  //  0度，正右方向切换卷积核
+        { 0,  1 },  // 90度，正下方向切换卷积核
+        { 1,  2 },  // 60度
+        { 2, -1 },  //-30度
+        { 1, -2 },  //-60度
+        { 2,  1 }   // 30度 
+    };
+
+    shiftPolicies = {{
+        { 1,  0, nConvSize,  0 },
+        { 1,  0, nConvSize,  0 },
+        { 1,  0, nConvSize,  0 },
+        { 1,  0, nConvSize,  0 },
+    }};
+
+    shiftPolicies = {{
+        { 1,  1, nConvSize,  nConvSize             },
+        { 1, -1, nConvSize,  nConvSize*(nConvs-1)  },
+        { 1,  0, nConvSize,  0                   },
+        { 0,  1, 0,          nConvSize             },
+    }};
+    */
+    shiftPolicies = {{
+        { 1,  0, nConvSize,  0          },
+        { 0,  1, 0,          nConvSize  },
+        { 1,  0, nConvSize,  0          },
+        { 0,  1, 0,          nConvSize  },
+    }};
+};
+
 
 static SCtx sCtx("CShiftConvNetwork");
 int CShiftConvNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator, SNnNetwork& spNetwork) {
@@ -225,6 +276,10 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
         (Q*)(void*)m_spBais,
     };
 
+    CShiftPolicy stepPolicy;
+    CShiftPolicies shiftPolicies;
+    s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch );
+
     //
     //
     //  注意，
@@ -246,6 +301,7 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
             itVars1.pWeights = it.pWeights;
             itVars1.pBais = it.pBais;
             pWeightEnd = it.pWeights + nLayerStepShifts;
+            stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
             for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
                 itVars2.pIn = it.pIn;
                 itVars2.pOut = it.pOut;
@@ -288,17 +344,22 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
                     //  注意权重矩阵    尺寸：nShiftConvs * w * h * l
                     //                 步长：w * h * l
                     //
-                    it.pWeights = itVars3.pWeights + stepConv.batch;
-                    it.pBais++;
+                    it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
+                    it.pBais = itVars3.pBais + stepPolicy.wBais;
                     if(it.pWeights >= pWeightEnd ) {
-                        it.pWeights = itVars2.pWeights;
-                        it.pBais = itVars2.pBais;
+                        it.pWeights -= nLayerStepShifts;
+                        it.pBais -= sizeConv.batch;
                     }
                 }
-                it.pWeights = itVars2.pWeights;
-                it.pBais = itVars2.pBais;
+
                 it.pIn = itVars2.pIn + stepInMove.height;
                 it.pOut = itVars2.pOut + stepOut.height;
+                it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
+                it.pBais = itVars2.pBais + stepPolicy.hBais;
+                if(it.pWeights >= pWeightEnd ) {
+                    it.pWeights -= nLayerStepShifts;
+                    it.pBais -= sizeConv.batch;
+                }
             }
             it.pIn = itVars1.pIn;
             it.pOut = itVars1.pOut + 1;
@@ -370,6 +431,11 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     Q* pBaisDeviationArray = pWeightDerivationArray+nWeights;
     memset(pWeightDerivationArray, 0 ,sizeof(Q)*(nWeights+nConvs));
 
+    CShiftPolicy stepPolicy;
+    CShiftPolicies shiftPolicies;
+    s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch);
+    int wWeight, hWeight;
+
     struct CItOutVariables {
         Q* pIn;
         Q* pInDeviation;
@@ -423,6 +489,7 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
             itVars1.pWeightDevivation = it.pWeightDevivation;
             itVars1.pBaisDeviation = it.pBaisDeviation;
             pWeightEnd = it.pWeights + nLayerStepShifts;
+            stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
             for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
                 itVars2.pIn = it.pIn;
                 itVars2.pInDeviation = it.pInDeviation;
@@ -507,21 +574,26 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                     //  注意权重矩阵    尺寸：nShiftConvs * w * h * l
                     //                 步长：w * h * l
                     //
-                    it.pWeights = itVars3.pWeights + stepConv.batch;
-                    it.pWeightDevivation = itVars3.pWeightDevivation + stepConv.batch;
-                    it.pBaisDeviation++;
-                    if(it.pWeights >= pWeightEnd) {
-                        it.pWeights = itVars2.pWeights;
-                        it.pWeightDevivation = itVars2.pWeightDevivation;
-                        it.pBaisDeviation = itVars2.pBaisDeviation;
+                    it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
+                    it.pWeightDevivation = itVars3.pWeightDevivation + stepPolicy.wWeight;
+                    it.pBaisDeviation = itVars3.pBaisDeviation + stepPolicy.wBais;
+                    if(it.pWeights >= pWeightEnd ) {
+                        it.pWeights -= nLayerStepShifts;
+                        it.pWeightDevivation -= nLayerStepShifts;
+                        it.pBaisDeviation -= sizeConv.batch;
                     }
                 }
-                it.pBaisDeviation = itVars2.pBaisDeviation;
-                it.pWeightDevivation = itVars2.pWeightDevivation;
-                it.pWeights = itVars2.pWeights;
                 it.pIn = itVars2.pIn + stepInMove.height;
                 it.pInDeviation = itVars2.pInDeviation + stepInMove.height;
                 it.pZDeviatioin = itVars2.pZDeviatioin + stepOut.height;
+                it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
+                it.pWeightDevivation = itVars2.pWeightDevivation + stepPolicy.hWeight;
+                it.pBaisDeviation = itVars2.pBaisDeviation + stepPolicy.hBais;
+                if(it.pWeights >= pWeightEnd ) {
+                    it.pWeights -= nLayerStepShifts;
+                    it.pWeightDevivation -= nLayerStepShifts;
+                    it.pBaisDeviation -= sizeConv.batch;
+                }
             }
 
             it.pIn = itVars1.pIn;
