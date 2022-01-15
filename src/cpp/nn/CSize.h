@@ -16,4 +16,11 @@ struct CBatchSize3D
     int layers;
 };
 
+struct CRect {
+    int left;
+    int right;
+    int top;
+    int bottom;
+};
+
 #endif//__SimpleWork_NN_CStepSize_H__

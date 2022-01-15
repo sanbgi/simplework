@@ -46,7 +46,7 @@ private:
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.ShiftConvNetwork"; }
-    static int createNetwork(int nWidth, int nHeight, int nLayers, int nLayerShiftConvs, const char* szActivator, SNnNetwork& spNetwork);
+    static int createNetwork(int nWidth, int nHeight, int nLayers, int nLayerShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
     int prepareNetwork(const STensor& inputTensor);
@@ -67,12 +67,12 @@ private:
     unsigned int m_idDataType;
     CTaker<char*> m_spWeights;
     CTaker<char*> m_spBais;
-    CActivator* m_pActivator;
-    SOptimizer m_spOptimizer;
 
     //缓存参数
     int m_nInputSize;
 
+    //填充尺寸
+    CRect m_padding;
     //输入、输出、卷积尺寸
     CBatchSize3D m_sizeIn;
     CBatchSize3D m_sizeOut;
@@ -86,6 +86,9 @@ private:
     STensor m_spBatchIn;
     STensor m_spBatchOut;
     STensor m_spBatchInDeviation;
+
+    CActivator* m_pActivator;
+    SOptimizer m_spOptimizer;
 
 public:
     CShiftConvNetwork(){

@@ -35,10 +35,9 @@ public:
         return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
     }
 
-    int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator, SNnNetwork& spNetwork) {
-        return CShiftConvNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, szActivator, spNetwork);
+    int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
+        return CShiftConvNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, szPadding, szActivator, spNetwork);
     }
-
 
     int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);

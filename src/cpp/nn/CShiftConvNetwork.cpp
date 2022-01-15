@@ -55,7 +55,7 @@ static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nCon
 
 
 static SCtx sCtx("CShiftConvNetwork");
-int CShiftConvNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator, SNnNetwork& spNetwork) {
+int CShiftConvNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
 
     if(nWidth < 1 || nHeight < 1 || nShiftConvs < 1 || nLayers < 1) {
         return sCtx.error("卷积核参数错误");
@@ -74,6 +74,9 @@ int CShiftConvNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int n
     spConvolution->m_nStrideHeight = 1;
     if( szActivator!=nullptr )
         spConvolution->m_strActivator = szActivator;
+    if( szPadding != nullptr) {
+        spConvolution->m_strPadding = szPadding;
+    }
     spNetwork.setPtr(spConvolution.getPtr());
     return sCtx.success();
 }
@@ -185,12 +188,28 @@ int CShiftConvNetwork::prepareNetwork(const STensor& spBatchIn) {
             nInputLayers
         };
 
-        m_sizeOut = {
-            nBatchs,
-            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-            m_nLayers
-        };
+        if(m_strPadding == "same" ) {
+            m_sizeOut = {
+                nBatchs,
+                (m_sizeIn.height - 1) / m_nStrideHeight + 1,
+                (m_sizeIn.width - 1) / m_nStrideWidth + 1,
+                m_nLayers
+            };
+            int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
+            int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
+            m_padding.left = nPadW / 2;
+            m_padding.right = nPadW - m_padding.left;
+            m_padding.top = nPadH / 2;
+            m_padding.bottom = nPadH - m_padding.top;
+        }else{
+            m_sizeOut = {
+                nBatchs,
+                (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+                (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+                m_nLayers
+            };
+            m_padding = { 0, 0, 0, 0 };
+        }
 
         m_stepInConv = {
             m_sizeIn.height * m_sizeIn.width * nInputLayers,
@@ -282,6 +301,7 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
     CShiftPolicies shiftPolicies;
     s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch );
 
+
     //
     //
     //  注意，
@@ -292,6 +312,12 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
     int nLayerStepShifts = sizeConv.batch * stepConv.batch;
     Q dConv, *pWeightEnd;
     itVars = it;
+
+    CRect rcConv, rcPading = m_padding;
+
+    //将输入指针向Padding后的起点偏移，变成一个非法指针
+    int nOffset = m_padding.left * stepInConv.width - m_padding.top * stepInConv.height;
+    it.pIn = it.pIn - nOffset;
     for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
         itVars0.pOut = it.pOut;
@@ -309,18 +335,43 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
                 itVars2.pOut = it.pOut;
                 itVars2.pWeights = it.pWeights;
                 itVars2.pBais = it.pBais;
+
+                //左边填充了都填充了控制，不能参与运算
+                if(itVars2.index < rcPading.top) {
+                    rcConv.top = rcPading.top;
+                    rcConv.bottom = sizeConv.height;
+                }else if(itVars2.index >= sizeOut.height - rcPading.bottom) {
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height - (itVars2.index - sizeOut.height + 1 + rcPading.bottom);
+                }else{
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height;
+                }
+
                 for(itVars3.index=0; itVars3.index < sizeOut.width; itVars3.index++) {
                     itVars3.pIn = it.pIn;
                     itVars3.pOut = it.pOut;
                     itVars3.pWeights = it.pWeights;
                     itVars3.pBais = it.pBais;
 
+                    //左边填充了都填充了控制，不能参与运算
+                    if(itVars3.index < rcPading.left) {
+                        rcConv.left = rcPading.left;
+                        rcConv.right = sizeConv.width;
+                    }else if(itVars3.index >= sizeOut.width - rcPading.right) {
+                        rcConv.left = 0;
+                        rcConv.right = sizeConv.width - (itVars3.index - sizeOut.width + 1 + rcPading.right);
+                    }else{
+                        rcConv.left = 0;
+                        rcConv.right = sizeConv.width;
+                    }
+
                     //初始化卷积结果
                     dConv = 0;
-                    for( itVars4.index=0; itVars4.index<sizeConv.height; itVars4.index++) {
+                    for( itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                         itVars4.pIn = it.pIn;
                         itVars4.pWeights = it.pWeights;
-                        for(itVars5.index=0; itVars5.index<sizeConv.width; itVars5.index++) {
+                        for(itVars5.index=rcConv.left; itVars5.index<rcConv.right; itVars5.index++) {
                             itVars5.pIn = it.pIn;
                             itVars5.pWeights = it.pWeights;
                             for(itVars6.index=0; itVars6.index<sizeConv.layers; itVars6.index++) {
@@ -472,6 +523,12 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     //      偏置大小：nLayers * nShiftConvs 
     //
     itVars = it;
+    CRect rcConv, rcPading = m_padding;
+
+    //将输入指针向Padding后的起点偏移，变成一个非法指针
+    int nOffset = m_padding.left * stepInConv.width + m_padding.top * stepInConv.height;
+    it.pIn = it.pIn - nOffset;
+    it.pInDeviation = it.pInDeviation - nOffset;
     for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
         itVars0.pInDeviation = it.pInDeviation;
@@ -499,6 +556,19 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                 itVars2.pWeights = it.pWeights;
                 itVars2.pWeightDevivation = it.pWeightDevivation;
                 itVars2.pBaisDeviation = it.pBaisDeviation;
+
+                //左边填充了都填充了控制，不能参与运算
+                if(itVars2.index < rcPading.top) {
+                    rcConv.top = rcPading.top;
+                    rcConv.bottom = sizeConv.height;
+                }else if(itVars2.index >= sizeOut.height - rcPading.bottom) {
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height - (itVars2.index - sizeOut.height + 1 + rcPading.bottom);
+                }else{
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height;
+                }
+
                 for(itVars3.index=0; itVars3.index < sizeOut.width; itVars3.index++) {
                     itVars3.pIn = it.pIn;
                     itVars3.pInDeviation = it.pInDeviation;
@@ -523,15 +593,27 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                     deviationZ = (*it.pZDeviatioin);
                     if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) 
                     {
+                        //左右填充了都填充了控制，不能参与运算
+                        if(itVars3.index < rcPading.left) {
+                            rcConv.left = rcPading.left;
+                            rcConv.right = sizeConv.width;
+                        }else if(itVars3.index >= sizeOut.width - rcPading.right) {
+                            rcConv.left = 0;
+                            rcConv.right = sizeConv.width - (itVars3.index - sizeOut.width + 1 + rcPading.right);
+                        }else{
+                            rcConv.left = 0;
+                            rcConv.right = sizeConv.width;
+                        }
+
                         //
                         //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                         //  
-                        for(itVars4.index=0; itVars4.index<sizeConv.height; itVars4.index++) {
+                        for(itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                             itVars4.pIn = it.pIn;
                             itVars4.pInDeviation = it.pInDeviation;
                             itVars4.pWeights = it.pWeights;
                             itVars4.pWeightDevivation = it.pWeightDevivation;
-                            for(itVars5.index=0; itVars5.index<sizeConv.width; itVars5.index++) {
+                            for(itVars5.index=rcConv.left; itVars5.index<rcConv.right; itVars5.index++) {
                                 itVars5.pIn = it.pIn;
                                 itVars5.pInDeviation = it.pInDeviation;
                                 itVars5.pWeights = it.pWeights;

@@ -75,7 +75,8 @@ private:
 
     //缓存参数
     int m_nInputSize;
-
+    //填充尺寸
+    CRect m_padding;
     //输入、输出、卷积尺寸
     CBatchSize3D m_sizeIn;
     CBatchSize3D m_sizeOut;

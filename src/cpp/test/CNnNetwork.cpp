@@ -13,7 +13,7 @@ using namespace sw;
 static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
-    runTest();
+    runLearn();
 }
 
 void CNnNetwork::runLearn() {
@@ -93,7 +93,7 @@ void CNnNetwork::runLearn() {
         }
     }
 
-    SNnNetwork::saveFile("D://snetwork.bin", nn);
+    //SNnNetwork::saveFile("D://snetwork.bin", nn);
 }
 
 void CNnNetwork::runTest() {
@@ -194,7 +194,7 @@ SNnNetwork CNnNetwork::createNetwork() {
 
 SNnNetwork CNnNetwork::createShiftNetwork() {
     std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createShiftConv(5,5,8,8));
+    arrNets.push_back(SNnNetwork::createShiftConv(5,5,8,8,"same"));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createShiftConv(7,7,32,8));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));

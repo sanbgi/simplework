@@ -31,7 +31,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         //  创建轮换卷积核，卷积核在x或有轴方向，每一层都有nShiftConvs个卷积核轮换使用
         //
-        virtual int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szActivator, SNnNetwork& spNetwork) = 0;
+        virtual int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
         //
         //  创建顺序处理神经网络
         //
