@@ -131,15 +131,6 @@ int CShiftConvNetwork::prepareNetwork(const STensor& spBatchIn) {
         if( m_sizeConv.batch <= 0 || m_sizeConv.width < 1 || m_sizeConv.height < 1 ) {
             return sCtx.error("卷积核参数错误");
         }
-        
-        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
-        if(m_pActivator == nullptr) {
-            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
-        }
-
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
-            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-        }
 
         int nConvs = m_nLayers * m_sizeConv.batch;
         int nWeights =  nConvs * m_sizeConv.width * m_sizeConv.height * nInputLayers;
@@ -167,6 +158,17 @@ int CShiftConvNetwork::prepareNetwork(const STensor& spBatchIn) {
             // TODO：权值类型改变？
             //
             return sCtx.error("输入张量的类型与初始化时不一致");
+        }
+    }
+
+    if(m_pActivator == nullptr) {
+        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
+        if(m_pActivator == nullptr) {
+            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+        }
+
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
+            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
         }
     }
 

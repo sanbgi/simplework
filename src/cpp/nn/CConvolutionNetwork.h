@@ -86,6 +86,8 @@ public:
         m_nInputSize = 0;
         //
         m_idDataType = 0;
+        //激活函数未初始化
+        m_pActivator = nullptr;
     }
 };
 

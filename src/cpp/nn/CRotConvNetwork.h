@@ -100,6 +100,8 @@ public:
         m_nLayers = 0;
         //输入尺寸
         m_nInputSize = 0;
+        //激活函数未初始化
+        m_pActivator = nullptr;
     }
 };
 

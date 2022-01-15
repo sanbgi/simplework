@@ -95,14 +95,6 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
         if( m_nCells <= 0 || nInputCells <= 0 ) {
             return sCtx.error("不允许全连接网络细胞数或输入细胞数为零");
         }
-        
-        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
-        if(m_pActivator == nullptr) {
-            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
-        }
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
-            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-        }
 
         int nWeights = m_nCells*nInputCells;
 
@@ -130,6 +122,17 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
             // TODO：权值类型改变？
             //
             return sCtx.error("输入张量的类型与初始化时不一致");
+        }
+    }
+    
+    if(m_pActivator == nullptr) {
+        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
+        if(m_pActivator == nullptr) {
+            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+        }
+
+        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
+            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
         }
     }
 

@@ -99,6 +99,8 @@ public:
         m_nInputSize = 0;
         //
         m_idDataType = 0;
+
+        m_pActivator = nullptr;
     }
 };
 

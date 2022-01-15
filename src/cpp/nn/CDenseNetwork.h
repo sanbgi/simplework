@@ -77,6 +77,8 @@ public:
         m_nInputCells = 0;
         m_nBatchs = 0;
         m_nEvalDropout = 0;
+        //激活函数未初始化
+        m_pActivator = nullptr;
     }
 };
 
