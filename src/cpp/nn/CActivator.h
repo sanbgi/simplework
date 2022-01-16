@@ -26,8 +26,8 @@ public:
     //      对于Softmax(交叉熵):
     //          E = -求和((Yi-Delta)*log(Yi))
     //
-    virtual void activate( int nData, void* pZArray, void* pYArray);
-    virtual void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray);
+    virtual void activate( int nData, void* pZArray, void* pYArray) = 0;
+    virtual void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) = 0;
 
 public:
     static CActivator* getActivation(unsigned int idType, const char* szActivator = nullptr);
