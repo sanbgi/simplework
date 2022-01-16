@@ -221,6 +221,17 @@ template<typename Q> int CConvolutionNetwork::initWeightT(int nWeights, int nCon
 
 template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
+    //
+    // 关于尺寸说明
+    //  1, size表示具体的尺寸
+    //  2，step表示在尺寸维度上移动指针，需要的步数
+    //
+    //  比如：
+    //      sizeIn.width        输入矩阵的宽度
+    //      stepInMove.width    输入矩阵在移动时，在宽度上移动一步，对于指针需要移动的距离（考虑了步长）
+    //      stepInConv.width    输入矩阵在卷积时，在宽度上移动一步时，对于指针需要移动的距离
+    //      stepConv.width      卷积矩阵，在宽度上移动一步时，卷积矩阵指针需要移动的距离
+    //
     CBatchSize3D sizeIn = m_sizeIn;
     CBatchSize3D sizeOut = m_sizeOut;
     CBatchSize3D sizeConv = m_sizeConv;
@@ -240,10 +251,31 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
         (Q*)(void*)m_spWeights,
         (Q*)(void*)m_spBais,
     };
-    //将输入指针向Padding后的起点偏移，变成一个非法指针
+
+    //
+    //  注意，关于填充问题，算法相对比较抽象。
+    //      
+    //      首先将数据矩阵首先按照填充规则，进行四周填充，然后，将输入指针指向填充后的最左上角，
+    //  此时，指针实际上是一个非法指针。在遍历输出矩阵宽度高度时，如果发现其实位置小于填充尺寸
+    //  则，卷积矩阵调整到有效的开始位置，而输入矩阵指针也同时指向有效的地址，与卷积矩阵开始位
+    //  置一致。
+    //
+    //  比如：
+    //      如果左边填充了两个像素，则卷积矩阵从第二各值开始（rcConv.left），输入指针向右平
+    //  移2各像素（it.pIn += rcConv.left * stepInConv.width)
+    //      在高度方向，策略核宽度一致
+    //
     CRect2D rcConv, rcPading = m_padding;
     int nOffset = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     it.pIn = it.pIn - nOffset;
+    //
+    //  输出矩阵能够完整卷积的最大下标，再往下，则需要剪裁了
+    //
+    int iCompleteConvHeightIndex = sizeOut.height - rcPading.bottom - 1;
+    //
+    //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
+    //
+    int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
 
     Q dConv;
     for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
@@ -257,9 +289,11 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
             if(itVars1.index < rcPading.top) {
                 rcConv.top = rcPading.top;
                 rcConv.bottom = sizeConv.height;
-            }else if(itVars1.index >= sizeOut.height - rcPading.bottom) {
+                it.pIn += rcConv.top * stepInConv.height;
+                it.pWeights += rcConv.top * stepConv.height;
+            }else if(itVars1.index > iCompleteConvHeightIndex) {
                 rcConv.top = 0;
-                rcConv.bottom = sizeConv.height - (itVars1.index - sizeOut.height + 1 + rcPading.bottom);
+                rcConv.bottom = sizeConv.height - (itVars1.index - iCompleteConvHeightIndex);
             }else{
                 rcConv.top = 0;
                 rcConv.bottom = sizeConv.height;
@@ -275,9 +309,11 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
                 if(itVars2.index < rcPading.left) {
                     rcConv.left = rcPading.left;
                     rcConv.right = sizeConv.width;
-                }else if(itVars2.index >= sizeOut.width - rcPading.right) {
+                    it.pIn += rcConv.left * stepInConv.width;
+                    it.pWeights += rcConv.left * stepConv.width;
+                }else if(itVars2.index > iCompleteConvWidthIndex) {
                     rcConv.left = 0;
-                    rcConv.right = sizeConv.width - (itVars2.index - sizeOut.width + 1 + rcPading.right);
+                    rcConv.right = sizeConv.width - (itVars2.index - iCompleteConvWidthIndex);
                 }else{
                     rcConv.left = 0;
                     rcConv.right = sizeConv.width;
@@ -289,8 +325,6 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
 
                     //初始化卷积结果
                     dConv = 0;
-                    it.pIn += rcConv.top * stepInConv.height + rcConv.left * stepInConv.width;
-                    it.pWeights += rcConv.top * stepConv.height + rcConv.left * stepConv.width; 
                     for( itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                         itVars4.pIn = it.pIn;
                         itVars4.pWeights = it.pWeights;
@@ -376,6 +410,10 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     spBatchIn = m_spBatchIn;
     spInDeviation = m_spBatchInDeviation;
 
+
+    //
+    // 关于尺寸说明，注意参考evalT中的说明
+    //
     CBatchSize3D sizeIn = m_sizeIn;
     CBatchSize3D sizeOut = m_sizeOut;
     CBatchSize3D sizeConv = m_sizeConv;
@@ -415,7 +453,9 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     Q pDeviationZArray[stepOut.batch];
 
     itVars = it;
-    //将输入指针向Padding后的起点偏移，变成一个非法指针
+    //
+    //  注意，关于填充问题，参考evalT说明
+    //
     CRect2D rcConv, rcPading = m_padding;
     int nOffsetIn = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     int nOffsetConv;
@@ -438,6 +478,12 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
             if(itVars1.index < rcPading.top) {
                 rcConv.top = rcPading.top;
                 rcConv.bottom = sizeConv.height;
+                nOffsetIn = rcConv.top * stepInConv.height;
+                nOffsetConv = rcConv.top * stepConv.height;
+                it.pIn += nOffsetIn;
+                it.pInDeviation += nOffsetIn;
+                it.pWeights += nOffsetConv;
+                it.pWeightDevivation += nOffsetConv;
             }else if(itVars1.index >= sizeOut.height - rcPading.bottom) {
                 rcConv.top = 0;
                 rcConv.bottom = sizeConv.height - (itVars1.index - sizeOut.height + 1 + rcPading.bottom);
@@ -455,6 +501,14 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
                 if(itVars2.index < rcPading.left) {
                     rcConv.left = rcPading.left;
                     rcConv.right = sizeConv.width;
+                    rcConv.left = rcPading.left;
+                    rcConv.right = sizeConv.width;
+                    nOffsetIn = rcConv.left * stepInConv.width;
+                    nOffsetConv = rcConv.left * stepConv.width;
+                    it.pIn += nOffsetIn;
+                    it.pInDeviation += nOffsetIn;
+                    it.pWeights += nOffsetConv;
+                    it.pWeightDevivation += nOffsetConv;
                 }else if(itVars2.index >= sizeOut.width - rcPading.right) {
                     rcConv.left = 0;
                     rcConv.right = sizeConv.width - (itVars2.index - sizeOut.width + 1 + rcPading.right);
@@ -488,12 +542,6 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
                         //
                         //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                         //  
-                        nOffsetIn = rcConv.top * stepInConv.height + rcConv.left * stepInConv.width;
-                        nOffsetConv = rcConv.top * stepConv.height + rcConv.left * stepConv.width;
-                        it.pIn += nOffsetIn;
-                        it.pInDeviation += nOffsetIn;
-                        it.pWeights += nOffsetConv;
-                        it.pWeightDevivation += nOffsetConv;
                         for(itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                             itVars4.pIn = it.pIn;
                             itVars4.pInDeviation = it.pInDeviation;

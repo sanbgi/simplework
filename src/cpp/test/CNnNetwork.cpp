@@ -217,17 +217,18 @@ SNnNetwork CNnNetwork::createRotNetwork() {
 
 SNnNetwork CNnNetwork::createGlobalPollNetwork() {
     std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createConv(3,3,32));
-    arrNets.push_back(SNnNetwork::createConv(3,3,16,"same"));
+    arrNets.push_back(SNnNetwork::createShiftConv(3,3,4,8,"same"));
+    arrNets.push_back(SNnNetwork::createShiftConv(3,3,16,1,"same"));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createConv(3,3,64));
-    arrNets.push_back(SNnNetwork::createConv(3,3,64, "same"));
+    arrNets.push_back(SNnNetwork::createShiftConv(3,3,32,2,"same"));
+    arrNets.push_back(SNnNetwork::createShiftConv(3,3,64,1,"same"));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createConv(3,3,10));
+    arrNets.push_back(SNnNetwork::createShiftConv(3,3,128,1));
+    //arrNets.push_back(SNnNetwork::createConv(3,3,10));
     //arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     //arrNets.push_back(SNnNetwork::createConv(3,3,10));
-    arrNets.push_back(SNnNetwork::createGlobalPool(nullptr, "softmax"));
-    //arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    //arrNets.push_back(SNnNetwork::createGlobalPool(nullptr, "softmax"));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
     return SNnNetwork::loadFile("D://snetwork.bin");

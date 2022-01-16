@@ -11,7 +11,7 @@ using namespace sw;
 using namespace std;
 //
 //
-// 轮换卷积网络（模拟人脑视觉V1皮层对朝向等识别的模式）
+// 轮换卷积网络（参考模拟人脑视觉V1皮层对朝向等特征识别的模式）
 //
 //      网络输出层为 ：nLayers
 //      每一层使用的轮换卷积核数为：nShiftConvs

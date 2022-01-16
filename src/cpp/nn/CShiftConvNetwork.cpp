@@ -268,8 +268,42 @@ template<typename Q> int CShiftConvNetwork::initWeightT(int nWeights, int nConvs
     return 0;
 }
 
+
+//
+//
+//  卷积运算函数，进行多级循环
+//      1，批量
+//      2，输出层数
+//      3，输出高度
+//      4，输出宽度
+//      5，卷积高度
+//      6，卷积宽度
+//      7，卷积深度
+//
+//  每一层输出层，其实是由每层多个卷积核(sizeConv.batch)共同卷积而成，当一层的卷积核为1个时，则退化为行业标
+//  准卷积核。
+//
+//  输出层的每一个坐标位置（宽度、高度）所选用的卷积核，是由一个策略决定的，策略决定了如何根据位置选择需要卷积
+//  的卷积核。目前策略为，两种之一：
+//      1，高度变化时，卷积核不变，宽度变化时，卷积核顺序轮换
+//      2，宽度变化时，卷积核不变，高度变化时，卷积核顺序轮换
+//  这种策略时参考了人类大脑皮层对于朝向的相应规则，来模拟的。在人类大脑皮层V1层中，对朝向等特征的检测，往往时
+//  每1mm从0度到360度，一个周期，不断的轮换检测。
+//
+//
 template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
+    //
+    // 关于尺寸说明
+    //  1, size表示具体的尺寸
+    //  2，step表示在尺寸维度上移动指针，需要的步数
+    //
+    //  比如：
+    //      sizeIn.width        输入矩阵的宽度
+    //      stepInMove.width    输入矩阵在移动时，在宽度上移动一步，对于指针需要移动的距离（考虑了步长）
+    //      stepInConv.width    输入矩阵在卷积时，在宽度上移动一步时，对于指针需要移动的距离
+    //      stepConv.width      卷积矩阵，在宽度上移动一步时，卷积矩阵指针需要移动的距离
+    //
     CBatchSize3D sizeIn = m_sizeIn;
     CBatchSize3D sizeOut = m_sizeOut;
     CBatchSize3D sizeConv = m_sizeConv;
@@ -294,7 +328,6 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
     CShiftPolicies shiftPolicies;
     s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch );
 
-
     //
     //
     //  注意，
@@ -306,11 +339,31 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
     Q dConv, *pWeightEnd;
     itVars = it;
 
+    //
+    //  注意，关于填充问题，算法相对比较抽象。
+    //      
+    //      首先将数据矩阵首先按照填充规则，进行四周填充，然后，将输入指针指向填充后的最左上角，
+    //  此时，指针实际上是一个非法指针。在遍历输出矩阵宽度高度时，如果发现其实位置小于填充尺寸
+    //  则，卷积矩阵调整到有效的开始位置，而输入矩阵指针也同时指向有效的地址，与卷积矩阵开始位
+    //  置一致。
+    //
+    //  比如：
+    //      如果左边填充了两个像素，则卷积矩阵从第二各值开始（rcConv.left），输入指针向右平
+    //  移2各像素（it.pIn += rcConv.left * stepInConv.width)
+    //      在高度方向，策略核宽度一致
+    //
     CRect2D rcConv, rcPading = m_padding;
-
-    //将输入指针向Padding后的起点偏移，变成一个非法指针
     int nOffset = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     it.pIn = it.pIn - nOffset;
+    //
+    //  输出矩阵能够完整卷积的最大下标，再往下，则需要剪裁了
+    //
+    int iCompleteConvHeightIndex = sizeOut.height - rcPading.bottom - 1;
+    //
+    //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
+    //
+    int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
+
     for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
         itVars0.pOut = it.pOut;
@@ -329,13 +382,20 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
                 itVars2.pWeights = it.pWeights;
                 itVars2.pBais = it.pBais;
 
-                //左边填充了都填充了控制，不能参与运算
+                //左边填充了都填充了空值，不能参与运算
                 if(itVars2.index < rcPading.top) {
+                    //
+                    // 卷积核顶部裁剪，相当于将起始坐标下移，同时
+                    //      1,  输入矩阵的起始坐标也需要下移
+                    //      2,  权重的其实位置也许要同步下移到实际的其实位置
+                    //
                     rcConv.top = rcPading.top;
                     rcConv.bottom = sizeConv.height;
-                }else if(itVars2.index >= sizeOut.height - rcPading.bottom) {
+                    it.pIn += rcConv.top * stepInConv.height;
+                    it.pWeights += rcConv.top * stepConv.height;
+                }else if(itVars2.index > iCompleteConvHeightIndex) {
                     rcConv.top = 0;
-                    rcConv.bottom = sizeConv.height - (itVars2.index - sizeOut.height + 1 + rcPading.bottom);
+                    rcConv.bottom = sizeConv.height - (itVars2.index - iCompleteConvHeightIndex);
                 }else{
                     rcConv.top = 0;
                     rcConv.bottom = sizeConv.height;
@@ -347,13 +407,20 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
                     itVars3.pWeights = it.pWeights;
                     itVars3.pBais = it.pBais;
 
-                    //左边填充了都填充了控制，不能参与运算
+                    //左边填充了都填充了空值，不能参与运算
                     if(itVars3.index < rcPading.left) {
+                        //
+                        // 卷积核左部裁剪，相当于将起始坐标右移，同时
+                        //      1，输入矩阵的起始坐标也需要右移
+                        //      2，权重矩阵其实坐标也需要右移到对应的开始位置
+                        //
                         rcConv.left = rcPading.left;
                         rcConv.right = sizeConv.width;
-                    }else if(itVars3.index >= sizeOut.width - rcPading.right) {
+                        it.pIn += rcConv.left * stepInConv.width;
+                        it.pWeights += rcConv.left * stepConv.width;
+                    }else if(itVars3.index > iCompleteConvWidthIndex) {
                         rcConv.left = 0;
-                        rcConv.right = sizeConv.width - (itVars3.index - sizeOut.width + 1 + rcPading.right);
+                        rcConv.right = sizeConv.width - (itVars3.index - iCompleteConvWidthIndex);
                     }else{
                         rcConv.left = 0;
                         rcConv.right = sizeConv.width;
@@ -361,8 +428,6 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
 
                     //初始化卷积结果
                     dConv = 0;
-                    it.pIn += rcConv.top * stepInConv.height + rcConv.left * stepInConv.width;
-                    it.pWeights += rcConv.top * stepConv.height + rcConv.left * stepConv.width; 
                     for( itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                         itVars4.pIn = it.pIn;
                         itVars4.pWeights = it.pWeights;
@@ -465,6 +530,9 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     spBatchIn = m_spBatchIn;
     spInDeviation = m_spBatchInDeviation;
 
+    //
+    // 关于尺寸说明，注意参考evalT里面的说明
+    //
     CBatchSize3D sizeIn = m_sizeIn;
     CBatchSize3D sizeOut = m_sizeOut;
     CBatchSize3D sizeConv = m_sizeConv;
@@ -482,7 +550,6 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     CShiftPolicy stepPolicy;
     CShiftPolicies shiftPolicies;
     s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch);
-    int wWeight, hWeight;
 
     struct CItOutVariables {
         Q* pIn;
@@ -518,11 +585,19 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     //      偏置大小：nLayers * nShiftConvs 
     //
     itVars = it;
-    CRect2D rcConv, rcPading = m_padding;
 
+    //
+    //  注意，关于填充问题，参考evalT说明
+    //
+    CRect2D rcConv, rcPading = m_padding;
     //将输入指针向Padding后的起点偏移，变成一个非法指针
     int nOffsetIn = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     int nOffsetConv;
+    //输出矩阵能够完整卷积的下标，再往下，则需要剪裁了
+    int iCompleteConvHeightIndex = sizeOut.height - rcPading.bottom - 1;
+    //输出矩阵能够完整卷积的下标，再往右，则需要剪裁了
+    int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
+
     it.pIn = it.pIn - nOffsetIn;
     it.pInDeviation = it.pInDeviation - nOffsetIn;
     for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
@@ -555,11 +630,22 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
 
                 //上下填充了都填充了控空制，不能参与运算
                 if(itVars2.index < rcPading.top) {
+                    //
+                    // 卷积核顶部裁剪，相当于将起始坐标下移，同时
+                    //      1,  输入矩阵的起始坐标也需要下移
+                    //      2,  权重的其实位置也许要同步下移到实际的其实位置
+                    //
                     rcConv.top = rcPading.top;
                     rcConv.bottom = sizeConv.height;
-                }else if(itVars2.index >= sizeOut.height - rcPading.bottom) {
+                    nOffsetIn = rcConv.top * stepInConv.height;
+                    nOffsetConv = rcConv.top * stepConv.height;
+                    it.pIn += nOffsetIn;
+                    it.pInDeviation += nOffsetIn;
+                    it.pWeights += nOffsetConv;
+                    it.pWeightDevivation += nOffsetConv;
+                }else if(itVars2.index > iCompleteConvHeightIndex) {
                     rcConv.top = 0;
-                    rcConv.bottom = sizeConv.height - (itVars2.index - sizeOut.height + 1 + rcPading.bottom);
+                    rcConv.bottom = sizeConv.height - (itVars2.index - iCompleteConvHeightIndex);
                 }else{
                     rcConv.top = 0;
                     rcConv.bottom = sizeConv.height;
@@ -591,11 +677,22 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                     {
                         //左右填充了都填充了空制，不能参与运算
                         if(itVars3.index < rcPading.left) {
+                            //
+                            // 卷积核左部裁剪，相当于将起始坐标右移，同时
+                            //      1，输入矩阵的起始坐标也需要右移
+                            //      2，权重矩阵其实坐标也需要右移到对应的开始位置
+                            //
                             rcConv.left = rcPading.left;
                             rcConv.right = sizeConv.width;
-                        }else if(itVars3.index >= sizeOut.width - rcPading.right) {
+                            nOffsetIn = rcConv.left * stepInConv.width;
+                            nOffsetConv = rcConv.left * stepConv.width;
+                            it.pIn += nOffsetIn;
+                            it.pInDeviation += nOffsetIn;
+                            it.pWeights += nOffsetConv;
+                            it.pWeightDevivation += nOffsetConv;
+                        }else if(itVars3.index > iCompleteConvWidthIndex) {
                             rcConv.left = 0;
-                            rcConv.right = sizeConv.width - (itVars3.index - sizeOut.width + 1 + rcPading.right);
+                            rcConv.right = sizeConv.width - (itVars3.index - iCompleteConvWidthIndex);
                         }else{
                             rcConv.left = 0;
                             rcConv.right = sizeConv.width;
@@ -604,12 +701,6 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                         //
                         //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                         //  
-                        nOffsetIn = rcConv.top * stepInConv.height + rcConv.left * stepInConv.width;
-                        nOffsetConv = rcConv.top * stepConv.height + rcConv.left * stepConv.width;
-                        it.pIn += nOffsetIn;
-                        it.pInDeviation += nOffsetIn;
-                        it.pWeights += nOffsetConv;
-                        it.pWeightDevivation += nOffsetConv;
                         for(itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                             itVars4.pIn = it.pIn;
                             itVars4.pInDeviation = it.pInDeviation;
