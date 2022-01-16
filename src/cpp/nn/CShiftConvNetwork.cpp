@@ -306,7 +306,7 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
     Q dConv, *pWeightEnd;
     itVars = it;
 
-    CRect rcConv, rcPading = m_padding;
+    CRect2D rcConv, rcPading = m_padding;
 
     //将输入指针向Padding后的起点偏移，变成一个非法指针
     int nOffset = m_padding.left * stepInConv.width - m_padding.top * stepInConv.height;
@@ -516,7 +516,7 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     //      偏置大小：nLayers * nShiftConvs 
     //
     itVars = it;
-    CRect rcConv, rcPading = m_padding;
+    CRect2D rcConv, rcPading = m_padding;
 
     //将输入指针向Padding后的起点偏移，变成一个非法指针
     int nOffset = m_padding.left * stepInConv.width + m_padding.top * stepInConv.height;

@@ -16,7 +16,7 @@ struct CBatchSize3D
     int layers;
 };
 
-struct CRect {
+struct CRect2D {
     int left;
     int right;
     int top;
