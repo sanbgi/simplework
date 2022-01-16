@@ -125,43 +125,39 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
         }
     }
     
+    //
+    //  如果抛弃比率大于2个神经元，则dropout机制有效
+    //
+    if(m_dDropoutRate > 2.0 / m_nCells) {
+        m_spDropout.take(new bool[m_nCells], [](bool* ptr){
+            delete[] ptr;
+        });
+    }
+
+    //
+    // 检查细胞数量是否合法
+    //
+    int pOutDimSizes[2] = { nBatchs, m_nCells };
+    STensor spOutDimVector;
+    if( int errCode = STensor::createVector(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
+    }
+
+    if( int errCode = STensor::createTensor(m_spBatchOut, spOutDimVector, idType, nBatchs * m_nCells) != sCtx.success() ) {
+        return sCtx.error(errCode, "创建输出张量失败");
+    }
+
+    m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
     if(m_pActivator == nullptr) {
-        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
-        if(m_pActivator == nullptr) {
-            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
-        }
-
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
-            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-        }
+        return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
     }
 
-    if(m_nBatchs != nBatchs) {
-        //
-        // 检查细胞数量是否合法
-        //
-        int pOutDimSizes[2] = { nBatchs, m_nCells };
-        STensor spOutDimVector;
-        if( int errCode = STensor::createVector(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
-            return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
-        }
-
-        if( int errCode = STensor::createTensor(m_spBatchOut, spOutDimVector, idType, nBatchs * m_nCells) != sCtx.success() ) {
-            return sCtx.error(errCode, "创建输出张量失败");
-        }
-
-        //
-        //  如果抛弃比率大于2个神经元，则dropout机制有效
-        //
-        if(m_dDropoutRate > 2.0 / m_nCells) {
-            m_spDropout.take(new bool[m_nCells], [](bool* ptr){
-                delete[] ptr;
-            });
-        }
-
-        m_spBatchInDeviation.release();
-        m_nBatchs = nBatchs;
+    if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
+        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
     }
+
+    m_spBatchInDeviation.release();
+    m_nBatchs = nBatchs;
     return sCtx.success();
 }
 
