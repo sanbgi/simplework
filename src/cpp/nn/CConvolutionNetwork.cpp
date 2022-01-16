@@ -2,18 +2,70 @@
 #include "CType.h"
 #include "math.h"
 
+//
+// 卷积核切换策略数组，w为宽度方向一步切换多少个卷积核
+//
+// 疑问？是否可以多少步切换一个卷积核呢？目前还无法确定哪个策略好
+//
+const int s_nShiftPolicy = 4;
+struct CShiftPolicy {
+    int wBais;
+    int hBais;
+    int wWeight;
+    int hWeight;
+};
+struct CShiftPolicies {
+    CShiftPolicy s[s_nShiftPolicy];
+};
+
+static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nConvSize) {
+    /*
+    s_shiftPolicies[] = {
+        { 1,  1 },  // 45度，右下方向切换卷积核
+        { 1, -1 },  //-45度，右上方向切换卷积核
+        { 1,  0 },  //  0度，正右方向切换卷积核
+        { 0,  1 },  // 90度，正下方向切换卷积核
+        { 1,  2 },  // 60度
+        { 2, -1 },  //-30度
+        { 1, -2 },  //-60度
+        { 2,  1 }   // 30度 
+    };
+
+    shiftPolicies = {{
+        { 1,  0, nConvSize,  0 },
+        { 1,  0, nConvSize,  0 },
+        { 1,  0, nConvSize,  0 },
+        { 1,  0, nConvSize,  0 },
+    }};
+
+    shiftPolicies = {{
+        { 1,  1, nConvSize,  nConvSize             },
+        { 1, -1, nConvSize,  nConvSize*(nConvs-1)  },
+        { 1,  0, nConvSize,  0                   },
+        { 0,  1, 0,          nConvSize             },
+    }};
+    */
+    shiftPolicies = {{
+        { 1,  0, nConvSize,  0          },
+        { 0,  1, 0,          nConvSize  },
+        { 1,  0, nConvSize,  0          },
+        { 0,  1, 0,          nConvSize  },
+    }};
+};
+
 
 static SCtx sCtx("CConvolutionNetwork");
-int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, const char* szPadding,  const char* szActivator, SNnNetwork& spNetwork) {
+int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
 
-    if(nWidth < 1 || nHeight < 1 || nConvs < 1) {
+    if(nWidth < 1 || nHeight < 1 || nShiftConvs < 1 || nLayers < 1) {
         return sCtx.error("卷积核参数错误");
     }
 
     CPointer<CConvolutionNetwork> spConvolution;
     CObject::createObject(spConvolution);
+    spConvolution->m_nLayers = nLayers;
     spConvolution->m_sizeConv = {
-        nConvs,
+        nShiftConvs,
         nHeight,
         nWidth,
         0
@@ -22,7 +74,7 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nConvs, cons
     spConvolution->m_nStrideHeight = 1;
     if( szActivator!=nullptr )
         spConvolution->m_strActivator = szActivator;
-    if( szPadding != nullptr ) {
+    if( szPadding != nullptr) {
         spConvolution->m_strPadding = szPadding;
     }
     spNetwork.setPtr(spConvolution.getPtr());
@@ -44,16 +96,16 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     // 计算参数
     //
-    int nBatchs, nInputCells, nInputWidth, nInputHeight, nLayers;
+    int nBatchs, nInputCells, nInputWidth, nInputHeight, nInputLayers;
     {
         STensor& spInDimVector = spBatchIn->getDimVector();
-        int nInDims = spInDimVector->getDataSize();
+        int nInputDims = spInDimVector->getDataSize();
         int* pInDimSizes = spInDimVector->getDataPtr<int>();
 
         //
         // 维度小于3的张量，无法进行卷积运算
         //
-        if(nInDims < 3) {
+        if(nInputDims < 3) {
             return sCtx.error("卷积网络的输入张量维度，必须大于等于3，其中第一个维度为张量个数，第二三个维度为卷积运算高和宽");
         }
 
@@ -64,11 +116,11 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
         }
 
-        nLayers = 1;
-        for( int i=3; i<nInDims; i++ ) {
-            nLayers *= pInDimSizes[i];
+        nInputLayers = 1;
+        for( int i=3; i<nInputDims; i++ ) {
+            nInputLayers *= pInDimSizes[i];
         }
-        nInputCells = nInputWidth*nInputHeight*nLayers;
+        nInputCells = nInputWidth*nInputHeight*nInputLayers;
         if(nBatchs * nInputCells != nInputSize ) {
             return sCtx.error("输入张量的维度信息核实际数据量不一致，输入张量非法");
         }
@@ -77,27 +129,27 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     // 判断是否需要初始化网络
     //
-    if(m_nLayers == 0) {
+    if(m_nInputLayers == 0) {
 
         if( m_sizeConv.batch <= 0 || m_sizeConv.width < 1 || m_sizeConv.height < 1 ) {
             return sCtx.error("卷积核参数错误");
         }
-        
-        int nConvs = m_sizeConv.batch;
-        int nWeights = nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch;
+
+        int nConvs = m_nLayers * m_sizeConv.batch;
+        int nWeights =  nConvs * m_sizeConv.width * m_sizeConv.height * nInputLayers;
         if(idType == CBasicData<double>::getStaticType()) {
-            initWeightT<double>(nWeights, nConvs * nLayers);
+            initWeightT<double>(nWeights, nConvs);
         }else if(idType == CBasicData<float>::getStaticType()) {
-            initWeightT<float>(nWeights, nConvs * nLayers);
+            initWeightT<float>(nWeights, nConvs);
         }else{
             return sCtx.error("不支持的数据类型");
         }
 
-        m_sizeIn.batch = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
-        m_nLayers = nLayers;
+        m_nInputSize = 0; //通过这个值的设置，实现之后的运行时参数必须重新初始化
+        m_nInputLayers = nInputLayers;
         m_idDataType = idType;
     }else {
-        if( m_nLayers != nLayers ) {
+        if( m_nInputLayers != nInputLayers ) {
             //
             // TODO: 重新初始化权值?(如果重新初始化，则已有权值将被清空，需要小心)
             //
@@ -112,15 +164,12 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
         }
     }
 
-    //
-    // 判断是否需要初始化运行时参数
-    //
-    m_sizeConv.layers = nLayers;
+    m_sizeConv.layers = nInputLayers;
     m_sizeIn = {
         nBatchs,
         nInputHeight,
         nInputWidth,
-        nLayers
+        nInputLayers
     };
 
     if(m_strPadding == "same" ) {
@@ -128,7 +177,7 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             nBatchs,
             (m_sizeIn.height - 1) / m_nStrideHeight + 1,
             (m_sizeIn.width - 1) / m_nStrideWidth + 1,
-            m_sizeConv.batch
+            m_nLayers
         };
         int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
         int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
@@ -141,15 +190,15 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             nBatchs,
             (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
             (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-            m_sizeConv.batch
+            m_nLayers
         };
         m_padding = { 0, 0, 0, 0 };
     }
 
     m_stepInConv = {
-        m_sizeIn.height * m_sizeIn.width * nLayers,
-        m_sizeIn.width * nLayers,
-        nLayers
+        m_sizeIn.height * m_sizeIn.width * nInputLayers,
+        m_sizeIn.width * nInputLayers,
+        nInputLayers
     };
 
     m_stepInMove = {  
@@ -159,15 +208,15 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     };
 
     m_stepOut = {
-        m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
-        m_sizeOut.width * m_sizeConv.batch,
-        m_sizeConv.batch
+        m_sizeOut.height * m_sizeOut.width * m_nLayers,
+        m_sizeOut.width * m_nLayers,
+        m_nLayers
     };
 
     m_stepConv = {
-        m_sizeConv.height * m_sizeConv.width * nLayers,
-        m_sizeConv.width * nLayers,
-        nLayers
+        m_sizeConv.height * m_sizeConv.width * nInputLayers,
+        m_sizeConv.width * nInputLayers,
+        nInputLayers
     };
 
     STensor spOutDimVector;
@@ -175,10 +224,10 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
         return sCtx.error("创建输出张量的维度向量失败");
     }
 
-    if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+    if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, nBatchs * m_stepOut.batch) != sCtx.success() ){
         return sCtx.error("创建输出张量失败");
     }
-
+    
     m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
     if(m_pActivator == nullptr) {
         return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
@@ -219,6 +268,29 @@ template<typename Q> int CConvolutionNetwork::initWeightT(int nWeights, int nCon
     return 0;
 }
 
+
+//
+//
+//  卷积运算函数，进行多级循环
+//      1，批量
+//      2，输出层数
+//      3，输出高度
+//      4，输出宽度
+//      5，卷积高度
+//      6，卷积宽度
+//      7，卷积深度
+//
+//  每一层输出层，其实是由每层多个卷积核(sizeConv.batch)共同卷积而成，当一层的卷积核为1个时，则退化为行业标
+//  准卷积核。
+//
+//  输出层的每一个坐标位置（宽度、高度）所选用的卷积核，是由一个策略决定的，策略决定了如何根据位置选择需要卷积
+//  的卷积核。目前策略为，两种之一：
+//      1，高度变化时，卷积核不变，宽度变化时，卷积核顺序轮换
+//      2，宽度变化时，卷积核不变，高度变化时，卷积核顺序轮换
+//  这种策略时参考了人类大脑皮层对于朝向的相应规则，来模拟的。在人类大脑皮层V1层中，对朝向等特征的检测，往往时
+//  每1mm从0度到360度，一个周期，不断的轮换检测。
+//
+//
 template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
     //
@@ -245,12 +317,27 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
         Q* pWeights;
         Q* pBais;
         int index;
-    }itVars0, itVars1, itVars2, itVars3, itVars4, itVars5, itVars6, it = {
+    }itVars, itVars0, itVars2, itVars3, itVars1, itVars4, itVars5, itVars6, it = {
         spBatchIn->getDataPtr<Q>(),
         m_spBatchOut->getDataPtr<Q>(),
         (Q*)(void*)m_spWeights,
         (Q*)(void*)m_spBais,
     };
+
+    CShiftPolicy stepPolicy;
+    CShiftPolicies shiftPolicies;
+    s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch );
+
+    //
+    //
+    //  注意，
+    //      权重卷积核大小 : nLayers * nShiftConvs * h * w * l
+    //      偏置大小：nLayers * nShiftConvs
+    //
+    int nLayers = m_nLayers;
+    int nLayerStepShifts = sizeConv.batch * stepConv.batch;
+    Q dConv, *pWeightEnd;
+    itVars = it;
 
     //
     //  注意，关于填充问题，算法相对比较抽象。
@@ -277,51 +364,67 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
     //
     int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
 
-    Q dConv;
     for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
         itVars0.pOut = it.pOut;
-        for(itVars1.index=0; itVars1.index < sizeOut.height; itVars1.index++) {
+        it.pWeights = itVars.pWeights;  //重置weight
+        it.pBais = itVars.pBais;        //重置bais
+        for(itVars1.index = 0; itVars1.index < nLayers; itVars1.index++) {
             itVars1.pIn = it.pIn;
             itVars1.pOut = it.pOut;
-
-            //左边填充了都填充了空值，不能参与运算
-            if(itVars1.index < rcPading.top) {
-                rcConv.top = rcPading.top;
-                rcConv.bottom = sizeConv.height;
-                it.pIn += rcConv.top * stepInConv.height;
-                it.pWeights += rcConv.top * stepConv.height;
-            }else if(itVars1.index > iCompleteConvHeightIndex) {
-                rcConv.top = 0;
-                rcConv.bottom = sizeConv.height - (itVars1.index - iCompleteConvHeightIndex);
-            }else{
-                rcConv.top = 0;
-                rcConv.bottom = sizeConv.height;
-            }
-
-            for(itVars2.index=0; itVars2.index < sizeOut.width; itVars2.index++) {
+            itVars1.pWeights = it.pWeights;
+            itVars1.pBais = it.pBais;
+            pWeightEnd = it.pWeights + nLayerStepShifts;
+            stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
+            for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
                 itVars2.pIn = it.pIn;
                 itVars2.pOut = it.pOut;
                 itVars2.pWeights = it.pWeights;
                 itVars2.pBais = it.pBais;
 
-                //左右填充了都填充了空值，不能参与运算
-                if(itVars2.index < rcPading.left) {
-                    rcConv.left = rcPading.left;
-                    rcConv.right = sizeConv.width;
-                    it.pIn += rcConv.left * stepInConv.width;
-                    it.pWeights += rcConv.left * stepConv.width;
-                }else if(itVars2.index > iCompleteConvWidthIndex) {
-                    rcConv.left = 0;
-                    rcConv.right = sizeConv.width - (itVars2.index - iCompleteConvWidthIndex);
+                //左边填充了都填充了空值，不能参与运算
+                if(itVars2.index < rcPading.top) {
+                    //
+                    // 卷积核顶部裁剪，相当于将起始坐标下移，同时
+                    //      1,  输入矩阵的起始坐标也需要下移
+                    //      2,  权重的其实位置也许要同步下移到实际的其实位置
+                    //
+                    rcConv.top = rcPading.top;
+                    rcConv.bottom = sizeConv.height;
+                    it.pIn += rcConv.top * stepInConv.height;
+                    it.pWeights += rcConv.top * stepConv.height;
+                }else if(itVars2.index > iCompleteConvHeightIndex) {
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height - (itVars2.index - iCompleteConvHeightIndex);
                 }else{
-                    rcConv.left = 0;
-                    rcConv.right = sizeConv.width;
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height;
                 }
 
-                for(itVars3.index = 0; itVars3.index < sizeConv.batch; itVars3.index++) {
+                for(itVars3.index=0; itVars3.index < sizeOut.width; itVars3.index++) {
                     itVars3.pIn = it.pIn;
+                    itVars3.pOut = it.pOut;
                     itVars3.pWeights = it.pWeights;
+                    itVars3.pBais = it.pBais;
+
+                    //左边填充了都填充了空值，不能参与运算
+                    if(itVars3.index < rcPading.left) {
+                        //
+                        // 卷积核左部裁剪，相当于将起始坐标右移，同时
+                        //      1，输入矩阵的起始坐标也需要右移
+                        //      2，权重矩阵其实坐标也需要右移到对应的开始位置
+                        //
+                        rcConv.left = rcPading.left;
+                        rcConv.right = sizeConv.width;
+                        it.pIn += rcConv.left * stepInConv.width;
+                        it.pWeights += rcConv.left * stepConv.width;
+                    }else if(itVars3.index > iCompleteConvWidthIndex) {
+                        rcConv.left = 0;
+                        rcConv.right = sizeConv.width - (itVars3.index - iCompleteConvWidthIndex);
+                    }else{
+                        rcConv.left = 0;
+                        rcConv.right = sizeConv.width;
+                    }
 
                     //初始化卷积结果
                     dConv = 0;
@@ -346,20 +449,37 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
                     //卷积结果减去偏置
                     (*it.pOut) = dConv - (*it.pBais);
 
-                    it.pIn = itVars3.pIn;
-                    it.pOut++;
-                    it.pWeights = itVars3.pWeights + stepConv.batch;
-                    it.pBais++;
-                }
-                it.pWeights = itVars2.pWeights;
-                it.pBais = itVars2.pBais;
-                it.pIn = itVars2.pIn + stepInMove.width;
-                it.pOut = itVars2.pOut + stepOut.width;
-            }
-            it.pIn = itVars1.pIn + stepInMove.height;
-            it.pOut = itVars1.pOut + stepOut.height;
-        }
+                    it.pIn = itVars3.pIn + stepInMove.width;
+                    it.pOut = itVars3.pOut + stepOut.width;
 
+                    //
+                    // 如果权重超出范围，则重新开始
+                    //  注意权重矩阵    尺寸：nShiftConvs * w * h * l
+                    //                 步长：w * h * l
+                    //
+                    it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
+                    it.pBais = itVars3.pBais + stepPolicy.wBais;
+                    if(it.pWeights >= pWeightEnd ) {
+                        it.pWeights -= nLayerStepShifts;
+                        it.pBais -= sizeConv.batch;
+                    }
+                }
+
+                it.pIn = itVars2.pIn + stepInMove.height;
+                it.pOut = itVars2.pOut + stepOut.height;
+                it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
+                it.pBais = itVars2.pBais + stepPolicy.hBais;
+                if(it.pWeights >= pWeightEnd ) {
+                    it.pWeights -= nLayerStepShifts;
+                    it.pBais -= sizeConv.batch;
+                }
+            }
+            it.pIn = itVars1.pIn;
+            it.pOut = itVars1.pOut + 1;
+            it.pWeights = itVars1.pWeights + nLayerStepShifts;
+            it.pBais = itVars1.pBais + sizeConv.batch;
+        }
+        
         //
         // 激活结果值
         //
@@ -410,9 +530,8 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     spBatchIn = m_spBatchIn;
     spInDeviation = m_spBatchInDeviation;
 
-
     //
-    // 关于尺寸说明，注意参考evalT中的说明
+    // 关于尺寸说明，注意参考evalT里面的说明
     //
     CBatchSize3D sizeIn = m_sizeIn;
     CBatchSize3D sizeOut = m_sizeOut;
@@ -422,11 +541,15 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     CBatchSize2D stepOut = m_stepOut;
     CBatchSize2D stepConv = m_stepConv;
 
-    int nConvs = sizeConv.batch;
-    int nWeights = stepConv.batch * sizeConv.batch;
+    int nConvs = sizeConv.batch * m_nLayers;
+    int nWeights = stepConv.batch * sizeConv.batch * m_nLayers;
     Q* pWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nWeights+nConvs);
     Q* pBaisDeviationArray = pWeightDerivationArray+nWeights;
     memset(pWeightDerivationArray, 0 ,sizeof(Q)*(nWeights+nConvs));
+
+    CShiftPolicy stepPolicy;
+    CShiftPolicies shiftPolicies;
+    s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch);
 
     struct CItOutVariables {
         Q* pIn;
@@ -446,19 +569,35 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         (Q*)(void*)m_spWeights,
         pWeightDerivationArray,
         pBaisDeviationArray
-    }, itVars, itVars0,itVars1,itVars2,itVars3,itVars4,itVars5,itVars6;
+    }, itVars, itVars0,itVars2,itVars3,itVars1,itVars4,itVars5,itVars6;
     memset(it.pInDeviation, 0, sizeof(Q)*stepInConv.batch * sizeIn.batch);
 
     Q deviationZ;
     Q pDeviationZArray[stepOut.batch];
+    int nLayers = m_nLayers;
+    int nLayerStepShifts = sizeConv.batch * stepConv.batch;
+    Q* pWeightEnd;
 
+    //
+    //
+    //  注意，
+    //      权重卷积核大小 : nLayers * nShiftConvs * h * w * l
+    //      偏置大小：nLayers * nShiftConvs 
+    //
     itVars = it;
+
     //
     //  注意，关于填充问题，参考evalT说明
     //
     CRect2D rcConv, rcPading = m_padding;
+    //将输入指针向Padding后的起点偏移，变成一个非法指针
     int nOffsetIn = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     int nOffsetConv;
+    //输出矩阵能够完整卷积的下标，再往下，则需要剪裁了
+    int iCompleteConvHeightIndex = sizeOut.height - rcPading.bottom - 1;
+    //输出矩阵能够完整卷积的下标，再往右，则需要剪裁了
+    int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
+
     it.pIn = it.pIn - nOffsetIn;
     it.pInDeviation = it.pInDeviation - nOffsetIn;
     for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
@@ -468,60 +607,57 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         itVars0.pOutDeviation = it.pOutDeviation; 
 
         m_pActivator->deactivate(stepOut.batch, it.pOut, it.pOutDeviation, pDeviationZArray);
-        it.pZDeviatioin = pDeviationZArray;
-
-        for(itVars1.index=0; itVars1.index < sizeOut.height; itVars1.index++) {
+        it.pZDeviatioin = pDeviationZArray;             
+        it.pWeights = itVars.pWeights;                  //重置Weight
+        it.pWeightDevivation = itVars.pWeightDevivation;//重置偏差
+        it.pBaisDeviation = itVars.pBaisDeviation;      //重置Bais
+        for(itVars1.index = 0; itVars1.index < nLayers; itVars1.index++) {
             itVars1.pIn = it.pIn;
             itVars1.pInDeviation = it.pInDeviation;
             itVars1.pZDeviatioin = it.pZDeviatioin;
-            //上下填充了都填充了控空制，不能参与运算
-            if(itVars1.index < rcPading.top) {
-                rcConv.top = rcPading.top;
-                rcConv.bottom = sizeConv.height;
-                nOffsetIn = rcConv.top * stepInConv.height;
-                nOffsetConv = rcConv.top * stepConv.height;
-                it.pIn += nOffsetIn;
-                it.pInDeviation += nOffsetIn;
-                it.pWeights += nOffsetConv;
-                it.pWeightDevivation += nOffsetConv;
-            }else if(itVars1.index >= sizeOut.height - rcPading.bottom) {
-                rcConv.top = 0;
-                rcConv.bottom = sizeConv.height - (itVars1.index - sizeOut.height + 1 + rcPading.bottom);
-            }else{
-                rcConv.top = 0;
-                rcConv.bottom = sizeConv.height;
-            }
-            for(itVars2.index=0; itVars2.index < sizeOut.width; itVars2.index++) {
+            itVars1.pWeights = it.pWeights;
+            itVars1.pWeightDevivation = it.pWeightDevivation;
+            itVars1.pBaisDeviation = it.pBaisDeviation;
+            pWeightEnd = it.pWeights + nLayerStepShifts;
+            stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
+            for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
+                itVars2.pIn = it.pIn;
+                itVars2.pInDeviation = it.pInDeviation;
+                itVars2.pZDeviatioin = it.pZDeviatioin;
                 itVars2.pWeights = it.pWeights;
                 itVars2.pWeightDevivation = it.pWeightDevivation;
                 itVars2.pBaisDeviation = it.pBaisDeviation;
-                itVars2.pZDeviatioin = it.pZDeviatioin;
 
-                //左右填充了都填充了空制，不能参与运算
-                if(itVars2.index < rcPading.left) {
-                    rcConv.left = rcPading.left;
-                    rcConv.right = sizeConv.width;
-                    rcConv.left = rcPading.left;
-                    rcConv.right = sizeConv.width;
-                    nOffsetIn = rcConv.left * stepInConv.width;
-                    nOffsetConv = rcConv.left * stepConv.width;
+                //上下填充了都填充了控空制，不能参与运算
+                if(itVars2.index < rcPading.top) {
+                    //
+                    // 卷积核顶部裁剪，相当于将起始坐标下移，同时
+                    //      1,  输入矩阵的起始坐标也需要下移
+                    //      2,  权重的其实位置也许要同步下移到实际的其实位置
+                    //
+                    rcConv.top = rcPading.top;
+                    rcConv.bottom = sizeConv.height;
+                    nOffsetIn = rcConv.top * stepInConv.height;
+                    nOffsetConv = rcConv.top * stepConv.height;
                     it.pIn += nOffsetIn;
                     it.pInDeviation += nOffsetIn;
                     it.pWeights += nOffsetConv;
                     it.pWeightDevivation += nOffsetConv;
-                }else if(itVars2.index >= sizeOut.width - rcPading.right) {
-                    rcConv.left = 0;
-                    rcConv.right = sizeConv.width - (itVars2.index - sizeOut.width + 1 + rcPading.right);
+                }else if(itVars2.index > iCompleteConvHeightIndex) {
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height - (itVars2.index - iCompleteConvHeightIndex);
                 }else{
-                    rcConv.left = 0;
-                    rcConv.right = sizeConv.width;
+                    rcConv.top = 0;
+                    rcConv.bottom = sizeConv.height;
                 }
 
-                for(itVars3.index = 0; itVars3.index < nConvs; itVars3.index++) {
+                for(itVars3.index=0; itVars3.index < sizeOut.width; itVars3.index++) {
                     itVars3.pIn = it.pIn;
                     itVars3.pInDeviation = it.pInDeviation;
+                    itVars3.pZDeviatioin = it.pZDeviatioin;
                     itVars3.pWeights = it.pWeights;
                     itVars3.pWeightDevivation = it.pWeightDevivation;
+                    itVars3.pBaisDeviation = it.pBaisDeviation;
 
                     //
                     //  计算目标函数对当前输出值的偏导数
@@ -539,6 +675,29 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
                     deviationZ = (*it.pZDeviatioin);
                     if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) 
                     {
+                        //左右填充了都填充了空制，不能参与运算
+                        if(itVars3.index < rcPading.left) {
+                            //
+                            // 卷积核左部裁剪，相当于将起始坐标右移，同时
+                            //      1，输入矩阵的起始坐标也需要右移
+                            //      2，权重矩阵其实坐标也需要右移到对应的开始位置
+                            //
+                            rcConv.left = rcPading.left;
+                            rcConv.right = sizeConv.width;
+                            nOffsetIn = rcConv.left * stepInConv.width;
+                            nOffsetConv = rcConv.left * stepConv.width;
+                            it.pIn += nOffsetIn;
+                            it.pInDeviation += nOffsetIn;
+                            it.pWeights += nOffsetConv;
+                            it.pWeightDevivation += nOffsetConv;
+                        }else if(itVars3.index > iCompleteConvWidthIndex) {
+                            rcConv.left = 0;
+                            rcConv.right = sizeConv.width - (itVars3.index - iCompleteConvWidthIndex);
+                        }else{
+                            rcConv.left = 0;
+                            rcConv.right = sizeConv.width;
+                        }
+
                         //
                         //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                         //  
@@ -583,27 +742,43 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
                         (*it.pBaisDeviation) += (-deviationZ);
                     }
 
-                    it.pIn = itVars3.pIn;
-                    it.pInDeviation = itVars3.pInDeviation;
-                    it.pWeights = itVars3.pWeights + stepConv.batch;
-                    it.pWeightDevivation = itVars3.pWeightDevivation + stepConv.batch;
-                    it.pBaisDeviation++;
-                    it.pZDeviatioin++;
+                    it.pIn = itVars3.pIn + stepInMove.width;
+                    it.pInDeviation = itVars3.pInDeviation + stepInMove.width;
+                    it.pZDeviatioin = itVars3.pZDeviatioin + stepOut.width;
+
+                    //
+                    // 如果权重超出范围，则重新开始
+                    //  注意权重矩阵    尺寸：nShiftConvs * w * h * l
+                    //                 步长：w * h * l
+                    //
+                    it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
+                    it.pWeightDevivation = itVars3.pWeightDevivation + stepPolicy.wWeight;
+                    it.pBaisDeviation = itVars3.pBaisDeviation + stepPolicy.wBais;
+                    if(it.pWeights >= pWeightEnd ) {
+                        it.pWeights -= nLayerStepShifts;
+                        it.pWeightDevivation -= nLayerStepShifts;
+                        it.pBaisDeviation -= sizeConv.batch;
+                    }
                 }
-
-                it.pWeights = itVars2.pWeights;
-                it.pWeightDevivation = itVars2.pWeightDevivation;
-                it.pBaisDeviation = itVars2.pBaisDeviation;
-                it.pZDeviatioin = itVars2.pZDeviatioin;
-
-                it.pIn += stepInMove.width;
-                it.pInDeviation += stepInMove.width;
-                it.pZDeviatioin += stepOut.width;
+                it.pIn = itVars2.pIn + stepInMove.height;
+                it.pInDeviation = itVars2.pInDeviation + stepInMove.height;
+                it.pZDeviatioin = itVars2.pZDeviatioin + stepOut.height;
+                it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
+                it.pWeightDevivation = itVars2.pWeightDevivation + stepPolicy.hWeight;
+                it.pBaisDeviation = itVars2.pBaisDeviation + stepPolicy.hBais;
+                if(it.pWeights >= pWeightEnd ) {
+                    it.pWeights -= nLayerStepShifts;
+                    it.pWeightDevivation -= nLayerStepShifts;
+                    it.pBaisDeviation -= sizeConv.batch;
+                }
             }
 
-            it.pIn = itVars1.pIn + stepInMove.height;
-            it.pInDeviation = itVars1.pInDeviation + stepInMove.height;
-            it.pZDeviatioin = itVars1.pZDeviatioin + stepOut.height;
+            it.pIn = itVars1.pIn;
+            it.pInDeviation = itVars1.pInDeviation;
+            it.pZDeviatioin = itVars1.pZDeviatioin + 1 ;
+            it.pWeights = itVars1.pWeights + nLayerStepShifts;
+            it.pWeightDevivation = itVars1.pWeightDevivation + nLayerStepShifts;
+            it.pBaisDeviation = itVars1.pBaisDeviation + sizeConv.batch;
         }
 
         //  更新迭代参数
@@ -622,7 +797,6 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     // 
     // 权重值更新，需要在输入偏导数计算完成后进行，否则，中间会影响输入偏导数值
     //
-    Q* pWeightEnd = it.pWeights+nWeights;
     while(it.pWeights != pWeightEnd) {
         *it.pWeights -= *it.pWeightDevivation;
         it.pWeights++, it.pWeightDevivation++;
@@ -633,38 +807,6 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         *pBais -= *it.pBaisDeviation;
         pBais++, it.pBaisDeviation++;
     }
-
-    /*
-    #ifdef _DEBUG
-    {
-        double avgWeight = 0;
-        double maxW = -100000;
-        double minW = 100000;
-        double avgDerivation = 0;
-        double avgBais = 0;
-        for(int iWeight=0;iWeight<nWeights; iWeight++) {
-            avgWeight += DVV(pWeightArray,iWeight,nWeights) / nWeights;
-            avgDerivation += abs(DVV(pWeightDerivationArray, iWeight, nWeights)) / nWeights;
-
-            if(maxW < DVV(pWeightArray,iWeight,nWeights)) {
-                maxW = DVV(pWeightArray,iWeight,nWeights);
-            }
-            if(minW > DVV(pWeightArray,iWeight,nWeights)) {
-                minW = DVV(pWeightArray,iWeight,nWeights);
-            }
-        }
-        for(int iConv = 0; iConv<nConvs; iConv++) {
-            avgBais += abs(DVV(pBaisArray, iConv, nConvs)) / nConvs;
-        }
-        
-        static int t = 0;
-        if( (t++ / 2) % 10 == 0) {
-            std::cout << "Conv: " << nWeights << " ,Weight: " << minW << " ," << avgWeight <<" ," << maxW <<" , Bais: " << avgBais << ", AvgWD: " << avgDerivation << "\n";
-        }
-    }
-    #endif//_DEBUG
-    */
-
     return sCtx.success();
 }
 
@@ -688,7 +830,8 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
 
 int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
     //基础参数
-    ar.visit("convs", m_sizeConv.batch);
+    ar.visit("layers", m_nLayers);
+    ar.visit("shiftConvs", m_sizeConv.batch);
     ar.visit("dropout", m_sizeConv.batch);
     ar.visit("width", m_sizeConv.width);
     ar.visit("height", m_sizeConv.height);
@@ -699,12 +842,12 @@ int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
     ar.visitString("padding", m_strPadding);
 
     //运行参数
-    ar.visit("inputLayers", m_nLayers);
+    ar.visit("inputLayers", m_nInputLayers);
     ar.visit("dataType", m_idDataType);
-    if(m_nLayers) {
+    if(m_nInputLayers) {
         int nBytes = CType::getTypeBytes(m_idDataType);
-        ar.visitTaker("weights", nBytes * m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);
-        ar.visitTaker("bais", nBytes * m_sizeConv.batch, m_spBais);
+        ar.visitTaker("weights", nBytes * m_nInputLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch * m_nLayers, m_spWeights);
+        ar.visitTaker("bais", nBytes * m_sizeConv.batch * m_nLayers, m_spBais);
     }
     return sCtx.success();
 }
