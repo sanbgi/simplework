@@ -549,73 +549,69 @@ int CRotConvNetwork::prepareNetwork(const STensor& spBatchIn) {
         }
     }
 
-    if(m_pActivator == nullptr) {
-        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
-        if(m_pActivator == nullptr) {
-            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
-        }
-
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
-            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-        }
-    }
-
     //
     // 判断是否需要初始化运行时参数
     //
-    if( m_nInputSize != nInputSize ) {
-        
-        m_sizeConv.layers = nLayers;
-        m_sizeIn = {
-            nBatchs,
-            nInputHeight,
-            nInputWidth,
-            nLayers
-        };
 
-        m_sizeOut = {
-            m_sizeIn.batch,
-            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-            m_sizeConv.batch
-        };
+    m_sizeConv.layers = nLayers;
+    m_sizeIn = {
+        nBatchs,
+        nInputHeight,
+        nInputWidth,
+        nLayers
+    };
 
-        m_stepInConv = {
-            m_sizeIn.height * m_sizeIn.width * nLayers,
-            m_sizeIn.width * nLayers,
-            nLayers
-        };
+    m_sizeOut = {
+        m_sizeIn.batch,
+        (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+        (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+        m_sizeConv.batch
+    };
 
-        m_stepInMove = {  
-            m_stepInConv.batch,
-            m_stepInConv.height * m_nStrideHeight,
-            m_stepInConv.width * m_nStrideWidth
-        };
+    m_stepInConv = {
+        m_sizeIn.height * m_sizeIn.width * nLayers,
+        m_sizeIn.width * nLayers,
+        nLayers
+    };
 
-        m_stepOut = {
-            m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
-            m_sizeOut.width * m_sizeConv.batch,
-            m_sizeConv.batch
-        };
+    m_stepInMove = {  
+        m_stepInConv.batch,
+        m_stepInConv.height * m_nStrideHeight,
+        m_stepInConv.width * m_nStrideWidth
+    };
 
-        m_stepConv = {
-            m_sizeConv.height * m_sizeConv.width * nLayers,
-            m_sizeConv.width * nLayers,
-            nLayers
-        };
+    m_stepOut = {
+        m_sizeOut.height * m_sizeOut.width * m_sizeConv.batch,
+        m_sizeOut.width * m_sizeConv.batch,
+        m_sizeConv.batch
+    };
 
-        STensor spOutDimVector;
-        if( STensor::createVector<int>(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度向量失败");
-        }
+    m_stepConv = {
+        m_sizeConv.height * m_sizeConv.width * nLayers,
+        m_sizeConv.width * nLayers,
+        nLayers
+    };
 
-        if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
-            return sCtx.error("创建输出张量失败");
-        }
-
-        m_spBatchInDeviation.release();
-        m_nInputSize = nInputSize;
+    STensor spOutDimVector;
+    if( STensor::createVector<int>(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
+        return sCtx.error("创建输出张量的维度向量失败");
     }
+
+    if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, m_sizeIn.batch * m_stepOut.batch) != sCtx.success() ){
+        return sCtx.error("创建输出张量失败");
+    }
+    
+    m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
+    if(m_pActivator == nullptr) {
+        return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+    }
+
+    if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
+        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+    }
+
+    m_spBatchInDeviation.release();
+    m_nInputSize = nInputSize;
     return sCtx.success();
 }
 

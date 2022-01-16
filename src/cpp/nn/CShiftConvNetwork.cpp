@@ -164,88 +164,81 @@ int CShiftConvNetwork::prepareNetwork(const STensor& spBatchIn) {
         }
     }
 
-    if(m_pActivator == nullptr) {
-        m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
-        if(m_pActivator == nullptr) {
-            return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
-        }
+    m_sizeConv.layers = nInputLayers;
+    m_sizeIn = {
+        nBatchs,
+        nInputHeight,
+        nInputWidth,
+        nInputLayers
+    };
 
-        if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
-            return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-        }
-    }
-
-    //
-    // 判断是否需要初始化运行时参数
-    //
-    if( m_nInputSize != nInputSize ) {
-        
-        m_sizeConv.layers = nInputLayers;
-        m_sizeIn = {
+    if(m_strPadding == "same" ) {
+        m_sizeOut = {
             nBatchs,
-            nInputHeight,
-            nInputWidth,
-            nInputLayers
-        };
-
-        if(m_strPadding == "same" ) {
-            m_sizeOut = {
-                nBatchs,
-                (m_sizeIn.height - 1) / m_nStrideHeight + 1,
-                (m_sizeIn.width - 1) / m_nStrideWidth + 1,
-                m_nLayers
-            };
-            int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
-            int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
-            m_padding.left = nPadW / 2;
-            m_padding.right = nPadW - m_padding.left;
-            m_padding.top = nPadH / 2;
-            m_padding.bottom = nPadH - m_padding.top;
-        }else{
-            m_sizeOut = {
-                nBatchs,
-                (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-                (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-                m_nLayers
-            };
-            m_padding = { 0, 0, 0, 0 };
-        }
-
-        m_stepInConv = {
-            m_sizeIn.height * m_sizeIn.width * nInputLayers,
-            m_sizeIn.width * nInputLayers,
-            nInputLayers
-        };
-
-        m_stepInMove = {  
-            m_stepInConv.batch,
-            m_stepInConv.height * m_nStrideHeight,
-            m_stepInConv.width * m_nStrideWidth
-        };
-
-        m_stepOut = {
-            m_sizeOut.height * m_sizeOut.width * m_nLayers,
-            m_sizeOut.width * m_nLayers,
+            (m_sizeIn.height - 1) / m_nStrideHeight + 1,
+            (m_sizeIn.width - 1) / m_nStrideWidth + 1,
             m_nLayers
         };
-
-        m_stepConv = {
-            m_sizeConv.height * m_sizeConv.width * nInputLayers,
-            m_sizeConv.width * nInputLayers,
-            nInputLayers
+        int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
+        int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
+        m_padding.left = nPadW / 2;
+        m_padding.right = nPadW - m_padding.left;
+        m_padding.top = nPadH / 2;
+        m_padding.bottom = nPadH - m_padding.top;
+    }else{
+        m_sizeOut = {
+            nBatchs,
+            (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+            (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+            m_nLayers
         };
-
-        STensor spOutDimVector;
-        if( STensor::createVector<int>(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度向量失败");
-        }
-
-        if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, nBatchs * m_stepOut.batch) != sCtx.success() ){
-            return sCtx.error("创建输出张量失败");
-        }
-
-        m_nInputSize = nInputSize;
+        m_padding = { 0, 0, 0, 0 };
     }
+
+    m_stepInConv = {
+        m_sizeIn.height * m_sizeIn.width * nInputLayers,
+        m_sizeIn.width * nInputLayers,
+        nInputLayers
+    };
+
+    m_stepInMove = {  
+        m_stepInConv.batch,
+        m_stepInConv.height * m_nStrideHeight,
+        m_stepInConv.width * m_nStrideWidth
+    };
+
+    m_stepOut = {
+        m_sizeOut.height * m_sizeOut.width * m_nLayers,
+        m_sizeOut.width * m_nLayers,
+        m_nLayers
+    };
+
+    m_stepConv = {
+        m_sizeConv.height * m_sizeConv.width * nInputLayers,
+        m_sizeConv.width * nInputLayers,
+        nInputLayers
+    };
+
+    STensor spOutDimVector;
+    if( STensor::createVector<int>(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
+        return sCtx.error("创建输出张量的维度向量失败");
+    }
+
+    if( STensor::createTensor(m_spBatchOut, spOutDimVector, idType, nBatchs * m_stepOut.batch) != sCtx.success() ){
+        return sCtx.error("创建输出张量失败");
+    }
+    
+    m_pActivator = CActivator::getActivation(idType, m_strActivator.c_str());
+    if(m_pActivator == nullptr) {
+        return sCtx.error((std::string("不支持的激活函数名: ") + m_strActivator).c_str());
+    }
+
+    if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
+        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+    }
+
+    m_spBatchInDeviation.release();
+    m_nInputSize = nInputSize;
     return sCtx.success();
 }
 
