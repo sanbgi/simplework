@@ -4,7 +4,7 @@
 #include <iostream>
 #include <time.h>
 
-SCtx CDenseNetwork::sCtx("CDenseNetwork");
+static SCtx sCtx("CDenseNetwork");
 int CDenseNetwork::createNetwork(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
     CPointer<CDenseNetwork> spDense;
     CObject::createObject(spDense);

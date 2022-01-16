@@ -1,6 +1,6 @@
 #include "CParallelNetwork.h"
 
-SCtx CParallelNetwork::sCtx("CParallelNetwork");
+static SCtx sCtx("CParallelNetwork");
 int CParallelNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
     CPointer<CParallelNetwork> spSequence;
     CObject::createObject(spSequence);

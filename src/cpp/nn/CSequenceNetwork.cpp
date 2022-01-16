@@ -1,6 +1,6 @@
 #include "CSequenceNetwork.h"
 
-SCtx CSequenceNetwork::sCtx("CSequenceNetwork");
+static SCtx sCtx("CSequenceNetwork");
 int CSequenceNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
     CPointer<CSequenceNetwork> spSequence;
     CObject::createObject(spSequence);

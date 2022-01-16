@@ -1,7 +1,7 @@
 #include "CPoolNetwork.h"
 #include "iostream"
 
-SCtx CPoolNetwork::sCtx("CPoolNetwork");
+static SCtx sCtx("CPoolNetwork");
 int CPoolNetwork::createNetwork(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) {
     CPointer<CPoolNetwork> spPool;
     CObject::createObject(spPool);

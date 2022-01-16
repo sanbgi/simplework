@@ -68,9 +68,6 @@ private:
     CTaker<bool*> m_spDropout;
     int m_nEvalDropout;
 
-    //环境变量
-    static SCtx sCtx;
-    
 public:
     CDenseNetwork() {
         m_nCells = 0;

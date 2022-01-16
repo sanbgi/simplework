@@ -56,8 +56,6 @@ private:
     STensor m_spBatchOut;
     STensor m_spOutDimVector;
 
-    static SCtx sCtx;
-
 protected:
     CPoolNetwork() {
         m_nPoolWidth = -1;

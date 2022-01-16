@@ -40,7 +40,6 @@ public:
     STensor m_spBatchOut;
     STensor m_spBatchIn;
     STensor m_spInDeviation;
-    static SCtx sCtx;
 };
 
 #endif//__SimpleWork_NN_CParallelNetwork_H__
