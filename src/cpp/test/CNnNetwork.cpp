@@ -26,7 +26,8 @@ void CNnNetwork::runLearn() {
     //
     STensor spPipeIn = STensor::createValue(10);
     //SNnNetwork nn = createNetwork();
-    SNnNetwork nn = createGlobalPollNetwork();
+    //SNnNetwork nn = createGlobalPollNetwork();
+    SNnNetwork nn = createLeNet_5();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin")
@@ -228,6 +229,24 @@ SNnNetwork CNnNetwork::createGlobalPollNetwork() {
     //arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     //arrNets.push_back(SNnNetwork::createConv(3,3,10));
     //arrNets.push_back(SNnNetwork::createGlobalPool(nullptr, "softmax"));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    return SNnNetwork::loadFile("D://snetwork.bin");
+}
+
+SNnNetwork CNnNetwork::createLeNet_5(bool isStandardNet){
+    std::vector<SNnNetwork> arrNets;
+    //
+    //  如果是28X28，则isStandardNet == false, padding="same"
+    //  如果时32X32，则isStandardNet == true, padding="valid"
+    //
+    arrNets.push_back(SNnNetwork::createConv(5,5,6,isStandardNet?nullptr:"same"));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(5,5,16));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(5,5,120));
+    arrNets.push_back(SNnNetwork::createDense(84));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
