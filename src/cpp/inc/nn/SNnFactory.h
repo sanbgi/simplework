@@ -24,17 +24,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         virtual int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) = 0;
         //
-        //  创建卷积神经网络
-        //
-        virtual int createConvolution(int nWidth, int nHeight, int nConv, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
-        //
         //  创建旋转卷积神经网络，（卷积核每移动一步，会旋转一个角度）
         //
         virtual int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) = 0;
         //
         //  创建轮换卷积核，卷积核在x或有轴方向，每一层都有nShiftConvs个卷积核轮换使用
         //
-        virtual int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
+        virtual int createConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
         //
         //  创建顺序处理神经网络
         //

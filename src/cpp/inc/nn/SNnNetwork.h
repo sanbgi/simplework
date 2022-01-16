@@ -56,13 +56,19 @@ public:
 
     static SNnNetwork createConv(int nWidth, int nHeight, int nConv, const char* szPadding=nullptr, const char* szActivator = nullptr ) {
         SNnNetwork nn;
-        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, szPadding, szActivator, nn);
+        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, 1, 1, szPadding, szActivator, nn);
         return nn;
     }
 
     static SNnNetwork createShiftConv(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding = nullptr, const char* szActivator = nullptr ) {
         SNnNetwork nn;
-        SNnFactory::getFactory()->createShiftConvolution(nWidth, nHeight, nLayers, nShiftConvs, szPadding, szActivator, nn);
+        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nLayers, nShiftConvs, 1, szPadding, szActivator, nn);
+        return nn;
+    }
+
+    static SNnNetwork createStrideConv(int nWidth, int nHeight, int nConv, int nStride, const char* szPadding=nullptr, const char* szActivator = nullptr ) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, 1, nStride, szPadding, szActivator, nn);
         return nn;
     }
 

@@ -27,12 +27,8 @@ public:
         return CDenseNetwork::createNetwork(nCells, dDropoutRate, szActivator, spNetwork);
     }
 
-    int createConvolution(int nWidth, int nHeight, int nConv, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
-        return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, 1, szPadding, szActivator, spNetwork);
-    }
-
-    int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
-        return CConvolutionNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, szPadding, szActivator, spNetwork);
+    int createConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
+        return CConvolutionNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, nStride, szPadding, szActivator, spNetwork);
     }
 
     int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {

@@ -55,9 +55,9 @@ static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nCon
 
 
 static SCtx sCtx("CConvolutionNetwork");
-int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
+int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
 
-    if(nWidth < 1 || nHeight < 1 || nShiftConvs < 1 || nLayers < 1) {
+    if(nWidth < 1 || nHeight < 1 || nShiftConvs < 1 || nLayers < 1 || nStride < 1) {
         return sCtx.error("卷积核参数错误");
     }
 
@@ -70,8 +70,8 @@ int CConvolutionNetwork::createNetwork(int nWidth, int nHeight, int nLayers, int
         nWidth,
         0
     };
-    spConvolution->m_nStrideWidth = 1;
-    spConvolution->m_nStrideHeight = 1;
+    spConvolution->m_nStrideWidth = nStride;
+    spConvolution->m_nStrideHeight = nStride;
     if( szActivator!=nullptr )
         spConvolution->m_strActivator = szActivator;
     if( szPadding != nullptr) {
