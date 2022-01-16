@@ -78,6 +78,8 @@ int CGlobalPoolNetwork::prepareNetwork(const STensor& spBatchIn) {
     }
 
     m_spBatchInDeviation.release();
+    m_nInputSize = nInputSize;
+    m_idDataType = idType;
     m_nBatchs = nBatchs;
     m_nLayers = nLayers;
     m_nLayerSize = nLayerSize;
@@ -111,14 +113,14 @@ template<typename Q> int CGlobalPoolNetwork::evalT(const STensor& spBatchIn, STe
             dOut = 0;
             for(iInput=0; iInput<nLayerSize; iInput++ ) {
                 dOut += (*it.pIn);
-                it.pIn++;
+                it.pIn+=nLayers;
             }
 
             (*it.pOut) = dOut / nLayerSize;
 
             //  更新迭代参数
             it.pOut++;
-            it.pIn = varOBackup.pIn + nLayerSize;
+            it.pIn = varOBackup.pIn+1;
         }
         
         m_pActivator->activate(nLayers, varTBackup.pOut, varTBackup.pOut);
@@ -195,15 +197,15 @@ template<typename Q> int CGlobalPoolNetwork::learnT(const STensor& spBatchOut, c
             deviationZ = *(it.pZDeviatioin);
             if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) {
                 deviationZ /= nTensorSize;
-                for(iInput=0; iInput<nTensorSize; iInput++ ) {
+                for(iInput=0; iInput<nLayerSize; iInput++ ) {
                     (*it.pInDeviation) += deviationZ;
-                    it.pInDeviation++;
+                    it.pInDeviation += nLayers;
                 }
             }
 
             //  更新迭代参数
             it.pZDeviatioin++;
-            it.pInDeviation = varOBackup.pInDeviation + nLayerSize;
+            it.pInDeviation = varOBackup.pInDeviation + 1;
         }
 
         //  更新迭代参数
@@ -217,10 +219,6 @@ template<typename Q> int CGlobalPoolNetwork::learnT(const STensor& spBatchOut, c
 int CGlobalPoolNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
-    }
-
-    if(spBatchOut.type() != m_idDataType) {
-        return sCtx.error("数据类型错误");
     }
 
     if(m_idDataType == CBasicData<double>::getStaticType()) {

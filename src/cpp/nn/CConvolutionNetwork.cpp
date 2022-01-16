@@ -242,7 +242,7 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
     };
     //将输入指针向Padding后的起点偏移，变成一个非法指针
     CRect2D rcConv, rcPading = m_padding;
-    int nOffset = rcPading.left * stepInConv.width - rcPading.top * stepInConv.height;
+    int nOffset = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     it.pIn = it.pIn - nOffset;
 
     Q dConv;
@@ -289,6 +289,8 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
 
                     //初始化卷积结果
                     dConv = 0;
+                    it.pIn += rcConv.top * stepInConv.height + rcConv.left * stepInConv.width;
+                    it.pWeights += rcConv.top * stepConv.height + rcConv.left * stepConv.width; 
                     for( itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                         itVars4.pIn = it.pIn;
                         itVars4.pWeights = it.pWeights;
@@ -415,8 +417,10 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     itVars = it;
     //将输入指针向Padding后的起点偏移，变成一个非法指针
     CRect2D rcConv, rcPading = m_padding;
-    int nOffset = rcPading.left * stepInConv.width - rcPading.top * stepInConv.height;
-    it.pIn = it.pIn - nOffset;
+    int nOffsetIn = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
+    int nOffsetConv;
+    it.pIn = it.pIn - nOffsetIn;
+    it.pInDeviation = it.pInDeviation - nOffsetIn;
     for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
         itVars0.pInDeviation = it.pInDeviation;
@@ -484,6 +488,12 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
                         //
                         //  计算每一个输出对输入及权重的偏导数，并以此来调整权重及输入
                         //  
+                        nOffsetIn = rcConv.top * stepInConv.height + rcConv.left * stepInConv.width;
+                        nOffsetConv = rcConv.top * stepConv.height + rcConv.left * stepConv.width;
+                        it.pIn += nOffsetIn;
+                        it.pInDeviation += nOffsetIn;
+                        it.pWeights += nOffsetConv;
+                        it.pWeightDevivation += nOffsetConv;
                         for(itVars4.index=rcConv.top; itVars4.index<rcConv.bottom; itVars4.index++) {
                             itVars4.pIn = it.pIn;
                             itVars4.pInDeviation = it.pInDeviation;
