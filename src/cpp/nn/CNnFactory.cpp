@@ -31,12 +31,12 @@ public:
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nConv, 1, szPadding, szActivator, spNetwork);
     }
 
-    int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
-        return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
-    }
-
     int createShiftConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, szPadding, szActivator, spNetwork);
+    }
+
+    int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
+        return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
     }
 
     int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {

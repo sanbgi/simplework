@@ -135,12 +135,12 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("卷积核参数错误");
         }
 
-        int nConvs = m_nLayers * m_sizeConv.batch;
-        int nWeights =  nConvs * m_sizeConv.width * m_sizeConv.height * nInputLayers;
+        int nBais = m_nLayers * m_sizeConv.batch;
+        int nWeights =  nBais * m_sizeConv.width * m_sizeConv.height * nInputLayers;
         if(idType == CBasicData<double>::getStaticType()) {
-            initWeightT<double>(nWeights, nConvs);
+            initWeightT<double>(nWeights, nBais);
         }else if(idType == CBasicData<float>::getStaticType()) {
-            initWeightT<float>(nWeights, nConvs);
+            initWeightT<float>(nWeights, nBais);
         }else{
             return sCtx.error("不支持的数据类型");
         }
@@ -172,6 +172,11 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
         nInputLayers
     };
 
+    //
+    //  填充模式有两种：
+    //      same -- 步长为1时，保持输出尺寸与输入尺寸一致
+    //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
+    //
     if(m_strPadding == "same" ) {
         m_sizeOut = {
             nBatchs,
@@ -186,6 +191,9 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
         m_padding.top = nPadH / 2;
         m_padding.bottom = nPadH - m_padding.top;
     }else{
+        //
+        //  默认为不填充
+        //
         m_sizeOut = {
             nBatchs,
             (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
@@ -242,9 +250,9 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     return sCtx.success();
 }
 
-template<typename Q> int CConvolutionNetwork::initWeightT(int nWeights, int nConvs) {
+template<typename Q> int CConvolutionNetwork::initWeightT(int nWeights, int nBais) {
     Q* pWeights = new Q[nWeights];
-    Q* pBais = new Q[nConvs];
+    Q* pBais = new Q[nBais];
     m_spWeights.take( (char*)pWeights, [](char* pWeights){
         delete[] (Q*)pWeights;
     });
@@ -541,11 +549,13 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
     CBatchSize2D stepOut = m_stepOut;
     CBatchSize2D stepConv = m_stepConv;
 
-    int nConvs = sizeConv.batch * m_nLayers;
+    int nBais = sizeConv.batch * m_nLayers;
     int nWeights = stepConv.batch * sizeConv.batch * m_nLayers;
-    Q* pWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nWeights+nConvs);
-    Q* pBaisDeviationArray = pWeightDerivationArray+nWeights;
-    memset(pWeightDerivationArray, 0 ,sizeof(Q)*(nWeights+nConvs));
+    int nVariables = nBais + nWeights;
+    Q* pVariables = (Q*)m_spOptimizer->getDeviationPtr(nWeights+nBais);
+    memset(pVariables, 0 ,sizeof(Q)*(nWeights+nBais));
+    Q* pWeightDerivationArray = pVariables;
+    Q* pBaisDeviationArray = pVariables+nWeights;
 
     CShiftPolicy stepPolicy;
     CShiftPolicies shiftPolicies;
@@ -802,7 +812,7 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         it.pWeights++, it.pWeightDevivation++;
     }
     Q* pBais = (Q*)(void*)m_spBais;
-    Q* pBaisEnd = pBais+nConvs;
+    Q* pBaisEnd = pBais+nBais;
     while(pBais != pBaisEnd) {
         *pBais -= *it.pBaisDeviation;
         pBais++, it.pBaisDeviation++;
