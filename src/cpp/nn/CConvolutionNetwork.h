@@ -34,7 +34,7 @@ private:
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.ConvNetwork"; }
-    static int createNetwork(int nWidth, int nHeight, int nConvs, const char* szActivator, SNnNetwork& spNetwork);
+    static int createNetwork(int nWidth, int nHeight, int nConvs, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
     int prepareNetwork(const STensor& inputTensor);

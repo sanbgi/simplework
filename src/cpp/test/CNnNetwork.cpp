@@ -25,9 +25,9 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    //SNnNetwork nn = createNetwork();
+    SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createRotNetwork();
-    SNnNetwork nn = createShiftNetwork();
+    //SNnNetwork nn = createShiftNetwork();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin")
 
     double sumAcc = 0;
@@ -104,10 +104,10 @@ void CNnNetwork::runTest() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    //SNnNetwork nn = createNetwork();
+    SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
-    SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
+    //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
 
     double sumAcc = 0;
     double sumLoss = 0;
@@ -175,13 +175,8 @@ void CNnNetwork::runTest() {
 
 
 SNnNetwork CNnNetwork::createNetwork() {
-    std::vector<SNnNetwork> arrParallelNets;
-    arrParallelNets.push_back(SNnNetwork::createConv(5,5,16));
-    arrParallelNets.push_back(SNnNetwork::createConv(5,5,16));
-
     std::vector<SNnNetwork> arrNets;
-    //arrNets.push_back(SNnNetwork::createConv(5,5,32));
-    arrNets.push_back(SNnNetwork::createParallel(arrParallelNets.size(),arrParallelNets.data()));
+    arrNets.push_back(SNnNetwork::createConv(5,5,32));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createConv(7,7,64));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
@@ -213,6 +208,19 @@ SNnNetwork CNnNetwork::createRotNetwork() {
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createDense(576));
     //arrNets.push_back(SNnNetwork::createDense(10));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    return SNnNetwork::loadFile("D://snetwork.bin");
+}
+
+SNnNetwork CNnNetwork::createGlobalPollNetwork() {
+    std::vector<SNnNetwork> arrNets;
+    arrNets.push_back(SNnNetwork::createConv(5,5,32));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(7,7,64));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createDense(576));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
     SNnNetwork::saveFile("D://snetwork.bin", spNet);

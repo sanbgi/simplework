@@ -48,9 +48,15 @@ public:
         return nn;
     }
 
-    static SNnNetwork createConv(int nWidth, int nHeight, int nConv, const char* szActivator = nullptr ) {
+    static SNnNetwork createGlobalPool(const char* szMode = nullptr, const char* szActivator=nullptr) {
         SNnNetwork nn;
-        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, szActivator, nn);
+        SNnFactory::getFactory()->createGlobalPool(szMode, szActivator, nn);
+        return nn;
+    }
+
+    static SNnNetwork createConv(int nWidth, int nHeight, int nConv, const char* szPadding=nullptr, const char* szActivator = nullptr ) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, szPadding, szActivator, nn);
         return nn;
     }
 

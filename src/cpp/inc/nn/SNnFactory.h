@@ -15,7 +15,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //  创建池化神经网络
         //
         virtual int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) = 0;
-
+        //
+        //  创建整体池化神经网络，每一层(channel)池化为一个平均值
+        //
+        virtual int createGlobalPool(const char* szMode, const char* szActivitor, SNnNetwork& spNetwork) = 0;
         //
         //  创建直连神经网络
         //
@@ -23,7 +26,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         //  创建卷积神经网络
         //
-        virtual int createConvolution(int nWidth, int nHeight, int nConv, const char* szActivator, SNnNetwork& spNetwork) = 0;
+        virtual int createConvolution(int nWidth, int nHeight, int nConv, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
         //
         //  创建旋转卷积神经网络，（卷积核每移动一步，会旋转一个角度）
         //

@@ -309,7 +309,7 @@ template<typename Q> int CShiftConvNetwork::evalT(const STensor& spBatchIn, STen
     CRect2D rcConv, rcPading = m_padding;
 
     //将输入指针向Padding后的起点偏移，变成一个非法指针
-    int nOffset = m_padding.left * stepInConv.width - m_padding.top * stepInConv.height;
+    int nOffset = rcPading.left * stepInConv.width - rcPading.top * stepInConv.height;
     it.pIn = it.pIn - nOffset;
     for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
         itVars0.pIn = it.pIn;
@@ -519,7 +519,7 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
     CRect2D rcConv, rcPading = m_padding;
 
     //将输入指针向Padding后的起点偏移，变成一个非法指针
-    int nOffset = m_padding.left * stepInConv.width + m_padding.top * stepInConv.height;
+    int nOffset = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
     it.pIn = it.pIn - nOffset;
     it.pInDeviation = it.pInDeviation - nOffset;
     for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
@@ -550,7 +550,7 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                 itVars2.pWeightDevivation = it.pWeightDevivation;
                 itVars2.pBaisDeviation = it.pBaisDeviation;
 
-                //左边填充了都填充了控制，不能参与运算
+                //上下填充了都填充了控空制，不能参与运算
                 if(itVars2.index < rcPading.top) {
                     rcConv.top = rcPading.top;
                     rcConv.bottom = sizeConv.height;
@@ -586,7 +586,7 @@ template<typename Q> int CShiftConvNetwork::learnT(const STensor& spBatchOut, co
                     deviationZ = (*it.pZDeviatioin);
                     if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) 
                     {
-                        //左右填充了都填充了控制，不能参与运算
+                        //左右填充了都填充了空制，不能参与运算
                         if(itVars3.index < rcPading.left) {
                             rcConv.left = rcPading.left;
                             rcConv.right = sizeConv.width;

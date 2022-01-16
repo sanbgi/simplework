@@ -12,6 +12,7 @@ public:
     static SNnNetwork createNetwork();
     static SNnNetwork createRotNetwork();
     static SNnNetwork createShiftNetwork();
+    static SNnNetwork createGlobalPollNetwork();
     static void runLearn();
     static void runTest();
     static void runFile();
