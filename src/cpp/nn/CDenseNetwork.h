@@ -10,11 +10,12 @@ using namespace sw;
 using namespace std;
 
 //
-//  网络定义：
-//      X = inputTensor
-//      Z = WX-B
-//      Y = activate(Z)
-//      outputTensor = Y
+//  全连接神经网络，注意数据格式：
+//
+//      输入数据：nBatchs(第一个维度) * nCells(余下所有维度)
+//      输出数据：nBatchs(第一个维度) * nCells(第二个维度)
+//
+//  比如：输入维度[10, 3, 1]，表示一共有十个输入数据，每一个数据数据包含3 X 1个输入神经元
 //
 class CDenseNetwork : public CObject, public INnNetwork, public IIoArchivable{
 

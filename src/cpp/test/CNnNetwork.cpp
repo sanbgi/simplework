@@ -27,7 +27,8 @@ void CNnNetwork::runLearn() {
     STensor spPipeIn = STensor::createValue(10);
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
-    SNnNetwork nn = createLeNet_5();
+    SNnNetwork nn = createTestNetwork();
+    //SNnNetwork nn = createLeNet_5();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin")
@@ -185,8 +186,8 @@ SNnNetwork CNnNetwork::createTestNetwork() {
     arrNets.push_back(SNnNetwork::createConv(3,3,16));
     arrNets.push_back(SNnNetwork::createConv(3,3,16));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createConv(3,3,120));
-    arrNets.push_back(SNnNetwork::createConv(3,3,120));
+    arrNets.push_back(SNnNetwork::createConv(5,5,120));
+    //arrNets.push_back(SNnNetwork::createConv(3,3,120));
     arrNets.push_back(SNnNetwork::createDense(84));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
