@@ -179,17 +179,14 @@ void CNnNetwork::runTest() {
 
 SNnNetwork CNnNetwork::createTestNetwork() {
     std::vector<SNnNetwork> arrNets;
-    //
-    //  如果是28X28，则isStandardNet == false, padding="same"
-    //  如果时32X32，则isStandardNet == true, padding="valid"
-    //
     arrNets.push_back(SNnNetwork::createConv(3,3,6,"same"));
     arrNets.push_back(SNnNetwork::createConv(3,3,6,"same"));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
     arrNets.push_back(SNnNetwork::createConv(3,3,16));
     arrNets.push_back(SNnNetwork::createConv(3,3,16));
     arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createConv(5,5,120));
+    arrNets.push_back(SNnNetwork::createConv(3,3,120));
+    arrNets.push_back(SNnNetwork::createConv(3,3,120));
     arrNets.push_back(SNnNetwork::createDense(84));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
