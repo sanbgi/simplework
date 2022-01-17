@@ -498,6 +498,9 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
     }
 
     m_spBatchIn = spBatchIn;
+    m_spBatchOut.updateVer();
+    m_nInVer = m_spBatchIn.ver();
+    m_nOutVer = m_spBatchOut.ver();
     spBatchOut = m_spBatchOut;
     return sCtx.success();
 }
@@ -505,6 +508,11 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
 int CConvolutionNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     if( prepareNetwork(spBatchIn) != sCtx.success() ) {
         return sCtx.error();
+    }
+
+    if(spBatchIn.getPtr() == m_spBatchIn.getPtr() && spBatchIn.ver() == m_nInVer ) {
+        spBatchOut = m_spBatchOut;
+        return sCtx.success();
     }
 
     if(m_idDataType == CBasicData<double>::getStaticType()) {
@@ -534,6 +542,8 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         if( int errCode = STensor::createTensor<Q>(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_spBatchIn.size()) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输入偏差张量失败");
         }
+    }else{
+        m_spBatchInDeviation.updateVer();
     }
     spBatchIn = m_spBatchIn;
     spInDeviation = m_spBatchInDeviation;
@@ -821,7 +831,7 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
 }
 
 int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
-    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr() || spBatchOut.ver() != m_nOutVer) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 

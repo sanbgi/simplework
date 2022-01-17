@@ -94,6 +94,14 @@ public://ITensor
 
 public://ITensor
 
+    int getVer() {
+        return m_nVer;
+    }
+
+    int updateVer() {
+        return ++m_nVer;
+    }
+
     unsigned int getDataType() {
         return CBasicData<T>::getStaticType();
     }
@@ -113,6 +121,7 @@ public://ITensor
 
 public:
     CTensor() {
+        m_nVer = 0;
         m_nElementSize = 0;
     }
     ~CTensor() {
@@ -132,6 +141,7 @@ public:
     }
 
 private:
+    int m_nVer;
     int m_nElementSize;
     CTaker<T*> m_spElementData;
     STensor m_spDimVector;

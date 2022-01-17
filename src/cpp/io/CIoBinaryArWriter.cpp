@@ -62,13 +62,13 @@ int CIoBinaryArWriter::saveArchive(const char* szFileName, const SIoArchivable& 
 
 void CIoBinaryArWriter::enterElement(SIoArchivable& spEle) {
     m_arrEles.push_back(spEle);                                        
-    m_nEleVer = spEle->getVer();
+    m_nEleVer = spEle->getClassVer();
 }
 
 void CIoBinaryArWriter::leaveElement(SIoArchivable& spEle) {
     m_arrEles.pop_back();
     if(m_arrEles.size() > 0) {
-        m_nEleVer = (*m_arrEles.rbegin())->getVer();
+        m_nEleVer = (*m_arrEles.rbegin())->getClassVer();
     }else{
         m_nEleVer = -1;
     }
@@ -93,7 +93,7 @@ int CIoBinaryArWriter::saveEle(SIoArchivable spVisitee) {
 
     int retCode = sCtx.success();
     if(classKey.length() > 0) {
-        int nVer = spVisitee->getVer();
+        int nVer = spVisitee->getClassVer();
         m_stream.write((const char*)&nVer, sizeof(int));
 
         enterElement(spVisitee);

@@ -10,6 +10,7 @@ class CNnNetwork {
 public:
     static void run();
     static SNnNetwork createNetwork();
+    static SNnNetwork createTestNetwork();
     static SNnNetwork createRotNetwork();
     static SNnNetwork createShiftNetwork();
     static SNnNetwork createGlobalPollNetwork();

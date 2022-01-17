@@ -27,8 +27,8 @@ private://INnNetwork
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
 private://IIoArchivable
-    int getVer() { return 220116; }
-    const char* getName() { return "GlobalPoolNetwork"; } 
+    int getClassVer() { return 220116; }
+    const char* getClassName() { return "GlobalPoolNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
@@ -50,7 +50,9 @@ private:
 
     //缓存参数
     int m_nInputSize;
-    unsigned int m_idDataType;
+    unsigned int m_idDataType;    
+    int m_nInVer;
+    int m_nOutVer;
     int m_nBatchs;
     int m_nLayers;
     int m_nLayerSize;
@@ -66,9 +68,8 @@ public:
         m_pActivator = nullptr;
         //输入数据大小
         m_nInputSize = 0;
-        //
         m_idDataType = 0;
-        
+        m_nInVer = m_nOutVer = 0;
     }
 };
 

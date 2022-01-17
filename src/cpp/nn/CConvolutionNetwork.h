@@ -34,8 +34,8 @@ private://INnNetwork
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
 private://IIoArchivable
-    int getVer() { return 220114; }
-    const char* getName() { return "ConvolutionNetwork"; } 
+    int getClassVer() { return 220114; }
+    const char* getClassName() { return "ConvolutionNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
@@ -70,7 +70,8 @@ private:
 
     //缓存参数
     int m_nInputSize;
-
+    int m_nInVer;
+    int m_nOutVer;
     //填充尺寸
     CRect2D m_padding;
     //输入、输出、卷积尺寸
@@ -101,8 +102,9 @@ public:
         //输入尺寸
         m_nInputSize = 0;
         //
+        m_nInVer = 0;
+        m_nOutVer = 0;
         m_idDataType = 0;
-
         m_pActivator = nullptr;
     }
 };

@@ -86,6 +86,11 @@ int CPoolNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         return sCtx.error();
     }
 
+    if(spBatchIn.getPtr() == m_spBatchIn.getPtr() && spBatchIn.ver() == m_nInVer ) {
+        spBatchOut = m_spBatchOut;
+        return sCtx.success();
+    }
+
     if(m_idDataType == CBasicData<double>::getStaticType()) {
         return evalT<double>(spBatchIn, spBatchOut);
     }else
@@ -175,9 +180,12 @@ template<typename Q> int CPoolNetwork::evalT(const STensor& spBatchIn, STensor& 
         it.pIn = varTBackup.pIn + nInputTensorSize;
         it.pOut = varTBackup.pOut + nOutputTensorSize;
     }
-    
-    m_spBatchIn = spBatchIn;
+
     spBatchOut = m_spBatchOut;
+    m_spBatchIn = spBatchIn;
+    m_spBatchOut.updateVer();
+    m_nInVer = m_spBatchIn.ver();
+    m_nOutVer = m_spBatchOut.ver();
     return sCtx.success();
 }
 

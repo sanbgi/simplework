@@ -28,8 +28,8 @@ private://INnNetwork
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
 private://IIoArchivable
-    int getVer() { return 220112; }
-    const char* getName() { return "DenseNetwork"; } 
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "DenseNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
@@ -60,6 +60,8 @@ private:
 
     //缓存参数
     int m_nBatchs;
+    int m_nInVer;
+    int m_nOutVer;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
     STensor m_spBatchIn;
@@ -73,6 +75,8 @@ public:
         m_nCells = 0;
         m_nInputCells = 0;
         m_nBatchs = 0;
+        m_nInVer = 0;
+        m_nOutVer = 0;
         m_nEvalDropout = 0;
         //激活函数未初始化
         m_pActivator = nullptr;

@@ -106,7 +106,8 @@ void CNnNetwork::runTest() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createNetwork();
+    SNnNetwork nn = createTestNetwork();
+    //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
@@ -175,6 +176,24 @@ void CNnNetwork::runTest() {
     }
 }
 
+
+SNnNetwork CNnNetwork::createTestNetwork() {
+    std::vector<SNnNetwork> arrNets;
+    //
+    //  如果是28X28，则isStandardNet == false, padding="same"
+    //  如果时32X32，则isStandardNet == true, padding="valid"
+    //
+    arrNets.push_back(SNnNetwork::createConv(3,3,6,"same"));
+    arrNets.push_back(SNnNetwork::createConv(3,3,6,"same"));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(3,3,16));
+    arrNets.push_back(SNnNetwork::createConv(3,3,16));
+    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
+    arrNets.push_back(SNnNetwork::createConv(5,5,120));
+    arrNets.push_back(SNnNetwork::createDense(84));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+}
 
 SNnNetwork CNnNetwork::createNetwork() {
     std::vector<SNnNetwork> arrNets;
@@ -248,9 +267,7 @@ SNnNetwork CNnNetwork::createLeNet_5(bool isStandardNet){
     arrNets.push_back(SNnNetwork::createConv(5,5,120));
     arrNets.push_back(SNnNetwork::createDense(84));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
-    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
-    SNnNetwork::saveFile("D://snetwork.bin", spNet);
-    return SNnNetwork::loadFile("D://snetwork.bin");
+    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
 }
 
 void CNnNetwork::runFile() {

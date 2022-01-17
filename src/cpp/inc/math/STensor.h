@@ -13,6 +13,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensor", 211202)
 
         //
+        // 获取版本号
+        //
+        virtual int getVer() = 0;
+
+        //
+        // 更新版本号
+        //
+        virtual int updateVer() = 0;
+
+        //
         // 获取维度
         //
         virtual STensor& getDimVector() = 0;
@@ -80,6 +90,16 @@ public:
         STensor spOut;
         STensorSolver::getSolver()->minus(*this, spIn, spOut);
         return spOut;
+    }
+
+    int ver() const {
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->getVer() : 0;
+    }
+
+    int updateVer() const {
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->updateVer() : 0;
     }
 
     int size() const{

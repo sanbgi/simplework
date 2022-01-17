@@ -36,8 +36,8 @@ private://INnNetwork
     int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
 
 private://IIoArchivable
-    int getVer() { return 220112; }
-    const char* getName() { return "RotConvNetwork"; } 
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "RotConvNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
@@ -67,6 +67,8 @@ private:
 
     //网络参数
     int m_nLayers;
+    int m_nInVer;
+    int m_nOutVer;
     unsigned int m_idDataType;
     CTaker<char*> m_spWeights;
     CTaker<char*> m_spBais;
@@ -103,6 +105,7 @@ public:
         m_nInputSize = 0;
         //激活函数未初始化
         m_pActivator = nullptr;
+        m_nInVer = m_nOutVer = 0;
     }
 };
 

@@ -11,8 +11,8 @@ int CSequenceNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNet
     return sCtx.success();
 }
 
-int CSequenceNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
-    STensor spIn = spInTensor;
+int CSequenceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+    STensor spIn = spBatchIn;
     std::vector<SNnNetwork>::iterator it = m_arrNetworks.begin();
     while(it != m_arrNetworks.end() ) {
         STensor spOut;
@@ -22,12 +22,12 @@ int CSequenceNetwork::eval(const STensor& spInTensor, STensor& spOutTensor) {
         spIn = spOut;
         it++;
     }
-    spOutTensor = spIn;
+    spBatchOut = spIn;
     return sCtx.success();
 }
 
-int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation) {
-    STensor spOut = spOutTensor;
+int CSequenceNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
+    STensor spOut = spBatchOut;
     STensor spOutDev = spOutDeviation;
     std::vector<SNnNetwork>::reverse_iterator it = m_arrNetworks.rbegin();
     while(it != m_arrNetworks.rend() ) {
@@ -40,7 +40,7 @@ int CSequenceNetwork::learn(const STensor& spOutTensor, const STensor& spOutDevi
         spOutDev = spInDev;
         it++;
     }
-    spInTensor = spOut;
+    spBatchIn = spOut;
     spInDeviation = spOutDev;
     return sCtx.success();
 }

@@ -19,8 +19,8 @@ private://INnNetwork
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 private://IIoArchivable
-    int getVer() { return 220112; }
-    const char* getName() { return "SequenceNetwork"; } 
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "SequenceNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 

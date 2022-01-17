@@ -20,8 +20,8 @@ private://INnNetwork
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 private://IIoArchivable
-    int getVer() { return 220112; }
-    const char* getName() { return "PoolNetwork"; } 
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "PoolNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
@@ -42,6 +42,8 @@ private:
 
     int m_nBatchInSize;
     unsigned int m_idDataType;
+    int m_nInVer;
+    int m_nOutVer;
     int m_nBatchs;
     int m_nInputTensorSize;
     int m_nInputWidth;
@@ -62,6 +64,7 @@ protected:
         m_nPoolHeight = -1;
         m_nBatchInSize = -1;
         m_idDataType = -1;
+        m_nInVer = m_nOutVer = 0;
     }
 
     int prepareNetwork(const STensor& inputTensor);

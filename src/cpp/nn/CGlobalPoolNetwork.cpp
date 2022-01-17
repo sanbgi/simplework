@@ -131,6 +131,9 @@ template<typename Q> int CGlobalPoolNetwork::evalT(const STensor& spBatchIn, STe
     }
 
     m_spBatchIn = spBatchIn;
+    m_spBatchOut.updateVer();
+    m_nInVer = m_spBatchIn.ver();
+    m_nOutVer = m_spBatchOut.ver();
     spBatchOut = m_spBatchOut;
     return sCtx.success();
 }
@@ -138,6 +141,11 @@ template<typename Q> int CGlobalPoolNetwork::evalT(const STensor& spBatchIn, STe
 int CGlobalPoolNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     if( int errCode = prepareNetwork(spBatchIn) != sCtx.success() ) {
         return errCode;
+    }
+
+    if(spBatchIn.getPtr() == m_spBatchIn.getPtr() && spBatchIn.ver() == m_nInVer ) {
+        spBatchOut = m_spBatchOut;
+        return sCtx.success();
     }
 
     if(m_idDataType == CBasicData<double>::getStaticType()) {
@@ -155,6 +163,8 @@ template<typename Q> int CGlobalPoolNetwork::learnT(const STensor& spBatchOut, c
         if( int errCode = STensor::createTensor(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_idDataType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输入偏差张量失败");
         }
+    }else{
+        m_spBatchInDeviation.updateVer();
     }
     spBatchIn = m_spBatchIn;
     spBatchInDeviation = m_spBatchInDeviation;
@@ -217,7 +227,7 @@ template<typename Q> int CGlobalPoolNetwork::learnT(const STensor& spBatchOut, c
 }
 
 int CGlobalPoolNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
-    if(spBatchOut.getPtr() != m_spBatchOut.getPtr()) {
+    if(spBatchOut.getPtr() != m_spBatchOut.getPtr() || spBatchOut.ver() != m_nOutVer) {
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
