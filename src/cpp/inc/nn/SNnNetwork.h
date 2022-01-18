@@ -96,7 +96,7 @@ public:
         return pipe;
     }
 
-    static SNnNetwork createRnn(int nCells, bool bKeepGroup, double dDropoutRate = 0, const char* szActivator = nullptr) {
+    static SNnNetwork createRnn(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
         return nn;
