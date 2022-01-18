@@ -14,6 +14,7 @@ public:
     static SNnNetwork createRotNetwork();
     static SNnNetwork createShiftNetwork();
     static SNnNetwork createGlobalPollNetwork();
+    static SNnNetwork createRnnNetwork();
     static SNnNetwork createLeNet_5(bool isStandardNet=false);
     static void runLearn();
     static void runTest();

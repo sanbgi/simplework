@@ -96,6 +96,12 @@ public:
         return pipe;
     }
 
+    static SNnNetwork createRnn(int nCells, bool bKeepGroup, double dDropoutRate = 0, const char* szActivator = nullptr) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
+        return nn;
+    }
+
     static STensor loadIdxFile(const char* szFilename) {
         STensor data;
         SNnFactory::getFactory()->readIdxFile(szFilename, data);

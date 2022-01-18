@@ -107,7 +107,8 @@ void CNnNetwork::runTest() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createTestNetwork();
+    SNnNetwork nn = createRnnNetwork();
+    //SNnNetwork nn = createTestNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
@@ -192,6 +193,15 @@ SNnNetwork CNnNetwork::createTestNetwork() {
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
 }
+
+
+SNnNetwork CNnNetwork::createRnnNetwork() {
+    std::vector<SNnNetwork> arrNets;
+    arrNets.push_back(SNnNetwork::createRnn(50,false));
+    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
+    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+}
+
 
 SNnNetwork CNnNetwork::createNetwork() {
     std::vector<SNnNetwork> arrNets;

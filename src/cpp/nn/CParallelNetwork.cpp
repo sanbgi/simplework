@@ -231,8 +231,8 @@ int CParallelNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOut
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    if(spBatchOut.type() != m_idDataType) {
-        return sCtx.error("数据类型错误");
+    if(spBatchOutDeviation.type() != m_idDataType || spBatchOutDeviation.size() != spBatchOut.size()) {
+        return sCtx.error("输出偏差数据类型或尺寸错误");
     }
 
     if(m_idDataType == CBasicData<double>::getStaticType()) {

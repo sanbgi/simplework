@@ -1,5 +1,6 @@
 #include "CRotConvNetwork.h"
 #include "CType.h"
+#include "CUtils.h"
 #include "math.h"
 #include "iostream"
 
@@ -464,8 +465,8 @@ int CRotConvNetwork::learn(const STensor& spBatchOut, const STensor& spOutDeviat
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    if(spOutDeviation.type() != m_idDataType) {
-        return sCtx.error("数据类型错误");
+    if(spOutDeviation.type() != m_idDataType || spOutDeviation.size() != spBatchOut.size() ) {
+        return sCtx.error("偏差数据类型或尺寸错误");
     }
 
     if(m_idDataType == CBasicData<double>::getStaticType()) {
@@ -641,7 +642,7 @@ template<typename Q> int CRotConvNetwork::initWeightT(int nWeights, int nConvs) 
     Q xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
     for(int i=0; i<nWeights; i++) {
         //pWeights[i] = 0;
-        pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
+        pWeights[i] = -xWeight + CUtils::rand() * xWeight * 2;
     }
 
     for(int i=0; i<m_sizeConv.batch; i++ ){

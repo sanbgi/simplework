@@ -1,8 +1,9 @@
 #include "CDenseNetwork.h"
 #include "CType.h"
+#include "CUtils.h"
 #include <math.h>
 #include <iostream>
-#include <time.h>
+
 
 static SCtx sCtx("CDenseNetwork");
 int CDenseNetwork::createNetwork(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
@@ -32,11 +33,11 @@ template<typename Q> int CDenseNetwork::initWeightT(int nWeights, int nCells) {
     /*
     Q xWeight = 1.0/nInputCells;
     for(int i=0; i<nWeight; i++) {
-        *(pWeights+i) = (rand() % 10000 / 10000.0) * xWeight;
+        *(pWeights+i) = CUtils::rand() * xWeight;
     }*/
     Q xWeight = 0.1;//sqrt(1.0/nInputCells);
     for(int i=0; i<nWeights; i++) {
-        pWeights[i] = -xWeight + (rand() % 10000 / 10000.0) * xWeight * 2;
+        pWeights[i] = -xWeight + CUtils::rand() * xWeight * 2;
     }
     for(int i=0; i<nCells; i++ ){
         pBais[i] = 0;
@@ -171,10 +172,9 @@ template<typename Q> int CDenseNetwork::evalT(const STensor& spBatchIn, STensor&
     bool* pDropout = m_spDropout, *pDrop;
     int nDropout = 0;
     if(pDropout) {
-        srand(time(nullptr));
         bool* ptr = pDropout;
         for(int i=0; i<nOutCells; i++) {
-            bool bDropout = (rand() * 1.0 / RAND_MAX) < m_dDropoutRate;
+            bool bDropout = CUtils::rand() < m_dDropoutRate;
             if(bDropout) {
                 nDropout++;
             }
@@ -477,8 +477,8 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
         return sCtx.error("神经网络已经更新，原有数据不能用于学习");
     }
 
-    if(spBatchOut.type() != m_idDataType) {
-        return sCtx.error("数据类型错误");
+    if(spBatchOutDeviation.type() != m_idDataType || spBatchOutDeviation.size() != spBatchOut.size() ) {
+        return sCtx.error("偏差数据类型或尺寸错误");
     }
 
     if(m_idDataType == CBasicData<double>::getStaticType()) {
@@ -492,13 +492,13 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
 
 int CDenseNetwork::toArchive(const SIoArchive& ar) {
     //基础参数
-    ar.visit("nCells", m_nCells);
-    ar.visit("dDropoutRate", m_dDropoutRate);
+    ar.visit("cells", m_nCells);
+    ar.visit("dropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
 
     //运行参数
-    ar.visit("nInputCells", m_nInputCells);
+    ar.visit("inputCells", m_nInputCells);
     ar.visit("dataType", m_idDataType);
     if(m_nInputCells) {
         int nBytes = CType::getTypeBytes(m_idDataType);
