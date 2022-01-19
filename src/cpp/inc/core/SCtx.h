@@ -41,7 +41,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Ctx)
         getCtx()->logError(szError);
         return SError::ERRORTYPE_FAILURE;
     }
-    int success() {
+    const inline int success() {
         return SError::ERRORTYPE_SUCCESS;
     }
 
