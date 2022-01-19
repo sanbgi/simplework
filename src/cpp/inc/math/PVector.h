@@ -28,18 +28,21 @@ struct PVector {
     };
 };
 
-struct PVectorArray {
-    SIMPLEWORK_PDATAKEY(PVector, "sw.math.VectorArray")
-
+struct PDeviaVector {
     //
-    //
+    // 大小
     //
     int size;
 
     //
+    // 数值数组
     //
+    void* data;
+
     //
-    PVector data[];
+    // 偏导数组
+    //
+    void* devia;
 };
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

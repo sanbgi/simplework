@@ -48,71 +48,35 @@ public:
         return sCtx.success();
     }
 
-    int add(const PVectorArray& inVars, const PVector& outVar){
-        if(inVars.size != 2) {
-            return sCtx.error("向量相加的输入参数，必须为两个向量");
-        }
-        PVector v1 = inVars.data[0];
-        PVector v2 = inVars.data[1];
-        PVector vO = outVar;
-        if( v1.size != v2.size || v2.size != vO.size ) {
-            return sCtx.error("输入输出向量尺寸不相等，不能相加");
-        }
-        Q* pV1 = (Q*)v1.data;
-        Q* pV2 = (Q*)v2.data;
-        Q* pVO = (Q*)vO.data;
-        Q* pVOEnd = pVO + vO.size;
+    int add(int nSize, void* pIn1, void* pIn2, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pVOEnd = pVO + nSize;
         while(pVO != pVOEnd) {
             *pVO = *pV1 + *pV2;
             pVO++, pV1++, pV2++;
         }
         return sCtx.success();
     }
-    int addAccDeviation(const PVector& outDVar, const PVectorArray& inDVars){
-        if(inDVars.size != 2) {
-            return sCtx.error("向量相加的输入参数，必须为两个向量");
-        }
-        PVector v1 = inDVars.data[0];
-        PVector v2 = inDVars.data[1];
-        PVector vO = outDVar;
-        if( v1.size != v2.size || v2.size != vO.size ) {
-            return sCtx.error("输入输出向量尺寸不相等，求偏导失败");
-        }
-        Q* pV1 = (Q*)v1.data;
-        Q* pV2 = (Q*)v2.data;
-        Q* pVO = (Q*)vO.data;
-        Q* pVOEnd = pVO + vO.size;
-        while(pVO != pVOEnd) {
-            *pV1 += *pVO;
-            *pV2 += *pVO;
-            pVO++, pV1++, pV2++;
-        }
-        return sCtx.success();
-    }
 
-    int multiply(const PVectorArray& inVars, const PVector& outVar){
-        if(inVars.size != 2) {
-            return sCtx.error("矩阵乘法输入必须为两个输入，一个向量，一个矩阵");
-        }
-        PVector v1 = inVars.data[0];
-        PVector v2 = inVars.data[1];
-        PVector vO = outVar;
-        if( v1.size * vO.size != v2.size ) {
+    int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) {
+        if( vecIn.size * vecOut.size != vecMatrix.size ) {
             return sCtx.error("乘法输入输出尺寸不一致");
         }
-        Q* pV1 = (Q*)v1.data;
-        Q* pV2 = (Q*)v2.data;
-        Q* pVO = (Q*)vO.data;
-        Q* pVOEnd = pVO + vO.size;
-        Q* pV1End = pV1 + v1.size;
-        Q* pIn;
+        Q* pV1 = (Q*)vecIn.data;
+        Q* pV2 = (Q*)vecMatrix.data;
+        Q* pVO = (Q*)vecOut.data;
+        Q* pVOEnd = pVO + vecOut.size;
+        Q* pV1End = pV1 + vecIn.size;
+        Q* pItIn;
         Q v;
         while(pVO != pVOEnd) {
             v = 0;
-            pIn = pV1;
-            while(pIn < pV1End) {
-                v += (*pIn) * (*pV2);
-                pIn++, pV2++;
+            pItIn = pV1;
+            while(pItIn < pV1End) {
+                v += (*pItIn) * (*pV2);
+                pItIn++, pV2++;
             }
             *pVO = v;
             pVO++;
@@ -120,26 +84,17 @@ public:
         return sCtx.success();
     }
 
-    int multiplyAccDeviation(const PVector& outDVar, const PVectorArray& inDVars, const PVectorArray& inVars){
-        if(inDVars.size != 2 || inVars.size != 2) {
-            return sCtx.error("向量相加的输入参数，必须为两个向量");
-        }
-        PVector dinput1 = inDVars.data[0];
-        PVector dinput2 = inDVars.data[1];
-        PVector input1 = inVars.data[0];
-        PVector input2 = inVars.data[1];
-        PVector deviaOut = outDVar;
-        if( dinput1.size != input1.size || dinput2.size != input2.size ||
-            input1.size * deviaOut.size != input2.size ) {
+    int multiplyAccDeviation(PDeviaVector vOut, PDeviaVector vWeights, PDeviaVector vIn) {
+        if( vIn.size * vOut.size != vWeights.size ) {
             return sCtx.error("输入输出向量尺寸不相等，求偏导失败");
         }
-        Q* pInput1 = (Q*)input1.data;
-        Q* pWeights = (Q*)input2.data;
-        Q* pD1 = (Q*)dinput1.data;
-        Q* pWeightDeviations = (Q*)dinput2.data;
-        Q* pDeviaOut = (Q*)deviaOut.data;
-        Q* pDeviaOutEnd = pDeviaOut + deviaOut.size;
-        Q* pInput1End = pInput1 + input1.size;
+        Q* pInput1 = (Q*)vIn.data;
+        Q* pD1 = (Q*)vIn.devia;
+        Q* pWeights = (Q*)vWeights.data;
+        Q* pWeightDeviations = (Q*)vWeights.devia;
+        Q* pDeviaOut = (Q*)vOut.data;
+        Q* pDeviaOutEnd = pDeviaOut + vOut.size;
+        Q* pInput1End = pInput1 + vIn.size;
         Q* pIn, *pInDeviation;
         Q deviationOut;
         while(pDeviaOut != pDeviaOutEnd) {
@@ -156,52 +111,22 @@ public:
         return sCtx.success();
     }
 
-    int join(const PVectorArray& inVars, const PVector& outVar){
-        if(inVars.size != 2) {
-            return sCtx.error("向量连接，必须为两个向量");
+
+    int join(PVector vecIn1, PVector vecIn2, PVector vecOut) {
+        if(vecIn1.size + vecIn2.size != vecOut.size) {
+            return sCtx.error("输入输出尺寸不一致");
         }
-        PVector v1 = inVars.data[0];
-        PVector v2 = inVars.data[1];
-        PVector vO = outVar;
-        if( v1.size + v2.size != vO.size ) {
-            return sCtx.error("输入输出向量尺寸不相等，不能相加");
-        }
-        Q* pV1 = (Q*)v1.data;
-        Q* pV2 = (Q*)v2.data;
-        Q* pVO = (Q*)vO.data;
-        Q* pV1End = pV1 + v1.size;
-        Q* pV2End = pV2 + v2.size;
+        Q* pV1 = (Q*)vecIn1.data;
+        Q* pV2 = (Q*)vecIn2.data;
+        Q* pVO = (Q*)vecOut.data;
+        Q* pV1End = pV1 + vecIn1.size;
+        Q* pV2End = pV2 + vecIn2.size;
         while(pV1 != pV1End) {
             *pVO = *pV1;
             pVO++, pV1++;
         }
         while(pV2 != pV2End) {
             *pVO = *pV2;
-            pVO++, pV2++;
-        }
-        return sCtx.success();
-    }
-    int joinAccDeviation(const PVector& outDVar, const PVectorArray& inDVars){
-        if(inDVars.size != 2) {
-            return sCtx.error("向量连接，必须为两个向量");
-        }
-        PVector v1 = inDVars.data[0];
-        PVector v2 = inDVars.data[1];
-        PVector vO = outDVar;
-        if( v1.size + v2.size != vO.size ) {
-            return sCtx.error("输入输出向量尺寸不相等，不能相加");
-        }
-        Q* pV1 = (Q*)v1.data;
-        Q* pV2 = (Q*)v2.data;
-        Q* pVO = (Q*)vO.data;
-        Q* pV1End = pV1 + v1.size;
-        Q* pV2End = pV2 + v2.size;
-        while(pV1 != pV1End) {
-            *pV1 += *pVO;
-            pVO++, pV1++;
-        }
-        while(pV2 != pV2End) {
-            *pV2 += *pVO;
             pVO++, pV2++;
         }
         return sCtx.success();

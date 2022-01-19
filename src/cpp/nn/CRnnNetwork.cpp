@@ -242,50 +242,25 @@ template<typename Q> int CRnnNetwork::evalT(const STensor& spBatchIn, STensor& s
 
     IVectorSolver* pSolver = m_spSolver.getPtr();
     Q joinedVec[nCells+nInputCells];
-    PVector outVar = {
-        m_nCells,
-        nullptr
-    };
-    PVectorArray inVars_Join = {2,{
-        { nInputCells, nullptr },
-        { nCells, it.pState }
-    }};
-    PVectorArray inVars_Multiply = {2,{
-        { nInputCells + nCells, joinedVec },
-        { nWeights, it.pWeight }
-    }};
-    PVectorArray inVars_Bais = {2,{
-        { nCells, nullptr },
-        { nCells, it.pBais }
-    }};
     for(int iTensor=0; iTensor<nTensors; iTensor++) {
         //
         // 输入向量和状态向量连接
         //
-        outVar.data = joinedVec;
-        outVar.size = nCells + nInputCells;
-        inVars_Join.data[0].data = it.pIn;
-        inVars_Join.data[1].data = it.pState;
-        if( pSolver->join(inVars_Join, outVar) != sCtx.success() ) {
+        if( pSolver->join({nInputCells, it.pIn},{nCells, it.pState}, {nCells + nInputCells, joinedVec}) != sCtx.success() ) {
             return sCtx.error("连接输入和状态向量异常");
         }
 
         //
         // 权重矩阵相乘
         //
-        outVar.size = nCells;
-        outVar.data = it.pOut;
-        if( pSolver->multiply(inVars_Multiply, outVar) != sCtx.success() ) {
+        if( pSolver->multiply({nCells+nInputCells, it.pIn}, {nWeights, it.pWeight}, {nCells, it.pOut}) != sCtx.success() ) {
             return sCtx.error("权重和输入向量相乘异常");
         }
 
         //
         // 加上偏置
         //
-        inVars_Bais.data[0].data = it.pOut;
-        outVar.size = nCells;
-        outVar.data = it.pOut;
-        if( pSolver->add(inVars_Bais, outVar) != sCtx.success() ) {
+        if( pSolver->add(nCells, it.pOut, it.pBais) != sCtx.success() ) {
             return sCtx.error("偏置计算异常");
         }
 
@@ -405,18 +380,6 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
     it.pState = (Q*)(void*)m_spState;
 
     IVectorSolver* pSolver = m_spSolver.getPtr();
-    PVector outDVar = {
-        nCells,
-        pZDeviationArray
-    };
-    PVectorArray inVars_DMultiply = {2, {
-        { nCells+nInputCells, pJoinIn },
-        { nWeights, it.pWeight }
-    }};
-    PVectorArray inDVars_DMultiply = {2, {
-        { nCells+nInputCells, pJoinDeviationArray },
-        { nWeights, it.pWeightDeviation }
-    }};
 
     int iTensor, iGroupOut;
     int nGroupOut = m_bKeepGroup ? 1 : nGroups;
@@ -457,7 +420,13 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
         //
         // 计算权重及输入的偏导数
         //
-        if( pSolver->multiplyAccDeviation(outDVar, inDVars_DMultiply, inVars_DMultiply) != sCtx.success() ) {
+        //if( pSolver->multiplyAccDeviation(outDVar, inDVars_DMultiply, inVars_DMultiply) != sCtx.success() ) {
+        //    return sCtx.error("偏导数计算错误");
+        //}
+        if( pSolver->multiplyAccDeviation(
+            {nCells, it.pOut, it.pOutDeviation },
+            {nWeights, it.pWeight, it.pWeightDeviation },
+            {nInputCells+nCells, pJoinIn, pJoinDeviationArray } ) != sCtx.success() ) {
             return sCtx.error("偏导数计算错误");
         }
 

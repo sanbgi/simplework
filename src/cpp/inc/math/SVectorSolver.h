@@ -19,25 +19,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER(VectorSolver, "sw.math.VectorSolver")
         virtual int del(int nSize, void* pDesc, void* pSrc) = 0;
         virtual int copy(int nSize, void* pDesc, void* pSrc) = 0;
         virtual int zero(int nSize, void* pDesc) = 0;
+        virtual int add(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
 
         //
-        // 两个向量相加及反向偏导（累加模式）
+        // 向量矩阵相乘
         //
-        virtual int add(const PVectorArray& inVars, const PVector& outVar) = 0;
-        virtual int addAccDeviation(const PVector& outDVar, const PVectorArray& inDVars) = 0;
-
-        //
-        // 向量矩阵相乘及反向偏导（累加模式）
-        //
-        virtual int multiply(const PVectorArray& inVars, const PVector& outVar) = 0;
-        virtual int multiplyAccDeviation(const PVector& outDVar, const PVectorArray& inDVars, const PVectorArray& inVars) = 0;
+        virtual int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) = 0;
+        virtual int multiplyAccDeviation(PDeviaVector vecOut, PDeviaVector vecWeights, PDeviaVector vecIn) = 0;
 
         //
         // 两个向量连接及反向偏导（累加模式）
         //
-        virtual int join(const PVectorArray& inVars, const PVector& outVar) = 0;
-        virtual int joinAccDeviation(const PVector& outDVar, const PVectorArray& inDVars) = 0;
-
+        virtual int join(PVector vecIn1, PVector vecIn2, PVector vecOut) = 0;
+  
     SIMPLEWORK_INTERFACE_LEAVE
 
     static int getSolver(unsigned int idType, SVectorSolver& spSolver) {
