@@ -197,7 +197,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 
 SNnNetwork CNnNetwork::createRnnNetwork() {
     std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createRnn(50,false));
+    arrNets.push_back(SNnNetwork::createGru(50,false));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
 }

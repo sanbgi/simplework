@@ -102,6 +102,13 @@ public:
         return nn;
     }
 
+    static SNnNetwork createGru(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createGru(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
+        return nn;
+    }
+
+
     static STensor loadIdxFile(const char* szFilename) {
         STensor data;
         SNnFactory::getFactory()->readIdxFile(szFilename, data);

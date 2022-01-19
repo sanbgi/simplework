@@ -9,6 +9,8 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 //
 // 向量求解器
 //
+//  注意：不同数据类型的向量求解器，不能混用，为了性能，系统并未检查数据类型
+//
 SIMPLEWORK_INTERFACECLASS_ENTER(VectorSolver, "sw.math.VectorSolver")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IVectorSolver", 211202)
@@ -20,15 +22,21 @@ SIMPLEWORK_INTERFACECLASS_ENTER(VectorSolver, "sw.math.VectorSolver")
         virtual int copy(int nSize, void* pDesc, void* pSrc) = 0;
         virtual int zero(int nSize, void* pDesc) = 0;
         virtual int add(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        virtual int del(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        //
+        //  加权求和，y = in1 * weight + in2 * (1-weight)
+        //
+        virtual int addByWeight(int nSize, void* pIn1, void* pIn2, void* pWeight, void* pOut) = 0;
+        virtual int multiply(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
 
         //
-        // 向量矩阵相乘
+        // 向量（输入） * 矩阵 = 向量（输出）
         //
         virtual int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) = 0;
         virtual int multiplyAccDeviation(PDeviaVector vecOut, PDeviaVector vecWeights, PDeviaVector vecIn) = 0;
 
         //
-        // 两个向量连接及反向偏导（累加模式）
+        // 两个向量连接
         //
         virtual int join(PVector vecIn1, PVector vecIn2, PVector vecOut) = 0;
   

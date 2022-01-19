@@ -60,6 +60,43 @@ public:
         return sCtx.success();
     }
 
+    int del(int nSize, void* pIn1, void* pIn2, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 - *pV2;
+            pVO++, pV1++, pV2++;
+        }
+        return sCtx.success();
+    }
+
+    int addByWeight(int nSize, void* pIn1, void* pIn2, void* pWeight, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pW = (Q*)pWeight;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 * (*pW) + *pV2 * (1-(*pW));
+            pVO++, pV1++, pV2++, pW++;
+        }
+        return sCtx.success();
+    }
+
+    int multiply(int nSize, void* pIn1, void* pIn2, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 * *pV2;
+            pVO++, pV1++, pV2++;
+        }
+        return sCtx.success();
+    }
+
     int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) {
         if( vecIn.size * vecOut.size != vecMatrix.size ) {
             return sCtx.error("乘法输入输出尺寸不一致");

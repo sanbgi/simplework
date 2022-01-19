@@ -9,6 +9,7 @@
 #include "CPoolNetwork.h"
 #include "CGlobalPoolNetwork.h"
 #include "CRnnNetwork.h"
+#include "CGruNetwork.h"
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
@@ -54,6 +55,10 @@ public:
 
     int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
         return CRnnNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
+    }
+
+    int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
+        return CGruNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
     }
 
     int readIdxFile(const char* szFileName, STensor& spData) {

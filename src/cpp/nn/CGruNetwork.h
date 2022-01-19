@@ -1,5 +1,5 @@
-#ifndef __SimpleWork_NN_CRnnNetwork_H__
-#define __SimpleWork_NN_CRnnNetwork_H__
+#ifndef __SimpleWork_NN_CGruNetwork_H__
+#define __SimpleWork_NN_CGruNetwork_H__
 
 #include "nn.h"
 #include "CActivator.h"
@@ -10,9 +10,12 @@ using namespace sw;
 using namespace std;
 
 //
-//  循环神经网络（最简单版本）
+//  GRU循环神经网络（最简单版本）
+//      
+//      参考：  https://www.jianshu.com/p/9dc9f41f0b29
+//             https://blog.csdn.net/weixin_37621229/article/details/80245449
 //
-class CRnnNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CGruNetwork : public CObject, public INnNetwork, public IIoArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
@@ -25,7 +28,7 @@ private://INnNetwork
 
 private://IIoArchivable
     int getClassVer() { return 220118; }
-    const char* getClassName() { return "RnnNetwork"; } 
+    const char* getClassName() { return "GruNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
@@ -35,7 +38,7 @@ private:
     template<typename Q> int initWeightT(int nWeights, int nConvs);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.RnnNetwork"; }
+    static const char* __getClassKey() { return "sw.nn.GruNetwork"; }
     static int createNetwork(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork);
 
 private:
@@ -58,9 +61,10 @@ private:
     //运行参数
     int m_nInputCells;
     unsigned int m_idDataType;
-    CTaker<char*> m_spWeights;
+    CTaker<char*> m_spWeightsZ;
+    CTaker<char*> m_spWeightsR;
+    CTaker<char*> m_spWeightsH;
     CTaker<char*> m_spState;
-    CTaker<char*> m_spBais;
 
     //缓存参数
     int m_nInputSize;
@@ -68,7 +72,8 @@ private:
     int m_nGroups;
     int m_nInVer;
     int m_nOutVer;
-    CActivator* m_pActivator;
+    CActivator* m_pSigmodActivator;
+    CActivator* m_pTanhActivator;
     SOptimizer m_spOptimizer;
     SVectorSolver m_spSolver;
     STensor m_spBatchIn;
@@ -79,7 +84,7 @@ private:
     int m_nEvalDropout;
 
 public:
-    CRnnNetwork() {
+    CGruNetwork() {
         m_nCells = 0;
         m_bKeepGroup = false;
         m_nInputCells = 0;
@@ -88,8 +93,8 @@ public:
         m_nOutVer = 0;
         m_nEvalDropout = 0;
         //激活函数未初始化
-        m_pActivator = nullptr;
+        m_pSigmodActivator = m_pTanhActivator = nullptr;
     }
 };
 
-#endif//__SimpleWork_NN_CRnnNetwork_H__
+#endif//__SimpleWork_NN_CGruNetwork_H__

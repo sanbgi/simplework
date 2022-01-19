@@ -45,6 +45,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         // 创建循环神经网络
         //
         virtual int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
+    
+        //
+        // 创建循环神经网络
+        //
+        virtual int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
 
         //
         //  读取整个IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
