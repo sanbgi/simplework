@@ -69,13 +69,11 @@ int CRnnNetwork::prepareNetwork(const STensor& spBatchIn) {
             return sCtx.error("不允许循环神经网络细胞数或输入细胞数为零");
         }
 
-        int nUWeights = m_nCells*nInputCells;
-        int nVWeights = m_nCells*m_nCells;
-
+        int nWeights = m_nCells*(nInputCells+m_nCells);
         if(idType == CBasicData<double>::getStaticType()) {
-            initWeightT<double>(nUWeights, nVWeights, m_nCells);
+            initWeightT<double>(nWeights, m_nCells);
         }else if(idType == CBasicData<float>::getStaticType()) {
-            initWeightT<float>(nUWeights, nVWeights, m_nCells);
+            initWeightT<float>(nWeights, m_nCells);
         }else{
             return sCtx.error("不支持的数据类型");
         }
@@ -145,6 +143,10 @@ int CRnnNetwork::prepareNetwork(const STensor& spBatchIn) {
         return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
     }
 
+    if( SVectorSolver::getSolver(idType, m_spSolver) != sCtx.success() ) {
+        return sCtx.error((std::string("创建向量求解器失败")).c_str());
+    }
+
     m_spBatchInDeviation.release();
     m_nBatchs = nBatchs;
     m_nGroups = nGroups;
@@ -153,15 +155,11 @@ int CRnnNetwork::prepareNetwork(const STensor& spBatchIn) {
 }
 
 
-template<typename Q> int CRnnNetwork::initWeightT(int nUWeights, int nVWeights, int nCells) {
-    Q* pUWeights = new Q[nUWeights];
-    Q* pVWeights = new Q[nVWeights];
+template<typename Q> int CRnnNetwork::initWeightT(int nWeights, int nCells) {
+    Q* pWeights = new Q[nWeights];
     Q* pState = new Q[nCells];
     Q* pBais = new Q[nCells];
-    m_spUWeights.take((char*)pUWeights, [](char* pWeights){
-        delete[] (Q*)pWeights;
-    });
-    m_spVWeights.take((char*)pVWeights, [](char* pWeights){
+    m_spWeights.take((char*)pWeights, [](char* pWeights){
         delete[] (Q*)pWeights;
     });
     m_spState.take((char*)pState, [](char* pState){
@@ -180,11 +178,8 @@ template<typename Q> int CRnnNetwork::initWeightT(int nUWeights, int nVWeights, 
         *(pWeights+i) = CUtils::rand() * xWeight;
     }*/
     Q xWeight = 0.1;//sqrt(1.0/nInputCells);
-    for(int i=0; i<nUWeights; i++) {
-        pUWeights[i] = -xWeight + CUtils::rand() * xWeight * 2;
-    }
-    for(int i=0; i<nVWeights; i++) {
-        pVWeights[i] = -xWeight + CUtils::rand() * xWeight * 2;
+    for(int i=0; i<nWeights; i++) {
+        pWeights[i] = -xWeight + CUtils::rand() * xWeight * 2;
     }
     for(int i=0; i<nCells; i++ ){
         pBais[i] = 0;
@@ -202,13 +197,13 @@ template<typename Q> int CRnnNetwork::evalT(const STensor& spBatchIn, STensor& s
     int nCells = m_nCells;
     int nOutputSize = m_nCells*sizeof(Q);
     int nInputCells = m_nInputCells;
-    int nUWeights = nInputCells*nCells;
-    int nVWeights = nCells*nCells;
+    int nWeights = nInputCells*(nInputCells*nCells);
     bool bKeepGroup = m_bKeepGroup;
 
     //
     // 丢弃数组长度为输出数组长度，值为同等位置输出是否需要抛弃。所以，根据抛弃比率，随机计算抛弃状态
     //
+    /*
     bool* pDropout = m_spDropout, *pDrop;
     int nDropout = 0;
     if(pDropout) {
@@ -224,6 +219,7 @@ template<typename Q> int CRnnNetwork::evalT(const STensor& spBatchIn, STensor& s
     }
     m_nEvalDropout = nDropout;
     Q xDropScale = nCells / (Q)(nCells-nDropout);
+    */
 
     //
     //执行内部状态值的指针，用于在最后一步，将状态计算结果(网络输出)保存下来
@@ -232,114 +228,82 @@ template<typename Q> int CRnnNetwork::evalT(const STensor& spBatchIn, STensor& s
     struct CItOutVariables {
         Q* pIn;
         Q* pOut;
-        Q* pUWeight;
-        Q* pVWeight;
+        Q* pWeight;
         Q* pState;
         Q* pBais;
-    }varBackup, varTBackup, varOBackup, it = {
+    }varBackup, it = {
         spBatchIn->getDataPtr<Q>(),
         m_spInternalBatchOut->getDataPtr<Q>(),
-        (Q*)(void*)m_spUWeights,
-        (Q*)(void*)m_spVWeights,
+        (Q*)(void*)m_spWeights,
         pState,
         (Q*)(void*)m_spBais
     };
-
-    Q dUOut, dVOut;
-    int iTensor, iOutput, iInput;
     varBackup = it;
-    for(iTensor=0; iTensor<nTensors; iTensor++) {
-        varTBackup.pIn = it.pIn;
-        varTBackup.pOut = it.pOut;
-        varTBackup.pUWeight = it.pUWeight;
-        varTBackup.pVWeight = it.pVWeight;
-        varTBackup.pBais = it.pBais;
 
+    IVectorSolver* pSolver = m_spSolver.getPtr();
+    Q joinedVec[nCells+nInputCells];
+    PVector outVar = {
+        m_nCells,
+        nullptr
+    };
+    PVectorArray inVars_Join = {2,{
+        { nInputCells, nullptr },
+        { nCells, it.pState }
+    }};
+    PVectorArray inVars_Multiply = {2,{
+        { nInputCells + nCells, joinedVec },
+        { nWeights, it.pWeight }
+    }};
+    PVectorArray inVars_Bais = {2,{
+        { nCells, nullptr },
+        { nCells, it.pBais }
+    }};
+    for(int iTensor=0; iTensor<nTensors; iTensor++) {
         //
-        // 计算输出值
+        // 输入向量和状态向量连接
         //
-        if(nDropout > 1) {
-            pDrop = pDropout;
-            for(iOutput=0; iOutput<nCells; iOutput++) {
-                varOBackup.pIn = it.pIn;
-                varOBackup.pState = it.pState;
-                varOBackup.pUWeight = it.pUWeight;
-                varOBackup.pVWeight = it.pVWeight;
-                if(*pDrop) {
-                    (*it.pOut) = 0;
-                }else{
-                    dUOut = 0;
-                    for(iInput=0; iInput<nInputCells; iInput++ ) {
-                        dUOut += (*it.pUWeight) * (*it.pIn);
-                        it.pIn++;
-                        it.pUWeight++;
-                    }
-
-                    dVOut = 0;
-                    for(iInput=0; iInput<nCells; iInput++ ) {
-                        dVOut += (*it.pVWeight) * (*it.pState);
-                        it.pState++;
-                        it.pVWeight++;
-                    }
-                    
-                    (*it.pOut) = (dUOut + dVOut - (*it.pBais))*xDropScale;
-                }
-
-                //  更新迭代参数
-                pDrop++;
-                it.pOut++;
-                it.pBais++;
-                it.pIn = varOBackup.pIn;
-                it.pState = varOBackup.pState;
-                it.pUWeight = varOBackup.pUWeight + nInputCells;
-                it.pVWeight = varOBackup.pVWeight + nCells;
-            }
-        }else{
-            for(iOutput=0; iOutput<nCells; iOutput++) {
-                varOBackup.pIn = it.pIn;
-                varOBackup.pState = it.pState;
-                varOBackup.pUWeight = it.pUWeight;
-                varOBackup.pVWeight = it.pVWeight;
-
-                dUOut = 0;
-                for(iInput=0; iInput<nInputCells; iInput++ ) {
-                    dUOut += (*it.pUWeight) * (*it.pIn);
-                    it.pIn++;
-                    it.pUWeight++;
-                }
-
-                dVOut = 0;
-                for(iInput=0; iInput<nCells; iInput++ ) {
-                    dVOut += (*it.pVWeight) * (*it.pState);
-                    it.pState++;
-                    it.pVWeight++;
-                }
-                
-                (*it.pOut) = dUOut + dVOut - (*it.pBais);
-
-                //  更新迭代参数
-                it.pOut++;
-                it.pBais++;
-                it.pIn = varOBackup.pIn;
-                it.pState = varOBackup.pState;
-                it.pUWeight = varOBackup.pUWeight + nInputCells;
-                it.pVWeight = varOBackup.pVWeight + nCells;
-            }
+        outVar.data = joinedVec;
+        outVar.size = nCells + nInputCells;
+        inVars_Join.data[0].data = it.pIn;
+        inVars_Join.data[1].data = it.pState;
+        if( pSolver->join(inVars_Join, outVar) != sCtx.success() ) {
+            return sCtx.error("连接输入和状态向量异常");
         }
 
-        m_pActivator->activate(nCells, varTBackup.pOut, varTBackup.pOut);
+        //
+        // 权重矩阵相乘
+        //
+        outVar.size = nCells;
+        outVar.data = it.pOut;
+        if( pSolver->multiply(inVars_Multiply, outVar) != sCtx.success() ) {
+            return sCtx.error("权重和输入向量相乘异常");
+        }
 
-        //  最后一步更新状态值
+        //
+        // 加上偏置
+        //
+        inVars_Bais.data[0].data = it.pOut;
+        outVar.size = nCells;
+        outVar.data = it.pOut;
+        if( pSolver->add(inVars_Bais, outVar) != sCtx.success() ) {
+            return sCtx.error("偏置计算异常");
+        }
+
+        //
+        // 激活
+        //
+        m_pActivator->activate(nCells, it.pOut, it.pOut);
+
+        //
+        //  更新状态值
+        //
         if(iTensor == nTensors-1) {
-            memcpy(pState, varTBackup.pOut, nOutputSize);
+            memcpy(pState, it.pOut, nOutputSize);
         }else{
-            it.pState = varTBackup.pOut;
+            it.pState = it.pOut;
         }
-        it.pIn = varTBackup.pIn + nInputCells;
-        it.pOut = varTBackup.pOut + nCells;
-        it.pUWeight = varTBackup.pUWeight;
-        it.pVWeight = varTBackup.pVWeight;
-        it.pBais = varTBackup.pBais;
+        it.pIn += nInputCells;
+        it.pOut += nCells;
     }
 
     m_spBatchIn = spBatchIn;
@@ -394,27 +358,24 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
     spBatchIn = m_spBatchIn;
     spBatchInDeviation = m_spBatchInDeviation;
 
-    bool* pDropout = m_spDropout;
-    int nDropout = m_nEvalDropout;
-    Q xScaleDropout = (m_nCells - nDropout) / (Q) m_nCells;
-    Q* pDev;
-    bool* pDrop;
-
     int nBatchs = m_nBatchs;
     int nGroups = m_nGroups;
     int nTensor = nBatchs * nGroups;
     int nInputCells = m_nInputCells;
     int nCells = m_nCells;
-    int nOutputSize = m_nCells*sizeof(Q);
+    int nJoinedInput = nCells + nInputCells;
     bool bKeepGroup = m_bKeepGroup;
 
-    int nUWeights = nCells * nInputCells;
-    int nVWeights = nCells * nCells;
-    int nVariables = nUWeights + nVWeights + nCells;
-    Q* pUWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nVariables);
-    Q* pVWeightDerivationArray = pUWeightDerivationArray+nUWeights;
-    Q* pBaisDeviationArray = pVWeightDerivationArray+nVWeights;
-    memset(pUWeightDerivationArray, 0 ,sizeof(Q)*(nVariables));
+    int nWeights = nCells * (nInputCells + nCells);
+    int nVariables = nWeights + nCells;
+    Q* pWeightDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nVariables);
+    Q* pBaisDeviationArray = pWeightDerivationArray+nWeights;
+    memset(pWeightDerivationArray, 0 ,sizeof(Q)*(nVariables));
+    Q pZDeviationArray[nCells], pStateDeviationArray[nCells];
+    Q pJoinDeviationArray[nJoinedInput], pJoinIn[nJoinedInput];
+    Q* pJoinInState = pJoinIn+nInputCells;
+    Q* pInDeviation = spBatchInDeviation->getDataPtr<Q>();
+    memset(pInDeviation, 0, sizeof(Q)*nTensor*nInputCells);
 
     //
     //  注意：输出偏差（pOutDeviation）相对特殊，如果一组对应一个输出，则输出
@@ -425,44 +386,62 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
     struct CItOutVariables {
         Q* pIn;
         Q* pInDeviation;
-        Q* pStateDeviation;
         Q* pOut;
         Q* pOutDeviation;
-        Q* pUWeight;
-        Q* pVWeight;
-        Q* pUWeightDeviation;
-        Q* pVWeightDeviation;
+        Q* pWeight;
+        Q* pWeightDeviation;
         Q* pBaisDeviation;
         Q* pZDeviatioin;
-    }varTBackup, varOBackup, it;
-    Q* pInDeviation = spBatchIn->getDataPtr<Q>();
+        Q* pState;
+    }it;
+
     it.pIn = spBatchIn->getDataPtr<Q>() + (nTensor-1)*nInputCells;
     it.pInDeviation = pInDeviation + (nTensor-1)*nInputCells;
     it.pOut = spBatchOut->getDataPtr<Q>() + (nTensor-1)*nCells;
     it.pOutDeviation = spBatchOutDeviation->getDataPtr<Q>() + (nTensor-1)*nCells;//这个地方小心
-    it.pUWeight = (Q*)(void*)m_spUWeights;
-    it.pVWeight = (Q*)(void*)m_spVWeights;
-    it.pUWeightDeviation = pUWeightDerivationArray;
-    it.pVWeightDeviation = pVWeightDerivationArray;
+    it.pWeight = (Q*)(void*)m_spWeights;
+    it.pWeightDeviation = pWeightDerivationArray;
     it.pBaisDeviation = pBaisDeviationArray;
-    memset(pInDeviation, 0, sizeof(Q)*nTensor*nInputCells);
+    it.pState = (Q*)(void*)m_spState;
 
-    Q pZDeviationArray[nCells], pStateDeviationArray[nCells], pTmpStateDeviationArray[nCells], deviationZ;
-    int iTensor, iOutput, iInput, iGroupOut;
+    IVectorSolver* pSolver = m_spSolver.getPtr();
+    PVector outDVar = {
+        nCells,
+        pZDeviationArray
+    };
+    PVectorArray inVars_DMultiply = {2, {
+        { nCells+nInputCells, pJoinIn },
+        { nWeights, it.pWeight }
+    }};
+    PVectorArray inDVars_DMultiply = {2, {
+        { nCells+nInputCells, pJoinDeviationArray },
+        { nWeights, it.pWeightDeviation }
+    }};
+
+    int iTensor, iGroupOut;
     int nGroupOut = m_bKeepGroup ? 1 : nGroups;
     for(iTensor=0, iGroupOut=0; iTensor<nTensor; iTensor++) {
-        //备份迭代器参数
-        varTBackup = it;
-
         //
         //  非一组中最后一个输出时（非倒序的第一个），其偏差等于上一此计算的状态输入偏差，其它情况为实际输出偏差（由外层传入）
         //
         if(iGroupOut>0) {
-            memcpy(pStateDeviationArray, pTmpStateDeviationArray, nOutputSize);
+            pSolver->copy(nCells, pStateDeviationArray, pJoinDeviationArray + nInputCells);
             it.pOutDeviation = pStateDeviationArray;
         }
-        memset(pTmpStateDeviationArray,0, nOutputSize);
-        it.pStateDeviation = pTmpStateDeviationArray;
+
+        //
+        // 初始化组合后的输入向量，以及输入偏导向量
+        //
+        pSolver->zero(nJoinedInput, pJoinDeviationArray);
+        pSolver->copy(nInputCells, pJoinIn, it.pIn);
+        if(iTensor == 0) {
+            pSolver->copy(nCells, pJoinInState, it.pState);
+        }
+        if(iTensor == nTensor-1) {
+            pSolver->copy(nCells, pJoinInState, it.pOut-nCells);
+        }else{
+            pSolver->zero(nCells, pJoinInState);
+        }
 
         //
         //  计算目标函数相对于Y值的偏导数
@@ -470,136 +449,38 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
         m_pActivator->deactivate(m_nCells, it.pOut, it.pOutDeviation, pZDeviationArray);
         it.pZDeviatioin = pZDeviationArray;
 
-        if(nDropout > 0) {
-            pDrop = pDropout;
-            pDev = pZDeviationArray;
-            for(iOutput=0; iOutput<m_nCells; iOutput++) {
-                if(*pDrop) {
-                    *pDev = 0;
-                }else{
-                    *pDev *= xScaleDropout;
-                }
-                pDrop++, pDev++;
-            }
+        //
+        //  偏置的偏导数更新
+        //
+        pSolver->add(nCells, pZDeviationArray, it.pBaisDeviation);
+
+        //
+        // 计算权重及输入的偏导数
+        //
+        if( pSolver->multiplyAccDeviation(outDVar, inDVars_DMultiply, inVars_DMultiply) != sCtx.success() ) {
+            return sCtx.error("偏导数计算错误");
         }
 
         //
-        //  调整权重
+        // 输入的偏导更新
         //
-        for(iOutput=0; iOutput<nCells; iOutput++) {
-            varOBackup.pIn = it.pIn;
-            varOBackup.pInDeviation = it.pInDeviation;
-            varOBackup.pStateDeviation = it.pStateDeviation;
-            varOBackup.pUWeight = it.pUWeight;
-            varOBackup.pUWeightDeviation = it.pUWeightDeviation,
-            varOBackup.pVWeight = it.pVWeight;
-            varOBackup.pVWeightDeviation = it.pVWeightDeviation,
-                
-            //
-            //  计算目标函数对当前输出值的偏导数
-            //      X = 输入
-            //      Y = 权重*X-偏置
-            //      F = activation(Y)
-            //      delta = F - F0(目标)
-            //      E = delta*delta/2 目标函数
-            //      deviationZ = d(E)/d(Y) = d(E)/d(delta) * d(delta)/d(F) * d(F)/d(Y)
-            //      其中：
-            //          d(E)/d(delta) = pOutDeviation[iOutput]
-            //          d(delta)/d(F) = 1
-            //          d(F)/d(Y) = deactivate(Y)
-            //
-            deviationZ = *(it.pZDeviatioin);
-            if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) {
-                //
-                // 更新权重，权重值的偏导数=输出值偏导数*数入值
-                //
-                for(iInput=0; iInput<nInputCells; iInput++ ) {
-
-                    //
-                    // 输入对实际目标的偏差值，反向传递给上一层，其实就是相对于输入的偏导数
-                    //
-                    // 注意：这里是否要乘以学习率？
-                    //      如果乘以学习率后，相当于向前传递的不是偏导数，而是偏导数 * 学习率，与现有神经网络BP算法不一致
-                    //      如果不乘以学习率，相当于直接向前传递偏导数，与现有神经网络BP算法一致，但含义上有点奇怪   
-                    //
-                    //pInDeviation[iInput] += deviationZ * pWeights[iWeight] * dLearnRate;
-                    (*it.pInDeviation) += deviationZ * (*it.pUWeight);
-                    (*it.pUWeightDeviation) += deviationZ * (*it.pIn);
-
-                    it.pIn++;
-                    it.pInDeviation++;
-                    it.pUWeight++;
-                    it.pUWeightDeviation++;
-                }
-
-                //如果不是第一个输入，则还需要继续将偏导向前一个状态输入传递
-                if(iTensor != nTensor-1) {
-                    pState = it.pOut - nCells;
-                    for(iInput=0; iInput<nCells; iInput++ ) {
-                        (*it.pStateDeviation) += deviationZ * (*it.pVWeight);
-                        (*it.pVWeightDeviation) += deviationZ * (*pState);
-
-                        pState++;
-                        it.pStateDeviation++;
-                        it.pVWeight++;
-                        it.pVWeightDeviation++;
-                    }
-                }
-                //
-                // 更新偏移，偏移值的偏导数= (-输出值偏导数)，因为具体值为wx-b=y
-                //
-                *it.pBaisDeviation += (-deviationZ);
-            }
-
-            //  更新迭代参数
-            it.pBaisDeviation++;
-            it.pZDeviatioin++;
-            it.pIn = varOBackup.pIn;
-            it.pInDeviation = varOBackup.pInDeviation;
-            it.pStateDeviation = varOBackup.pStateDeviation;
-            it.pUWeight = varOBackup.pUWeight + nInputCells;
-            it.pUWeightDeviation = varOBackup.pUWeightDeviation + nInputCells;
-            it.pVWeight = varOBackup.pVWeight + nCells;
-            it.pVWeightDeviation = varOBackup.pVWeightDeviation + nCells;
-        }
+        pSolver->copy(nInputCells, it.pInDeviation, pJoinDeviationArray);
 
         iGroupOut++;
         if(iGroupOut == nGroupOut) {
-            it.pOutDeviation = varTBackup.pOutDeviation - nCells;
+            it.pOutDeviation -= nCells;
             iGroupOut = 0;
         }
 
         //  更新迭代参数
         it.pIn -= nInputCells;
         it.pInDeviation -= nInputCells;
-        it.pOut = varTBackup.pOut - nCells;
-        it.pUWeight = varTBackup.pUWeight;
-        it.pUWeightDeviation = varTBackup.pUWeightDeviation;
-        it.pVWeight = varTBackup.pVWeight;
-        it.pVWeightDeviation = varTBackup.pVWeightDeviation;
-        it.pBaisDeviation = varTBackup.pBaisDeviation;
+        it.pOut -= nCells;
     }
 
     m_spOptimizer->updateDeviation(nTensor);
-
-    Q* pUWeightArray = (Q*)(void*)m_spUWeights;
-    Q* pUWeightEnd = pUWeightArray+nUWeights;
-    while(pUWeightArray != pUWeightEnd) {
-        *pUWeightArray -= *pUWeightDerivationArray;
-        pUWeightArray++, pUWeightDerivationArray++;
-    }
-    Q* pVWeightArray = (Q*)(void*)m_spVWeights;
-    Q* pVWeightEnd = pVWeightArray+nVWeights;
-    while(pVWeightArray != pVWeightEnd) {
-        *pVWeightArray -= *pVWeightDerivationArray;
-        pVWeightArray++, pVWeightDerivationArray++;
-    }
-    Q* pBaisArray = (Q*)(void*)m_spBais;
-    Q* pBaisEnd = pBaisArray+m_nCells;
-    while(pBaisArray != pBaisEnd) {
-        *pBaisArray -= *pBaisDeviationArray;
-        pBaisArray++, pBaisDeviationArray++;
-    }
+    pSolver->del(nWeights, it.pWeight, pWeightDerivationArray);
+    pSolver->del(nCells, (Q*)(void*)m_spBais, pBaisDeviationArray);
     return sCtx.success();
 }
 
@@ -635,8 +516,7 @@ int CRnnNetwork::toArchive(const SIoArchive& ar) {
     ar.visit("dataType", m_idDataType);
     if(m_nInputCells) {
         int nBytes = CType::getTypeBytes(m_idDataType);
-        ar.visitTaker("uweights", nBytes*m_nCells*m_nInputCells, m_spUWeights);
-        ar.visitTaker("vweights", nBytes*m_nCells*m_nCells, m_spVWeights);
+        ar.visitTaker("weights", nBytes*m_nCells*(m_nInputCells+m_nCells), m_spWeights);
         ar.visitTaker("state", nBytes*m_nCells, m_spState);
         ar.visitTaker("bais", nBytes*m_nCells, m_spBais);
     }

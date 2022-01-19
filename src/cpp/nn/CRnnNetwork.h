@@ -41,7 +41,7 @@ private://IIoArchivable
 private:
     template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);
     template<typename Q> int learnT(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
-    template<typename Q> int initWeightT(int nUWeights, int nVWeights, int nConvs);
+    template<typename Q> int initWeightT(int nWeights, int nConvs);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.RnnNetwork"; }
@@ -67,8 +67,7 @@ private:
     //运行参数
     int m_nInputCells;
     unsigned int m_idDataType;
-    CTaker<char*> m_spUWeights;
-    CTaker<char*> m_spVWeights;
+    CTaker<char*> m_spWeights;
     CTaker<char*> m_spState;
     CTaker<char*> m_spBais;
 
@@ -80,6 +79,7 @@ private:
     int m_nOutVer;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
+    SVectorSolver m_spSolver;
     STensor m_spBatchIn;
     STensor m_spInternalBatchOut;
     STensor m_spBatchOut;

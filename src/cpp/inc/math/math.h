@@ -7,8 +7,11 @@
 #define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace sw {
 #define SIMPLEWORK_MATH_NAMESPACE_LEAVE }
 
+#include "PVector.h"
 #include "PTensor.h"
 #include "STensor.h"
-#include "STensorSolver.h"
+#include "SMathSolver.h"
+#include "SMathFactory.h"
+#include "SVectorSolver.h"
 
 #endif//__SimpleWork_Math_h__

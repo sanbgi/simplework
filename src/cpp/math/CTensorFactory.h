@@ -2,7 +2,7 @@
 #ifndef __SimpleWork_Math_CTensorFactory_H__
 #define __SimpleWork_Math_CTensorFactory_H__
 
-#include "../inc/math/math.h"
+#include "math.h"
 #include <map>
 
 using namespace sw;

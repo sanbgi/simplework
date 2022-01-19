@@ -1,7 +1,8 @@
 #ifndef __SimpleWork_Tensor_h__
 #define __SimpleWork_Tensor_h__
 
-#include "STensorSolver.h"
+#include "SMathFactory.h"
+#include "SMathSolver.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -61,34 +62,34 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
 public:
     template<typename Q> static STensor createValue(Q v) {
         STensor spTensor;
-        STensorSolver::getSolver()->createVector(spTensor, CBasicData<Q>::getStaticType(), 1, (void*)&v);
+        SMathFactory::getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), 1, (void*)&v);
         return spTensor;
     }
     template<typename Q> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
         STensor spTensor;
-        STensorSolver::getSolver()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
+        SMathFactory::getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
         return spTensor;
     }
     //
     // 构造一维张量
     //
     template<typename Q> static int createVector(STensor& spTensor, int nElementSize, Q* pElementData=nullptr) {
-        return STensorSolver::getSolver()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
+        return SMathFactory::getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
     template<typename Q> static int createTensor(STensor& spTensor, STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
-        return STensorSolver::getSolver()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
+        return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
     static int createTensor(STensor& spTensor, STensor& spDimVector, unsigned int iElementType, int nElementSize, void* pElementData=nullptr) {
-        return STensorSolver::getSolver()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
+        return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
     }
 
 public:
     STensor operator - (const STensor& spIn) {
         STensor spOut;
-        STensorSolver::getSolver()->minus(*this, spIn, spOut);
+        SMathSolver::getSolver()->minus(*this, spIn, spOut);
         return spOut;
     }
 

@@ -8,13 +8,14 @@ using namespace sw;
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 static unsigned int s_double_type_id = CBasicData<double>::getStaticType();
+static SCtx sCtx("CMathSolver");
 
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-class CTensorSolver : public CObject, ITensorSolver {
+class CMathSolver : public CObject, IMathSolver {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(ITensorSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IMathSolver)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
@@ -88,19 +89,8 @@ public:
         resTensor.pDimSizes = nResDimSizes;
         return pRecerver->visit(resTensor);
     }
-
-    int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) {
-        return CTensorFactory::createVector(spTensor, eElementType, nElementSize, pElementData);
-    }
-    
-    int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ){
-        return CTensorFactory::createTensor(spTensor, spDimVector, eElementType, nElementSize, pElementData);
-    } 
-
-    static SCtx sCtx;
 };
-SCtx CTensorSolver::sCtx("CTensorSolver");
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSolver, STensorSolver::__getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CMathSolver, SMathSolver::__getClassKey())
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE
