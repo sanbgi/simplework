@@ -29,6 +29,8 @@ struct PVector {
 };
 
 struct PDeviaVector {
+    SIMPLEWORK_PDATAKEY(PVector, "sw.math.DeviaVector")
+    
     //
     // 大小
     //
