@@ -216,6 +216,7 @@ template<typename Q> int CGruNetwork::evalT(const STensor& spBatchIn, STensor& s
     //执行内部状态值的指针，用于在最后一步，将状态计算结果(网络输出)保存下来
     //
     Q* pState = (Q*)(void*)m_spState;
+    Q* pInternalBatchOut = m_spInternalBatchOut->getDataPtr<Q>();
     struct CItOutVariables {
         Q* pIn;
         Q* pOut;
@@ -223,15 +224,14 @@ template<typename Q> int CGruNetwork::evalT(const STensor& spBatchIn, STensor& s
         Q* pWeightR;
         Q* pWeightH;
         Q* pState;
-    }varBackup, it = {
+    }it = {
         spBatchIn->getDataPtr<Q>(),
-        m_spInternalBatchOut->getDataPtr<Q>(),
+        pInternalBatchOut,
         (Q*)(void*)m_spWeightsZ,
         (Q*)(void*)m_spWeightsR,
         (Q*)(void*)m_spWeightsH,
         pState,
     };
-    varBackup = it;
 
     IVectorSolver* pSolver = m_spSolver.getPtr();
     Q joinInVec[nJoinCells], hhInVec[nJoinCells], hhOutVec[nCells], zVec[nCells], rVec[nCells];
@@ -293,7 +293,7 @@ template<typename Q> int CGruNetwork::evalT(const STensor& spBatchIn, STensor& s
         spBatchOut = m_spInternalBatchOut;
     }else{
         int nBatchStep = nGroups * nCells;
-        Q* pOut = varBackup.pOut + nBatchStep - nCells;
+        Q* pOut = pInternalBatchOut + nBatchStep - nCells;
         Q* pGroupOut = m_spBatchOut->getDataPtr<Q>();
         for(int iBatch=0; iBatch<nBatchs; iBatch++) {
             memcpy(pGroupOut, pOut, nOutputSize);
@@ -346,6 +346,7 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
     int nJoinCells = nCells + nInputCells;
     bool bKeepGroup = m_bKeepGroup;
 
+    //权重偏导初始化为零
     int nWeights = nCells * (nInputCells + nCells);
     int nVariables = nWeights * 3;
     Q* pWeightZDerivationArray = (Q*)m_spOptimizer->getDeviationPtr(nVariables);
@@ -353,14 +354,20 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
     Q* pWeightHDerivationArray = pWeightRDerivationArray+nWeights;
     memset(pWeightZDerivationArray, 0 ,sizeof(Q)*(nVariables));
 
-    Q pPrevOutDeviationArray[nCells];
-    Q pJoinInStateDevia[nJoinCells], pJoinInState[nJoinCells];
+    //上一级状态偏导，临时变量，用于缓存输出偏导数（从下一级计算传导到上一级的输出）
+    Q pPrevStateDeviaArray[nCells];
+
+    //状态和输入的联合体，值+偏导
+    Q pJoinInState[nJoinCells], pJoinInStateDevia[nJoinCells];
     Q* pJoinIn = pJoinInState + nCells;
     Q* pJoinInDevia = pJoinInStateDevia + nCells;
 
+    //所有输入偏导，重置为零
     Q* pInDeviation = spBatchInDeviation->getDataPtr<Q>();
     memset(pInDeviation, 0, sizeof(Q)*nTensor*nInputCells);
-    Q hhInVec[nJoinCells], hhInDeviaVec[nJoinCells], tmp[nCells];
+
+    //公式计算中间的临时变量，包括输入、输入偏导，以及Z、R、H的值和偏导
+    Q hhInVec[nJoinCells], hhInDeviaVec[nJoinCells], tmp[nCells*6];
 
     //
     //  注意：输出偏差（pOutDeviation）相对特殊，如果一组对应一个输出，则输出
@@ -386,8 +393,8 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
         Q* pHHDeiva;
         Q* pZDeiva;
         Q* pRDeiva;
-        Q* pInState;
-        Q* pInStateDevia;
+        Q* pPrevState;
+        Q* pPrevStateDevia;
     }it;
 
     it.pIn = spBatchIn->getDataPtr<Q>() + (nTensor-1)*nInputCells;
@@ -407,8 +414,8 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
     it.pHHDeiva = it.pR + nCells;
     it.pRDeiva = it.pHHDeiva + nCells;
     it.pZDeiva = it.pRDeiva + nCells;
-    it.pInState = pJoinInState;
-    it.pInStateDevia = pJoinInStateDevia;
+    it.pPrevState = pJoinInState;
+    it.pPrevStateDevia = pJoinInStateDevia;
 
     IVectorSolver* pSolver = m_spSolver.getPtr();
 
@@ -419,8 +426,8 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
         //  非一组中最后一个输出时（非倒序的第一个），其偏差等于上一此计算的状态输入偏差，其它情况为实际输出偏差（由外层传入）
         //
         if(iGroupOut>0) {
-            pSolver->copy(nCells, pPrevOutDeviationArray, pJoinInStateDevia);
-            it.pOutDeviation = pPrevOutDeviationArray;
+            pSolver->copy(nCells, pPrevStateDeviaArray, pJoinInStateDevia);
+            it.pOutDeviation = pPrevStateDeviaArray;
         }
 
         //
@@ -473,11 +480,11 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
             m_pTanhActivator->deactivate(nCells, it.pHH, it.pHHDeiva, it.pHHDeiva);
 
             //求h偏导:dy * (1 - z)
-            pSolver->multiply(nCells, it.pOutDeviation, it.pZ, it.pInStateDevia);
-            pSolver->del(nCells, it.pOut, it.pInStateDevia, it.pInStateDevia);
+            pSolver->multiply(nCells, it.pOutDeviation, it.pZ, it.pPrevStateDevia);
+            pSolver->del(nCells, it.pOut, it.pPrevStateDevia, it.pPrevStateDevia);
 
             //求z偏导：dy * (hh-h)
-            pSolver->del(nCells, it.pHH, it.pInState, it.pZDeiva);
+            pSolver->del(nCells, it.pHH, it.pPrevState, it.pZDeiva);
             pSolver->multiply(nCells, it.pZDeiva, it.pOut, it.pZDeiva);
         }
 
@@ -499,7 +506,7 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
 
             //求h(t-1)偏导数
             pSolver->multiply(nCells, hhInDeviaVec, it.pHHDeiva, hhInDeviaVec);
-            pSolver->add(nCells, it.pInStateDevia, hhInDeviaVec);
+            pSolver->add(nCells, it.pPrevStateDevia, hhInDeviaVec);
         }
 
         //最后一部分
