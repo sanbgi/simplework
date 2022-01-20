@@ -1,96 +1,188 @@
-#include "../inc/math/math.h"
-#include <map>
-#include "CTensorFactory.h"
 
-using namespace sw;
-using namespace sw;
+#include "CMathSolver.h"
+#include "map"
 
-SIMPLEWORK_MATH_NAMESPACE_ENTER
+using namespace std;
 
-static unsigned int s_double_type_id = CBasicData<double>::getStaticType();
-static SCtx sCtx("CTensorSolver");
+static SCtx sCtx("CMathSolver");
 
-//
-// 张量基类，主要用于申明不带模板参数的初始化函数
-//
-class CTensorSolver : public CObject, ITensorSolver {
+template<typename Q>
+class CMathSolverT : public CObject, public IMathSolver {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(ITensorSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IMathSolver)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int minus( const STensor& t1, const STensor& t2, STensor& spOut) {
-        int nSize = t1->getDataSize();
-        if( nSize != t2->getDataSize()) {
-            return sCtx.error("大小不同的两个张量不能相减");
-        }
-
-        if(t1->getDataType() != s_double_type_id || t2->getDataType() != s_double_type_id ) {
-            return sCtx.error("目前张量运算只支持双精度类型");
-        }
-
-        if( STensor::createTensor<double>(spOut, t1->getDimVector(), nSize) != sCtx.success() ) {
-            return sCtx.error("创建结果张量失败");
-        }
-
-        double* pT1 = t1->getDataPtr<double>();
-        double* pT2 = t2->getDataPtr<double>();
-        double* pOut = spOut->getDataPtr<double>();
-        for(int i=0; i<nSize; i++) {
-            pOut[i] = pT1[i] - pT2[i];
+    int add(int nSize, void* pDesc, void* pSrc) {
+        Q* pTarget = (Q*)pDesc;
+        Q* pSource = (Q*)pSrc;
+        while(nSize>=0) {
+            *pTarget += *pSource;
         }
         return sCtx.success();
     }
 
-    int multiply( const PTensor& t1, const PTensor& t2, IVisitor<const PTensor&>* pRecerver) {
-        if( t1.idType != s_double_type_id || t2.idType != s_double_type_id ) {
-            return sCtx.error();
+    int del(int nSize, void* pDesc, void* pSrc){
+        Q* pTarget = (Q*)pDesc;
+        Q* pSource = (Q*)pSrc;
+        while(nSize>=0) {
+            *pTarget -= *pSource;
         }
+        return sCtx.success();
+    }
 
-        if(t1.nDims < 1 || t2.nDims < 1 ) {
-            return sCtx.error();
+    int copy(int nSize, void* pDesc, void* pSrc){
+        Q* pTarget = (Q*)pDesc;
+        Q* pSource = (Q*)pSrc;
+        while(nSize>=0) {
+            *pTarget = *pSource;
         }
+        return sCtx.success();
+    }
 
-        if(t1.pDimSizes[t1.nDims-1] != t2.pDimSizes[0] ) {
-            return sCtx.error();
+    int zero(int nSize, void* pDesc){
+        Q* pTarget = (Q*)pDesc;
+        while(nSize>=0) {
+            *pTarget = 0;
         }
+        return sCtx.success();
+    }
 
-        int mlength = t1.pDimSizes[t1.nDims-1];
-        int nT1vector = t1.nData / mlength;
-        int nT2vector = t2.nData / mlength;
+    int add(int nSize, void* pIn1, void* pIn2, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 + *pV2;
+            pVO++, pV1++, pV2++;
+        }
+        return sCtx.success();
+    }
 
-        // 计算结果数据
-        int nResSize = nT1vector * nT2vector;
-        double dResTensor[nResSize];
-        for( int i=0; i<nT1vector; i++) {
-            for(int j=0; j<nT2vector; j++) {
-                double dRes = 0;
-                for( int k=0; k<mlength; k++ ) {
-                    dRes += t1.pDoubleArray[i*mlength+k] * t2.pDoubleArray[k*nT2vector+j];
-                }
-                dResTensor[i*nT2vector+j] = dRes;
+    int del(int nSize, void* pIn1, void* pIn2, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 - *pV2;
+            pVO++, pV1++, pV2++;
+        }
+        return sCtx.success();
+    }
+
+    int addByWeight(int nSize, void* pIn1, void* pIn2, void* pWeight, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pW = (Q*)pWeight;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 * (*pW) + *pV2 * (1-(*pW));
+            pVO++, pV1++, pV2++, pW++;
+        }
+        return sCtx.success();
+    }
+
+    int multiply(int nSize, void* pIn1, void* pIn2, void* pOut) {
+        Q* pV1 = (Q*)pIn1;
+        Q* pV2 = (Q*)pIn2;
+        Q* pVO = (Q*)pOut;
+        Q* pVOEnd = pVO + nSize;
+        while(pVO != pVOEnd) {
+            *pVO = *pV1 * *pV2;
+            pVO++, pV1++, pV2++;
+        }
+        return sCtx.success();
+    }
+
+    int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) {
+        if( vecIn.size * vecOut.size != vecMatrix.size ) {
+            return sCtx.error("乘法输入输出尺寸不一致");
+        }
+        Q* pV1 = (Q*)vecIn.data;
+        Q* pV2 = (Q*)vecMatrix.data;
+        Q* pVO = (Q*)vecOut.data;
+        Q* pVOEnd = pVO + vecOut.size;
+        Q* pV1End = pV1 + vecIn.size;
+        Q* pItIn;
+        Q v;
+        while(pVO != pVOEnd) {
+            v = 0;
+            pItIn = pV1;
+            while(pItIn < pV1End) {
+                v += (*pItIn) * (*pV2);
+                pItIn++, pV2++;
             }
+            *pVO = v;
+            pVO++;
         }
-        
-        // 计算结果维度
-        int nResDims = t1.nDims+t2.nDims-2;
-        int nResDimSizes[nResDims];
-        for(int i=0; i<t1.nDims-1; i++) {
-            nResDimSizes[i] = t1.pDimSizes[i];
-        }
-        for(int j=1; j<t2.nDims; j++) {
-            nResDimSizes[t1.nDims+j-2] = t2.pDimSizes[j];
-        }
+        return sCtx.success();
+    }
 
-        PTensor resTensor;
-        resTensor.nData = nResSize;
-        resTensor.pDoubleArray = dResTensor;
-        resTensor.nDims = nResDims;
-        resTensor.pDimSizes = nResDimSizes;
-        return pRecerver->visit(resTensor);
+    int multiplyAccDeviation(PDeviaVector vOut, PDeviaVector vWeights, PDeviaVector vIn) {
+        if( vIn.size * vOut.size != vWeights.size ) {
+            return sCtx.error("输入输出向量尺寸不相等，求偏导失败");
+        }
+        Q* pInput1 = (Q*)vIn.data;
+        Q* pD1 = (Q*)vIn.devia;
+        Q* pWeights = (Q*)vWeights.data;
+        Q* pWeightDeviations = (Q*)vWeights.devia;
+        Q* pDeviaOut = (Q*)vOut.data;
+        Q* pDeviaOutEnd = pDeviaOut + vOut.size;
+        Q* pInput1End = pInput1 + vIn.size;
+        Q* pIn, *pInDeviation;
+        Q deviationOut;
+        while(pDeviaOut != pDeviaOutEnd) {
+            pIn = pInput1;
+            pInDeviation = pD1;
+            deviationOut = *pDeviaOut;
+            while(pIn < pInput1End) {
+                *pInDeviation += deviationOut * (*pWeights);
+                *pWeightDeviations += deviationOut * (*pIn);
+                pIn++, pInDeviation++, pWeights++, pWeightDeviations++;
+            }
+            pDeviaOut++;
+        }
+        return sCtx.success();
+    }
+
+
+    int join(PVector vecIn1, PVector vecIn2, PVector vecOut) {
+        if(vecIn1.size + vecIn2.size != vecOut.size) {
+            return sCtx.error("输入输出尺寸不一致");
+        }
+        Q* pV1 = (Q*)vecIn1.data;
+        Q* pV2 = (Q*)vecIn2.data;
+        Q* pVO = (Q*)vecOut.data;
+        Q* pV1End = pV1 + vecIn1.size;
+        Q* pV2End = pV2 + vecIn2.size;
+        while(pV1 != pV1End) {
+            *pVO = *pV1;
+            pVO++, pV1++;
+        }
+        while(pV2 != pV2End) {
+            *pVO = *pV2;
+            pVO++, pV2++;
+        }
+        return sCtx.success();
+    }
+
+    static int getSolver(SMathSolver& spSolver) {
+        static SMathSolver g_solver = CObject::createObject<CMathSolverT>();
+        spSolver = g_solver;
+        return sCtx.success();
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSolver, STensorSolver::__getClassKey())
 
-SIMPLEWORK_MATH_NAMESPACE_LEAVE
+int CMathSolver::createSolver(unsigned int idType, SMathSolver& spSolver) {
+    if(idType == CBasicData<double>::getStaticType() ) {
+        return CMathSolverT<double>::getSolver(spSolver);
+    }else
+    if(idType == CBasicData<float>::getStaticType() ) {
+        return CMathSolverT<float>::getSolver(spSolver);
+    }
+    return sCtx.error("不支持数据类型");
+}
