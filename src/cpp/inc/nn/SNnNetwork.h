@@ -78,6 +78,18 @@ public:
         return nn;
     }
 
+    static SNnNetwork createRnn(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
+        return nn;
+    }
+
+    static SNnNetwork createGru(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createGru(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
+        return nn;
+    }
+
     static SNnNetwork createSequence(int nNetworks, SNnNetwork* pNetworks) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createSequence(nNetworks, pNetworks, nn);
@@ -94,18 +106,6 @@ public:
         SNnPipe pipe;
         SNnFactory::getFactory()->openIdxFileReader(szFilename, pipe);
         return pipe;
-    }
-
-    static SNnNetwork createRnn(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
-        return nn;
-    }
-
-    static SNnNetwork createGru(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createGru(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
-        return nn;
     }
 
 
