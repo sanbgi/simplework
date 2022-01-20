@@ -7,7 +7,7 @@ using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
 using namespace SIMPLEWORK_NN_NAMESPACE;
 
-class CMathSolver {
+class CTensorSolver {
 public:
     //
     // 归一化

@@ -74,11 +74,11 @@ public:
     }
 
     int normalizeTensor(const STensor& spIn, STensor& spOut) {
-        return CMathSolver::normalize(spIn, spOut);
+        return CTensorSolver::normalize(spIn, spOut);
     }
 
     int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) {
-        return CMathSolver::classify(nClassify, spIn, spOut);
+        return CTensorSolver::classify(nClassify, spIn, spOut);
     }
 
     int saveNetwork(const char* szFileName, const SNnNetwork& spNet) {

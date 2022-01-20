@@ -2,7 +2,7 @@
 #define __SimpleWork_Tensor_h__
 
 #include "SMathFactory.h"
-#include "SMathSolver.h"
+#include "STensorSolver.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -89,7 +89,7 @@ public:
 public:
     STensor operator - (const STensor& spIn) {
         STensor spOut;
-        SMathSolver::getSolver()->minus(*this, spIn, spOut);
+        STensorSolver::getSolver()->minus(*this, spIn, spOut);
         return spOut;
     }
 

@@ -4,7 +4,7 @@
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 class STensor;
-class SVectorSolver;
+class SMathSolver;
 
 //
 // 向量求解器，其输入输出均为相同数据类型
@@ -18,7 +18,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathFactory, "sw.math.MathFactory")
         virtual int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
         virtual int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
 
-        virtual int createSolver(unsigned int idType, SVectorSolver& spSolver) = 0;
+        virtual int createSolver(unsigned int idType, SMathSolver& spSolver) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

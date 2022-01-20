@@ -10,8 +10,8 @@
 #include "PVector.h"
 #include "PTensor.h"
 #include "STensor.h"
-#include "SMathSolver.h"
+#include "STensorSolver.h"
 #include "SMathFactory.h"
-#include "SVectorSolver.h"
+#include "SMathSolver.h"
 
 #endif//__SimpleWork_Math_h__

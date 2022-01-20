@@ -70,7 +70,7 @@ private:
     int m_nOutVer;
     CActivator* m_pActivator;
     SOptimizer m_spOptimizer;
-    SVectorSolver m_spSolver;
+    SMathSolver m_spSolver;
     STensor m_spBatchIn;
     STensor m_spInternalBatchOut;
     STensor m_spBatchOut;

@@ -1,7 +1,7 @@
 #include "CTensorSolver.h"
 
-static SCtx sCtx("CMathSolver");
-int CMathSolver::normalize(const STensor& spIn, STensor& spOut) {
+static SCtx sCtx("CTensorSolver");
+int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
 
     int nSize = spIn->getDataSize();
     STensor spOutTensor;
@@ -23,7 +23,7 @@ int CMathSolver::normalize(const STensor& spIn, STensor& spOut) {
     return sCtx.error("不支持的归一化输入类型");
 }
 
-int CMathSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) {
+int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) {
 
     //
     // 计算新张量尺寸

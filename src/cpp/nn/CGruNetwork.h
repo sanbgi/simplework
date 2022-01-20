@@ -75,7 +75,7 @@ private:
     CActivator* m_pSigmodActivator;
     CActivator* m_pTanhActivator;
     SOptimizer m_spOptimizer;
-    SVectorSolver m_spSolver;
+    SMathSolver m_spSolver;
     STensor m_spBatchIn;
     STensor m_spInternalBatchOut;
     STensor m_spBatchOut;

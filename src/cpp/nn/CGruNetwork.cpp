@@ -148,7 +148,7 @@ int CGruNetwork::prepareNetwork(const STensor& spBatchIn) {
         return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
     }
 
-    if( SVectorSolver::getSolver(idType, m_spSolver) != sCtx.success() ) {
+    if( SMathSolver::getSolver(idType, m_spSolver) != sCtx.success() ) {
         return sCtx.error((std::string("创建向量求解器失败")).c_str());
     }
 
@@ -233,7 +233,7 @@ template<typename Q> int CGruNetwork::evalT(const STensor& spBatchIn, STensor& s
         pState,
     };
 
-    IVectorSolver* pSolver = m_spSolver.getPtr();
+    IMathSolver* pSolver = m_spSolver.getPtr();
     Q joinInVec[nJoinCells], hhInVec[nJoinCells], hhOutVec[nCells], zVec[nCells], rVec[nCells];
     for(int iTensor=0; iTensor<nTensors; iTensor++) {
         //
@@ -417,7 +417,7 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
     it.pPrevState = pJoinInState;
     it.pPrevStateDevia = pJoinInStateDevia;
 
-    IVectorSolver* pSolver = m_spSolver.getPtr();
+    IMathSolver* pSolver = m_spSolver.getPtr();
 
     int iTensor, iGroupOut;
     int nGroupOut = m_bKeepGroup ? 1 : nGroups;

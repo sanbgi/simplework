@@ -1,7 +1,7 @@
 #include "../inc/math/math.h"
 #include <map>
 #include "CTensorFactory.h"
-#include "CVectorSolver.h"
+#include "CMathSolver.h"
 
 using namespace sw;
 
@@ -24,8 +24,8 @@ public:
         return CTensorFactory::createTensor(spTensor, spDimVector, eElementType, nElementSize, pElementData);
     }
 
-    int createSolver(unsigned int idType, SVectorSolver& spSolver) {
-        return CVectorSolver::createSolver(idType, spSolver);
+    int createSolver(unsigned int idType, SMathSolver& spSolver) {
+        return CMathSolver::createSolver(idType, spSolver);
     }
 };
 

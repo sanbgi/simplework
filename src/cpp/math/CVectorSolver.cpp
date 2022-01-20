@@ -1,15 +1,15 @@
 
-#include "CVectorSolver.h"
+#include "CMathSolver.h"
 #include "map"
 
 using namespace std;
 
-static SCtx sCtx("CVectorSolver");
+static SCtx sCtx("CMathSolver");
 
 template<typename Q>
-class CVectorSolverT : public CObject, public IVectorSolver {
+class CMathSolverT : public CObject, public IMathSolver {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IVectorSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IMathSolver)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
@@ -169,20 +169,20 @@ public:
         return sCtx.success();
     }
 
-    static int getSolver(SVectorSolver& spSolver) {
-        static SVectorSolver g_solver = CObject::createObject<CVectorSolverT>();
+    static int getSolver(SMathSolver& spSolver) {
+        static SMathSolver g_solver = CObject::createObject<CMathSolverT>();
         spSolver = g_solver;
         return sCtx.success();
     }
 };
 
 
-int CVectorSolver::createSolver(unsigned int idType, SVectorSolver& spSolver) {
+int CMathSolver::createSolver(unsigned int idType, SMathSolver& spSolver) {
     if(idType == CBasicData<double>::getStaticType() ) {
-        return CVectorSolverT<double>::getSolver(spSolver);
+        return CMathSolverT<double>::getSolver(spSolver);
     }else
     if(idType == CBasicData<float>::getStaticType() ) {
-        return CVectorSolverT<float>::getSolver(spSolver);
+        return CMathSolverT<float>::getSolver(spSolver);
     }
     return sCtx.error("不支持数据类型");
 }
