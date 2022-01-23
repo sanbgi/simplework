@@ -24,7 +24,13 @@ public:
     //
     // 创建张量
     //
-    static int createTensor( STensor& spTensor, const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData);
+    static int createTensor( STensor& spTensor, const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData);
+
+    //
+    // 创建维度
+    //
+    static int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData);
+
 };
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

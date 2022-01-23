@@ -1,9 +1,15 @@
 #ifndef __SimpleWork_NN_CUtils_H__
 #define __SimpleWork_NN_CUtils_H__
 
+#include "nn.h"
+
+using namespace sw;
+
 class CUtils {
 public:
     static double rand(); 
+    static bool isSameDimVector(const STensor& spDimVector1, const STensor& spDimVector2);
+
 
     //
     // 反向计算偏导数，注意计算模式

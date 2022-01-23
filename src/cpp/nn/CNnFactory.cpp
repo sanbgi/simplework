@@ -13,6 +13,9 @@
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
+#include "CNnWeight.h"
+#include "CNnState.h"
+#include "CNnOperator.h"
 
 using namespace SIMPLEWORK_CORE_NAMESPACE;
 using namespace SIMPLEWORK_MATH_NAMESPACE;
@@ -87,6 +90,26 @@ public:
 
     int loadNetwork(const char* szFileName, SNnNetwork& spNet) {
         return CNnNetwork::loadNetwork(szFileName, spNet);
+    }
+    
+    int createWeightVariable(const STensor& spDimVector, SNnVariable& spVar) {
+        return CNnWeight::createWeightVariable(spDimVector, spVar);
+    }
+
+    int createStateVariable(const STensor& spDimVector, SNnVariable& spVar){
+        return CNnState::createStateVariable(spDimVector, spVar);
+    }
+
+    int createOpVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+        return CNnOperator::createOperatorVariable(szOp, nInVars, pInVars, spOutVar);
+    }
+
+    int createPoolVariable(const SNnVariable& spIn, int nWidth, int nHeight, int nStride, SNnVariable& spOutVar) {
+        return CNnOperator::createPoolVariable(nullptr, nWidth, nHeight, nStride, 1, &spIn, spOutVar);
+    }
+
+    int createConvVariable(const SNnVariable& spIn, int nWidth, int nHeight, int nConvs, const char* szPadding, SNnVariable& spOutVar) {
+        return CNnOperator::createConvVariable(spIn, nWidth, nHeight, nConvs, szPadding, spOutVar);
     }
 };
 

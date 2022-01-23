@@ -4,7 +4,7 @@ static SCtx sCtx("CNormalizePipe");
 int CNormalizePipe::push(const STensor& spIn, STensor& spOut) {
 
     int nSize = spIn->getDataSize();
-    if( STensor::createTensor<double>(spOut, spIn->getDimVector(), nSize ) != sCtx.success() ) {
+    if( STensor::createTensor<double>(spOut, spIn.dimension(), nSize ) != sCtx.success() ) {
         return sCtx.error("创建标准化张量失败");
     }
 

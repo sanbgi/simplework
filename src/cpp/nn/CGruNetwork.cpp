@@ -37,8 +37,8 @@ int CGruNetwork::prepareNetwork(const STensor& spBatchIn) {
         //
         // 检查输入张量维度
         //
-        STensor& spInDimTensor = spBatchIn->getDimVector();
-        int nInputDims = spInDimTensor->getDataSize();
+        SDimension spInDimTensor = spBatchIn.dimension();
+        int nInputDims = spInDimTensor.size();
         if(nInputDims < 3) {
             return sCtx.error("输入张量维度需要大于2，其中第一个维度是批量数据组数，第二个维度是分组数据个数");
         }
@@ -46,7 +46,7 @@ int CGruNetwork::prepareNetwork(const STensor& spBatchIn) {
         //
         // 计算输入参数
         //
-        int* pDimSizes = spInDimTensor->getDataPtr<int>();
+        const int* pDimSizes = spInDimTensor.data();
         nBatchs = pDimSizes[0];
         nGroups = pDimSizes[1];
         nInputCells = pDimSizes[2];
@@ -111,8 +111,8 @@ int CGruNetwork::prepareNetwork(const STensor& spBatchIn) {
     //  2，如果不需要输出，则单独创建输出张量
     //
     int pOutDimSizes[3] = { nBatchs, nGroups, m_nCells };
-    STensor spOutDimVector;
-    if( int errCode = STensor::createVector(spOutDimVector, 3, pOutDimSizes) != sCtx.success() ) {
+    SDimension spOutDimVector;
+    if( int errCode = SDimension::createDimension(spOutDimVector, 3, pOutDimSizes) != sCtx.success() ) {
         return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
     }
 
@@ -122,8 +122,8 @@ int CGruNetwork::prepareNetwork(const STensor& spBatchIn) {
 
     if(!m_bKeepGroup) {
         int pOutDimSizes[2] = { nBatchs, m_nCells };
-        STensor spOutDimVector;
-        if( int errCode = STensor::createVector(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
+        SDimension spOutDimVector;
+        if( int errCode = SDimension::createDimension(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
             return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
         }
 
@@ -329,7 +329,7 @@ int CGruNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 
 template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     if( !m_spBatchInDeviation ) {
-        if( int errCode = STensor::createTensor(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_idDataType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
+        if( int errCode = STensor::createTensor(m_spBatchInDeviation, m_spBatchIn.dimension(), m_idDataType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输入偏差张量失败");
         }
     }else{

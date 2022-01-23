@@ -5,7 +5,7 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
 
     int nSize = spIn->getDataSize();
     STensor spOutTensor;
-    if( STensor::createTensor<double>(spOutTensor, spIn->getDimVector(), nSize ) != sCtx.success() ) {
+    if( STensor::createTensor<double>(spOutTensor, spIn.dimension(), nSize ) != sCtx.success() ) {
         return sCtx.error("创建标准化张量失败");
     }
 
@@ -28,15 +28,16 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     //
     // 计算新张量尺寸
     //
-    STensor& spDimVector = spIn->getDimVector();
-    int nDims = spDimVector->getDataSize();
-    int* pDimSizes = spDimVector->getDataPtr<int>();
+    SDimension spDimVector = spIn.dimension();
+    int nDims = spDimVector.size();
+    const int* pDimSizes = spDimVector.data();
     int pNewDimSizes[nDims+1];
     for(int i=0; i<nDims; i++) {
         pNewDimSizes[i] = pDimSizes[i];
     }
     pNewDimSizes[nDims] = nClassify;
-    STensor spNewDimVector = STensor::createVector(nDims+1, pNewDimSizes);
+    SDimension spNewDimVector;
+    SDimension::createDimension(spNewDimVector, nDims+1, pNewDimSizes);
 
     //
     // 创建新的张量

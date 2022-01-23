@@ -10,14 +10,14 @@ static SCtx sCtx("CTensor");
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-class CPlaceTensor : public CObject, ITensor {
+class CPlaceTensor : public CObject, public ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(ITensor)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
     virtual int initVector( unsigned int idElementType, int nElementSize, void* pElementData) = 0;
-    virtual int initTensor( const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData) = 0;
+    virtual int initTensor( const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData) = 0;
 };
 
 //
@@ -53,27 +53,14 @@ public://ITensor
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData = nullptr) {
+    int initTensor( const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData = nullptr) {
 
         if( idElementType != getDataType() ) {
             return SError::ERRORTYPE_FAILURE;
         }
 
         if( spDimVector ) {
-            if( spDimVector->getDataType() != CBasicData<int>::getStaticType() ) {
-                return SError::ERRORTYPE_FAILURE;
-            }
-
-            int nDim = spDimVector->getDataSize();
-            const int* pDimSize = spDimVector->getDataPtr<int>();
-            int nSize = 1;
-            for( int i=0; i<nDim; i++) {
-                if(pDimSize[i] < 1) {
-                    return SError::ERRORTYPE_FAILURE;
-                }
-                nSize *= pDimSize[i];
-            }
-            if(nSize!= nElementSize) {
+            if(nElementSize!= spDimVector->getElementSize()) {
                 return SError::ERRORTYPE_FAILURE;
             }
         }
@@ -85,9 +72,9 @@ public://ITensor
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    STensor& getDimVector() {
+    SDimension& getDimVector() {
         if(!m_spDimVector && m_nElementSize > 0) {
-            STensor::createVector(m_spDimVector, 1, &m_nElementSize);
+            SDimension::createDimension(m_spDimVector, 1, &m_nElementSize);
         }
         return m_spDimVector;
     }
@@ -100,6 +87,11 @@ public://ITensor
 
     int updateVer() {
         return ++m_nVer;
+    }
+
+    int getDimension(SDimension& spDim) {
+        spDim = getDimVector();
+        return sCtx.success();
     }
 
     unsigned int getDataType() {
@@ -140,13 +132,55 @@ public:
         return spTensor;
     }
 
-private:
+protected:
     int m_nVer;
     int m_nElementSize;
     CTaker<T*> m_spElementData;
-    STensor m_spDimVector;
+    SDimension m_spDimVector;
 };
 
+class CDimension : public CTensor<int>, public IDimension {
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CTensor)
+        SIMPLEWORK_INTERFACE_ENTRY(ITensor)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CTensor)
+
+public://IDimension
+    int getSize() {
+        return m_nElementSize;
+    }
+
+    const int* getData() {
+        return (const int*)getDataPtr(CBasicData<int>::getStaticType());
+    }
+
+    int getElementSize() {
+        const int* pDimSizes = getData();
+        if(pDimSizes == nullptr) {
+            return sCtx.error("当前向量并非维度向量");
+        }
+        int nElementSize = 1;
+        for(int i=0; i<m_nElementSize; i++) {
+            nElementSize *= pDimSizes[i];
+        }
+        return nElementSize;
+    }
+
+    int getVector(STensor& spDimVector) {
+        spDimVector.setPtr((ITensor*)this);
+        return sCtx.success();
+    }
+
+public:
+    static int createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {
+        CPointer<CDimension> spTensor;
+        CObject::createObject(spTensor);
+        if( spTensor->initVector(CBasicData<int>::getStaticType(), nDims, (void*)pDimSizes) != sCtx.success()) {
+            return sCtx.error("创建维度失败");
+        }
+        spDim.setPtr(spTensor.getPtr());
+        return sCtx.success();
+    }
+};
 
 typedef CPlaceTensor* (*FCreateTensor)(SObject& spTensor);
 std::map<unsigned int, FCreateTensor> g_tensorFacotries = {
@@ -182,7 +216,7 @@ int CTensorFactory::createVector( STensor& spTensor, unsigned int idElementType,
     return sCtx.error("无法创建指定类型的张量");
 }
 
-int CTensorFactory::createTensor( STensor& spTensor, const STensor& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
+int CTensorFactory::createTensor( STensor& spTensor, const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
     SObject spObject;
     CPlaceTensor* pTensor = ::createTensor(idElementType, spObject);
     if(pTensor) {
@@ -193,6 +227,10 @@ int CTensorFactory::createTensor( STensor& spTensor, const STensor& spDimVector,
         return sCtx.success();
     }
     return sCtx.error("无法创建指定类型的张量");
+}
+
+int CTensorFactory::createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) {
+    return CDimension::createDimension(spDimension, nElementSize, pElementData);
 }
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

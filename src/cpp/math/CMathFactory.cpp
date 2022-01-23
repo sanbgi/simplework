@@ -20,8 +20,12 @@ public:
         return CTensorFactory::createVector(spTensor, eElementType, nElementSize, pElementData);
     }
     
-    int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ){
+    int createTensor(STensor& spTensor, const SDimension& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ){
         return CTensorFactory::createTensor(spTensor, spDimVector, eElementType, nElementSize, pElementData);
+    }
+
+    int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) {
+        return CTensorFactory::createDimension(spDimension, nElementSize, pElementData);
     }
 
     int createSolver(unsigned int idType, SMathSolver& spSolver) {

@@ -29,7 +29,7 @@ public:
             return sCtx.error("目前张量运算只支持双精度类型");
         }
 
-        if( STensor::createTensor<double>(spOut, t1->getDimVector(), nSize) != sCtx.success() ) {
+        if( STensor::createTensor<double>(spOut, t1.dimension(), nSize) != sCtx.success() ) {
             return sCtx.error("创建结果张量失败");
         }
 

@@ -4,6 +4,7 @@
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 class STensor;
+class SDimension;
 class SMathSolver;
 
 //
@@ -16,7 +17,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathFactory, "sw.math.MathFactory")
         // 构造全新的张量
         //
         virtual int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) = 0;
-        virtual int createTensor(STensor& spTensor, const STensor& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+        virtual int createTensor(STensor& spTensor, const SDimension& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ) = 0;
+        virtual int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) = 0;
 
         virtual int createSolver(unsigned int idType, SMathSolver& spSolver) = 0;
 

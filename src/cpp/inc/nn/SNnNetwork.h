@@ -108,7 +108,6 @@ public:
         return pipe;
     }
 
-
     static STensor loadIdxFile(const char* szFilename) {
         STensor data;
         SNnFactory::getFactory()->readIdxFile(szFilename, data);

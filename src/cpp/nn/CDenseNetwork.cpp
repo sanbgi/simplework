@@ -66,8 +66,8 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
         //
         // 检查输入张量维度
         //
-        STensor& spInDimTensor = spBatchIn->getDimVector();
-        int nInputDims = spInDimTensor->getDataSize();
+        SDimension spInDimTensor = spBatchIn.dimension();
+        int nInputDims = spInDimTensor.size();
         if(nInputDims < 2) {
             return sCtx.error("输入张量维度需要大于1，其中第一个维度是批量张量个数");
         }
@@ -75,7 +75,7 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
         //
         // 计算输入参数
         //
-        int* pDimSizes = spInDimTensor->getDataPtr<int>();
+        const int* pDimSizes = spInDimTensor.data();
         nBatchs = pDimSizes[0];
         nInputCells = pDimSizes[1];
         for( int i=2; i<nInputDims; i++) {
@@ -139,8 +139,8 @@ int CDenseNetwork::prepareNetwork(const STensor& spBatchIn) {
     // 检查细胞数量是否合法
     //
     int pOutDimSizes[2] = { nBatchs, m_nCells };
-    STensor spOutDimVector;
-    if( int errCode = STensor::createVector(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
+    SDimension spOutDimVector;
+    if( int errCode = SDimension::createDimension(spOutDimVector, 2, pOutDimSizes) != sCtx.success() ) {
         return sCtx.error(errCode, "创建神经网络输出张量维度向量失败");
     }
 
@@ -304,7 +304,7 @@ int CDenseNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 
 template<typename Q> int CDenseNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     if( !m_spBatchInDeviation ) {
-        if( int errCode = STensor::createTensor(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_idDataType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
+        if( int errCode = STensor::createTensor(m_spBatchInDeviation, m_spBatchIn.dimension(), m_idDataType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输入偏差张量失败");
         }
     }else{

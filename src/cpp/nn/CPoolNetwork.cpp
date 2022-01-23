@@ -28,9 +28,9 @@ int CPoolNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     // 计算参数
     //
-    STensor& spInDimVector = spBatchIn->getDimVector();
-    int nDims = spInDimVector->getDataSize();
-    int* pDimSizes = spInDimVector->getDataPtr<int>();
+    SDimension spInDimVector = spBatchIn.dimension();
+    int nDims = spInDimVector.size();
+    const int* pDimSizes = spInDimVector.data();
     if(nDims < 3) {
         return sCtx.error("池化层输入张量维度需要大于等于3，其中第一个维度为实际张量个数");
     }
@@ -68,7 +68,7 @@ int CPoolNetwork::prepareNetwork(const STensor& spBatchIn) {
     pOutDimSizes[0] = m_nBatchs;
     pOutDimSizes[1] = m_nOutHeight;
     pOutDimSizes[2] = m_nOutWidth;
-    if( STensor::createVector(m_spOutDimVector, nDims, pOutDimSizes) != sCtx.success() ) {
+    if( SDimension::createDimension(m_spOutDimVector, nDims, pOutDimSizes) != sCtx.success() ) {
         return sCtx.error("创建输出张量的维度张量失败");
     }
 
@@ -214,7 +214,7 @@ int CPoolNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviatio
     }
 
     spBatchIn = m_spBatchIn;
-    if( int errCode = STensor::createTensor(spInDeviation, spBatchIn->getDimVector(), m_idDataType, spBatchIn->getDataSize()) != sCtx.success() ) {
+    if( int errCode = STensor::createTensor(spInDeviation, spBatchIn.dimension(), m_idDataType, spBatchIn->getDataSize()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
 

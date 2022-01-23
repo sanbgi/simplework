@@ -203,7 +203,7 @@ int CRotConvNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 
 template<typename Q> int CRotConvNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
     if( !m_spBatchInDeviation ) {
-        if( int errCode = STensor::createTensor<Q>(m_spBatchInDeviation, m_spBatchIn->getDimVector(), m_spBatchIn->getDataSize()) != sCtx.success() ) {
+        if( int errCode = STensor::createTensor<Q>(m_spBatchInDeviation, m_spBatchIn.dimension(), m_spBatchIn->getDataSize()) != sCtx.success() ) {
             return sCtx.error(errCode, "创建输入偏差张量失败");
         }
     }else{
@@ -494,9 +494,9 @@ int CRotConvNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     int nBatchs, nInputCells, nInputWidth, nInputHeight, nLayers;
     {
-        STensor& spInDimVector = spBatchIn->getDimVector();
-        int nInDims = spInDimVector->getDataSize();
-        int* pInDimSizes = spInDimVector->getDataPtr<int>();
+        SDimension spInDimVector = spBatchIn.dimension();
+        int nInDims = spInDimVector.size();
+        const int* pInDimSizes = spInDimVector.data();
 
         //
         // 维度小于3的张量，无法进行卷积运算
@@ -603,8 +603,8 @@ int CRotConvNetwork::prepareNetwork(const STensor& spBatchIn) {
         nLayers
     };
 
-    STensor spOutDimVector;
-    if( STensor::createVector<int>(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
+    SDimension spOutDimVector;
+    if( SDimension::createDimension(spOutDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
         return sCtx.error("创建输出张量的维度向量失败");
     }
 

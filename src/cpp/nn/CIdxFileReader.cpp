@@ -21,7 +21,7 @@ int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
 
     int nRead = spIn->getDataAt<int>(0);
     if( m_spDimVector ) {
-        if( m_spDimVector->getDataAt<int>(0) != nRead ) {
+        if( *m_spDimVector.data() != nRead ) {
             m_spDimVector.release();
         }
     }
@@ -29,7 +29,7 @@ int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
     if( !m_spDimVector ) {
         int* pDimSizes = m_spDims;
         pDimSizes[0] = nRead;
-        if( STensor::createVector(m_spDimVector, m_nDims, pDimSizes) != sCtx.success() ) {
+        if( SDimension::createDimension(m_spDimVector, m_nDims, pDimSizes) != sCtx.success() ) {
             return sCtx.error("创建输出维度向量失败");
         }
     }
@@ -223,8 +223,8 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
         nData *= pDimSize[i];
     }
 
-    STensor spDimVector;
-    if( STensor::createVector(spDimVector, nDims, pDimSize) != sCtx.success() ) {
+    SDimension spDimVector;
+    if( SDimension::createDimension(spDimVector, nDims, pDimSize) != sCtx.success() ) {
         return sCtx.error("创建张量的维度向量失败");
     }
     STensor spTensor;

@@ -3,6 +3,7 @@
 
 #include "SMathFactory.h"
 #include "STensorSolver.h"
+#include "SDimension.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -26,7 +27,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取维度
         //
-        virtual STensor& getDimVector() = 0;
+        //virtual STensor& getDimVector() = 0;
+
+        //
+        // 获取张量维度信息
+        //
+        virtual int getDimension(SDimension& spDim) = 0;
 
         //
         // 获取元素类型
@@ -73,16 +79,16 @@ public:
     //
     // 构造一维张量
     //
-    template<typename Q> static int createVector(STensor& spTensor, int nElementSize, Q* pElementData=nullptr) {
+    template<typename Q> static int createVector(STensor& spTensor, int nElementSize, const Q* pElementData=nullptr) {
         return SMathFactory::getFactory()->createVector(spTensor, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
     //
     // 构造多维张量
     //
-    template<typename Q> static int createTensor(STensor& spTensor, STensor& spDimVector, int nElementSize, Q* pElementData=nullptr) {
+    template<typename Q> static int createTensor(STensor& spTensor, const SDimension& spDimVector, int nElementSize, const Q* pElementData=nullptr) {
         return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
-    static int createTensor(STensor& spTensor, STensor& spDimVector, unsigned int iElementType, int nElementSize, void* pElementData=nullptr) {
+    static int createTensor(STensor& spTensor, const SDimension& spDimVector, unsigned int iElementType, int nElementSize, const void* pElementData=nullptr) {
         return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
     }
 
@@ -108,6 +114,15 @@ public:
         return pFace != nullptr ? pFace->getDataSize() : 0;
     }
 
+    SDimension dimension() const {
+        SDimension spDim;
+        IFace* pFace = getPtr();
+        if(pFace != nullptr) {
+            pFace->getDimension(spDim);
+        }
+        return spDim;
+    }
+
     unsigned int type() const {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getDataType() : 0;
@@ -117,6 +132,8 @@ public:
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getDataPtr<Q>(iPos) : nullptr;
     }
+
+
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 

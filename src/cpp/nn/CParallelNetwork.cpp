@@ -14,7 +14,7 @@ int CParallelNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNet
 template<typename Q>
 int CParallelNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
-    STensor spInDimTensor = spBatchIn->getDimVector();
+    STensor spInDimTensor = spBatchIn.dimension();
     int nInDims = spInDimTensor->getDataSize();
     if( nInDims < 2) {
         return sCtx.error("输入张量维度不能小于2");
@@ -35,13 +35,13 @@ int CParallelNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         if( int errCode = (*it)->eval(spBatchIn, spOut) != sCtx.success() ){
             return errCode;
         }
-        STensor spDimTensor = spOut->getDimVector();
-        int nDimSize = spDimTensor->getDataSize();
+        SDimension spDimTensor = spOut.dimension();
+        int nDimSize = spDimTensor.size();
         if( nDimSize < 2) {
             return sCtx.error("子网络计算输出的张量维度少于2");
         }
 
-        int* pDimSize = spDimTensor->getDataPtr<int>();
+        const int* pDimSize = spDimTensor.data();
         int nData = spOut->getDataSize();
         int nLayer = pDimSize[nDimSize-1];
         int nLayerSize = nData/nLayer;
@@ -68,8 +68,8 @@ int CParallelNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             pNewDimSize[i] = pDimSize[i];
         }
         pNewDimSize[nDims-1] = nSumLayers;
-        STensor spDimTensor = STensor::createVector(nDims,pNewDimSize);
-        if( !spDimTensor ) {
+        SDimension spDimTensor;
+        if( SDimension::createDimension(spDimTensor, nDims, pNewDimSize) != sCtx.success() ) {
             return sCtx.error("创建输出张量的维度尺寸张量失败");
         }
 
@@ -125,7 +125,7 @@ template<typename Q>
 int CParallelNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation) {
     if(!m_spInDeviation) {
         int nIn = m_spBatchIn->getDataSize();
-        if( STensor::createTensor<Q>(m_spInDeviation, m_spBatchIn->getDimVector(), nIn) != sCtx.success()) {
+        if( STensor::createTensor<Q>(m_spInDeviation, m_spBatchIn.dimension(), nIn) != sCtx.success()) {
             return sCtx.error("创建输入偏差张量失败");
         }
     }else{
@@ -145,13 +145,13 @@ int CParallelNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDevi
     std::vector<SNnNetwork>::iterator it = m_arrNetworks.begin();
     while(it != m_arrNetworks.end() ) {
         STensor& spOut = *itTensor;
-        STensor& spOutDim = spOut->getDimVector();
+        SDimension spOutDim = spOut.dimension();
 
-        int nOutDim = spOutDim->getDataSize();
-        int nOutLayer = *spOutDim->getDataPtr<int>(nOutDim-1);
+        int nOutDim = spOutDim.size();
+        int nOutLayer = spOutDim.data()[nOutDim-1];
 
         STensor spOutDev;
-        if( STensor::createTensor<Q>(spOutDev, spOut->getDimVector(), spOut->getDataSize()) != sCtx.success()) {
+        if( STensor::createTensor<Q>(spOutDev, spOut.dimension(), spOut.size()) != sCtx.success()) {
             return sCtx.error("创建节点输出偏差张量失败");
         }
 

@@ -9,7 +9,10 @@
 #define SIMPLEWORK_NN_NAMESPACE_LEAVE }
 
 #include "SNnPipe.h"
+#include "SNnUnit.h"
 #include "SNnNetwork.h"
+#include "SNnVariable.h"
 #include "SNnFactory.h"
+
 
 #endif//__SimpleWork_NN_h__
