@@ -8,29 +8,15 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 static SCtx sCtx("CTensor");
 
 //
-// 张量基类，主要用于申明不带模板参数的初始化函数
+// 张量模板类
 //
-class CPlaceTensor : public CObject, public ITensor {
+template<typename T> class CTensor : public CObject, public ITensor {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(ITensor)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public:
-    virtual int initVector( unsigned int idElementType, int nElementSize, void* pElementData) = 0;
-    virtual int initTensor( const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData) = 0;
-};
-
-//
-// 张量模板类
-//
-template<typename T> class CTensor : public CPlaceTensor {
-
 public://ITensor
-    int initVector(unsigned int eDt, int nSize, void* pData) {
-
-        if( eDt != getDataType() ) {
-            return SError::ERRORTYPE_FAILURE;
-        }
+    int initVector(int nSize, void* pData) {
 
         release();
         m_spElementData.take(new T[nSize], [](T* pPtr){ 
@@ -53,19 +39,14 @@ public://ITensor
         return SError::ERRORTYPE_SUCCESS;
     }
 
-    int initTensor( const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData = nullptr) {
-
-        if( idElementType != getDataType() ) {
-            return SError::ERRORTYPE_FAILURE;
-        }
-
+    int initTensor( const SDimension& spDimVector, int nElementSize, void* pElementData = nullptr) {
         if( spDimVector ) {
             if(nElementSize!= spDimVector->getElementSize()) {
                 return SError::ERRORTYPE_FAILURE;
             }
         }
         
-        if( initVector(idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS ) {
+        if( initVector(nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS ) {
             return SError::ERRORTYPE_FAILURE;
         }
         m_spDimVector = spDimVector;
@@ -125,11 +106,20 @@ public:
     }
 
 public:
-    static CPlaceTensor* createTensor(SObject& rObject) {
-        CPointer<CTensor<T>> spTensor;
-        CObject::createObject(spTensor);
-        rObject = spTensor.getObject();
-        return spTensor;
+    static int createTensor(STensor& spTensor, const SDimension* pDimension, int nElementSize, void* pElementData) {
+        CPointer<CTensor<T>> sp;
+        CObject::createObject(sp);
+        if(pDimension) {
+            if( sp->initTensor(*pDimension, nElementSize, pElementData) != sCtx.success() ) {
+                return sCtx.error("初始化张量失败");
+            }
+        }else{
+            if( sp->initVector(nElementSize, pElementData) != sCtx.success() ) {
+                return sCtx.error("初始化张量失败");
+            }
+        }
+        spTensor.setPtr(sp.getPtr());
+        return sCtx.success();
     }
 
 protected:
@@ -174,7 +164,7 @@ public:
     static int createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {
         CPointer<CDimension> spTensor;
         CObject::createObject(spTensor);
-        if( spTensor->initVector(CBasicData<int>::getStaticType(), nDims, (void*)pDimSizes) != sCtx.success()) {
+        if( spTensor->initVector(nDims, (void*)pDimSizes) != sCtx.success()) {
             return sCtx.error("创建维度失败");
         }
         spDim.setPtr(spTensor.getPtr());
@@ -182,7 +172,7 @@ public:
     }
 };
 
-typedef CPlaceTensor* (*FCreateTensor)(SObject& spTensor);
+typedef int (*FCreateTensor)(STensor& spTensor, const SDimension* pDimension, int nElementSize, void* pElementData);
 std::map<unsigned int, FCreateTensor> g_tensorFacotries = {
     { CBasicData<bool>::getStaticType(), CTensor<bool>::createTensor },
     { CBasicData<char>::getStaticType(), CTensor<char>::createTensor },
@@ -194,37 +184,18 @@ std::map<unsigned int, FCreateTensor> g_tensorFacotries = {
     { CBasicData<double>::getStaticType(), CTensor<double>::createTensor },
 };
 
-CPlaceTensor* createTensor(unsigned int tid, SObject& rObject) {
-    std::map<unsigned int, FCreateTensor>::iterator it = g_tensorFacotries.find(tid);
-    if( it != g_tensorFacotries.end() ) {
-        return (*(it->second))(rObject);
-    }
-    
-    return nullptr;
-}
-
 int CTensorFactory::createVector( STensor& spTensor, unsigned int idElementType, int nElementSize, void* pElementData) {
-    SObject spObject;
-    CPlaceTensor* pTensor = ::createTensor(idElementType, spObject);
-    if(pTensor) {
-        if( int errCode = pTensor->initVector(idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
-            return errCode;
-        }
-        spTensor.setPtr((ITensor*)pTensor);
-        return sCtx.success();
+    std::map<unsigned int, FCreateTensor>::iterator it = g_tensorFacotries.find(idElementType);
+    if( it != g_tensorFacotries.end() ) {
+        return (*(it->second))(spTensor, nullptr, nElementSize, pElementData);
     }
     return sCtx.error("无法创建指定类型的张量");
 }
 
 int CTensorFactory::createTensor( STensor& spTensor, const SDimension& spDimVector, unsigned int idElementType, int nElementSize, void* pElementData){
-    SObject spObject;
-    CPlaceTensor* pTensor = ::createTensor(idElementType, spObject);
-    if(pTensor) {
-        if( int errCode = pTensor->initTensor(spDimVector, idElementType, nElementSize, pElementData) != SError::ERRORTYPE_SUCCESS) {
-            return errCode;
-        }
-        spTensor.setPtr((ITensor*)pTensor);
-        return sCtx.success();
+    std::map<unsigned int, FCreateTensor>::iterator it = g_tensorFacotries.find(idElementType);
+    if( it != g_tensorFacotries.end() ) {
+        return (*(it->second))(spTensor, &spDimVector, nElementSize, pElementData);
     }
     return sCtx.error("无法创建指定类型的张量");
 }
