@@ -142,6 +142,11 @@ public:
         return spNet;
     }
 
+    static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
+        SNnNetwork spNet;
+        SNnFactory::getFactory()->createNetwork(spUnit, spInDimension, spNet);
+        return spNet;
+    }
 
 public:
     STensor eval(const STensor& spIn) {

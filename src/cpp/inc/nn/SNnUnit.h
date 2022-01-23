@@ -18,9 +18,30 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnUnit, "sw.nn.NnUnit")
         //
         // 获取变量维度
         //
-        virtual int eval(const SNnVariable& spIn, SNnVariable& spOut) = 0;
+        virtual int eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
+
+    static SNnUnit createDenseUnit(int nCells, double dDropoutRate=0, const char* szActivator = nullptr){
+        SNnUnit spUnit;
+        SNnFactory::getFactory()->createDenseUnit(nCells, dDropoutRate, szActivator, spUnit);
+        return spUnit;
+    }
+    static SNnUnit createConvUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs = 1, const char* szPaddingMode = nullptr, const char* szActivator = nullptr) {
+        SNnUnit spUnit;
+        SNnFactory::getFactory()->createConvUnit(nWidth, nHeight, nLayers, nShiftConvs, szPaddingMode, szActivator, spUnit);
+        return spUnit;
+    }
+    static SNnUnit createPoolUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode=nullptr){
+        SNnUnit spUnit;
+        SNnFactory::getFactory()->createPoolUnit(nWidth, nHeight, nStride, szPaddingMode, spUnit);
+        return spUnit;
+    }
+    static SNnUnit createSequenceUnit(int nUnits, const SNnUnit pUnits[]) {
+        SNnUnit spUnit;
+        SNnFactory::getFactory()->createSequenceUnit(nUnits, pUnits, spUnit);
+        return spUnit;
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnUnit)
 

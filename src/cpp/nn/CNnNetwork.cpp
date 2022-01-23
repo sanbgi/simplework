@@ -20,7 +20,7 @@ int CNnNetwork::loadNetwork(const char* szFileName, SNnNetwork& spNet){
     return sCtx.success();
 }
 
-int CNnNetwork::createNetwork(const SNnUnit& spUnit, const SDimension spInDimVector, SNnNetwork& spNet) {
+int CNnNetwork::createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
     CPointer<CNnNetwork> spNetwork;
     CObject::createObject(spNetwork);
     spNetwork->m_spUnit = spUnit;
@@ -49,7 +49,7 @@ int CNnNetwork::initNetwork() {
     // 求解网络单元，生成网络计算图
     //
     SNnVariable spOutVariable;
-    if(m_spUnit->eval(spInput, spOutVariable) != sCtx.success()) {
+    if(m_spUnit->eval(1, &spInput, spOutVariable) != sCtx.success()) {
         return sCtx.error("网络单元求解失败");
     }
 
@@ -71,6 +71,18 @@ int CNnNetwork::initNetwork() {
     arrToSolveVars.push_back(spOutVar);
     while(arrToSolveVars.size() > 0) {
         SNnInternalVariable spToSolveVar = arrToSolveVars.at(arrToSolveVars.size()-1);
+
+        //
+        // 已经解算的变量，不用重复解算
+        //
+        if( arrSolvedVars.find(spToSolveVar.getPtr()) != arrSolvedVars.end()) {
+            arrToSolveVars.pop_back();
+            continue;
+        }
+
+        //
+        // 分类型处理未解算变量
+        //
         switch(spToSolveVar->getVariableType()) {
             case ENnVariableType::EVInput:
             {
@@ -126,7 +138,7 @@ int CNnNetwork::initNetwork() {
                 for( int i=0; i<nSubVars; i++) {
                     SNnInternalVariable spSubVar = pSubVars[i];
                     map<INnInternalVariable*, int>::iterator it = arrSolvedVars.find(spSubVar.getPtr());
-                    if(it != arrSolvedVars.end()) {
+                    if(it == arrSolvedVars.end()) {
                         arrToSolveVars.push_back(spSubVar);
                         nPushback ++;
                     }else{
@@ -192,11 +204,11 @@ int CNnNetwork::initNetwork() {
     int nInputTensorSize = 1;
     while(nDimSize-->0) {
         nInputTensorSize *= *pDimSize;
-        pDimSize--;
+        pDimSize++;
     }
 
     m_spOutVar = spOutVar;
-    m_nOpVarSize = nOpSize;
+    m_nOpSize = nOpSize;
     m_nStateSize = nStateSize;
     m_nWeightSize = nWeightSize;
     m_iInputVarIndex = iInputVarIndex;
@@ -251,6 +263,9 @@ int CNnNetwork::prepareNetwork(const STensor& spBatchIn) {
         it->pOperator->getEvalFunAddress(idType, it->pFunEval, it->pFunDevia);
     }
 
+    //
+    // 初始化权重和状态值的指针
+    //
     vector<PSolveVar>::iterator itVar = m_arrVars.begin();
     for(; itVar != m_arrVars.end(); itVar++) {
         switch(itVar->type) {
@@ -287,8 +302,8 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //
     // 准备计算缓冲区
     //
-    if(!m_spSolveBuffer || m_spSolveBuffer.size() != m_nOpVarSize * m_nBatchIns) {
-        if( STensor::createVector<Q>(m_spSolveBuffer, m_nOpVarSize * m_nBatchIns) != sCtx.success()) {
+    if(!m_spOpSolveBuffer || m_spOpSolveBuffer.size() != m_nOpSize * m_nBatchIns) {
+        if( STensor::createVector<Q>(m_spOpSolveBuffer, m_nOpSize * m_nBatchIns) != sCtx.success()) {
             return sCtx.error("创建计算缓冲区失败");
         }
     }
@@ -322,7 +337,7 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
     int nVars = m_arrVars.size();
     PSolveVar* pVars = m_arrVars.data();
-    Q* pBuffer = m_spSolveBuffer.data<Q>();
+    Q* pOpSolvedBuffer = m_spOpSolveBuffer.data<Q>();
 
     int nSolvers = m_arrSolvers.size();
     PSolveInstruct* pSolver = m_arrSolvers.data();
@@ -339,19 +354,16 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         //  2，运算变量指针指向缓冲区
         //  3，输出变量指针指向输出张量
         //
-        Q* pVarBuf = pBuffer;
+        Q* pOpVarBuf = pOpSolvedBuffer;
         for(int i=0; i<nVars-1; i++) {
             switch(pVars[i].type) {
-            case ENnVariableType::EVInput:
-                pVars[i].data = pInData;
-                break;
-
             case ENnVariableType::EVOperator:
-                pVars[i].data = pVarBuf;
-                pVarBuf += pVars[i].size;
+                pVars[i].data = pOpVarBuf;
+                pOpVarBuf += pVars[i].size;
                 break;
             }
         }
+        pVars[m_iInputVarIndex].data = pInData;
         pVars[nVars-1].data = pOutData;
 
         //
@@ -360,11 +372,11 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         for(int i=0; i<nSolvers; i++) {
             //准备输入输出计算参数
             PSolveInstruct instruct = pSolver[i];
-            int nIns = instruct.nInVar;
-            for(int j=0; j<nIns; j++) {
+            int nInVars = instruct.nInVar;
+            for(int j=0; j<nInVars; j++) {
                 int iVar = instruct.pInVarIndex[j];
-                evalIn[i].size = pVars[iVar].size;
-                evalIn[i].data = pVars[iVar].data;
+                evalIn[j].size = pVars[iVar].size;
+                evalIn[j].data = pVars[iVar].data;
             }
             int iOutVarIndex = instruct.iOutVarIndex;
             evalOut.size = pVars[iOutVarIndex].size;
@@ -376,14 +388,14 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
         pInData += m_nInputTensorSize;
         pOutData += m_nOutputTensorSize;
-        pBuffer += m_nOpVarSize;
+        pOpSolvedBuffer += m_nOpSize;
     }
 
     m_spBatchOut.updateVer();
     m_nBatchOutVer = m_spBatchOut.ver();
     m_spBatchIn = spBatchIn;
     spBatchOut = m_spBatchOut;
-    return sCtx.error();
+    return sCtx.success();
 }
 
 int CNnNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
@@ -410,14 +422,14 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
     //
     // 准备计算缓冲区
     //
-    int nDeviaBuffer = m_nOpVarSize + m_nStateSize;
+    int nDeviaBuffer = m_nOpSize + m_nStateSize;
     if(!m_spDeviaBuffer || m_spDeviaBuffer.size() != nDeviaBuffer) {
         if( STensor::createVector<Q>(m_spDeviaBuffer,nDeviaBuffer) != sCtx.success()) {
             return sCtx.error("创建计算缓冲区失败");
         }
     }
     Q* pDeviaBuffer = m_spDeviaBuffer.data<Q>();
-    
+
     //
     // 准备权重缓冲区
     //
@@ -441,7 +453,7 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
     PSolveVar* pVars = m_arrVars.data();
 
     //
-    // 设置所有的权重偏导指针
+    // 设置所有的权重、运算、状态的偏导指针
     //
     {
         Q* pItWeightDevia = pWeightDeviaBuffer;
@@ -450,13 +462,13 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
             switch(pVars[i].type) {
             case ENnVariableType::EVWeight:
                 pVars[i].devia = pItWeightDevia;
-                pItWeightDevia + pVars[i].size;
+                pItWeightDevia += pVars[i].size;
                 break;
 
             case ENnVariableType::EVState:
             case ENnVariableType::EVOperator:
                 pVars[i].devia = pItDevia;
-                pItDevia + pVars[i].size;
+                pItDevia += pVars[i].size;
                 break;
             }
         }
@@ -466,7 +478,7 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
     // 准备计算参数
     //
     PDeviaVector evalIn[4], evalOut;
-    Q* pBuffer = m_spSolveBuffer.data<Q>();
+    Q* pOpSolvedBuffer = m_spOpSolveBuffer.data<Q>();
 
     int nSolvers = m_arrSolvers.size();
     PSolveInstruct* pSolver = m_arrSolvers.data();
@@ -489,17 +501,12 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
         //  2，运算变量指针指向缓冲区
         //  3，输出变量指针指向输出张量
         //
-        Q* pVarBuf = pBuffer;
+        Q* pOpVarBuf = pOpSolvedBuffer;
         for(int i=0; i<nVars-1; i++) {
             switch(pVars[i].type) {
-            case ENnVariableType::EVInput:
-                pVars[i].data = pInData;
-                pVars[i].devia = pInData;
-                break;
-
             case ENnVariableType::EVOperator:
-                pVars[i].data = pVarBuf;
-                pVarBuf += pVars[i].size;
+                pVars[i].data = pOpVarBuf;
+                pOpVarBuf += pVars[i].size;
                 break;
             }
         }
@@ -514,12 +521,12 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
         for(int i=nSolvers-1; i>=0; i--) {
             //准备输入输出计算参数
             PSolveInstruct instruct = pSolver[i];
-            int nIns = instruct.nInVar;
-            for(int j=0; j<nIns; j++) {
+            int nInVars = instruct.nInVar;
+            for(int j=0; j<nInVars; j++) {
                 int iVar = instruct.pInVarIndex[j];
-                evalIn[i].size = pVars[iVar].size;
-                evalIn[i].data = pVars[iVar].data;
-                evalIn[i].devia = pVars[iVar].devia;
+                evalIn[j].size = pVars[iVar].size;
+                evalIn[j].data = pVars[iVar].data;
+                evalIn[j].devia = pVars[iVar].devia;
             }
             int iOutVarIndex = instruct.iOutVarIndex;
             evalOut.size = pVars[iOutVarIndex].size;
@@ -527,13 +534,14 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
             evalOut.devia = pVars[iOutVarIndex].devia;
 
             //实际计算函数调用
-            (*instruct.pFunDevia)(instruct.pOperator, instruct.nInVar, evalIn, evalOut);
+            (*instruct.pFunDevia)(instruct.pOperator, nInVars, evalIn, evalOut);
         }
 
         pInData += m_nInputTensorSize;
         pInDevial += m_nInputTensorSize;
         pOutData += m_nOutputTensorSize;
         pOutDevia += m_nOutputTensorSize;
+        pOpSolvedBuffer += m_nOpSize;
     }
 
     m_spOptimizer->updateDeviation(m_nBatchIns);
@@ -553,7 +561,7 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
                         *pItData -= *pItDevia;
                         pItData++, pItDevia++;
                     }
-                    pItWeightDevia + nWeights;
+                    pItWeightDevia += nWeights;
                 }
                 break;
             }
@@ -562,5 +570,5 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
 
     m_spBatchInDeviation.updateVer();
     spBatchInDeviation = m_spBatchInDeviation;
-    return sCtx.error();
+    return sCtx.success();
 }

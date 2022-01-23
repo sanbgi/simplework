@@ -32,7 +32,7 @@ public:
         Q* pD1 = (Q*)inVars[0].devia;
         Q* pWeights = (Q*)inVars[1].data;
         Q* pWeightDeviations = (Q*)inVars[1].devia;
-        Q* pDeviaOut = (Q*)outVar.data;
+        Q* pDeviaOut = (Q*)outVar.devia;
         Q* pDeviaOutEnd = pDeviaOut + outVar.size;
         Q* pInput1End = pInput1 + inVars[0].size;
         Q* pIn, *pInDeviation;
@@ -54,9 +54,11 @@ public:
         if(idType == CBasicData<float>::getStaticType() ) {
             pEval = evalT<float>;
             pDevia = deviaT<float>;
+            return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
             pEval = evalT<double>;
             pDevia = deviaT<double>;
+            return sCtx.success();
         }
         return sCtx.error("类型错误");
     }
@@ -70,17 +72,17 @@ public:
 
         SDimension spDim1 = pInVars[0].dimension();
         SDimension spDim2 = pInVars[1].dimension();
-        if( spDim1.size() != 1 || spDim2.size() != 2 ) {
+        if(spDim2.size() != 2 ) {
             return sCtx.error("点乘只适用于向量乘以矩阵");
         }
 
-        const int* pDimSize1 = spDim1.data();
+        int nInElementSize = spDim1.dataSize();
         const int* pDimSize2 = spDim2.data();
-        if(*pDimSize1 != *pDimSize2) {
+        if(nInElementSize != pDimSize2[1]) {
             return sCtx.error("向量和矩阵点乘的尺寸不匹配");
         }
 
-        if( SDimension::createDimension(spOut->m_spDimVector, 1, pDimSize2+1) != sCtx.success()) {
+        if( SDimension::createDimension(spOut->m_spDimension, 1, pDimSize2) != sCtx.success()) {
             return sCtx.error("创建输出张量的维度向量失败");
         }
         spOutVar.setPtr(spOut.getPtr());

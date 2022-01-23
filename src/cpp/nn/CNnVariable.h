@@ -41,16 +41,16 @@ class CNnVariable : public CObject, public INnVariable, public INnInternalVariab
 
 public://INnVariable
     int getDimension(SDimension& spDimension) {
-        spDimension = m_spDimVector;
+        spDimension = m_spDimension;
         return 0;
     }
     int getSize() {
-        if(!m_spDimVector) {
+        if(!m_spDimension) {
             return -1;
         }
 
-        int nDims = m_spDimVector.size();
-        const int* pDims = m_spDimVector.data();
+        int nDims = m_spDimension.size();
+        const int* pDims = m_spDimension.data();
         if( pDims == nullptr ) {
             return -1;
         }
@@ -63,6 +63,6 @@ public://INnVariable
     }
 
 protected:
-    SDimension m_spDimVector;
+    SDimension m_spDimension;
 };
 #endif//__SimpleWork_NN_CNnVariable_H__

@@ -10,8 +10,8 @@ using namespace std;
 class CNnState : public CNnVariable {
 
 public:
-    static int createStateVariable(const STensor& spDimVector, SNnVariable& spOutVar);
-    
+    static int createStateVariable(const SDimension& spDimension, SNnVariable& spOutVar);
+    static int createStateVariable(int nDims, const int pDimSizes[], SNnVariable& spOutVar);
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }
     int getSubVariables(SNnInternalVariable pSubVariables[4]) { return 0; }

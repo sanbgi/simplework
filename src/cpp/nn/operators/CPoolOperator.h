@@ -119,7 +119,7 @@ public:
         }it = {
             (Q*)inVars[0].data,
             (Q*)inVars[0].devia,
-            (Q*)outVar.data,
+            (Q*)outVar.devia,
         };
         for(int iTensor=0; iTensor<nTensor; iTensor++) {
             CItOutVariables varTBackup = {
@@ -193,9 +193,11 @@ public:
         if(idType == CBasicData<float>::getStaticType() ) {
             pEval = evalT<float>;
             pDevia = deviaT<float>;
+            return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
             pEval = evalT<double>;
             pDevia = deviaT<double>;
+            return sCtx.success();
         }
         return sCtx.error("类型错误");
     }
@@ -261,7 +263,7 @@ public:
         m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;
         pOutDimSizes[0] = m_nOutHeight;
         pOutDimSizes[1] = m_nOutWidth;
-        if( SDimension::createDimension(m_spDimVector, nDims, pOutDimSizes) != sCtx.success() ) {
+        if( SDimension::createDimension(m_spDimension, nDims, pOutDimSizes) != sCtx.success() ) {
             return sCtx.error("创建输出张量的维度张量失败");
         }
 

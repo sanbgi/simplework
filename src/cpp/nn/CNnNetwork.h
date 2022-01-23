@@ -60,7 +60,7 @@ class CNnNetwork : public CObject, public INnNetwork{
 public:
     static int saveNetwork(const char* szFileName, const SNnNetwork& spNet);
     static int loadNetwork(const char* szFileName, SNnNetwork& spNet);
-    static int createNetwork(const SNnUnit& spUnit, const SDimension spInDimVector, SNnNetwork& spNet);
+    static int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet);
 
 public://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
@@ -86,7 +86,7 @@ private:
     //单元求解后的变量
     int m_nStateSize;
     int m_nWeightSize;
-    int m_nOpVarSize;
+    int m_nOpSize;
     int m_iInputVarIndex;
     int m_nInputTensorSize;
     int m_nOutputTensorSize;
@@ -101,7 +101,7 @@ private:
     unsigned int m_idType;
     SOptimizer m_spOptimizer;
 
-    STensor m_spSolveBuffer;
+    STensor m_spOpSolveBuffer;
     STensor m_spDeviaBuffer;
     STensor m_spBatchIn;
     STensor m_spBatchOut;

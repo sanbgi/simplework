@@ -30,7 +30,7 @@ private:
     int m_nEleByte;
     unsigned int m_iEleType;
     CTaker<int*> m_spDims;
-    SDimension m_spDimVector;
+    SDimension m_spDimension;
     int m_nTensor;
 
 };

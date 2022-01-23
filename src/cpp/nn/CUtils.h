@@ -8,7 +8,7 @@ using namespace sw;
 class CUtils {
 public:
     static double rand(); 
-    static bool isSameDimVector(const STensor& spDimVector1, const STensor& spDimVector2);
+    static bool isSameDimVector(const STensor& spDimension1, const STensor& spDimension2);
 
 
     //

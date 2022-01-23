@@ -15,7 +15,7 @@ public:
     static int createOperatorVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     static int createConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     static int createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    static int createConvVariable(const SNnVariable& spIn, int nWidth, int nHeight, int nConvs, const char* szPadding, SNnVariable& spOutVar);
+    static int createConvVariable(int nVars, const SNnVariable pInVars[], const char* szPadding, SNnVariable& spOutVar);
 
 public:
     virtual int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) = 0;

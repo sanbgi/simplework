@@ -14,6 +14,47 @@ static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
     runLearn();
+    //runTestNetwork();
+}
+
+void CNnNetwork::runTestNetwork(){
+
+    class CMyUnit : public CObject, public INnUnit {
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+    public:
+        int eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+            spOutVar = pInVars[0];
+            spOutVar = spOutVar + spOutVar;
+            return sCtx.success();
+        }
+    };
+
+    CPointer<CMyUnit> spObject;
+    CObject::createObject<CMyUnit>(spObject);
+    SNnUnit spUnit;
+    spUnit.setPtr(spObject.getPtr());
+
+    int nIn = 2;
+    SNnNetwork spNet = SNnNetwork::createNetwork(spUnit, SDimension::createDimension(1,&nIn));
+    
+    double inVar[4] = { 2.1, 3.2, 4.1, 5.1 };
+    int pInDimSize[2] = { 2, 2};
+
+    STensor spBatchIn;
+    STensor::createTensor<double>(spBatchIn, SDimension::createDimension(2,pInDimSize), 4, inVar);
+
+    STensor spBatchOut;
+    spNet->eval(spBatchIn, spBatchOut);
+    int nSizeOut = spBatchOut.size();
+    double pOutV[nSizeOut];
+    double* pOut = spBatchOut.data<double>();
+    for(int i=0; i<nSizeOut; i++) {
+        pOutV[i] = pOut[i];
+    }
+
+    spNet.release();
 }
 
 void CNnNetwork::runLearn() {
@@ -27,7 +68,7 @@ void CNnNetwork::runLearn() {
     STensor spPipeIn = STensor::createValue(10);
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
-    SNnNetwork nn = createTestNetwork();
+    SNnNetwork nn = createUnitNetwork();
     //SNnNetwork nn = createLeNet_5();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
@@ -195,13 +236,27 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 }
 
 
+SNnNetwork CNnNetwork::createUnitNetwork() {
+    std::vector<SNnUnit> arrUnits;
+    arrUnits.push_back(SNnUnit::createConvUnit(5,5,32));
+    arrUnits.push_back(SNnUnit::createPoolUnit(2,2,2));
+    arrUnits.push_back(SNnUnit::createConvUnit(7,7,64));
+    arrUnits.push_back(SNnUnit::createPoolUnit(2,2,2));
+    arrUnits.push_back(SNnUnit::createDenseUnit(576));
+    arrUnits.push_back(SNnUnit::createDenseUnit(10, 0, "softmax"));
+    SNnUnit spSeq = SNnUnit::createSequenceUnit(arrUnits.size(), arrUnits.data());
+
+    int pDimSizes[] = {28, 28};
+    SDimension spDim = SDimension::createDimension(2,pDimSizes);
+    return SNnNetwork::createNetwork(spSeq,spDim);
+}
+
 SNnNetwork CNnNetwork::createRnnNetwork() {
     std::vector<SNnNetwork> arrNets;
     arrNets.push_back(SNnNetwork::createGru(50,false));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
 }
-
 
 SNnNetwork CNnNetwork::createNetwork() {
     std::vector<SNnNetwork> arrNets;

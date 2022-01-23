@@ -55,6 +55,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
         return SMathFactory::getFactory()->createDimension(spDim, nDims, pDimSizes);
     }
 
+    static SDimension createDimension(int nDims, const int* pDimSizes) {
+        SDimension spDim;
+        SMathFactory::getFactory()->createDimension(spDim, nDims, pDimSizes);
+        return spDim;
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(Dimension)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

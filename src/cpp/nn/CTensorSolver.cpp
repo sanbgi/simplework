@@ -28,9 +28,9 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     //
     // 计算新张量尺寸
     //
-    SDimension spDimVector = spIn.dimension();
-    int nDims = spDimVector.size();
-    const int* pDimSizes = spDimVector.data();
+    SDimension spDimension = spIn.dimension();
+    int nDims = spDimension.size();
+    const int* pDimSizes = spDimension.data();
     int pNewDimSizes[nDims+1];
     for(int i=0; i<nDims; i++) {
         pNewDimSizes[i] = pDimSizes[i];

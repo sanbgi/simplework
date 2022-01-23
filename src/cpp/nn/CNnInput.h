@@ -10,7 +10,7 @@ using namespace std;
 class CNnInput : public CNnVariable {
 
 public:
-    static int createVariable(const STensor& spDimVector, SNnVariable& spOutVar);
+    static int createVariable(const STensor& spDimension, SNnVariable& spOutVar);
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVInput; }

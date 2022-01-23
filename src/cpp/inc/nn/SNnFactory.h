@@ -8,6 +8,7 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 class SNnNetwork;
 class SNnVariable;
 class SNnPipe;
+class SNnUnit;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnFactory", 211223)
@@ -86,19 +87,32 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         // 创建权重变量
         //
-        virtual int createWeightVariable(const STensor& spDimVector, SNnVariable& spVar) = 0;
+        virtual int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
+        virtual int createWeightVariable(int nDims, const int pDimSizes[], SNnVariable& spVar) = 0;
 
         //
         // 创建权重变量
         //
-        virtual int createStateVariable(const STensor& spDimVector, SNnVariable& spVar) = 0;
+        virtual int createStateVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
+        virtual int createStateVariable(int nDims, const int pDimSizes[], SNnVariable& spVar) = 0;
 
         //
         // 创建运算结果变量
         //
         virtual int createOpVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spVar) = 0;
 
+        //
+        // 创建神经网络单元
+        //
+        virtual int createDenseUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) = 0;
+        virtual int createConvUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPaddingMode, const char* szActivator, SNnUnit& spUnit) = 0;
+        virtual int createPoolUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode, SNnUnit& spUnit) = 0;
+        virtual int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) = 0;
 
+        //
+        // 创建神经网络
+        //
+        virtual int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
     static SNnFactory& getFactory() {

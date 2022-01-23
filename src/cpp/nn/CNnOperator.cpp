@@ -14,7 +14,7 @@ static SCtx sCtx("CNnOperator");
 #include "operators/CSigmodOperator.h"
 #include "operators/CTanhOperator.h"
 #include "operators/CSoftmaxOperator.h"
-#include "operators/CLeRUOperator.h"
+#include "operators/CReLUOperator.h"
 #include "operators/CConvOperator.h"
 #include "operators/CPoolOperator.h"
 
@@ -30,7 +30,7 @@ static map<string, FCreateOperator> s_opFactories = {
     { "sigmod", CSigmodOperator::createOperator },
     { "tanh", CTanhOperator::createOperator },
     { "softmax", CSoftmaxOperator::createOperator },
-    { "leru", CLeRUOperator::createOperator },
+    { "relu", CReLUOperator::createOperator },
 };
 
 int CNnOperator::createOperatorVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
@@ -45,31 +45,8 @@ int CNnOperator::createConvVariable(const char* szPadding, int nInVars, const SN
     return CConvOperator::createConvVariable(szPadding, nInVars, pInVars, spOutVar);
 }
 
-int CNnOperator::createConvVariable(const SNnVariable& spIn, int nWidth, int nHeight, int nConvs, const char* szPadding, SNnVariable& spOutVar) {
-    SDimension spDim = spIn.dimension();
-    if(spDim.size() < 2) {
-        return sCtx.error("卷积操作输入张量至少需要二维，代表高度和宽度");
-    }
-    int nDim = spDim.size();
-    const int* pDimSize = spDim.data();
-    int nInputLayers = 1;
-    for(int i=2; i<nDim; i++) {
-        nInputLayers *= pDimSize[i];
-    }
-
-    int pWeightDimSize[4] = { nConvs, nWidth, nHeight, nInputLayers };
-    SDimension spWeightDimVector;
-    if( SDimension::createDimension(spWeightDimVector, 4, pWeightDimSize) != sCtx.success()) {
-        return sCtx.error("创建卷积权重维度张量失败");
-    }
-
-    SNnVariable spWeight;
-    if( CNnWeight::createWeightVariable(spWeightDimVector, spWeight) != sCtx.success()) {
-        return sCtx.error("创建卷积权重变量失败");
-    }
-
-    SNnVariable inVars[2] = { spIn, spWeight };
-    return CConvOperator::createConvVariable(szPadding, 2, inVars, spOutVar);
+int CNnOperator::createConvVariable(int nVars, const SNnVariable pInVars[], const char* szPadding, SNnVariable& spOutVar) {
+    return CConvOperator::createConvVariable(szPadding, nVars, pInVars, spOutVar);
 }
 
 int CNnOperator::createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
@@ -97,7 +74,7 @@ int CNnOperator::initOneEleWiseOperator(int nInVars, const SNnVariable pInVars[]
         return sCtx.error("参数个数不等于一");
     }
 
-    m_spDimVector = pInVars[0].dimension();
+    m_spDimension = pInVars[0].dimension();
     return initOperator(nInVars, pInVars);
 }
 
@@ -106,14 +83,14 @@ int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]
         return sCtx.error("参数个数不等于二");
     }
 
-    STensor spDimVector, spDimVector2;
-    pInVars[0].dimension()->getVector(spDimVector);
-    pInVars[1].dimension()->getVector(spDimVector2);
-    if( !CUtils::isSameDimVector(spDimVector, spDimVector2) ) {
+    STensor spDimension, spDimension2;
+    pInVars[0].dimension()->getVector(spDimension);
+    pInVars[1].dimension()->getVector(spDimension2);
+    if( !CUtils::isSameDimVector(spDimension, spDimension2) ) {
         return sCtx.error("相加的两个元素维度不一致");
     }
 
-    m_spDimVector = spDimVector;
+    m_spDimension = spDimension;
     return initOperator(nInVars, pInVars);
 }
 

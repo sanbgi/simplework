@@ -37,9 +37,11 @@ public:
         if(idType == CBasicData<float>::getStaticType() ) {
             pEval = evalT<float>;
             pDevia = deviaT<float>;
+            return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
             pEval = evalT<double>;
             pDevia = deviaT<double>;
+            return sCtx.success();
         }
         return sCtx.error("类型错误");
     }

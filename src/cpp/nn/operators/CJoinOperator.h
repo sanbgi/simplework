@@ -47,9 +47,11 @@ public:
         if(idType == CBasicData<float>::getStaticType() ) {
             pEval = evalT<float>;
             pDevia = deviaT<float>;
+            return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
             pEval = evalT<double>;
             pDevia = deviaT<double>;
+            return sCtx.success();
         }
         return sCtx.error("类型错误");
     }
@@ -75,7 +77,7 @@ public:
         int size1 = *spDim1.data();
         int size2 = *spDim2.data();
         int size = size1+size2;
-        if( SDimension::createDimension(spOut->m_spDimVector,1,&size) != sCtx.success() ) {
+        if( SDimension::createDimension(spOut->m_spDimension,1,&size) != sCtx.success() ) {
             return sCtx.error();
         }
 

@@ -20,7 +20,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-    SNnVariable operator + (const SNnVariable& b) {
+    SNnVariable operator + (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
         SNnFactory::getFactory()->createOpVariable("plus", 2, pIns, o);
         return o;
@@ -32,7 +32,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return (*this);
     }
 
-    SNnVariable operator - (const SNnVariable& b) {
+    SNnVariable operator - (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
         SNnFactory::getFactory()->createOpVariable("minus", 2, pIns, o);
         return o;
@@ -44,7 +44,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return (*this);
     }
 
-    SNnVariable operator * (const SNnVariable& b) {
+    SNnVariable operator * (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
         SNnFactory::getFactory()->createOpVariable("multiply", 2, pIns, o);
         return o;
@@ -56,7 +56,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return (*this);
     }
 
-    SNnVariable operator / (const SNnVariable& b) {
+    SNnVariable operator / (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
         SNnFactory::getFactory()->createOpVariable("divide", 2, pIns, o);
         return o;
@@ -68,6 +68,18 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return (*this);
     }
 
+    SNnVariable op(const char* szOp) {
+        SNnVariable o;
+        SNnFactory::getFactory()->createOpVariable(szOp, 1, this, o);
+        return o;
+    }
+
+    SNnVariable product(const SNnVariable& mat) {
+        SNnVariable o, in[2] = { *this, mat };
+        SNnFactory::getFactory()->createOpVariable("product", 2, in, o);
+        return o;
+    }
+
     SDimension dimension() const{
         SDimension spDimension;
         IFace* pFace = getPtr();
@@ -75,6 +87,23 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
             pFace->getDimension(spDimension);
         }
         return spDimension;
+    }
+
+public:
+    static int createState(int nDims, const int pDimSizes[], SNnVariable& spVar) {
+        return SNnFactory::getFactory()->createStateVariable(nDims, pDimSizes, spVar);
+    }
+
+    static int createWeight(int nDims, const int pDimSizes[], SNnVariable& spVar) {
+        return SNnFactory::getFactory()->createWeightVariable(nDims, pDimSizes, spVar);
+    }    
+    
+    static int createState(const SDimension& spDim, SNnVariable& spVar) {
+        return SNnFactory::getFactory()->createStateVariable(spDim, spVar);
+    }
+
+    static int createWeight(const SDimension& spDim, SNnVariable& spVar) {
+        return SNnFactory::getFactory()->createWeightVariable(spDim, spVar);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnVariable)

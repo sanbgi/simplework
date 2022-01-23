@@ -58,6 +58,152 @@ static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nCon
 
 class CConvOperator : public CNnOperator {
 public:
+
+    int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) {
+        if(idType == CBasicData<float>::getStaticType() ) {
+            pEval = evalT<float>;
+            pDevia = deviaT<float>;
+            return sCtx.success();
+        }else if(idType == CBasicData<double>::getStaticType() ) {
+            pEval = evalT<double>;
+            pDevia = deviaT<double>;
+            return sCtx.success();
+        }
+        return sCtx.error("类型错误");
+    }
+
+    static int createConvVariable( const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+        CPointer<CConvOperator> spOut;
+        CObject::createObject(spOut);
+        if( int retcode = spOut->initConvVariable(szPadding, nInVars, pInVars) != sCtx.success() ) {
+            return retcode;
+        }
+        spOutVar.setPtr(spOut.getPtr());
+        return sCtx.success();
+    }
+
+
+    int initConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[]) {
+
+        if( int retcode = initOperator(nInVars, pInVars) != sCtx.success() ) {
+            return retcode;
+        }
+
+        if(nInVars != 3) {
+            return sCtx.error("卷积操作需要三个输入数据");
+        }
+
+        SDimension spDim1 = pInVars[0].dimension();
+        SDimension spDim2 = pInVars[1].dimension();
+        SDimension spDimBais = pInVars[2].dimension();
+        if(spDim2.size() != 5) {
+            return sCtx.error("卷积核需要一个五维矩阵nLayer*nShiftConvs*nWidth*nHeight*nDeep");
+        }
+        const int* pDimSize2 = spDim2.data();
+
+        if(spDim1.size() < 2) {
+            return sCtx.error("卷积操作输入张量至少需要二维，代表高度和宽度");
+        }
+        int nDim1 = spDim1.size();
+        const int* pDimSize1 = spDim1.data();
+        int nBatchs = 1;
+        int nInputLayers = 1;
+        for(int i=2; i<nDim1; i++) {
+            nInputLayers *= pDimSize1[i];
+        }
+
+        if(nInputLayers != pDimSize2[4]) {
+            return sCtx.error("卷积核深度于输入张量深度不一致");
+        }
+
+        if(pDimSize2[2] > pDimSize1[0] || pDimSize2[3] > pDimSize1[1]) {
+            return sCtx.error("卷积核尺寸不应该大于输入尺寸");
+        }
+
+        if(spDimBais.dataSize() != pDimSize2[0] * pDimSize2[1]) {
+            return sCtx.error("偏置量需要与卷积核数相等");
+        }
+
+        m_nStrideHeight = m_nStrideWidth = 1;
+        m_nLayers = pDimSize2[0];
+        m_nInputLayers = pDimSize2[4];
+        m_sizeConv = {
+            pDimSize2[1],
+            pDimSize2[2],
+            pDimSize2[3],
+            m_nInputLayers,
+        };
+        m_sizeIn = {
+            1,
+            pDimSize1[0],
+            pDimSize1[1],
+            m_nInputLayers
+        };
+
+        //
+        //  填充模式有两种：
+        //      same -- 步长为1时，保持输出尺寸与输入尺寸一致
+        //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
+        //
+        if( szPadding && string(szPadding) == "same" ) {
+            m_sizeOut = {
+                nBatchs,
+                (m_sizeIn.height - 1) / m_nStrideHeight + 1,
+                (m_sizeIn.width - 1) / m_nStrideWidth + 1,
+                m_nLayers
+            };
+            int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
+            int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
+            m_padding.left = nPadW / 2;
+            m_padding.right = nPadW - m_padding.left;
+            m_padding.top = nPadH / 2;
+            m_padding.bottom = nPadH - m_padding.top;
+        }else{
+            //
+            //  默认为不填充
+            //
+            m_sizeOut = {
+                nBatchs,
+                (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
+                (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
+                m_nLayers
+            };
+            m_padding = { 0, 0, 0, 0 };
+        }
+
+        m_stepInConv = {
+            m_sizeIn.height * m_sizeIn.width * nInputLayers,
+            m_sizeIn.width * nInputLayers,
+            nInputLayers
+        };
+
+        m_stepInMove = {  
+            m_stepInConv.batch,
+            m_stepInConv.height * m_nStrideHeight,
+            m_stepInConv.width * m_nStrideWidth
+        };
+
+        m_stepOut = {
+            m_sizeOut.height * m_sizeOut.width * m_nLayers,
+            m_sizeOut.width * m_nLayers,
+            m_nLayers
+        };
+
+        m_stepConv = {
+            m_sizeConv.height * m_sizeConv.width * nInputLayers,
+            m_sizeConv.width * nInputLayers,
+            nInputLayers
+        };
+
+        int pOutDimSizes[3] = { m_sizeOut.height, m_sizeOut.width, m_sizeOut.layers };
+        if( SDimension::createDimension(m_spDimension, 3, pOutDimSizes) != sCtx.success() ) {
+            return sCtx.error("创建输出张量的维度向量失败");
+        }
+
+        return sCtx.success();
+    }
+
+
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         CConvOperator* pThis = (CConvOperator*)pParameters;
@@ -84,11 +230,13 @@ public:
             Q* pIn;
             Q* pOut;
             Q* pWeights;
+            Q* pBais;
             int index;
         }itVars, itVars0, itVars2, itVars3, itVars1, itVars4, itVars5, itVars6, it = {
             (Q*)inVars[0].data,
             (Q*)outVar.data,
             (Q*)inVars[1].data,
+            (Q*)inVars[2].data,
         };
 
         CShiftPolicy stepPolicy;
@@ -131,21 +279,23 @@ public:
         //
         int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
 
-        //for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++)
-        {
+        for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
             itVars0.pIn = it.pIn;
             itVars0.pOut = it.pOut;
             it.pWeights = itVars.pWeights;  //重置weight
+            it.pBais = itVars.pBais;        //重置bais
             for(itVars1.index = 0; itVars1.index < nLayers; itVars1.index++) {
                 itVars1.pIn = it.pIn;
                 itVars1.pOut = it.pOut;
                 itVars1.pWeights = it.pWeights;
+                itVars1.pBais = it.pBais;
                 pWeightEnd = it.pWeights + nLayerStepShifts;
                 stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
                 for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
                     itVars2.pIn = it.pIn;
                     itVars2.pOut = it.pOut;
                     itVars2.pWeights = it.pWeights;
+                    itVars2.pBais = it.pBais;
 
                     //左边填充了都填充了空值，不能参与运算
                     if(itVars2.index < rcPading.top) {
@@ -170,6 +320,7 @@ public:
                         itVars3.pIn = it.pIn;
                         itVars3.pOut = it.pOut;
                         itVars3.pWeights = it.pWeights;
+                        itVars3.pBais = it.pBais;
 
                         //左边填充了都填充了空值，不能参与运算
                         if(itVars3.index < rcPading.left) {
@@ -211,7 +362,7 @@ public:
                             it.pWeights = itVars4.pWeights + stepConv.height;
                         }
                         //卷积结果减去偏置
-                        (*it.pOut) = dConv;
+                        (*it.pOut) = dConv - (*it.pBais);
 
                         it.pIn = itVars3.pIn + stepInMove.width;
                         it.pOut = itVars3.pOut + stepOut.width;
@@ -222,21 +373,26 @@ public:
                         //                 步长：w * h * l
                         //
                         it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
+                        it.pBais = itVars3.pBais + stepPolicy.wBais;
                         if(it.pWeights >= pWeightEnd ) {
                             it.pWeights -= nLayerStepShifts;
+                            it.pBais -= sizeConv.batch;
                         }
                     }
 
                     it.pIn = itVars2.pIn + stepInMove.height;
                     it.pOut = itVars2.pOut + stepOut.height;
                     it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
+                    it.pBais = itVars2.pBais + stepPolicy.hBais;
                     if(it.pWeights >= pWeightEnd ) {
                         it.pWeights -= nLayerStepShifts;
+                        it.pBais -= sizeConv.batch;
                     }
                 }
                 it.pIn = itVars1.pIn;
                 it.pOut = itVars1.pOut + 1;
                 it.pWeights = itVars1.pWeights + nLayerStepShifts;
+                it.pBais = itVars1.pBais + sizeConv.batch;
             }
             
             it.pIn = itVars0.pIn + stepInMove.batch;
@@ -259,6 +415,16 @@ public:
         CBatchSize2D stepOut = pThis->m_stepOut;
         CBatchSize2D stepConv = pThis->m_stepConv;
 
+        /*
+        int nBais = sizeConv.batch * pThis->m_nLayers;
+        int nWeights = stepConv.batch * sizeConv.batch * pThis->m_nLayers;
+        int nVariables = nBais + nWeights;
+        Q* pVariables = (Q*)m_spOptimizer->getDeviationPtr(nWeights+nBais);
+        memset(pVariables, 0 ,sizeof(Q)*(nWeights+nBais));
+        Q* pWeightDerivationArray = pVariables;
+        Q* pBaisDeviationArray = pVariables+nWeights;
+        */
+
         CShiftPolicy stepPolicy;
         CShiftPolicies shiftPolicies;
         s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch);
@@ -270,6 +436,7 @@ public:
             Q* pOutDeviation;
             Q* pWeights;
             Q* pWeightDevivation;
+            Q* pBaisDeviation;
             Q* pZDeviatioin;
             int index;
         }it = {
@@ -279,12 +446,21 @@ public:
             (Q*)outVar.devia,
             (Q*)inVars[1].data,
             (Q*)inVars[1].devia,
-        }, itVars=it, itVars0,itVars2,itVars3,itVars1,itVars4,itVars5,itVars6;
+            (Q*)inVars[2].devia
+        }, itVars, itVars0,itVars2,itVars3,itVars1,itVars4,itVars5,itVars6;
 
         Q deviationZ;
         int nLayers = pThis->m_nLayers;
         int nLayerStepShifts = sizeConv.batch * stepConv.batch;
         Q* pWeightEnd;
+
+        //
+        //
+        //  注意，
+        //      权重卷积核大小 : nLayers * nShiftConvs * h * w * l
+        //      偏置大小：nLayers * nShiftConvs 
+        //
+        itVars = it;
 
         //
         //  注意，关于填充问题，参考evalT说明
@@ -300,22 +476,23 @@ public:
 
         it.pIn = it.pIn - nOffsetIn;
         it.pInDeviation = it.pInDeviation - nOffsetIn;
-        //for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) 
-        {
+        for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
             itVars0.pIn = it.pIn;
             itVars0.pInDeviation = it.pInDeviation;
             itVars0.pOut = it.pOut;
             itVars0.pOutDeviation = it.pOutDeviation; 
 
-            it.pZDeviatioin = it.pOut;             
+            it.pZDeviatioin = it.pOutDeviation;             
             it.pWeights = itVars.pWeights;                  //重置Weight
             it.pWeightDevivation = itVars.pWeightDevivation;//重置偏差
+            it.pBaisDeviation = itVars.pBaisDeviation;      //重置Bais
             for(itVars1.index = 0; itVars1.index < nLayers; itVars1.index++) {
                 itVars1.pIn = it.pIn;
                 itVars1.pInDeviation = it.pInDeviation;
                 itVars1.pZDeviatioin = it.pZDeviatioin;
                 itVars1.pWeights = it.pWeights;
                 itVars1.pWeightDevivation = it.pWeightDevivation;
+                itVars1.pBaisDeviation = it.pBaisDeviation;
                 pWeightEnd = it.pWeights + nLayerStepShifts;
                 stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
                 for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
@@ -324,6 +501,7 @@ public:
                     itVars2.pZDeviatioin = it.pZDeviatioin;
                     itVars2.pWeights = it.pWeights;
                     itVars2.pWeightDevivation = it.pWeightDevivation;
+                    itVars2.pBaisDeviation = it.pBaisDeviation;
 
                     //上下填充了都填充了控空制，不能参与运算
                     if(itVars2.index < rcPading.top) {
@@ -354,6 +532,7 @@ public:
                         itVars3.pZDeviatioin = it.pZDeviatioin;
                         itVars3.pWeights = it.pWeights;
                         itVars3.pWeightDevivation = it.pWeightDevivation;
+                        itVars3.pBaisDeviation = it.pBaisDeviation;
 
                         //
                         //  计算目标函数对当前输出值的偏导数
@@ -431,6 +610,11 @@ public:
                                 it.pWeights = itVars4.pWeights + stepConv.height;
                                 it.pWeightDevivation = itVars4.pWeightDevivation + stepConv.height;
                             }
+
+                            //
+                            //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-deviationZ)
+                            //
+                            (*it.pBaisDeviation) += (-deviationZ);
                         }
 
                         it.pIn = itVars3.pIn + stepInMove.width;
@@ -444,9 +628,11 @@ public:
                         //
                         it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
                         it.pWeightDevivation = itVars3.pWeightDevivation + stepPolicy.wWeight;
+                        it.pBaisDeviation = itVars3.pBaisDeviation + stepPolicy.wBais;
                         if(it.pWeights >= pWeightEnd ) {
                             it.pWeights -= nLayerStepShifts;
                             it.pWeightDevivation -= nLayerStepShifts;
+                            it.pBaisDeviation -= sizeConv.batch;
                         }
                     }
                     it.pIn = itVars2.pIn + stepInMove.height;
@@ -454,9 +640,11 @@ public:
                     it.pZDeviatioin = itVars2.pZDeviatioin + stepOut.height;
                     it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
                     it.pWeightDevivation = itVars2.pWeightDevivation + stepPolicy.hWeight;
+                    it.pBaisDeviation = itVars2.pBaisDeviation + stepPolicy.hBais;
                     if(it.pWeights >= pWeightEnd ) {
                         it.pWeights -= nLayerStepShifts;
                         it.pWeightDevivation -= nLayerStepShifts;
+                        it.pBaisDeviation -= sizeConv.batch;
                     }
                 }
 
@@ -465,6 +653,7 @@ public:
                 it.pZDeviatioin = itVars1.pZDeviatioin + 1 ;
                 it.pWeights = itVars1.pWeights + nLayerStepShifts;
                 it.pWeightDevivation = itVars1.pWeightDevivation + nLayerStepShifts;
+                it.pBaisDeviation = itVars1.pBaisDeviation + sizeConv.batch;
             }
 
             //  更新迭代参数
@@ -473,141 +662,6 @@ public:
             it.pOut = itVars0.pOut + stepOut.batch;
             it.pOutDeviation = itVars0.pOutDeviation + stepOut.batch;
         }
-    }
-
-    int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) {
-        if(idType == CBasicData<float>::getStaticType() ) {
-            pEval = evalT<float>;
-            pDevia = deviaT<float>;
-        }else if(idType == CBasicData<double>::getStaticType() ) {
-            pEval = evalT<double>;
-            pDevia = deviaT<double>;
-        }
-        return sCtx.error("类型错误");
-    }
-
-    static int createConvVariable( const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-        CPointer<CConvOperator> spOut;
-        CObject::createObject(spOut);
-        if( int retcode = spOut->initConvVariable(szPadding, nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-        spOutVar.setPtr(spOut.getPtr());
-        return sCtx.success();
-    }
-
-
-    int initConvVariable( const char* szPadding, int nInVars, const SNnVariable pInVars[]) {
-
-        if( int retcode = initOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-
-        if(nInVars != 2) {
-            return sCtx.error("卷积操作需要两个输入数据");
-        }
-
-        SDimension spDim1 = pInVars[0].dimension();
-        SDimension spDim2 = pInVars[1].dimension();
-        if(spDim2.size() != 4) {
-            return sCtx.error("卷积核需要一个五维矩阵nConv*nWidth*nHeight*nDeep");
-        }
-        const int* pDimSize2 = spDim2.data();
-
-        if(spDim1.size() < 2) {
-            return sCtx.error("卷积操作输入张量至少需要二维，代表高度和宽度");
-        }
-        int nDim1 = spDim1.size();
-        const int* pDimSize1 = spDim1.data();
-        int nBatchs = 1;
-        int nInputLayers = 1;
-        for(int i=2; i<nDim1; i++) {
-            nInputLayers *= pDimSize1[i];
-        }
-
-        if(nInputLayers != pDimSize2[3]) {
-            return sCtx.error("卷积核深度于输入张量深度不一致");
-        }
-
-        if(pDimSize2[1] > pDimSize1[0] || pDimSize2[2] > pDimSize1[1]) {
-            return sCtx.error("卷积核尺寸不应该大于输入尺寸");
-        }
-
-        m_nStrideHeight = m_nStrideWidth = 1;
-        m_nLayers = pDimSize2[0];
-        m_nInputLayers = pDimSize2[3];
-        m_sizeConv = {
-            1,
-            pDimSize2[2],
-            pDimSize2[2]
-        };
-        m_sizeIn = {
-            1,
-            pDimSize1[0],
-            pDimSize1[1],
-            m_nInputLayers
-        };
-
-        //
-        //  填充模式有两种：
-        //      same -- 步长为1时，保持输出尺寸与输入尺寸一致
-        //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
-        //
-        if( szPadding && string(szPadding) == "same" ) {
-            m_sizeOut = {
-                nBatchs,
-                (m_sizeIn.height - 1) / m_nStrideHeight + 1,
-                (m_sizeIn.width - 1) / m_nStrideWidth + 1,
-                m_nLayers
-            };
-            int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
-            int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
-            m_padding.left = nPadW / 2;
-            m_padding.right = nPadW - m_padding.left;
-            m_padding.top = nPadH / 2;
-            m_padding.bottom = nPadH - m_padding.top;
-        }else{
-            //
-            //  默认为不填充
-            //
-            m_sizeOut = {
-                nBatchs,
-                (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-                (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-                m_nLayers
-            };
-            m_padding = { 0, 0, 0, 0 };
-        }
-
-        m_stepInConv = {
-            m_sizeIn.height * m_sizeIn.width * nInputLayers,
-            m_sizeIn.width * nInputLayers,
-            nInputLayers
-        };
-
-        m_stepInMove = {  
-            m_stepInConv.batch,
-            m_stepInConv.height * m_nStrideHeight,
-            m_stepInConv.width * m_nStrideWidth
-        };
-
-        m_stepOut = {
-            m_sizeOut.height * m_sizeOut.width * m_nLayers,
-            m_sizeOut.width * m_nLayers,
-            m_nLayers
-        };
-
-        m_stepConv = {
-            m_sizeConv.height * m_sizeConv.width * nInputLayers,
-            m_sizeConv.width * nInputLayers,
-            nInputLayers
-        };
-
-        if( SDimension::createDimension(m_spDimVector, 4, (int*)&m_sizeOut) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度向量失败");
-        }
-
-        return sCtx.success();
     }
 
 private:
