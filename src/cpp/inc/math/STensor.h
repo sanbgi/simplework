@@ -128,8 +128,6 @@ public:
         return pFace != nullptr ? pFace->getDataPtr<Q>(iPos) : nullptr;
     }
 
-
-
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE
