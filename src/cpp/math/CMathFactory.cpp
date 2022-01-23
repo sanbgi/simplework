@@ -1,6 +1,6 @@
 #include "../inc/math/math.h"
 #include <map>
-#include "CTensorFactory.h"
+#include "CTensor.h"
 #include "CMathSolver.h"
 
 using namespace sw;
@@ -17,15 +17,15 @@ class CMathFactory : public CObject, IMathFactory {
 
 public:
     int createVector(STensor& spTensor, unsigned int eElementType, int nElementSize, void* pElementData = nullptr) {
-        return CTensorFactory::createVector(spTensor, eElementType, nElementSize, pElementData);
+        return CTensor::createTensor(spTensor, nullptr, eElementType, nElementSize, pElementData);
     }
     
     int createTensor(STensor& spTensor, const SDimension& spDimVector, unsigned int eElementType, int nElementSize, void* pElementData = nullptr ){
-        return CTensorFactory::createTensor(spTensor, spDimVector, eElementType, nElementSize, pElementData);
+        return CTensor::createTensor(spTensor, &spDimVector, eElementType, nElementSize, pElementData);
     }
 
     int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) {
-        return CTensorFactory::createDimension(spDimension, nElementSize, pElementData);
+        return CTensor::createDimension(spDimension, nElementSize, pElementData);
     }
 
     int createSolver(unsigned int idType, SMathSolver& spSolver) {

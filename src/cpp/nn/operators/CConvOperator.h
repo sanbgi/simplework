@@ -415,16 +415,6 @@ public:
         CBatchSize2D stepOut = pThis->m_stepOut;
         CBatchSize2D stepConv = pThis->m_stepConv;
 
-        /*
-        int nBais = sizeConv.batch * pThis->m_nLayers;
-        int nWeights = stepConv.batch * sizeConv.batch * pThis->m_nLayers;
-        int nVariables = nBais + nWeights;
-        Q* pVariables = (Q*)m_spOptimizer->getDeviationPtr(nWeights+nBais);
-        memset(pVariables, 0 ,sizeof(Q)*(nWeights+nBais));
-        Q* pWeightDerivationArray = pVariables;
-        Q* pBaisDeviationArray = pVariables+nWeights;
-        */
-
         CShiftPolicy stepPolicy;
         CShiftPolicies shiftPolicies;
         s_GetShiftPolicy(shiftPolicies, sizeConv.batch, stepConv.batch);

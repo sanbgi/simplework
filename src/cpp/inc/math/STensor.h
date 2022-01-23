@@ -25,11 +25,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         virtual int updateVer() = 0;
 
         //
-        // 获取维度
-        //
-        //virtual STensor& getDimVector() = 0;
-
-        //
         // 获取张量维度信息
         //
         virtual int getDimension(SDimension& spDim) = 0;

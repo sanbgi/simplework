@@ -170,6 +170,14 @@ public:
         return (*this)->visitObject(szName, spVisitee, nMinVer, nMaxVer);
     }
 
+    template<typename Q>
+    int visitObject(const char* szName, Q& spObj, int nMinVer=0, int nMaxVer=999999999) const {
+        SIoArchivable arObj = spObj;
+        int retcode = (*this)->visitObject(szName, arObj, nMinVer, nMaxVer);
+        spObj = arObj;
+        return retcode;
+    }
+
     //
     //
     //

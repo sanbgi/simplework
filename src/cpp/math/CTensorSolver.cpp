@@ -1,6 +1,6 @@
 #include "../inc/math/math.h"
 #include <map>
-#include "CTensorFactory.h"
+#include "CTensor.h"
 
 using namespace sw;
 using namespace sw;
