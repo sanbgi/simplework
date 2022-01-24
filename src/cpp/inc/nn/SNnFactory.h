@@ -85,23 +85,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         virtual int loadNetwork(const char* szFileName, SNnNetwork& spNet) = 0;
 
         //
-        // 创建权重变量
-        //
-        virtual int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
-        virtual int createWeightVariable(int nDims, const int pDimSizes[], SNnVariable& spVar) = 0;
-
-        //
-        // 创建权重变量
-        //
-        virtual int createStateVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
-        virtual int createStateVariable(int nDims, const int pDimSizes[], SNnVariable& spVar) = 0;
-
-        //
-        // 创建运算结果变量
-        //
-        virtual int createOpVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spVar) = 0;
-
-        //
         // 创建神经网络单元
         //
         virtual int createDenseUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) = 0;

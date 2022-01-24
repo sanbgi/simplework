@@ -1,23 +1,15 @@
-#include "CNnState.h"
+#include "CNnStateVariable.h"
 
-static SCtx sCtx("CNnState");
-int CNnState::createStateVariable(const SDimension& spDimension, SNnVariable& spOutVar) { 
-    CPointer<CNnState> spState;
+static SCtx sCtx("CNnStateVariable");
+int CNnStateVariable::createStateVariable(const SDimension& spDimension, SNnVariable& spOutVar) { 
+    CPointer<CNnStateVariable> spState;
     CObject::createObject(spState);
     spState->m_spDimension = spDimension;
     spOutVar.setPtr(spState.getPtr());
     return sCtx.success();
 }
 
-int CNnState::createStateVariable(int nDims, const int pDimSizes[], SNnVariable& spOutVar) {
-    SDimension spDim;
-    if( SDimension::createDimension(spDim, nDims, pDimSizes) != sCtx.success() ) {
-        return sCtx.error("创建维度失败");
-    }
-    return createStateVariable(spDim, spOutVar);
-}
-
-void* CNnState::getData(unsigned int idType) {
+void* CNnStateVariable::getData(unsigned int idType) {
     if(!m_spData) {
         int nDims = m_spDimension.size();
         const int* pDimSize = m_spDimension.data();

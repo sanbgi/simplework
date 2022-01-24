@@ -56,7 +56,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
 
         if(nInVars != 2) {
             return sCtx.error("连接需要两个参数");

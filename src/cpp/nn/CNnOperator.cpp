@@ -1,7 +1,7 @@
 #include "CNnOperator.h"
+#include "CNnOperatorVariable.h"
 #include "CUtils.h"
 #include "CActivator.h"
-#include "CNnWeight.h"
 #include <map>
 
 static SCtx sCtx("CNnOperator");
@@ -18,7 +18,7 @@ static SCtx sCtx("CNnOperator");
 #include "operators/CConvOperator.h"
 #include "operators/CPoolOperator.h"
 
-typedef int (*FCreateOperator)(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+typedef int (*FCreateOperator)(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar);
 
 static map<string, FCreateOperator> s_opFactories = {
     { "plus", CPlusOperator::createOperator },
@@ -33,24 +33,32 @@ static map<string, FCreateOperator> s_opFactories = {
     { "relu", CReLUOperator::createOperator },
 };
 
-int CNnOperator::createOperatorVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CNnOperator::createOperator(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     map<string, FCreateOperator>::iterator it = s_opFactories.find(szOp);
     if(it != s_opFactories.end()) {
-        return it->second(nInVars,pInVars, spOutVar);
+        SNnOperator spOperator;
+        if( it->second(nInVars,pInVars, spOperator) != sCtx.success() ) {
+            return sCtx.error("计算错误");
+        }
+        return spOperator->getOutVar(spOutOp);
     }
     return sCtx.error();
 }
 
-int CNnOperator::createConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    return CConvOperator::createConvVariable(szPadding, nInVars, pInVars, spOutVar);
+int CNnOperator::createConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+    SNnOperator spOperator;
+    if( CConvOperator::createConvVariable(szPadding, nInVars,pInVars, spOperator) != sCtx.success() ) {
+        return sCtx.error("计算错误");
+    }
+    return spOperator->getOutVar(spOutOp);
 }
 
-int CNnOperator::createConvVariable(int nVars, const SNnVariable pInVars[], const char* szPadding, SNnVariable& spOutVar) {
-    return CConvOperator::createConvVariable(szPadding, nVars, pInVars, spOutVar);
-}
-
-int CNnOperator::createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    return CPoolOperator::createPoolVariable(szPadding, nWidth, nHeight, nStride, nInVars, pInVars, spOutVar);
+int CNnOperator::createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+    SNnOperator spOperator;
+    if( CPoolOperator::createPoolVariable(szPadding, nWidth, nHeight, nStride, nInVars, pInVars, spOperator) != sCtx.success() ) {
+        return sCtx.error("计算错误");
+    }
+    return spOperator->getOutVar(spOutOp);
 }
 
 int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {
@@ -94,10 +102,22 @@ int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]
     return initOperator(nInVars, pInVars);
 }
 
-int CNnOperator::getSubVariables(SNnInternalVariable pSubVariables[4]) {
-    for( int i=0; i<m_nInVars; i++ ) {
-        pSubVariables[i] = m_pInVars[i];
+int CNnOperator::getOutVar(SNnVariable& spOutVar) {
+    return CNnOperatorVariable::createOperatorVariable(m_spDimension, SNnOperator::wrapPtr(this), spOutVar);
+}
+
+int CNnOperator::getInVars(SNnVariable pInVars[4]) {
+    for(int i=0; i<m_nInVars; i++) {
+        pInVars[i] = m_pInVars[i];
     }
     return m_nInVars;
 }
 
+CNnOperator* CNnOperator::getOpPtr() {
+    return this;
+}
+
+int CNnOperator::initOutVar(const SDimension& spDimension) {
+    m_spDimension = spDimension;
+    return sCtx.success();
+}

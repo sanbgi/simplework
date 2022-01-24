@@ -7,11 +7,10 @@
 using namespace sw;
 using namespace std;
 
-class CNnWeight : public CNnVariable {
+class CNnWeightVariable : public CNnVariable {
 
 public:
     static int createWeightVariable(const SDimension& spDimension, SNnVariable& spOutVar);
-    static int createWeightVariable(int nDims, const int pDimSizes[], SNnVariable& spOutVar);
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVWeight; }

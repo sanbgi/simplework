@@ -56,6 +56,7 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
     if( CNnOperator::createConvVariable(m_strPaddingMode.c_str(), 3, inConv, y ) != sCtx.success() ) {
         return sCtx.error("卷积运算错误");
     }
+
     if(m_strActivator.length() > 0) {
         spOutVar = y.op(m_strActivator.c_str());
     }else{

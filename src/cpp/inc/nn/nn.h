@@ -12,6 +12,7 @@
 #include "SNnUnit.h"
 #include "SNnNetwork.h"
 #include "SNnVariable.h"
+#include "SNnVariableSolver.h"
 #include "SNnFactory.h"
 
 

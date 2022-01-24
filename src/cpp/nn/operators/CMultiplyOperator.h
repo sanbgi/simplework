@@ -46,7 +46,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
         CPointer<CMultiplyOperator> spOut;
         CObject::createObject(spOut);
         if( int retcode = spOut->initTwoEleWiseOperator(nInVars, pInVars) != sCtx.success() ) {

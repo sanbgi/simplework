@@ -36,6 +36,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
 
     SIMPLEWORK_INTERFACE_LEAVE
     
+    SDimension(int nDim, const int* pDimSizes) {
+        SMathFactory::getFactory()->createDimension(*this, nDim, pDimSizes);
+    }
+
     int size() {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getSize() : 0;

@@ -13,17 +13,12 @@
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
-#include "CNnWeight.h"
-#include "CNnState.h"
-#include "CNnOperator.h"
 #include "CDenseUnit.h"
 #include "CConvUnit.h"
 #include "CPoolUnit.h"
 #include "CSequenceUnit.h"
 
-using namespace SIMPLEWORK_CORE_NAMESPACE;
-using namespace SIMPLEWORK_MATH_NAMESPACE;
-using namespace SIMPLEWORK_NN_NAMESPACE;
+using namespace sw;
 
 class CNnFactory : public CObject, public INnFactory{
 
@@ -96,34 +91,6 @@ public:
         return CNnNetwork::loadNetwork(szFileName, spNet);
     }
     
-    int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar) {
-        return CNnWeight::createWeightVariable(spDimension, spVar);
-    }
-
-    int createStateVariable(const SDimension& spDimension, SNnVariable& spVar){
-        return CNnState::createStateVariable(spDimension, spVar);
-    }
-
-    int createWeightVariable(int nDims, const int pDimSizes[], SNnVariable& spVar) {
-        return CNnWeight::createWeightVariable(nDims, pDimSizes, spVar);
-    }
-
-    int createStateVariable(int nDims, const int pDimSizes[], SNnVariable& spVar){
-        return CNnState::createStateVariable(nDims, pDimSizes, spVar);
-    }
-
-    int createOpVariable(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-        return CNnOperator::createOperatorVariable(szOp, nInVars, pInVars, spOutVar);
-    }
-
-    //int createPoolVariable(const SNnVariable& spIn, int nWidth, int nHeight, int nStride, SNnVariable& spOutVar) {
-    //    return CNnOperator::createPoolVariable(nullptr, nWidth, nHeight, nStride, 1, &spIn, spOutVar);
-    //}
-
-    //int createConvVariable(const SNnVariable& spIn, int nWidth, int nHeight, int nConvs, const char* szPadding, SNnVariable& spOutVar) {
-    //    return CNnOperator::createConvVariable(spIn, nWidth, nHeight, nConvs, szPadding, spOutVar);
-    //}
-
     int createDenseUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) {
         return CDenseUnit::createUnit(nCells, dDropoutRate, szActivator, spUnit);
     }

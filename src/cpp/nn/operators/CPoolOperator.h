@@ -202,7 +202,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createPoolVariable( const char* szPadding, int nPoolWidth, int nPoolHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    static int createPoolVariable( const char* szPadding, int nPoolWidth, int nPoolHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
         CPointer<CPoolOperator> spOut;
         CObject::createObject(spOut);
         if( int retcode = spOut->initPoolVariable(szPadding, nPoolWidth, nPoolHeight, nStride, nInVars, pInVars) != sCtx.success() ) {

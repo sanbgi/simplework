@@ -1,6 +1,8 @@
 #include "CNnNetwork.h"
 #include "CNnInput.h"
 #include "CNnOperator.h"
+#include "CNnOperatorVariable.h"
+
 #include <map>
 
 static SCtx sCtx("CNnNetwork");
@@ -149,11 +151,12 @@ int CNnNetwork::initNetwork() {
                 if(nPushback == 0) {
                     PSolveVar solveVar;
                     solveVar.size = spToSolveVar->getSize();
+                    solveVar.pVar = (CNnVariable*)spToSolveVar->getVariablePtr();
                     solveVar.type = ENnVariableType::EVOperator;
                     arrSolvedVars[spToSolveVar.getPtr()] = arrVars.size();
 
                     solveParameter.iOutVarIndex = arrVars.size();
-                    solveParameter.pOperator = (CNnOperator*)spToSolveVar->getVariablePtr();
+                    solveParameter.pOperator = (CNnOperator*)((CNnOperatorVariable*)solveVar.pVar)->m_spOperator->getOpPtr();
 
                     arrSolvers.push_back(solveParameter);
                     arrVars.push_back(solveVar);
