@@ -18,6 +18,7 @@ static SCtx sCtx("CNnOperator");
 #include "operators/CReLUOperator.h"
 #include "operators/CConvOperator.h"
 #include "operators/CPoolOperator.h"
+#include "operators/CCopyOperator.h"
 
 typedef int (*FCreateOperator)(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar);
 
@@ -32,6 +33,7 @@ static map<string, FCreateOperator> s_opFactories = {
     { "tanh", CTanhOperator::createOperator },
     { "softmax", CSoftmaxOperator::createOperator },
     { "relu", CReLUOperator::createOperator },
+    { "copy", CCopyOperator::createOperator },
 };
 
 int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
@@ -60,6 +62,14 @@ int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int n
         return sCtx.error("计算错误");
     }
     return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
+}
+
+int CNnOperator::createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp) {
+    map<string, FCreateOperator>::iterator it = s_opFactories.find(szOp);
+    if(it != s_opFactories.end()) {
+        return it->second(nInVars, pInVars, spOutOp) != sCtx.success();
+    }
+    return sCtx.error();
 }
 
 int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {
@@ -101,7 +111,7 @@ int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]
     return initOperator(nInVars, pInVars);
 }
 
-int CNnOperator::getOutVar(SNnVariable& spOutVar) {
+int CNnOperator::createOutVar(SNnVariable& spOutVar) {
     return CNnOperatorVariable::createOperatorVariable(m_spDimension, spOutVar);
 }
 

@@ -19,7 +19,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
         //
         // 获得计算输出变量
         //
-        virtual int getOutVar(SNnVariable& spOutVar) = 0;
+        virtual int createOutVar(SNnVariable& spOutVar) = 0;
 
         //
         // 获取计算函数
@@ -48,19 +48,18 @@ public:
     static int solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
     static int solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
     static int solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
+    static int createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp);
 
 public:
     virtual int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) = 0;
+    int createOutVar(SNnVariable& spOutVar);
+    CNnOperator* getOpPtr();
 
 public:
     int initOperator(int nInVars, const SNnVariable pInVars[]);
     int initOneEleWiseOperator(int nInVars, const SNnVariable pInVars[]);
     int initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]);
     int initOutVar(const SDimension& spDimension);
-
-public:
-    int getOutVar(SNnVariable& spOutVar);
-    CNnOperator* getOpPtr();
 
 protected:
     SDimension m_spDimension;
