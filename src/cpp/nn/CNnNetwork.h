@@ -52,6 +52,8 @@ struct PSolveInstruct {
     FEval pFunDevia;
 }; 
 
+class PSolveContext;
+
 class CNnNetwork : public CObject, public INnNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
@@ -80,8 +82,7 @@ private:
     string m_strOptimizer;
 
     bool m_bInitialized;
-
-    SNnVariable m_spOutVar;
+    CTaker<PSolveContext*> m_spSolveCtx;
 
     //单元求解后的变量
     int m_nStateSize;

@@ -2,8 +2,33 @@
 #define __SimpleWork_NN_CNnVariableSolver_H__
 
 #include "nn.h"
+#include <vector>
 
 using namespace sw;
+using namespace std;
+
+
+struct PSolveContext {
+
+    struct PSolveOperator {
+        //
+        // 输入变量数以及对应的下标
+        //
+        int nInVars;
+        int pInVarIndexs[4];
+
+        //
+        // 输出变量下标
+        //
+        int iOutVar;
+
+        SNnOperator spOperator;
+    };
+    SNnInternalVariable spInVar;
+    SNnInternalVariable spOutVar;
+    vector<SNnInternalVariable> arrVars;
+    vector<PSolveOperator> arrOperators;
+};
 
 class CNnVariableSolver : public CObject, public INnVariableSolver{
 
@@ -15,6 +40,9 @@ public:
     int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar);
     int createStateVariable(const SDimension& spDimension, SNnVariable& spVar);
     int solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+
+public:
+    static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PSolveContext* pCtx);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

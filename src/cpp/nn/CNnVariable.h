@@ -27,9 +27,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnInternalVariable)
         virtual CNnVariable* getVariablePtr() = 0;
         virtual ENnVariableType getVariableType() = 0;
         virtual int getSubVariables(SNnInternalVariable pSubVariables[4]) = 0;
+        virtual int getDimension(SDimension& spDimension) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
+    SDimension dimension() const{
+        SDimension spDimension;
+        IFace* pFace = getPtr();
+        if(pFace) {
+            pFace->getDimension(spDimension);
+        }
+        return spDimension;
+    }
+    
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnInternalVariable)
 
 class CNnVariable : public CObject, public INnVariable, public INnInternalVariable {

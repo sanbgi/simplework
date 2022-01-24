@@ -47,7 +47,7 @@ int CNnOperator::createOperator(const char* szOp, int nInVars, const SNnVariable
 
 int CNnOperator::createConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     SNnOperator spOperator;
-    if( CConvOperator::createConvVariable(szPadding, nInVars,pInVars, spOperator) != sCtx.success() ) {
+    if( CConvOperator::createOperator(szPadding, nInVars,pInVars, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
     return spOperator->getOutVar(spOutOp);
@@ -55,7 +55,7 @@ int CNnOperator::createConvVariable(const char* szPadding, int nInVars, const SN
 
 int CNnOperator::createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     SNnOperator spOperator;
-    if( CPoolOperator::createPoolVariable(szPadding, nWidth, nHeight, nStride, nInVars, pInVars, spOperator) != sCtx.success() ) {
+    if( CPoolOperator::createOperator(szPadding, nWidth, nHeight, nStride, nInVars, pInVars, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
     return spOperator->getOutVar(spOutOp);

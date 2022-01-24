@@ -7,7 +7,7 @@
 using namespace sw;
 using namespace std;
 
-class CNnInput : public CNnVariable {
+class CNnInputVariable : public CNnVariable {
 
 public:
     static int createVariable(const STensor& spDimension, SNnVariable& spOutVar);

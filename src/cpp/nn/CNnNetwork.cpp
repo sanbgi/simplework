@@ -1,7 +1,8 @@
 #include "CNnNetwork.h"
-#include "CNnInput.h"
+#include "CNnInputVariable.h"
 #include "CNnOperator.h"
 #include "CNnOperatorVariable.h"
+#include "CNnVariableSolver.h"
 
 #include <map>
 
@@ -39,137 +40,54 @@ int CNnNetwork::initNetwork() {
         return sCtx.success();
     }
 
+    m_spSolveCtx.take(new PSolveContext(), [](PSolveContext* pCtx){
+        delete pCtx;
+    });
+
     //
-    // 创建输入变量
+    // 解算计算单元
     //
-    SNnVariable spInput;
-    if( CNnInput::createVariable(m_spInDimVector, spInput) != sCtx.success()) {
-        return sCtx.error("创建输入变量失败");
+    PSolveContext& solveCtx = *m_spSolveCtx;
+    if( CNnVariableSolver::solveUnit(m_spInDimVector, m_spUnit, &solveCtx) != sCtx.success()) {
+        return sCtx.error("解算网络单元错误");
     }
 
     //
-    // 求解网络单元，生成网络计算图
+    // 更新计算变量数组
     //
-    SNnVariable spOutVariable;
-    if(m_spUnit->eval(1, &spInput, spOutVariable) != sCtx.success()) {
-        return sCtx.error("网络单元求解失败");
-    }
-
-    SNnInternalVariable spOutVar = spOutVariable;
-    if( !spOutVar ) {
-        return sCtx.error("网络单元求解结果无效");
-    }
-
-    //
-    // 深度遍历网络计算图，生成计算需要的变量及步骤
-    // 
-    vector<PSolveVar> arrVars;
-    vector<PSolveInstruct> arrSolvers;
-    map<INnInternalVariable*, int> arrSolvedVars;
     int iInputVarIndex = -1;
-    SNnInternalVariable spInputVar;
-    vector<int> arrWeightVarIndex;
-    vector<SNnInternalVariable> arrToSolveVars;
-    arrToSolveVars.push_back(spOutVar);
-    while(arrToSolveVars.size() > 0) {
-        SNnInternalVariable spToSolveVar = arrToSolveVars.at(arrToSolveVars.size()-1);
-
-        //
-        // 已经解算的变量，不用重复解算
-        //
-        if( arrSolvedVars.find(spToSolveVar.getPtr()) != arrSolvedVars.end()) {
-            arrToSolveVars.pop_back();
-            continue;
+    vector<PSolveVar> arrVars;
+    vector<SNnInternalVariable>::iterator itVar = solveCtx.arrVars.begin();
+    while(itVar != solveCtx.arrVars.end()) {
+        SNnInternalVariable spToSolveVar = *itVar;
+        if(!spToSolveVar) {
+            return sCtx.error("不认识的变量类型");
         }
-
-        //
-        // 分类型处理未解算变量
-        //
-        switch(spToSolveVar->getVariableType()) {
-            case ENnVariableType::EVInput:
-            {
-                if(iInputVarIndex >= 0) {
-                    return sCtx.error("目前网络还不支持多输入模式");
-                }
-                PSolveVar solveVar;
-                solveVar.size = spToSolveVar->getSize();
-                solveVar.data = nullptr;
-                solveVar.type = ENnVariableType::EVInput;
-                solveVar.pVar = spToSolveVar->getVariablePtr();
-                iInputVarIndex = arrVars.size();
-                spInputVar = spToSolveVar;
-                arrSolvedVars[spToSolveVar.getPtr()] = arrVars.size();
-                arrVars.push_back(solveVar);
-                arrToSolveVars.pop_back();
-            }
-            break;
-
-            case ENnVariableType::EVState:
-            {
-                PSolveVar solveVar;
-                solveVar.size = spToSolveVar->getSize();
-                solveVar.pVar = spToSolveVar->getVariablePtr();
-                solveVar.type = ENnVariableType::EVState;
-                arrSolvedVars[spToSolveVar.getPtr()] = arrVars.size();
-                arrVars.push_back(solveVar);
-                arrToSolveVars.pop_back();
-            }
-            break;
-
-            case ENnVariableType::EVWeight:
-            {
-                PSolveVar solveVar;
-                solveVar.size = spToSolveVar->getSize();
-                solveVar.pVar = spToSolveVar->getVariablePtr();
-                solveVar.type = ENnVariableType::EVWeight;
-                arrWeightVarIndex.push_back(arrVars.size());
-                arrSolvedVars[spToSolveVar.getPtr()] = arrVars.size();
-                arrVars.push_back(solveVar);
-                arrToSolveVars.pop_back();
-            }
-            break;
-
-            case ENnVariableType::EVOperator:
-            {
-                SNnInternalVariable pSubVars[4];
-                int nSubVars = spToSolveVar->getSubVariables(pSubVars);
-
-                PSolveInstruct solveParameter;
-                solveParameter.nInVar = nSubVars;
-                int nPushback = 0;
-                for( int i=0; i<nSubVars; i++) {
-                    SNnInternalVariable spSubVar = pSubVars[i];
-                    map<INnInternalVariable*, int>::iterator it = arrSolvedVars.find(spSubVar.getPtr());
-                    if(it == arrSolvedVars.end()) {
-                        arrToSolveVars.push_back(spSubVar);
-                        nPushback ++;
-                    }else{
-                        solveParameter.pInVarIndex[i] = it->second;
-                    }
-                }
-
-                if(nPushback == 0) {
-                    PSolveVar solveVar;
-                    solveVar.size = spToSolveVar->getSize();
-                    solveVar.pVar = (CNnVariable*)spToSolveVar->getVariablePtr();
-                    solveVar.type = ENnVariableType::EVOperator;
-                    arrSolvedVars[spToSolveVar.getPtr()] = arrVars.size();
-
-                    solveParameter.iOutVarIndex = arrVars.size();
-                    solveParameter.pOperator = (CNnOperator*)((CNnOperatorVariable*)solveVar.pVar)->m_spOperator->getOpPtr();
-
-                    arrSolvers.push_back(solveParameter);
-                    arrVars.push_back(solveVar);
-                    arrToSolveVars.pop_back();
-                }
-            }
-            break;
-
-            default:{
-                return sCtx.error("未知错误，发现不认识的结算变量类型");
-            }
-            break;
+        PSolveVar solveVar;
+        solveVar.size = spToSolveVar->getSize();
+        solveVar.data = nullptr;
+        solveVar.type = spToSolveVar->getVariableType();
+        solveVar.pVar = spToSolveVar->getVariablePtr();
+        if(solveVar.type == ENnVariableType::EVInput) {
+            iInputVarIndex = arrVars.size();
         }
+        arrVars.push_back(solveVar);
+        itVar++;
+    }
+
+    vector<PSolveInstruct> arrSolvers;
+    vector<PSolveContext::PSolveOperator>::iterator itOp = solveCtx.arrOperators.begin();
+    while(itOp != solveCtx.arrOperators.end()) {
+        PSolveContext::PSolveOperator spOp = *itOp;
+        PSolveInstruct solveParameter;
+        solveParameter.nInVar = spOp.nInVars;
+        solveParameter.iOutVarIndex = spOp.iOutVar;
+        for(int i=0; i<spOp.nInVars; i++) {
+            solveParameter.pInVarIndex[i] = spOp.pInVarIndexs[i];
+        }
+        solveParameter.pOperator = spOp.spOperator->getOpPtr();
+        arrSolvers.push_back(solveParameter);
+        itOp++;
     }
 
     //
@@ -198,25 +116,12 @@ int CNnNetwork::initNetwork() {
         }
     }
     
-    int nDimSize = m_spInDimVector.size();
-    const int* pDimSize = m_spInDimVector.data();
-    if(pDimSize == nullptr || nDimSize < 1) {
-        return sCtx.error("网络输入张量维度定义无效");
-    } 
-
-    int nInputTensorSize = 1;
-    while(nDimSize-->0) {
-        nInputTensorSize *= *pDimSize;
-        pDimSize++;
-    }
-
-    m_spOutVar = spOutVar;
     m_nOpSize = nOpSize;
     m_nStateSize = nStateSize;
     m_nWeightSize = nWeightSize;
     m_iInputVarIndex = iInputVarIndex;
-    m_nInputTensorSize = nInputTensorSize;
-    m_nOutputTensorSize = spOutVar->getSize();
+    m_nInputTensorSize = m_spInDimVector.dataSize();
+    m_nOutputTensorSize = solveCtx.spOutVar->getSize();
     m_arrSolvers = arrSolvers;
     m_arrVars = arrVars;
     m_bInitialized = true;
@@ -316,7 +221,7 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //
     if(!m_spBatchOut || m_spBatchOut.size() != m_nOutputTensorSize * m_nBatchIns) {
 
-        SDimension spOutDimVector = m_spOutVar.dimension();
+        SDimension spOutDimVector = m_spSolveCtx->spOutVar.dimension();
         int nDims = spOutDimVector.size();
         const int* pDimSizes = spOutDimVector.data();
 
