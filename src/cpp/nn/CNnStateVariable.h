@@ -14,7 +14,6 @@ public:
     
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }
-    int getSubVariables(SNnInternalVariable pSubVariables[4]) { return 0; }
     CNnVariable* getVariablePtr() { return this; }
     void* getData(unsigned int idType);
 

@@ -67,13 +67,11 @@ int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {
         return sCtx.error("目前神经网络的计算输入参数，最大不能超过4个");
     }
 
-    m_nInVars = nInVars;
     for(int i=0; i<nInVars; i++) {
         SNnInternalVariable spInternalVar = pInVars[i];
         if( !spInternalVar ) {
             return sCtx.error("不认识的参数类型");
         }
-        m_pInVars[i] = spInternalVar; 
     }
     return sCtx.success();
 }
@@ -104,14 +102,7 @@ int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]
 }
 
 int CNnOperator::getOutVar(SNnVariable& spOutVar) {
-    return CNnOperatorVariable::createOperatorVariable(m_spDimension, SNnOperator::wrapPtr(this), spOutVar);
-}
-
-int CNnOperator::getInVars(SNnVariable pInVars[4]) {
-    for(int i=0; i<m_nInVars; i++) {
-        pInVars[i] = m_pInVars[i];
-    }
-    return m_nInVars;
+    return CNnOperatorVariable::createOperatorVariable(m_spDimension, spOutVar);
 }
 
 CNnOperator* CNnOperator::getOpPtr() {

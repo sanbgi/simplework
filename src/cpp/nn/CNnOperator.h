@@ -22,11 +22,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
         virtual int getOutVar(SNnVariable& spOutVar) = 0;
 
         //
-        // 获得计算输入变量
-        //
-        virtual int getInVars(SNnVariable pInVars[4]) = 0;
-
-        //
         // 获取计算函数
         //
         virtual int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) = 0;
@@ -65,12 +60,9 @@ public:
 
 public:
     int getOutVar(SNnVariable& spOutVar);
-    int getInVars(SNnVariable pInVars[4]);
     CNnOperator* getOpPtr();
 
 protected:
-    int m_nInVars;
-    SNnInternalVariable m_pInVars[4];
     SDimension m_spDimension;
 };
 

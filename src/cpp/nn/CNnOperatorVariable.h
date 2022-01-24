@@ -12,18 +12,14 @@ public:
     //
     // 创建求解计算器 
     //
-    static int createOperatorVariable(const SDimension& spDimension, const SNnOperator& spOperator, SNnVariable& spOutVar);
+    static int createOperatorVariable(const SDimension& spDimension, SNnVariable& spOutVar);
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVOperator; }
-    int getSubVariables(SNnInternalVariable pSubVariables[4]);
     CNnVariable* getVariablePtr() { return this; }
     void* getData(unsigned int idType) {
         return nullptr;
     }
-
-public:
-    SNnOperator m_spOperator;
 };
 
 #endif//__SimpleWork_NN_COperatorVariable_H__
