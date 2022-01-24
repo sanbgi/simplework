@@ -53,7 +53,7 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
 
     SNnVariable y;
     SNnVariable inConv[3] = { spInVars[0], m_spWeights, m_spBais };
-    if( CNnOperator::createConvVariable(m_strPaddingMode.c_str(), 3, inConv, y ) != sCtx.success() ) {
+    if( CNnOperator::solveConv(m_strPaddingMode.c_str(), 3, inConv, y ) != sCtx.success() ) {
         return sCtx.error("卷积运算错误");
     }
 

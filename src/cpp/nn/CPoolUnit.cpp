@@ -23,7 +23,7 @@ int CPoolUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
         return sCtx.error("池化单元输入参数必须为一个");
     }
 
-    if( CNnOperator::createPoolVariable(m_strPaddingMode.c_str(), m_nWidth, m_nHeight, m_nStride, nInVars, spInVars, spOutVar ) != sCtx.success() ) {
+    if( CNnOperator::solvePool(m_strPaddingMode.c_str(), m_nWidth, m_nHeight, m_nStride, nInVars, spInVars, spOutVar ) != sCtx.success() ) {
         return sCtx.error("卷积运算错误");
     }
     return sCtx.success();

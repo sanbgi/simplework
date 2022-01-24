@@ -22,6 +22,9 @@ struct PSolveContext {
         //
         int iOutVar;
 
+        //
+        // 求解函数
+        //
         SNnOperator spOperator;
     };
     SNnInternalVariable spInVar;
@@ -43,6 +46,7 @@ public:
 
 public:
     static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PSolveContext* pCtx);
+    static int returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spReturnOut);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

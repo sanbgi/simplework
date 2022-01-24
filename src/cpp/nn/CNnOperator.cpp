@@ -2,6 +2,7 @@
 #include "CNnOperatorVariable.h"
 #include "CUtils.h"
 #include "CActivator.h"
+#include "CNnVariableSolver.h"
 #include <map>
 
 static SCtx sCtx("CNnOperator");
@@ -33,32 +34,32 @@ static map<string, FCreateOperator> s_opFactories = {
     { "relu", CReLUOperator::createOperator },
 };
 
-int CNnOperator::createOperator(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     map<string, FCreateOperator>::iterator it = s_opFactories.find(szOp);
     if(it != s_opFactories.end()) {
         SNnOperator spOperator;
         if( it->second(nInVars,pInVars, spOperator) != sCtx.success() ) {
             return sCtx.error("计算错误");
         }
-        return spOperator->getOutVar(spOutOp);
+        return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
     }
     return sCtx.error();
 }
 
-int CNnOperator::createConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+int CNnOperator::solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     SNnOperator spOperator;
     if( CConvOperator::createOperator(szPadding, nInVars,pInVars, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
-    return spOperator->getOutVar(spOutOp);
+    return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
 }
 
-int CNnOperator::createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     SNnOperator spOperator;
     if( CPoolOperator::createOperator(szPadding, nWidth, nHeight, nStride, nInVars, pInVars, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
-    return spOperator->getOutVar(spOutOp);
+    return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
 }
 
 int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {

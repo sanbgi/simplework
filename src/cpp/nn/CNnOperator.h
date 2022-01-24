@@ -50,9 +50,9 @@ public:
     //
     // 创建求解计算器 
     //
-    static int createOperator(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
-    static int createConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
-    static int createPoolVariable(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
+    static int solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
+    static int solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
+    static int solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
 
 public:
     virtual int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) = 0;
