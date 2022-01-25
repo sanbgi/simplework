@@ -66,9 +66,11 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
+    //SNnNetwork nn = createLayerNetwork();
+    SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
-    SNnNetwork nn = createUnitNetwork();
+    //SNnNetwork nn = createUnitNetwork();
     //SNnNetwork nn = createLeNet_5();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
@@ -148,7 +150,8 @@ void CNnNetwork::runTest() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createRnnNetwork();
+    //SNnNetwork nn = createRnnNetwork();
+    SNnNetwork nn = createLayerNetwork();
     //SNnNetwork nn = createTestNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createRotNetwork();
@@ -267,12 +270,12 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
 }
 
 SNnNetwork CNnNetwork::createRnnNetwork() {
-    std::vector<SNnNetwork> arrNets;
-    /*
-    arrNets.push_back(SNnNetwork::createGru(50,false));
-    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
-    
-    return SNnNetwork::createSequence(arrNets.size(), arrNets.data());*/
+    std::vector<SNnLayer> arrUnits;
+    arrUnits.push_back(SNnLayer::createRnnLayer(50, "sequence"));
+    arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
+    int pDimSizes[] = {28, 28};
+    SDimension spDim = SDimension::createDimension(2,pDimSizes);
+    return SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
 }
 
 SNnNetwork CNnNetwork::createNetwork() {

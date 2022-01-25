@@ -107,6 +107,25 @@ public:
         return SNnVariableSolver::getSolver()->createWeightVariable(spDim, spVar);
     }
 
+    static SNnVariable eval(const char* szOp, const SNnVariable& a) {
+        SNnVariable o;
+        SNnVariableSolver::getSolver()->solveOp(szOp, 1, &a, o);
+        return o;
+    }
+
+    static SNnVariable eval(const char* szOp, const SNnVariable& a, const SNnVariable& b) {
+        SNnVariable o;
+        SNnVariable pInVars[2] = {a, b};
+        SNnVariableSolver::getSolver()->solveOp(szOp, 2, pInVars, o);
+        return o;
+    }
+
+    static SNnVariable eval(const char* szOp, int nInVars, const SNnVariable pInVars[]) {
+        SNnVariable o;
+        SNnVariableSolver::getSolver()->solveOp(szOp, nInVars, pInVars, o);
+        return o;
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnVariable)
 
 SIMPLEWORK_NN_NAMESPACE_LEAVE

@@ -9,6 +9,7 @@
 #include "CDenseUnit.h"
 #include "CConvUnit.h"
 #include "CPoolUnit.h"
+#include "CRnnUnit.h"
 #include "CSequenceUnit.h"
 #include "CNnLayer.h"
 #include "CNnLayerNetwork.h"
@@ -96,6 +97,9 @@ public:
     }
     int createPoolUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode, SNnUnit& spUnit) {
         return CPoolUnit::createUnit(nWidth, nHeight, nStride, szPaddingMode, spUnit);
+    }
+    int createRnnUnit(int nCells, const char* szActivator, SNnUnit& spUnit) {
+        return CRnnUnit::createUnit(nCells, szActivator, spUnit);
     }
     int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) {
         return CSequenceUnit::createUnit(nUnits, pUnits, spUnit);

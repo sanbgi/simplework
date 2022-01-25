@@ -286,9 +286,11 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 evalIn[j].size = pVars[iVar].size;
                 evalIn[j].data = pVars[iVar].data;
             }
-            int iOutVarIndex = instruct.iOutVarIndex;
-            evalOut.size = pVars[iOutVarIndex].size;
-            evalOut.data = pVars[iOutVarIndex].data;
+            if(instruct.iOutVarIndex>=0) {
+                int iOutVarIndex = instruct.iOutVarIndex;
+                evalOut.size = pVars[iOutVarIndex].size;
+                evalOut.data = pVars[iOutVarIndex].data;
+            }
 
             //实际计算函数调用
             (*instruct.pFunEval)(instruct.pOperator, instruct.nInVar, evalIn, evalOut);
@@ -436,10 +438,12 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
                 evalIn[j].data = pVars[iVar].data;
                 evalIn[j].devia = pVars[iVar].devia;
             }
-            int iOutVarIndex = instruct.iOutVarIndex;
-            evalOut.size = pVars[iOutVarIndex].size;
-            evalOut.data = pVars[iOutVarIndex].data;
-            evalOut.devia = pVars[iOutVarIndex].devia;
+            if(instruct.iOutVarIndex>=0){
+                int iOutVarIndex = instruct.iOutVarIndex;
+                evalOut.size = pVars[iOutVarIndex].size;
+                evalOut.data = pVars[iOutVarIndex].data;
+                evalOut.devia = pVars[iOutVarIndex].devia;
+            }
 
             //实际计算函数调用
             (*instruct.pFunDevia)(instruct.pOperator, nInVars, evalIn, evalOut);

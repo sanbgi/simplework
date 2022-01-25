@@ -18,11 +18,12 @@ static SCtx sCtx("CNnOperator");
 #include "operators/CReLUOperator.h"
 #include "operators/CConvOperator.h"
 #include "operators/CPoolOperator.h"
-#include "operators/CCopyOperator.h"
+#include "operators/CStoreStateOperator.h"
 
 typedef int (*FCreateOperator)(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar);
 
 static map<string, FCreateOperator> s_opFactories = {
+    { "storeState", CStoreStateOperator::createOperator },
     { "plus", CPlusOperator::createOperator },
     { "minus", CMinusOperator::createOperator },
     { "multiply", CMultiplyOperator::createOperator },
@@ -33,7 +34,6 @@ static map<string, FCreateOperator> s_opFactories = {
     { "tanh", CTanhOperator::createOperator },
     { "softmax", CSoftmaxOperator::createOperator },
     { "relu", CReLUOperator::createOperator },
-    { "copy", CCopyOperator::createOperator },
 };
 
 int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
@@ -112,7 +112,11 @@ int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]
 }
 
 int CNnOperator::createOutVar(SNnVariable& spOutVar) {
-    return CNnOperatorVariable::createOperatorVariable(m_spDimension, spOutVar);
+    if(m_spDimension) {
+        return CNnOperatorVariable::createOperatorVariable(m_spDimension, spOutVar);
+    }
+    //如果没有输出维度信息，则表示没有输出信息
+    return sCtx.success();
 }
 
 CNnOperator* CNnOperator::getOpPtr() {

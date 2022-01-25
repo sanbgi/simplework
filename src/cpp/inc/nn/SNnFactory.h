@@ -92,6 +92,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         virtual int createDenseUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) = 0;
         virtual int createConvUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPaddingMode, const char* szActivator, SNnUnit& spUnit) = 0;
         virtual int createPoolUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode, SNnUnit& spUnit) = 0;
+        virtual int createRnnUnit(int nCells, const char* szActivator, SNnUnit& spUnit) = 0;
         virtual int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) = 0;
 
         //

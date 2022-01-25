@@ -25,12 +25,11 @@ private://INnUnit
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.RnnUnit"; }
-    static int createUnit(int nCells, bool isBatchMode, const char* szActivator, SNnUnit& spUnit);
+    static int createUnit(int nCells, const char* szActivator, SNnUnit& spUnit);
 
 private:
     //基础参数
     int m_nCells;
-    bool m_isBatchMode;
     string m_strActivator;
     SNnVariable m_spWeights;
     SNnVariable m_spState;

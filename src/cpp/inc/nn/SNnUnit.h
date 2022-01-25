@@ -37,6 +37,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnUnit, "sw.nn.NnUnit")
         SNnFactory::getFactory()->createPoolUnit(nWidth, nHeight, nStride, szPaddingMode, spUnit);
         return spUnit;
     }
+    static SNnUnit createRnnUnit(int nCells, const char* szActivator=nullptr) {
+        SNnUnit spUnit;
+        SNnFactory::getFactory()->createRnnUnit(nCells, szActivator, spUnit);
+        return spUnit;
+    }
     static SNnUnit createSequenceUnit(int nUnits, const SNnUnit pUnits[]) {
         SNnUnit spUnit;
         SNnFactory::getFactory()->createSequenceUnit(nUnits, pUnits, spUnit);

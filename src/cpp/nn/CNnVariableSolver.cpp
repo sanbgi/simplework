@@ -9,22 +9,27 @@
 
 #include <map>
 
+static SCtx sCtx("CNnVariableSolver");
+
 static struct PRunCtx {
     PSolveContext* pSolveCtx;
-    map<INnInternalVariable*, int> mapSolvedVars;
-    map<INnInternalVariable*, SNnInternalVariable> mapReplacement;
+    map<INnVariable*, int> mapSolvedVars;
+    /*
+    map<INnVariable*, SNnVariable> mapReplacement;
+    */
 
     int registerVar(const SNnVariable& spVar, bool bReplacement = true) {
         int iVar = -1;
-        SNnInternalVariable spInternalVar = spVar;
+        SNnVariable spInternalVar = spVar;
+        /*
         if(bReplacement) {
-            map<INnInternalVariable*, SNnInternalVariable>::iterator itReplacement = mapReplacement.find(spInternalVar.getPtr());
+            map<INnVariable*, SNnVariable>::iterator itReplacement = mapReplacement.find(spInternalVar.getPtr());
             if(itReplacement != mapReplacement.end()) {
                 spInternalVar = itReplacement->second;
             }
-        }
+        }*/
 
-        map<INnInternalVariable*, int>::iterator it = mapSolvedVars.find(spInternalVar.getPtr());
+        map<INnVariable*, int>::iterator it = mapSolvedVars.find(spInternalVar.getPtr());
         if(it == mapSolvedVars.end()) {
             iVar = pSolveCtx->arrVars.size();
             mapSolvedVars[spInternalVar.getPtr()] = iVar;
@@ -36,7 +41,6 @@ static struct PRunCtx {
     }
 }*s_pRunCtx = nullptr;
 
-static SCtx sCtx("CNnVariableSolver");
 int CNnVariableSolver::createWeightVariable(const SDimension& spDimension, SNnVariable& spVar) {
     return CNnWeightVariable::createWeightVariable(spDimension, spVar);
 }
@@ -62,38 +66,32 @@ int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, con
         for( int i=0; i<nInVars; i++) {
             solveParameter.pInVarIndexs[i] = s_pRunCtx->registerVar(pInVars[i]);
         }
-        solveParameter.iOutVar = s_pRunCtx->registerVar(spOut);
+
+        //
+        // 如果有输出对象，则注册输出对象
+        //
+        if(spOut) {
+            solveParameter.iOutVar = s_pRunCtx->registerVar(spOut);
+        }else{
+            solveParameter.iOutVar = -1;
+        }
         solveParameter.spOperator = spOp;
         pCtx->arrOperators.push_back(solveParameter);
 
         //
-        //  输出的时候注意，如果输出目标是state对象，则相当于是两步：
-        //      1，将输出数据拷贝到state
-        //      2，添加对state的替换，以后使用state，相当于使用当前的output
-        //  
-        //  为什么state变量需要使用替换机制（即后续对state的引用替换为当前计算结果）？目
-        //  的是为了正确求解梯度。由于state值不断在变，但是计算梯度时，是需要当时的state
-        //  值的，所以，需要把state替换为计算变量，才能够正确传递梯度；
+        //  输出的时候注意，如果输出目标是state对象，则相记录当前state所对应的目标变量，
+        //  之后再引用state时，直接应用state对应的目标变量。
+        //  在整个操作结束以后，还需要将目标变量拷贝到state中
         // 
+        /*
         SNnInternalVariable spExternalOut = spOutVar;
         if( spExternalOut && spExternalOut->getVariableType() == ENnVariableType::EVState ) {
-            SNnInternalVariable spInternalOut = spOut;
-            s_pRunCtx->mapReplacement[spExternalOut.getPtr()] = spInternalOut;
-            
-            SNnOperator spCopyOp;
-            if( CNnOperator::createOp("copy", 1, &spOut, spCopyOp) != sCtx.success() ) {
-                return sCtx.error("创建拷贝操作失败");
-            }
-            
-            PSolveContext::PSolveOperator replaceParameter;
-            replaceParameter.nInVars = 1;
-            replaceParameter.pInVarIndexs[0] = solveParameter.iOutVar;
-            replaceParameter.iOutVar = s_pRunCtx->registerVar(spOutVar, false);
-            replaceParameter.spOperator = spCopyOp;
-            pCtx->arrOperators.push_back(replaceParameter);
+            s_pRunCtx->mapReplacement[spOutVar.getPtr()] = spOut;
         }else{
             spOutVar = spOut;
         }
+        */
+        spOutVar = spOut;
         return sCtx.success();
     }
 
@@ -138,6 +136,24 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
     if( !spOutVar ) {
         return sCtx.error("网络单元求解结果无效");
     }
+
+    //
+    // 添加步骤，备份状态值
+    //
+    /*
+    map<INnVariable*, SNnVariable>::iterator it = runCtx.mapReplacement.begin();
+    while(it != runCtx.mapReplacement.end()) {
+        SNnVariable spState =it->first;
+        SNnVariable spSrc = it->second;
+
+        PSolveContext::PSolveOperator storeStateParameter;
+        storeStateParameter.nInVars = 1;
+        storeStateParameter.pInVarIndexs[0] = s_pRunCtx->registerVar(spSrc, false);
+        storeStateParameter.iOutVar = s_pRunCtx->registerVar(spState, false);
+        CStoreStateOperator::createOperator(storeStateParameter.spOperator);
+        pCtx->arrOperators.push_back(storeStateParameter);
+        it++;
+    }*/
 
     pCtx->spInVar = spInput;
     pCtx->spOutVar = spOutVar;

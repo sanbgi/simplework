@@ -277,6 +277,8 @@ int CNnLayerNetwork::prepareNetwork(const STensor& spBatchIn) {
                 break;
             }
         }
+
+        itLayer++;
     }
     
     m_nBatchIns = pInDimSize[0];
@@ -342,8 +344,10 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     Q* pInDataEnd = pInData + spBatchIn.size();
     while(pInData < pInDataEnd) {
         Q* pOpVarBuf = pOpSolvedBuffer;
-        PLayerContext* pLayer = *ppLayers;
+        PLayerContext** itPpLayer = ppLayers;
         for(int iLayer=0; iLayer<nLayers; iLayer++) {
+            PLayerContext* pLayer = *itPpLayer;
+            
             int nVars = pLayer->arrVars.size();
             PSolveVar* pVars = pLayer->arrVars.data();
 
@@ -356,7 +360,7 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             //  1，输入变量的数据指针指向输入数据
             //  2，运算变量指针指向缓冲区
             //
-            for(int i=0; i<nVars-1; i++) {
+            for(int i=0; i<nVars; i++) {
                 switch(pVars[i].type) {
                 case ENnVariableType::EVOperator:
                     pVars[i].data = pOpVarBuf;
@@ -375,7 +379,7 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 pInVar->data = pInData;
             }
             else {
-                PLayerContext* pPrevLayer = pLayer-1;
+                PLayerContext* pPrevLayer = *(itPpLayer-1);
                 PSolveVar* pPrevOutVar = &pPrevLayer->arrVars[pPrevLayer->iOutputVarIndex];
                 pInVar->data = pPrevOutVar->data;
             }
@@ -396,9 +400,12 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                         evalIn[j].size = pVars[iVar].size;
                         evalIn[j].data = pVars[iVar].data;
                     }
-                    int iOutVarIndex = instruct.iOutVarIndex;
-                    evalOut.size = pVars[iOutVarIndex].size;
-                    evalOut.data = pVars[iOutVarIndex].data;
+
+                    if(instruct.iOutVarIndex>=0) {
+                        int iOutVarIndex = instruct.iOutVarIndex;
+                        evalOut.size = pVars[iOutVarIndex].size;
+                        evalOut.data = pVars[iOutVarIndex].data;
+                    }
 
                     //实际计算函数调用
                     (*instruct.pFunEval)(instruct.pOperator, instruct.nInVar, evalIn, evalOut);
@@ -423,10 +430,13 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             // 如果是最后一层，则拷贝输出结果，注意：此时输出变量的指针指向一批次中的最后一次结果，
             //  所以，实际数据取数据结尾指针 - m_nOutputTensorSize;
             //
-            Q* pLastOut = (Q*)pVars[pLayer->iOutputVarIndex].data;
-            Q* pSrc = pLastOut+pVars[pLayer->iOutputVarIndex].size-m_nOutputTensorSize;
-            memcpy(pOutData,pSrc,sizeof(Q)*m_nOutputTensorSize);
-            pLayer++;
+            if(iLayer==nLayers-1) {
+                PSolveVar* pOutVar = &pVars[pLayer->iOutputVarIndex];
+                Q* pLastOutPtr = (Q*)pOutVar->data;
+                Q* pSrc = pLastOutPtr + pOutVar->size-m_nOutputTensorSize;
+                memcpy(pOutData,pSrc,sizeof(Q)*m_nOutputTensorSize);
+            }
+            itPpLayer++;
         }
         pInData += m_nInputTensorSize;
         pOutData += m_nOutputTensorSize;
@@ -493,39 +503,42 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
 
     int nLayers = m_arrLayerCtx.size();
     PLayerContext** ppLayers = m_arrLayerCtx.data();
-    PLayerContext* pLayer = *ppLayers;
+    PLayerContext** itPpLayer = ppLayers;
+    Q* pItWeightDevia = pWeightDeviaBuffer;
+    Q* pItDevia = pDeviaBuffer;
     for(int iLayer=0; iLayer<nLayers; iLayer++) {
+        PLayerContext* pLayer = *itPpLayer;
 
         int nBatchs = pLayer->nBatchs;
         int nVars = pLayer->arrVars.size();
-        PSolveVar* pVars = pLayer->arrVars.data();
 
         //
         // 设置所有的权重、运算、状态的偏导指针
         //
-        {
-            Q* pItWeightDevia = pWeightDeviaBuffer;
-            Q* pItDevia = pDeviaBuffer;
-            for(int i=0; i<nVars-1; i++) {
-                switch(pVars[i].type) {
-                case ENnVariableType::EVWeight:
-                    pVars[i].devia = pItWeightDevia;
-                    pItWeightDevia += pVars[i].size;
-                    break;
+        PSolveVar* pVars = pLayer->arrVars.data();
+        for(int i=0; i<nVars; i++) {
+            switch(pVars[i].type) {
+            case ENnVariableType::EVWeight:
+                pVars[i].devia = pItWeightDevia;
+                pItWeightDevia += pVars[i].size;
+                break;
 
-                case ENnVariableType::EVState:
-                    pVars[i].devia = pItDevia;
-                    pItDevia += pVars[i].size;
-                    break;
+            case ENnVariableType::EVState:
+                pVars[i].devia = pItDevia;
+                pItDevia += pVars[i].size;
+                break;
 
-                case ENnVariableType::EVOperator:
-                    pVars[i].devia = pItDevia;
-                    pItDevia += pVars[i].size*nBatchs;
-                    break;
-                }
+            case ENnVariableType::EVOperator:
+                pVars[i].devia = pItDevia;
+                pItDevia += pVars[i].size*nBatchs;
+                break;
             }
         }
-        pLayer++;
+
+        itPpLayer++;
+    }
+    if(pItDevia - pDeviaBuffer != nDeviaBuffer || pItWeightDevia - pWeightDeviaBuffer != m_nWeightSize) {
+        return sCtx.error("内部异常");
     }
 
     //
@@ -544,17 +557,35 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         //重置Op和State的偏导缓冲
         memset(pDeviaBuffer, 0, sizeof(Q)*nDeviaBuffer);
 
-        //将运算缓存指针，指向最后一层的后面，因为会从最后一层向前反向运算
-        Q* pLayerOpVarBufEnd = pOpSolvedBuffer + m_nOpSize;
+        //
+        // 正向设置指针运算数据指针，这一步以后，偏导数、数据指针都已经就绪
+        //
+        itPpLayer = ppLayers;
+        Q* pOpVarBuf = pOpSolvedBuffer;
+        for( int iLayer=0; iLayer<nLayers; iLayer++) {
+            PLayerContext* pLayer = *itPpLayer;
+            int nBatchs = pLayer->nBatchs;
+            int nVars = pLayer->arrVars.size();
+            PSolveVar* pVars = pLayer->arrVars.data();
+            for(int i=0; i<nVars; i++) {
+                switch(pVars[i].type) {
+                case ENnVariableType::EVOperator:
+                    {
+                        pVars[i].data = pOpVarBuf;
+                        pOpVarBuf += pVars[i].size * nBatchs;
+                    }
+                    break;
+                }
+            }
+            itPpLayer++;
+        }
 
-        pLayer = *ppLayers + nLayers - 1;
+        //
+        // 反向求解
+        //
+        itPpLayer = ppLayers + nLayers - 1;
         for(int iLayer=nLayers-1; iLayer>=0; iLayer--){
-
-            //
-            // 将运算结果缓存指针向前移一层
-            //
-            pLayerOpVarBufEnd -= pLayer->nOpSize * pLayer->nBatchs;
-            Q* pOpVarBuf = pLayerOpVarBufEnd;
+            PLayerContext* pLayer = *itPpLayer;
 
             //
             // 准备层参数
@@ -565,25 +596,6 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
 
             int nSolvers = pLayer->arrSolvers.size();
             PSolveInstruct* pSolver = pLayer->arrSolvers.data();
-
-            //
-            // 准备计算指针
-            //  1，输入变量的数据指针指向输入数据
-            //  2，运算变量指针指向缓冲区
-            //
-            for(int i=0; i<nVars; i++) {
-                switch(pVars[i].type) {
-                case ENnVariableType::EVOperator:
-                    {
-                        int size = pVars[i].size;
-                        int offset = pVars[i].size * (nBatchs-1);
-                        pVars[i].data = pOpVarBuf + offset;
-                        pVars[i].devia = ((Q*)pVars[i].devia) + offset;
-                        pOpVarBuf += size + offset;
-                    }
-                    break;
-                }
-            }
 
             //
             // 准备输入数据指针，比较复杂，大体逻辑是：
@@ -598,15 +610,47 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 pInVar->devia = pInDevial;
             }
             else {
-                PLayerContext* pPrevLayer = pLayer-1;
+                PLayerContext* pPrevLayer = *(itPpLayer-1);
                 PSolveVar* pPrevOutVar = &pPrevLayer->arrVars[pPrevLayer->iOutputVarIndex];
                 pInVar->data = pPrevOutVar->data;
                 pInVar->devia = pPrevOutVar->devia;
             }
-            //输入指向最后一个，从后往前执行
-            int offset = pInVar->size * (nBatchs - 1);
-            pInVar->data = (Q*)pInVar->data + offset;
-            pInVar->devia = (Q*)pInVar->devia + offset;
+
+            //如果是最后一层，则数据的指针指向输出的指针
+            if(iLayer==nLayers-1) {
+                PSolveVar * pOutVar = pVars + pLayer->iOutputVarIndex;
+                pOutVar->devia = pOutDevia;
+                pOutVar->data = pOutData;
+            }
+
+            //
+            // 准备计算指针
+            //  1，输入变量的数据指针指向输入数据
+            //  2，运算变量指针指向缓冲区
+            //
+            if(nBatchs > 1) {
+                //
+                // 如果一层中是一批数据需要计算，则指向这一批数据的最后一个，在循环的时候，会每次向前移动一个size;
+                //
+                for(int i=0; i<nVars; i++) {
+                    switch(pVars[i].type) {
+                    case ENnVariableType::EVOperator:
+                        {
+                            int size = pVars[i].size;
+                            int offset = size * (nBatchs-1);
+                            pVars[i].data = ((Q*)pVars[i].data) + offset;
+                            pVars[i].devia = ((Q*)pVars[i].devia) + offset;
+                        }
+                        break;
+                    }
+                }
+
+                //输入指向最后一个，从后往前执行
+                int offset = pInVar->size * (nBatchs - 1);
+                pInVar->data = (Q*)pInVar->data + offset;
+                pInVar->devia = (Q*)pInVar->devia + offset;
+            }
+
 
             //
             // 遍历所有批次，依次运算
@@ -625,10 +669,13 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                         evalIn[j].data = pVars[iVar].data;
                         evalIn[j].devia = pVars[iVar].devia;
                     }
-                    int iOutVarIndex = instruct.iOutVarIndex;
-                    evalOut.size = pVars[iOutVarIndex].size;
-                    evalOut.data = pVars[iOutVarIndex].data;
-                    evalOut.devia = pVars[iOutVarIndex].devia;
+
+                    if(instruct.iOutVarIndex>=0){
+                        int iOutVarIndex = instruct.iOutVarIndex;
+                        evalOut.size = pVars[iOutVarIndex].size;
+                        evalOut.data = pVars[iOutVarIndex].data;
+                        evalOut.devia = pVars[iOutVarIndex].devia;
+                    }
 
                     //实际计算函数调用
                     (*instruct.pFunDevia)(instruct.pOperator, nInVars, evalIn, evalOut);
@@ -652,7 +699,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                     }
                 }
             }
-            pLayer--;
+            itPpLayer--;
         }
 
         pInData += m_nInputTensorSize;
@@ -667,8 +714,10 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
     //更新权重值
     {
         Q* pItWeightDevia = pWeightDeviaBuffer;
-        pLayer = *ppLayers;
+        itPpLayer = ppLayers;
         for(int iLayer=0; iLayer<nLayers; iLayer++) {
+            PLayerContext* pLayer = *itPpLayer;
+
             int nVars = pLayer->arrVars.size();
             PSolveVar* pVars = pLayer->arrVars.data();
             for(int i=0; i<nVars; i++) {
@@ -688,6 +737,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                     break;
                 }
             }
+            itPpLayer++;
         }
     }
 

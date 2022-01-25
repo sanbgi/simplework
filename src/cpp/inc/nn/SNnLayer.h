@@ -52,6 +52,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnLayer)
     static SNnLayer createDenseLayer(int nCells, double dDropoutRate=0, const char* szActivator = nullptr){
         return createLayer(SNnUnit::createDenseUnit(nCells,dDropoutRate,szActivator));
     }
+    static SNnLayer createRnnLayer(int nCells, const char* szMode=nullptr, const char* szActivator = nullptr){
+        return createLayer(SNnUnit::createRnnUnit(nCells,szActivator), szMode);
+    }
     static SNnLayer createConvLayer(int nWidth, int nHeight, int nLayers, int nShiftConvs = 1, const char* szPaddingMode = nullptr, const char* szActivator = nullptr) {
         return createLayer(SNnUnit::createConvUnit(nWidth,nHeight,nLayers,nShiftConvs,szPaddingMode,szActivator));
     }

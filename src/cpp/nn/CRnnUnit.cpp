@@ -4,11 +4,10 @@
 #include "CNnOperator.h"
 
 static SCtx sCtx("CRnnUnit");
-int CRnnUnit::createUnit(int nCells, bool isBatchMode, const char* szActivator, SNnUnit& spUnit) {
+int CRnnUnit::createUnit(int nCells, const char* szActivator, SNnUnit& spUnit) {
     CPointer<CRnnUnit> spRnn;
     CObject::createObject(spRnn);
     spRnn->m_nCells = nCells;
-    spRnn->m_isBatchMode = isBatchMode;
     if( szActivator!=nullptr ){
         spRnn->m_strActivator = szActivator;
     }
@@ -18,41 +17,34 @@ int CRnnUnit::createUnit(int nCells, bool isBatchMode, const char* szActivator, 
 
 int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
-        return sCtx.error("卷积单元输入参数必须为一个");
+        return sCtx.error("Rnn单元输入参数必须为一个");
     }
 
     if(!m_spWeights) {
-        /*
-        SDimension spInDim = spInVars[0].dimension();
-
-        int nDims = spInDim.size();
-        const int* pDimSizes = spInDim.data();
-        if(nDims < 2) {
-            return sCtx.error("卷积的输入张量维度至少要大于2");
+        int nInputSize = spInVars[0].dimension().dataSize();
+        if(nInputSize < 1) {
+            return sCtx.error("Rnn单元的输入必须大于等于1");
         }
 
-        int nLayers = 1;
-        for(int i=2; i<nDims; i++) {
-            nLayers *= pDimSizes[i];
+        if( SNnVariable::createState(SDimension(1, &m_nCells), m_spState) != sCtx.success() ) {
+            return sCtx.error("偏置状态失败");
         }
 
-        int pWeightDimSizes[5] = { m_nLayers, m_nShiftConvs, m_nHeight, m_nWidth, nLayers };
-        if( SNnVariable::createWeight(5, pWeightDimSizes, m_spWeights) != sCtx.success() ) {
+        int pDimSizes[2] = {m_nCells, m_nCells+nInputSize };
+        if( SNnVariable::createWeight(SDimension(2, pDimSizes), m_spWeights) != sCtx.success() ) {
             return sCtx.error("权重变量创建失败");
         }
-
-        if( SNnVariable::createWeight(1, &m_nLayers, m_spBais) != sCtx.success() ) {
-            return sCtx.error("偏置创建失败");
-        }*/
     }
 
-    SNnVariable y;
-
+    SNnVariable x = spInVars[0];
+    SNnVariable joinedx = SNnVariable::eval("join", x, m_spState);
+    SNnVariable y = joinedx.product(m_spWeights);
     if(m_strActivator.length() > 0) {
         spOutVar = y.op(m_strActivator.c_str());
     }else{
         spOutVar = y.op("relu");
     }
+    SNnVariable::eval("storeState", m_spState, y);
     return sCtx.success();
 }
 

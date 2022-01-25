@@ -18,7 +18,7 @@ public:
             *pO = *pIn1;
             pO++, pIn1++;
         }
-        while(pIn2 < pIn1End) {
+        while(pIn2 < pIn2End) {
             *pO = *pIn2;
             pO++, pIn2++;
         }
@@ -37,7 +37,7 @@ public:
             *pDevia1 += *pDeviaO;
             pDevia1++, pDeviaO++;
         }
-        while(pDevia2 < pDevia1End) {
+        while(pDevia2 < pDevia2End) {
             *pDevia2 += *pDeviaO;
             pDevia2++, pDeviaO++;
         }
