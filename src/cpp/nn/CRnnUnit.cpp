@@ -44,7 +44,7 @@ int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
     }else{
         spOutVar = y.op("relu");
     }
-    SNnVariable::eval("storeState", m_spState, y);
+    SNnVariable::eval("storeState", m_spState, spOutVar);
     return sCtx.success();
 }
 
