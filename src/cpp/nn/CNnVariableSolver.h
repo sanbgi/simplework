@@ -7,7 +7,6 @@
 using namespace sw;
 using namespace std;
 
-
 struct PSolveContext {
 
     struct PSolveOperator {
@@ -29,6 +28,8 @@ struct PSolveContext {
     };
     SNnInternalVariable spInVar;
     SNnInternalVariable spOutVar;
+    int iInVar;
+    int iOutVar;
     vector<SNnInternalVariable> arrVars;
     vector<PSolveOperator> arrOperators;
 };

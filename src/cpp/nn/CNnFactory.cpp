@@ -1,15 +1,8 @@
 
 #include "nn.h"
 #include "CNnNetwork.h"
-#include "CDenseNetwork.h"
-#include "CConvolutionNetwork.h"
-#include "CRotConvNetwork.h"
 #include "CSequenceNetwork.h"
 #include "CParallelNetwork.h"
-#include "CPoolNetwork.h"
-#include "CGlobalPoolNetwork.h"
-#include "CRnnNetwork.h"
-#include "CGruNetwork.h"
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
@@ -17,6 +10,8 @@
 #include "CConvUnit.h"
 #include "CPoolUnit.h"
 #include "CSequenceUnit.h"
+#include "CNnLayer.h"
+#include "CNnLayerNetwork.h"
 
 using namespace sw;
 
@@ -27,6 +22,7 @@ class CNnFactory : public CObject, public INnFactory{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
+    /*
     int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
         return CDenseNetwork::createNetwork(nCells, dDropoutRate, szActivator, spNetwork);
     }
@@ -37,16 +33,9 @@ public:
 
     int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
         return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
-    }
+    }*/
 
-    int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
-        return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
-    }
-
-    int createParallel(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
-        return CParallelNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
-    }
-
+    /*
     int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) {
         return CPoolNetwork::createNetwork(nWidth, nHeight, nStrideWidth, nStrideHeight, spNetwork);
     }
@@ -61,6 +50,14 @@ public:
 
     int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
         return CGruNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
+    }*/
+
+    int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
+        return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
+    }
+
+    int createParallel(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
+        return CParallelNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
     }
 
     int readIdxFile(const char* szFileName, STensor& spData) {
@@ -105,6 +102,12 @@ public:
     }
     int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
         return CNnNetwork::createNetwork(spUnit, spInDimVector, spNet);
+    }
+    int createLayer(const SNnUnit& spUnit, const char* szMode, SNnLayer& spLayer) {
+        return CNnLayer::createLayer(spUnit, szMode, spLayer);
+    }
+    int createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension, SNnNetwork& spNet) {
+        return CNnLayerNetwork::createNetwork(nLayers, pLayers, spInDimension, spNet);
     }
 };
 

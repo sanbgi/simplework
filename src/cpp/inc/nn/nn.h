@@ -10,6 +10,7 @@
 
 #include "SNnPipe.h"
 #include "SNnUnit.h"
+#include "SNnLayer.h"
 #include "SNnNetwork.h"
 #include "SNnDevia.h"
 #include "SNnVariable.h"

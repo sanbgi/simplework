@@ -36,6 +36,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
+    /*
     static SNnNetwork createDense(int nCells, double dDropoutRate = 0, const char* szActivator = nullptr) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createDense(nCells,dDropoutRate,szActivator,nn);
@@ -88,6 +89,17 @@ public:
         SNnNetwork nn;
         SNnFactory::getFactory()->createGru(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
         return nn;
+    }*/
+    static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
+        SNnNetwork spNet;
+        SNnFactory::getFactory()->createNetwork(spUnit, spInDimension, spNet);
+        return spNet;
+    }
+
+    static SNnNetwork createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension) {
+        SNnNetwork spNet;
+        SNnFactory::getFactory()->createNetwork(nLayers, pLayers, spInDimension, spNet);
+        return spNet;
     }
 
     static SNnNetwork createSequence(int nNetworks, SNnNetwork* pNetworks) {
@@ -139,12 +151,6 @@ public:
     static SNnNetwork loadFile(const char* szFileName) {
         SNnNetwork spNet;
         SNnFactory::getFactory()->loadNetwork(szFileName, spNet);
-        return spNet;
-    }
-
-    static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
-        SNnNetwork spNet;
-        SNnFactory::getFactory()->createNetwork(spUnit, spInDimension, spNet);
         return spNet;
     }
 

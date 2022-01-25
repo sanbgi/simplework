@@ -3,61 +3,56 @@
 
 #include "nn.h"
 #include "COptimizer.h"
+#include "CNnOperator.h"
 #include <vector>
 #include <string>
 
 using namespace sw;
 using namespace std;
 
+
 class CNnOperator;
 class CNnVariable;
-
-//
-// 计算函数
-//
-typedef void (*FEval)(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
-
-//
-// 计算变量
-//
-struct PSolveVar {
-    int type;//ENnVariableType
-    int size;
-    void* data; //存储状态及权重值的指针
-    void* devia;//存储偏倒数的指针
-    CNnVariable* pVar;
-};
-
-struct PSolveInstruct {
-    //
-    // 输入参数个数及位置
-    //
-    int nInVar;
-    int pInVarIndex[4];
-
-    //
-    // 输出参数位置
-    //
-    int iOutVarIndex;
-
-    //
-    // 操作对象指针
-    //
-    CNnOperator* pOperator;
-
-    //
-    // 计算值和偏导数的函数指针
-    //
-    FEval pFunEval;
-    FEval pFunDevia;
-}; 
-
 class PSolveContext;
-
 class CNnNetwork : public CObject, public INnNetwork{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+    //
+    // 计算变量
+    //
+    struct PSolveVar {
+        int type;//ENnVariableType
+        int size;
+        void* data; //存储状态及权重值的指针
+        void* devia;//存储偏倒数的指针
+        CNnVariable* pVar;
+    };
+
+    struct PSolveInstruct {
+        //
+        // 输入参数个数及位置
+        //
+        int nInVar;
+        int pInVarIndex[4];
+
+        //
+        // 输出参数位置
+        //
+        int iOutVarIndex;
+
+        //
+        // 操作对象指针
+        //
+        CNnOperator* pOperator;
+
+        //
+        // 计算值和偏导数的函数指针
+        //
+        FEval pFunEval;
+        FEval pFunDevia;
+    }; 
 
 public:
     static int saveNetwork(const char* szFileName, const SNnNetwork& spNet);

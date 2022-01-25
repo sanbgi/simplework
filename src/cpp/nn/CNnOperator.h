@@ -2,11 +2,13 @@
 #define __SimpleWork_NN_COperator_H__
 
 #include "nn.h"
-#include "CNnVariable.h"
-#include "CNnNetwork.h"
 
 using namespace sw;
 
+//
+// 计算函数
+//
+typedef void (*FEval)(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
 class CNnOperator;
 
 //
