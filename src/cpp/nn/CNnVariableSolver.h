@@ -26,10 +26,10 @@ struct PSolveContext {
         //
         SNnOperator spOperator;
     };
-    SNnInternalVariable spInVar;
-    SNnInternalVariable spOutVar;
     int iInVar;
     int iOutVar;
+    //SNnInternalVariable spInVar;
+    //SNnInternalVariable spOutVar;
     vector<SNnInternalVariable> arrVars;
     vector<PSolveOperator> arrOperators;
 };

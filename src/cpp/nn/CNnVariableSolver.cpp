@@ -155,8 +155,6 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
         it++;
     }*/
 
-    pCtx->spInVar = spInput;
-    pCtx->spOutVar = spOutVar;
     pCtx->iInVar = runCtx.registerVar(spInput,false);
     pCtx->iOutVar = runCtx.registerVar(spOutVar,false);
     return sCtx.success();

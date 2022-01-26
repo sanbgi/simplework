@@ -34,15 +34,14 @@ struct PSolveInstruct {
     int iOutVar;
 
     //
-    // 操作对象指针
+    // 求解参数
     //
-    CNnOperator* pOperator;
+    PSolveParameter solver;
 
     //
-    // 计算值和偏导数的函数指针
+    // 求解器
     //
-    FEval pFunEval;
-    FEval pFunDevia;
+    SNnOperator pOperator;
 };
 
 struct PLayerContext {
@@ -148,7 +147,7 @@ int CNnLayerNetwork::initNetwork() {
             for(int i=0; i<spOp.nInVars; i++) {
                 solveParameter.pInVarIndex[i] = spOp.pInVarIndexs[i];
             }
-            solveParameter.pOperator = spOp.spOperator->getOpPtr();
+            solveParameter.pOperator = spOp.spOperator;
             arrSolvers.push_back(solveParameter);
             itOp++;
         }
@@ -179,7 +178,8 @@ int CNnLayerNetwork::initNetwork() {
             }
         }
 
-        spDimension = solveCtx.spOutVar.dimension();
+
+        spDimension = solveCtx.arrVars[solveCtx.iOutVar].dimension();
         switch(eMode) {
         case SNnLayer::EMODE_BATCH:
             {
@@ -260,7 +260,7 @@ int CNnLayerNetwork::prepareNetwork(const STensor& spBatchIn) {
         //
         vector<PSolveInstruct>::iterator it = layerCtx.arrSolvers.begin(); 
         for(;it != layerCtx.arrSolvers.end(); it++) {
-            it->pOperator->getEvalFunAddress(idType, it->pFunEval, it->pFunDevia);
+            it->pOperator->getSolveParameter(idType, it->solver);
         }
 
         //
@@ -406,7 +406,7 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                     }
 
                     //实际计算函数调用
-                    (*instruct.pFunEval)(instruct.pOperator, instruct.nInVar, evalIn, evalOut);
+                    (*instruct.solver.pEvalFun)(instruct.solver.pParameter, instruct.nInVar, evalIn, evalOut);
                 }
 
                 //
@@ -726,7 +726,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                     }
 
                     //实际计算函数调用
-                    (*instruct.pFunDevia)(instruct.pOperator, nInVars, evalIn, evalOut);
+                    (*instruct.solver.pDeviaFun)(instruct.solver.pParameter, nInVars, evalIn, evalOut);
 
                     /*
                     if(pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE) {

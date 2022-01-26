@@ -38,14 +38,16 @@ public:
         }
     }
 
-    int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) {
+    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
-            pEval = evalT<float>;
-            pDevia = deviaT<float>;
+            solveParameter.pEvalFun = evalT<float>;
+            solveParameter.pDeviaFun = deviaT<float>;
+            solveParameter.pParameter = this;
             return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
-            pEval = evalT<double>;
-            pDevia = deviaT<double>;
+            solveParameter.pEvalFun = evalT<double>;
+            solveParameter.pDeviaFun = deviaT<double>;
+            solveParameter.pParameter = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");

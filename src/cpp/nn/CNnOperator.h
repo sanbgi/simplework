@@ -11,6 +11,12 @@ using namespace sw;
 typedef void (*FEval)(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
 class CNnOperator;
 
+struct PSolveParameter {
+    FEval pEvalFun;
+    FEval pDeviaFun;
+    void* pParameter;
+};
+
 //
 // 神经网络计算器，为了实现高速计算，参数和函数地址，都是直接的指针
 //
@@ -26,12 +32,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
         //
         // 获取计算函数
         //
-        virtual int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) = 0;
+        virtual int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;
 
         //
         // 获取对象指针
         //
-        virtual CNnOperator* getOpPtr() = 0;
+        //virtual CNnOperator* getOpPtr() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -53,7 +59,7 @@ public:
     static int createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp);
 
 public:
-    virtual int getEvalFunAddress(unsigned int idType, FEval& pEval, FEval& pDevia) = 0;
+    virtual int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;
     int createOutVar(SNnVariable& spOutVar);
     CNnOperator* getOpPtr();
 
@@ -62,6 +68,7 @@ public:
     int initOneEleWiseOperator(int nInVars, const SNnVariable pInVars[]);
     int initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]);
     int initOutVar(const SDimension& spDimension);
+
 
 protected:
     SDimension m_spDimension;

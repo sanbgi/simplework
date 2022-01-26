@@ -85,7 +85,7 @@ int CNnNetwork::initNetwork() {
         for(int i=0; i<spOp.nInVars; i++) {
             solveParameter.pInVarIndex[i] = spOp.pInVarIndexs[i];
         }
-        solveParameter.pOperator = spOp.spOperator->getOpPtr();
+        solveParameter.pOperator = spOp.spOperator;
         arrSolvers.push_back(solveParameter);
         itOp++;
     }
@@ -115,13 +115,15 @@ int CNnNetwork::initNetwork() {
             break;
         }
     }
+
+    SNnInternalVariable spOutVar = solveCtx.arrVars[solveCtx.iOutVar];
     
     m_nOpSize = nOpSize;
     m_nStateSize = nStateSize;
     m_nWeightSize = nWeightSize;
     m_iInputVarIndex = iInputVarIndex;
     m_nInputTensorSize = m_spInDimVector.dataSize();
-    m_nOutputTensorSize = solveCtx.spOutVar->getSize();
+    m_nOutputTensorSize = spOutVar->getSize();
     m_arrSolvers = arrSolvers;
     m_arrVars = arrVars;
     m_bInitialized = true;
@@ -168,7 +170,7 @@ int CNnNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     vector<PSolveInstruct>::iterator it = m_arrSolvers.begin(); 
     for(;it != m_arrSolvers.end(); it++) {
-        it->pOperator->getEvalFunAddress(idType, it->pFunEval, it->pFunDevia);
+        it->pOperator->getSolveParameter(idType, it->solver);
     }
 
     //
@@ -221,7 +223,8 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //
     if(!m_spBatchOut || m_spBatchOut.size() != m_nOutputTensorSize * m_nBatchIns) {
 
-        SDimension spOutDimVector = m_spSolveCtx->spOutVar.dimension();
+        SNnInternalVariable spOutVar = m_spSolveCtx->arrVars[m_spSolveCtx->iOutVar];
+        SDimension spOutDimVector = spOutVar.dimension();
         int nDims = spOutDimVector.size();
         const int* pDimSizes = spOutDimVector.data();
 
@@ -293,7 +296,7 @@ int CNnNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             }
 
             //实际计算函数调用
-            (*instruct.pFunEval)(instruct.pOperator, instruct.nInVar, evalIn, evalOut);
+            (*instruct.solver.pEvalFun)(instruct.solver.pParameter, instruct.nInVar, evalIn, evalOut);
         }
 
         pInData += m_nInputTensorSize;
@@ -446,7 +449,7 @@ int CNnNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDevia
             }
 
             //实际计算函数调用
-            (*instruct.pFunDevia)(instruct.pOperator, nInVars, evalIn, evalOut);
+            (*instruct.solver.pDeviaFun)(instruct.solver.pParameter, nInVars, evalIn, evalOut);
         }
 
         pInData += m_nInputTensorSize;

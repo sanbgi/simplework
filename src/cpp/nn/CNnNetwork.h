@@ -42,16 +42,12 @@ class CNnNetwork : public CObject, public INnNetwork{
         //
         int iOutVarIndex;
 
+        PSolveParameter solver;
+  
         //
         // 操作对象指针
         //
-        CNnOperator* pOperator;
-
-        //
-        // 计算值和偏导数的函数指针
-        //
-        FEval pFunEval;
-        FEval pFunDevia;
+        SNnOperator pOperator;
     }; 
 
 public:
