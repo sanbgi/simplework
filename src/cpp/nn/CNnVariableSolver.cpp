@@ -14,21 +14,9 @@ static SCtx sCtx("CNnVariableSolver");
 static struct PRunCtx {
     PSolveContext* pSolveCtx;
     map<INnVariable*, int> mapSolvedVars;
-    /*
-    map<INnVariable*, SNnVariable> mapReplacement;
-    */
-
     int registerVar(const SNnVariable& spVar, bool bReplacement = true) {
         int iVar = -1;
         SNnVariable spInternalVar = spVar;
-        /*
-        if(bReplacement) {
-            map<INnVariable*, SNnVariable>::iterator itReplacement = mapReplacement.find(spInternalVar.getPtr());
-            if(itReplacement != mapReplacement.end()) {
-                spInternalVar = itReplacement->second;
-            }
-        }*/
-
         map<INnVariable*, int>::iterator it = mapSolvedVars.find(spInternalVar.getPtr());
         if(it == mapSolvedVars.end()) {
             iVar = pSolveCtx->arrVars.size();
@@ -64,7 +52,7 @@ int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, con
         PSolveContext::PSolveOperator solveParameter;
         solveParameter.nInVars = nInVars;
         for( int i=0; i<nInVars; i++) {
-            solveParameter.pInVarIndexs[i] = s_pRunCtx->registerVar(pInVars[i]);
+            solveParameter.pInVars[i] = s_pRunCtx->registerVar(pInVars[i]);
         }
 
         //
@@ -78,19 +66,6 @@ int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, con
         solveParameter.spOperator = spOp;
         pCtx->arrOperators.push_back(solveParameter);
 
-        //
-        //  输出的时候注意，如果输出目标是state对象，则相记录当前state所对应的目标变量，
-        //  之后再引用state时，直接应用state对应的目标变量。
-        //  在整个操作结束以后，还需要将目标变量拷贝到state中
-        // 
-        /*
-        SNnInternalVariable spExternalOut = spOutVar;
-        if( spExternalOut && spExternalOut->getVariableType() == ENnVariableType::EVState ) {
-            s_pRunCtx->mapReplacement[spOutVar.getPtr()] = spOut;
-        }else{
-            spOutVar = spOut;
-        }
-        */
         spOutVar = spOut;
         return sCtx.success();
     }
@@ -136,24 +111,6 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
     if( !spOutVar ) {
         return sCtx.error("网络单元求解结果无效");
     }
-
-    //
-    // 添加步骤，备份状态值
-    //
-    /*
-    map<INnVariable*, SNnVariable>::iterator it = runCtx.mapReplacement.begin();
-    while(it != runCtx.mapReplacement.end()) {
-        SNnVariable spState =it->first;
-        SNnVariable spSrc = it->second;
-
-        PSolveContext::PSolveOperator storeStateParameter;
-        storeStateParameter.nInVars = 1;
-        storeStateParameter.pInVarIndexs[0] = s_pRunCtx->registerVar(spSrc, false);
-        storeStateParameter.iOutVar = s_pRunCtx->registerVar(spState, false);
-        CStoreStateOperator::createOperator(storeStateParameter.spOperator);
-        pCtx->arrOperators.push_back(storeStateParameter);
-        it++;
-    }*/
 
     pCtx->iInVar = runCtx.registerVar(spInput,false);
     pCtx->iOutVar = runCtx.registerVar(spOutVar,false);

@@ -83,7 +83,7 @@ int CNnNetwork::initNetwork() {
         solveParameter.nInVar = spOp.nInVars;
         solveParameter.iOutVarIndex = spOp.iOutVar;
         for(int i=0; i<spOp.nInVars; i++) {
-            solveParameter.pInVarIndex[i] = spOp.pInVarIndexs[i];
+            solveParameter.pInVarIndex[i] = spOp.pInVars[i];
         }
         solveParameter.pOperator = spOp.spOperator;
         arrSolvers.push_back(solveParameter);

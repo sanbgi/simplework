@@ -14,7 +14,7 @@ struct PSolveContext {
         // 输入变量数以及对应的下标
         //
         int nInVars;
-        int pInVarIndexs[4];
+        int pInVars[4];
 
         //
         // 输出变量下标
@@ -28,8 +28,6 @@ struct PSolveContext {
     };
     int iInVar;
     int iOutVar;
-    //SNnInternalVariable spInVar;
-    //SNnInternalVariable spOutVar;
     vector<SNnInternalVariable> arrVars;
     vector<PSolveOperator> arrOperators;
 };

@@ -145,7 +145,7 @@ int CNnLayerNetwork::initNetwork() {
             solveParameter.nInVar = spOp.nInVars;
             solveParameter.iOutVar = spOp.iOutVar;
             for(int i=0; i<spOp.nInVars; i++) {
-                solveParameter.pInVarIndex[i] = spOp.pInVarIndexs[i];
+                solveParameter.pInVarIndex[i] = spOp.pInVars[i];
             }
             solveParameter.pOperator = spOp.spOperator;
             arrSolvers.push_back(solveParameter);
