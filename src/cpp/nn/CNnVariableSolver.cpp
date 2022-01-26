@@ -41,39 +41,7 @@ int CNnVariableSolver::solveOp(const char* szOp, int nInVars, const SNnVariable 
     return CNnOperator::solveOp(szOp, nInVars, pInVars, spOutVar);
 }
 
-int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    if(s_pRunCtx) {
-        SNnVariable spOut;
-        if( spOp->createOutVar(spOut) != sCtx.success() ) {
-            return sCtx.error("无法获取计算返回值");
-        }
-
-        PSolveContext* pCtx = s_pRunCtx->pSolveCtx;
-        PSolveContext::PSolveOperator solveParameter;
-        solveParameter.nInVars = nInVars;
-        for( int i=0; i<nInVars; i++) {
-            solveParameter.pInVars[i] = s_pRunCtx->registerVar(pInVars[i]);
-        }
-
-        //
-        // 如果有输出对象，则注册输出对象
-        //
-        if(spOut) {
-            solveParameter.iOutVar = s_pRunCtx->registerVar(spOut);
-        }else{
-            solveParameter.iOutVar = -1;
-        }
-        solveParameter.spOperator = spOp;
-        pCtx->arrOperators.push_back(solveParameter);
-
-        spOutVar = spOut;
-        return sCtx.success();
-    }
-
-    return spOp->createOutVar(spOutVar);
-}
-
-int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spSolvedOut, SNnVariable& spReturnOut) {
+int CNnVariableSolver::registerSolvedOperator(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
     if(s_pRunCtx) {
         PSolveContext* pCtx = s_pRunCtx->pSolveCtx;
         PSolveContext::PSolveOperator solveParameter;
@@ -85,16 +53,14 @@ int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, con
         //
         // 如果有输出对象，则注册输出对象
         //
-        if(spSolvedOut) {
-            solveParameter.iOutVar = s_pRunCtx->registerVar(spSolvedOut);
+        if(spOutVar) {
+            solveParameter.iOutVar = s_pRunCtx->registerVar(spOutVar);
         }else{
             solveParameter.iOutVar = -1;
         }
         solveParameter.spOperator = spOp;
         pCtx->arrOperators.push_back(solveParameter);
     }
-
-    spReturnOut = spSolvedOut;
     return sCtx.success();
 }
 

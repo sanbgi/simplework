@@ -24,11 +24,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnOperator", 211202)
 
         //
-        // 获得计算输出变量
-        //
-        virtual int createOutVar(SNnVariable& spOutVar) = 0;
-
-        //
         // 解算
         //
         virtual int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) = 0;

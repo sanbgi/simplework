@@ -18,14 +18,6 @@ public:
     static int solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
     static int solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
     static int solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
-    //static int createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp);
-
-public:
-    int createOutVar(SNnVariable& spOutVar);
-
-public:
-    int initOperator(int nInVars, const SNnVariable pInVars[]);
-    int initOutVar(const SDimension& spDimension);
 
 public:
     int solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);

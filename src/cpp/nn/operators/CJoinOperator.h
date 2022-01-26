@@ -70,12 +70,6 @@ public:
             return sCtx.error("连接只适用于连接两个向量");
         }
 
-        CPointer<CJoinOperator> spOut;
-        CObject::createObject(spOut);
-        if( int retcode = spOut->initOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-
         int size1 = *spDim1.data();
         int size2 = *spDim2.data();
         int size = size1+size2;

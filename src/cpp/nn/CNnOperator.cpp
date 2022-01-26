@@ -44,44 +44,40 @@ int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVar
             return sCtx.error("创建计算器失败");
         }
 
-        SNnVariable spSolvedOut;
-        if( spOperator->solve(nInVars, pInVars, spSolvedOut) != sCtx.success() ) {
+
+        if( spOperator->solve(nInVars, pInVars, spOutOp) != sCtx.success() ) {
             return sCtx.error("计算错误");
         }
 
-        return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spSolvedOut, spOutOp);
+        return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutOp);
     }
     return sCtx.error();
 }
 
 int CNnOperator::solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     SNnOperator spOperator;
-    if( CConvOperator::createOperator(szPadding, nInVars,pInVars, spOperator) != sCtx.success() ) {
+    if( CConvOperator::createOperator(szPadding, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
-    return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
+
+    if( spOperator->solve(nInVars, pInVars, spOutOp) != sCtx.success() ) {
+        return sCtx.error("计算错误");
+    }
+
+    return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutOp);
 }
 
 int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     SNnOperator spOperator;
-    if( CPoolOperator::createOperator(szPadding, nWidth, nHeight, nStride, nInVars, pInVars, spOperator) != sCtx.success() ) {
+    if( CPoolOperator::createOperator(szPadding, nWidth, nHeight, nStride, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
-    return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
-}
 
-int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {
-    if(nInVars > 3) {
-        return sCtx.error("目前神经网络的计算输入参数，最大不能超过4个");
+    if( spOperator->solve(nInVars, pInVars, spOutOp) != sCtx.success() ) {
+        return sCtx.error("计算错误");
     }
 
-    for(int i=0; i<nInVars; i++) {
-        SNnInternalVariable spInternalVar = pInVars[i];
-        if( !spInternalVar ) {
-            return sCtx.error("不认识的参数类型");
-        }
-    }
-    return sCtx.success();
+    return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutOp);
 }
 
 int CNnOperator::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
@@ -111,19 +107,6 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
 
 int CNnOperator::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
     return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
-}
-
-int CNnOperator::createOutVar(SNnVariable& spOutVar) {
-    if(m_spDimension) {
-        return CNnOperatorVariable::createOperatorVariable(m_spDimension, spOutVar);
-    }
-    //如果没有输出维度信息，则表示没有输出信息
-    return sCtx.success();
-}
-
-int CNnOperator::initOutVar(const SDimension& spDimension) {
-    m_spDimension = spDimension;
-    return sCtx.success();
 }
 
 template<typename Q> int CNnOperator::createStaticOperator(SNnOperator& spOperator) {

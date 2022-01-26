@@ -66,12 +66,6 @@ public:
     }
 
     int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-       CPointer<CProductOperator> spOut;
-        CObject::createObject(spOut);
-        if( int retcode = spOut->initOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-
         SDimension spDim1 = pInVars[0].dimension();
         SDimension spDim2 = pInVars[1].dimension();
         if(spDim2.size() != 2 ) {

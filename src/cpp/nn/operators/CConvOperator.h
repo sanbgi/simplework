@@ -57,6 +57,9 @@ static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nCon
 
 
 class CConvOperator : public CNnOperator {
+private:
+    string m_strPadding;
+
 public:
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
@@ -73,26 +76,16 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        return sCtx.error();
-    }
-
-    static int createOperator( const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
+    static int createOperator(const char* szPadding, SNnOperator& spOperator) {
         CPointer<CConvOperator> spOut;
         CObject::createObject(spOut);
-        if( int retcode = spOut->initConvVariable(szPadding, nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-        spOutVar.setPtr(spOut.getPtr());
+        if(szPadding != nullptr)
+            spOut->m_strPadding = szPadding;
+        spOperator.setPtr(spOut.getPtr());
         return sCtx.success();
     }
 
-    int initConvVariable(const char* szPadding, int nInVars, const SNnVariable pInVars[]) {
-
-        if( int retcode = initOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 3) {
             return sCtx.error("卷积操作需要三个输入数据");
         }
@@ -149,7 +142,7 @@ public:
         //      same -- 步长为1时，保持输出尺寸与输入尺寸一致
         //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
         //
-        if( szPadding && string(szPadding) == "same" ) {
+        if( m_strPadding == "same" ) {
             m_sizeOut = {
                 nBatchs,
                 (m_sizeIn.height - 1) / m_nStrideHeight + 1,
@@ -200,13 +193,8 @@ public:
         };
 
         int pOutDimSizes[3] = { m_sizeOut.height, m_sizeOut.width, m_sizeOut.layers };
-        if( SDimension::createDimension(m_spDimension, 3, pOutDimSizes) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度向量失败");
-        }
-
-        return sCtx.success();
+        return createVariable(SDimension(3, pOutDimSizes), spVarOut);
     }
-
 
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {

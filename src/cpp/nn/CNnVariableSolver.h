@@ -46,8 +46,7 @@ public:
 
 public:
     static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PSolveContext* pCtx);
-    static int returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spReturnOut);
-    static int returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spSolvedOut, SNnVariable& spReturnOut);
+    static int registerSolvedOperator(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

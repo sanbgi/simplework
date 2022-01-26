@@ -205,33 +205,9 @@ public:
     }
 
     int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        return sCtx.error();
-    }
-
-    static int createOperator( const char* szPadding, int nPoolWidth, int nPoolHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
-        CPointer<CPoolOperator> spOut;
-        CObject::createObject(spOut);
-        if( int retcode = spOut->initPoolVariable(szPadding, nPoolWidth, nPoolHeight, nStride, nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-        spOutVar.setPtr(spOut.getPtr());
-        return sCtx.success();
-    }
-
-
-    int initPoolVariable( const char* szPadding, int nPoolWidth, int nPoolHeight, int nStride, int nInVars, const SNnVariable pInVars[]) {
-
-        if( int retcode = initOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-
         if(nInVars != 1) {
             return sCtx.error("卷积操作需要1个输入数据");
         }
-
-        m_nPoolHeight = nPoolHeight;
-        m_nPoolWidth = nPoolWidth;
-        m_nStrideHeight = m_nStrideWidth = nStride;
 
         SDimension spDim1 = pInVars[0].dimension();
         if(spDim1.dataSize() < 2) {
@@ -269,14 +245,24 @@ public:
         m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;
         pOutDimSizes[0] = m_nOutHeight;
         pOutDimSizes[1] = m_nOutWidth;
-        if( SDimension::createDimension(m_spDimension, nDims, pOutDimSizes) != sCtx.success() ) {
-            return sCtx.error("创建输出张量的维度张量失败");
-        }
+        return createVariable(SDimension(nDims, pOutDimSizes),spVarOut);
+    }
 
+    static int createOperator( const char* szPadding, int nPoolWidth, int nPoolHeight, int nStride, SNnOperator& spOutVar) {
+        CPointer<CPoolOperator> spOut;
+        CObject::createObject(spOut);
+        spOut->m_nPoolWidth = nPoolWidth;
+        spOut->m_nPoolHeight = nPoolHeight;
+        spOut->m_nStrideWidth = spOut->m_nStrideHeight = nStride;
+        if(szPadding!=nullptr) {
+            spOut->m_strPadding = szPadding;
+        }
+        spOutVar.setPtr(spOut.getPtr());
         return sCtx.success();
     }
 
 private:
+    string m_strPadding;
     int m_nPoolWidth;
     int m_nPoolHeight;
     int m_nStrideWidth;
