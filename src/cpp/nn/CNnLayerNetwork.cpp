@@ -122,7 +122,7 @@ int CNnLayerNetwork::initNetwork() {
         //
 
         vector<PSolveVar>& arrVars = layerCtx.arrVars;
-        vector<SNnInternalVariable>::iterator itVar = solveCtx.arrVars.begin();
+        vector<SNnVariable>::iterator itVar = solveCtx.arrVars.begin();
         while(itVar != solveCtx.arrVars.end()) {
             SNnInternalVariable spToSolveVar = *itVar;
             if(!spToSolveVar) {

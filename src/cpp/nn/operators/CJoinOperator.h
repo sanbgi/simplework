@@ -58,7 +58,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
 
         if(nInVars != 2) {
             return sCtx.error("连接需要两个参数");
@@ -79,12 +79,7 @@ public:
         int size1 = *spDim1.data();
         int size2 = *spDim2.data();
         int size = size1+size2;
-        if( SDimension::createDimension(spOut->m_spDimension,1,&size) != sCtx.success() ) {
-            return sCtx.error();
-        }
-
-        spOutVar.setPtr(spOut.getPtr());
-        return sCtx.success();
+        return createVariable(SDimension(1,&size), spVarOut);
     }
 };
 

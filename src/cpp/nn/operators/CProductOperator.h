@@ -65,8 +65,8 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
-        CPointer<CProductOperator> spOut;
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+       CPointer<CProductOperator> spOut;
         CObject::createObject(spOut);
         if( int retcode = spOut->initOperator(nInVars, pInVars) != sCtx.success() ) {
             return retcode;
@@ -84,11 +84,7 @@ public:
             return sCtx.error("向量和矩阵点乘的尺寸不匹配");
         }
 
-        if( SDimension::createDimension(spOut->m_spDimension, 1, pDimSize2) != sCtx.success()) {
-            return sCtx.error("创建输出张量的维度向量失败");
-        }
-        spOutVar.setPtr(spOut.getPtr());
-        return sCtx.success();
+        return createVariable(SDimension(1,pDimSize2), spVarOut);
     }
 };
 

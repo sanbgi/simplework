@@ -73,6 +73,10 @@ public:
         return sCtx.error("类型错误");
     }
 
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+        return sCtx.error();
+    }
+
     static int createOperator( const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
         CPointer<CConvOperator> spOut;
         CObject::createObject(spOut);

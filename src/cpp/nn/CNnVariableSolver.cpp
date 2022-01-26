@@ -73,6 +73,31 @@ int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, con
     return spOp->createOutVar(spOutVar);
 }
 
+int CNnVariableSolver::returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spSolvedOut, SNnVariable& spReturnOut) {
+    if(s_pRunCtx) {
+        PSolveContext* pCtx = s_pRunCtx->pSolveCtx;
+        PSolveContext::PSolveOperator solveParameter;
+        solveParameter.nInVars = nInVars;
+        for( int i=0; i<nInVars; i++) {
+            solveParameter.pInVars[i] = s_pRunCtx->registerVar(pInVars[i]);
+        }
+
+        //
+        // 如果有输出对象，则注册输出对象
+        //
+        if(spSolvedOut) {
+            solveParameter.iOutVar = s_pRunCtx->registerVar(spSolvedOut);
+        }else{
+            solveParameter.iOutVar = -1;
+        }
+        solveParameter.spOperator = spOp;
+        pCtx->arrOperators.push_back(solveParameter);
+    }
+
+    spReturnOut = spSolvedOut;
+    return sCtx.success();
+}
+
 //
 // 求解单元函数，虽然做了避免重入处理，但仍然不可以多线程操作
 //
@@ -107,13 +132,8 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
         return sCtx.error("网络单元求解失败");
     }
 
-    SNnInternalVariable spOutVar = spOutVariable;
-    if( !spOutVar ) {
-        return sCtx.error("网络单元求解结果无效");
-    }
-
     pCtx->iInVar = runCtx.registerVar(spInput,false);
-    pCtx->iOutVar = runCtx.registerVar(spOutVar,false);
+    pCtx->iOutVar = runCtx.registerVar(spOutVariable,false);
     return sCtx.success();
 }
 

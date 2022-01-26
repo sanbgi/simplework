@@ -18,18 +18,22 @@ public:
     static int solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
     static int solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
     static int solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp);
-    static int createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp);
+    //static int createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp);
 
 public:
-    virtual int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;
     int createOutVar(SNnVariable& spOutVar);
 
 public:
     int initOperator(int nInVars, const SNnVariable pInVars[]);
-    int initOneEleWiseOperator(int nInVars, const SNnVariable pInVars[]);
-    int initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]);
     int initOutVar(const SDimension& spDimension);
 
+public:
+    int solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    int solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    int createVariable(const SDimension& spDimension, SNnVariable& spOutVar);
+
+public:
+    template<typename T> static int createStaticOperator(SNnOperator& spOperator);
 
 protected:
     SDimension m_spDimension;

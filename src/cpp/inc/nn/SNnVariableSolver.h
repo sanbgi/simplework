@@ -24,7 +24,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariableSolver, "sw.nn.NnVariableSolver")
         virtual int createStateVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
 
         //
-        // 创建运算结果变量
+        // 运算求解
         //
         virtual int solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spVar) = 0;
 

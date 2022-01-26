@@ -20,30 +20,36 @@ static SCtx sCtx("CNnOperator");
 #include "operators/CPoolOperator.h"
 #include "operators/CStoreStateOperator.h"
 
-typedef int (*FCreateOperator)(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar);
+typedef int (*FCreateOperator)(SNnOperator& spOutVar);
 
 static map<string, FCreateOperator> s_opFactories = {
-    { "storeState", CStoreStateOperator::createOperator },
-    { "plus", CPlusOperator::createOperator },
-    { "minus", CMinusOperator::createOperator },
-    { "multiply", CMultiplyOperator::createOperator },
-    { "divide", CDivideOperator::createOperator },
-    { "join", CJoinOperator::createOperator },
-    { "product", CProductOperator::createOperator },
-    { "sigmod", CSigmodOperator::createOperator },
-    { "tanh", CTanhOperator::createOperator },
-    { "softmax", CSoftmaxOperator::createOperator },
-    { "relu", CReLUOperator::createOperator },
+    { "storeState", CNnOperator::createStaticOperator<CStoreStateOperator> },
+    { "plus", CNnOperator::createStaticOperator<CPlusOperator> },
+    { "minus", CNnOperator::createStaticOperator<CMinusOperator> },
+    { "multiply", CNnOperator::createStaticOperator<CMultiplyOperator> },
+    { "divide", CNnOperator::createStaticOperator<CDivideOperator> },
+    { "join", CNnOperator::createStaticOperator<CJoinOperator> },
+    { "product", CNnOperator::createStaticOperator<CProductOperator> },
+    { "sigmod", CNnOperator::createStaticOperator<CSigmodOperator> },
+    { "tanh", CNnOperator::createStaticOperator<CTanhOperator> },
+    { "softmax", CNnOperator::createStaticOperator<CSoftmaxOperator> },
+    { "relu", CNnOperator::createStaticOperator<CReLUOperator> },
 };
 
 int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
     map<string, FCreateOperator>::iterator it = s_opFactories.find(szOp);
     if(it != s_opFactories.end()) {
         SNnOperator spOperator;
-        if( it->second(nInVars,pInVars, spOperator) != sCtx.success() ) {
+        if( it->second(spOperator) != sCtx.success() ) {
+            return sCtx.error("创建计算器失败");
+        }
+
+        SNnVariable spSolvedOut;
+        if( spOperator->solve(nInVars, pInVars, spSolvedOut) != sCtx.success() ) {
             return sCtx.error("计算错误");
         }
-        return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
+
+        return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spSolvedOut, spOutOp);
     }
     return sCtx.error();
 }
@@ -64,14 +70,6 @@ int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int n
     return CNnVariableSolver::returnSolvedVar(spOperator, nInVars, pInVars, spOutOp);
 }
 
-int CNnOperator::createOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutOp) {
-    map<string, FCreateOperator>::iterator it = s_opFactories.find(szOp);
-    if(it != s_opFactories.end()) {
-        return it->second(nInVars, pInVars, spOutOp) != sCtx.success();
-    }
-    return sCtx.error();
-}
-
 int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {
     if(nInVars > 3) {
         return sCtx.error("目前神经网络的计算输入参数，最大不能超过4个");
@@ -86,20 +84,21 @@ int CNnOperator::initOperator(int nInVars, const SNnVariable pInVars[]) {
     return sCtx.success();
 }
 
-int CNnOperator::initOneEleWiseOperator(int nInVars, const SNnVariable pInVars[]) {
+int CNnOperator::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
-        return sCtx.error("参数个数不等于一");
+        return sCtx.error("参数个数不等于二");
     }
 
-    m_spDimension = pInVars[0].dimension();
-    return initOperator(nInVars, pInVars);
+    SDimension spDimension = pInVars[0].dimension();
+    return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
 }
 
-int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]) {
+int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
     if(nInVars != 2) {
         return sCtx.error("参数个数不等于二");
     }
 
+    SDimension spInDimension = pInVars[0].dimension();
     STensor spDimension, spDimension2;
     pInVars[0].dimension()->getVector(spDimension);
     pInVars[1].dimension()->getVector(spDimension2);
@@ -107,8 +106,11 @@ int CNnOperator::initTwoEleWiseOperator(int nInVars, const SNnVariable pInVars[]
         return sCtx.error("相加的两个元素维度不一致");
     }
 
-    m_spDimension = spDimension;
-    return initOperator(nInVars, pInVars);
+    return CNnOperatorVariable::createOperatorVariable(spInDimension, spOutVar);
+}
+
+int CNnOperator::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
+    return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
 }
 
 int CNnOperator::createOutVar(SNnVariable& spOutVar) {
@@ -121,5 +123,11 @@ int CNnOperator::createOutVar(SNnVariable& spOutVar) {
 
 int CNnOperator::initOutVar(const SDimension& spDimension) {
     m_spDimension = spDimension;
+    return sCtx.success();
+}
+
+template<typename Q> int CNnOperator::createStaticOperator(SNnOperator& spOperator) {
+    static SNnOperator s_operator = CObject::createObject<Q>();
+    spOperator = s_operator;
     return sCtx.success();
 }

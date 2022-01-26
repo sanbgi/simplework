@@ -29,7 +29,7 @@ struct PSolveContext {
     };
     int iInVar;
     int iOutVar;
-    vector<SNnInternalVariable> arrVars;
+    vector<SNnVariable> arrVars;
     vector<PSolveOperator> arrOperators;
 };
 
@@ -47,6 +47,7 @@ public:
 public:
     static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PSolveContext* pCtx);
     static int returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spReturnOut);
+    static int returnSolvedVar(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spSolvedOut, SNnVariable& spReturnOut);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

@@ -29,6 +29,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
         virtual int createOutVar(SNnVariable& spOutVar) = 0;
 
         //
+        // 解算
+        //
+        virtual int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) = 0;
+
+        //
         // 获取计算函数
         //
         virtual int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;

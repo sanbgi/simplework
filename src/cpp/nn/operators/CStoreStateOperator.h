@@ -52,8 +52,8 @@ public:
         }
         return sCtx.error("类型错误");
     }
-
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
+    
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 2) {
             return sCtx.error("存储状态参数必须为两个，一个为状态变量，一个为计算变量");
         }
@@ -63,9 +63,6 @@ public:
             return sCtx.error("存储状态参数必须为两个，一个为状态变量，一个为计算变量");
         }
 
-        CPointer<CStoreStateOperator> spOut;
-        CObject::createObject(spOut);
-        spOutVar.setPtr(spOut.getPtr());
         return sCtx.success();
     }
 };

@@ -57,7 +57,7 @@ int CNnNetwork::initNetwork() {
     //
     int iInputVarIndex = -1;
     vector<PSolveVar> arrVars;
-    vector<SNnInternalVariable>::iterator itVar = solveCtx.arrVars.begin();
+    vector<SNnVariable>::iterator itVar = solveCtx.arrVars.begin();
     while(itVar != solveCtx.arrVars.end()) {
         SNnInternalVariable spToSolveVar = *itVar;
         if(!spToSolveVar) {

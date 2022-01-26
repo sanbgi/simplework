@@ -204,6 +204,10 @@ public:
         return sCtx.error("类型错误");
     }
 
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+        return sCtx.error();
+    }
+
     static int createOperator( const char* szPadding, int nPoolWidth, int nPoolHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
         CPointer<CPoolOperator> spOut;
         CObject::createObject(spOut);

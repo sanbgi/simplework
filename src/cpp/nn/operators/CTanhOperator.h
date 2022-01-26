@@ -7,44 +7,33 @@ class CTanhOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CTanhOperator* pThis = (CTanhOperator*)pParameters;
-        pThis->m_pActivator->activate(inVars[0].size, inVars[0].data, outVar.data);
+        CActivator* pThis = (CActivator*)pParameters;
+        pThis->activate(inVars[0].size, inVars[0].data, outVar.data);
     }
 
     template<typename Q>
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CTanhOperator* pThis = (CTanhOperator*)pParameters;
-        pThis->m_pActivator->deactivate(inVars[0].size, outVar.data, outVar.devia, inVars[0].devia);
+        CActivator* pThis = (CActivator*)pParameters;
+        pThis->deactivate(inVars[0].size, outVar.data, outVar.devia, inVars[0].devia);
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
-        m_pActivator = CActivator::getActivation(idType, "tanh");
+        solveParameter.pParameter = CActivator::getActivation(idType, "tanh");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameter = this;
             return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameter = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
-        CPointer<CTanhOperator> spOut;
-        CObject::createObject(spOut);
-        if( int retcode = spOut->initOneEleWiseOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-        spOutVar.setPtr(spOut.getPtr());
-        return sCtx.success();
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+        return solveOneEleWise(nInVars, pInVars, spVarOut);
     }
-
-private:
-    CActivator* m_pActivator;
 };
 
 #endif//__SimpleWork_NN_Operators_CTanhOperator_h__

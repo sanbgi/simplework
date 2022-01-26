@@ -45,14 +45,8 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(int nInVars, const SNnVariable pInVars[], SNnOperator& spOutVar) {
-        CPointer<CMinusOperator> spOut;
-        CObject::createObject(spOut);
-        if( int retcode = spOut->initTwoEleWiseOperator(nInVars, pInVars) != sCtx.success() ) {
-            return retcode;
-        }
-        spOutVar.setPtr(spOut.getPtr());
-        return sCtx.success();
+    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+        return solveTwoEleWise(nInVars, pInVars, spVarOut);
     }
 };
 
