@@ -26,9 +26,6 @@ public:
 
 public:
     template<typename T> static int createStaticOperator(SNnOperator& spOperator);
-
-protected:
-    SDimension m_spDimension;
 };
 
 #endif//__SimpleWork_NN_COperator_H__
