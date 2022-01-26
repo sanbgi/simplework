@@ -3,7 +3,6 @@
 
 #include "nn.h"
 #include "CNnVariable.h"
-#include "CNnOperator.h"
 
 using namespace sw;
 

@@ -2,6 +2,7 @@
 #define __SimpleWork_NN_CNnVariableSolver_H__
 
 #include "nn.h"
+#include "SNnOperator.h"
 #include <vector>
 
 using namespace sw;

@@ -119,10 +119,6 @@ int CNnOperator::createOutVar(SNnVariable& spOutVar) {
     return sCtx.success();
 }
 
-CNnOperator* CNnOperator::getOpPtr() {
-    return this;
-}
-
 int CNnOperator::initOutVar(const SDimension& spDimension) {
     m_spDimension = spDimension;
     return sCtx.success();

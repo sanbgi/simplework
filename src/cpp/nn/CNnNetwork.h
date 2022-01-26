@@ -11,7 +11,6 @@ using namespace sw;
 using namespace std;
 
 
-class CNnOperator;
 class CNnVariable;
 class PSolveContext;
 class CNnNetwork : public CObject, public INnNetwork{

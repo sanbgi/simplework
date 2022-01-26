@@ -1,8 +1,8 @@
 #include "CNnLayerNetwork.h"
 #include "CNnInputVariable.h"
-#include "CNnOperator.h"
 #include "CNnOperatorVariable.h"
 #include "CNnVariableSolver.h"
+#include "SNnOperator.h"
 
 #include <map>
 #include <iostream>
