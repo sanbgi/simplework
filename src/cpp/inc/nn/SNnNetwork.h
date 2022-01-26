@@ -36,13 +36,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    /*
+
     static SNnNetwork createDense(int nCells, double dDropoutRate = 0, const char* szActivator = nullptr) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createDense(nCells,dDropoutRate,szActivator,nn);
         return nn;
     }
-
+    
+    static SNnNetwork createRnn(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
+        SNnNetwork nn;
+        SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
+        return nn;
+    }
+    /*
     static SNnNetwork createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createPool(nWidth, nHeight, nStrideWidth, nStrideHeight, nn);
@@ -79,11 +85,6 @@ public:
         return nn;
     }
 
-    static SNnNetwork createRnn(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
-        return nn;
-    }
 
     static SNnNetwork createGru(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
         SNnNetwork nn;

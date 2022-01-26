@@ -10,9 +10,12 @@
 #include "CConvUnit.h"
 #include "CPoolUnit.h"
 #include "CRnnUnit.h"
+#include "CGruUnit.h"
 #include "CSequenceUnit.h"
 #include "CNnLayer.h"
 #include "CNnLayerNetwork.h"
+#include "CRnnNetwork.h"
+#include "CDenseNetwork.h"
 
 using namespace sw;
 
@@ -23,10 +26,14 @@ class CNnFactory : public CObject, public INnFactory{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    /*
     int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
         return CDenseNetwork::createNetwork(nCells, dDropoutRate, szActivator, spNetwork);
     }
+    int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
+        return CRnnNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
+    }
+    /*
+
 
     int createConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, nStride, szPadding, szActivator, spNetwork);
@@ -45,9 +52,6 @@ public:
         return CGlobalPoolNetwork::createNetwork(szMode, szActivitor, spNetwork);
     }
 
-    int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
-        return CRnnNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
-    }
 
     int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
         return CGruNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
@@ -100,6 +104,9 @@ public:
     }
     int createRnnUnit(int nCells, const char* szActivator, SNnUnit& spUnit) {
         return CRnnUnit::createUnit(nCells, szActivator, spUnit);
+    }
+    int createGruUnit(int nCells, SNnUnit& spUnit) {
+        return CGruUnit::createUnit(nCells, spUnit);
     }
     int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) {
         return CSequenceUnit::createUnit(nUnits, pUnits, spUnit);

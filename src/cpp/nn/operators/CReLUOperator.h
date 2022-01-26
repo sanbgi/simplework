@@ -7,14 +7,16 @@ class CReLUOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CActivator* pThis = (CActivator*)pParameters;
-        pThis->activate(inVars[0].size, inVars[0].data, outVar.data);
+        VERIFY(nInVars==1)
+        VERIFY(inVars[0].size==outVar.size)
+        ((CActivator*)pParameters)->activate(inVars[0].size, inVars[0].data, outVar.data);
     }
 
     template<typename Q>
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CActivator* pThis = (CActivator*)pParameters;
-        pThis->deactivate(inVars[0].size, outVar.data, outVar.devia, inVars[0].devia);
+        VERIFY(nInVars==1)
+        VERIFY(inVars[0].size==outVar.size)
+        ((CActivator*)pParameters)->deactivate(inVars[0].size, outVar.data, outVar.devia, inVars[0].devia);
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {

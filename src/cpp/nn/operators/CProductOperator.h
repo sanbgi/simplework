@@ -7,6 +7,8 @@ class CProductOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+        VERIFY(nInVars==2)
+        VERIFY(inVars[0].size * outVar.size == inVars[1].size)
         Q* pV1 = (Q*)inVars[0].data;
         Q* pV2 = (Q*)inVars[1].data;
         Q* pVO = (Q*)outVar.data;
@@ -28,6 +30,8 @@ public:
 
     template<typename Q>
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+        VERIFY(nInVars==2)
+        VERIFY(inVars[0].size * outVar.size == inVars[1].size)
         Q* pInput1 = (Q*)inVars[0].data;
         Q* pD1 = (Q*)inVars[0].devia;
         Q* pWeights = (Q*)inVars[1].data;
@@ -48,6 +52,7 @@ public:
             }
             pDeviaOut++;
         }
+        VERIFY(pWeightDeviations - (Q*)inVars[1].devia == inVars[1].size )
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {

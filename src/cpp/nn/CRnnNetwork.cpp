@@ -198,7 +198,7 @@ template<typename Q> int CRnnNetwork::evalT(const STensor& spBatchIn, STensor& s
     int nOutputSize = m_nCells*sizeof(Q);
     int nInputCells = m_nInputCells;
     int nJoinCells = nInputCells + nCells;
-    int nWeights = nInputCells*(nInputCells*nCells);
+    int nWeights = nCells*(nInputCells+nCells);
     bool bKeepGroup = m_bKeepGroup;
 
     //
@@ -449,6 +449,7 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
         it.pIn -= nInputCells;
         it.pInDeviation -= nInputCells;
         it.pOut -= nCells;
+        //it.pOutDeviation -= nCells;
     }
 
     m_spOptimizer->updateDeviation(nTensor);

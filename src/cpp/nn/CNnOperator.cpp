@@ -36,7 +36,7 @@ static map<string, FCreateOperator> s_opFactories = {
     { "relu", CNnOperator::createStaticOperator<CReLUOperator> },
 };
 
-int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     map<string, FCreateOperator>::iterator it = s_opFactories.find(szOp);
     if(it != s_opFactories.end()) {
         SNnOperator spOperator;
@@ -44,40 +44,39 @@ int CNnOperator::solveOp(const char* szOp, int nInVars, const SNnVariable pInVar
             return sCtx.error("创建计算器失败");
         }
 
-
-        if( spOperator->solve(nInVars, pInVars, spOutOp) != sCtx.success() ) {
+        if( spOperator->solve(nInVars, pInVars, spOutVar) != sCtx.success() ) {
             return sCtx.error("计算错误");
         }
 
-        return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutOp);
+        return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutVar);
     }
     return sCtx.error();
 }
 
-int CNnOperator::solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+int CNnOperator::solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     SNnOperator spOperator;
     if( CConvOperator::createOperator(szPadding, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
 
-    if( spOperator->solve(nInVars, pInVars, spOutOp) != sCtx.success() ) {
+    if( spOperator->solve(nInVars, pInVars, spOutVar) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
 
-    return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutOp);
+    return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutVar);
 }
 
-int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutOp) {
+int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     SNnOperator spOperator;
     if( CPoolOperator::createOperator(szPadding, nWidth, nHeight, nStride, spOperator) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
 
-    if( spOperator->solve(nInVars, pInVars, spOutOp) != sCtx.success() ) {
+    if( spOperator->solve(nInVars, pInVars, spOutVar) != sCtx.success() ) {
         return sCtx.error("计算错误");
     }
 
-    return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutOp);
+    return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutVar);
 }
 
 int CNnOperator::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {

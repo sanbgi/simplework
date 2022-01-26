@@ -7,6 +7,9 @@ class CJoinOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+        VERIFY(nInVars==2)
+        VERIFY(inVars[0].size+inVars[1].size==outVar.size)
+
         Q* pIn1 = (Q*)inVars[0].data;
         Q* pIn1End = pIn1 + inVars[0].size;
 
@@ -22,10 +25,14 @@ public:
             *pO = *pIn2;
             pO++, pIn2++;
         }
+        VERIFY(pO-(Q*)outVar.data==outVar.size)
     }
 
     template<typename Q>
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+        VERIFY(nInVars==2)
+        VERIFY(inVars[0].size+inVars[1].size==outVar.size)
+
         Q* pDevia1 = (Q*)inVars[0].devia;
         Q* pDevia1End = pDevia1 + inVars[0].size;
 
@@ -41,6 +48,7 @@ public:
             *pDevia2 += *pDeviaO;
             pDevia2++, pDeviaO++;
         }
+        VERIFY(pDeviaO-(Q*)outVar.devia==outVar.size)
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
@@ -59,7 +67,6 @@ public:
     }
 
     int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-
         if(nInVars != 2) {
             return sCtx.error("连接需要两个参数");
         }
@@ -72,7 +79,7 @@ public:
 
         int size1 = *spDim1.data();
         int size2 = *spDim2.data();
-        int size = size1+size2;
+        int size = size1 + size2;
         return createVariable(SDimension(1,&size), spVarOut);
     }
 };

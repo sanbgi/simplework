@@ -13,6 +13,15 @@ class SNnUnit;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnFactory", 211223)
+        //
+        // 创建循环神经网络
+        //
+        virtual int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
+        //
+        //  创建直连神经网络
+        //
+        virtual int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) = 0;
+   
         /*
         //
         //  创建池化神经网络
@@ -23,10 +32,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         virtual int createGlobalPool(const char* szMode, const char* szActivitor, SNnNetwork& spNetwork) = 0;
         //
-        //  创建直连神经网络
-        //
-        virtual int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) = 0;
-        //
         //  创建旋转卷积神经网络，（卷积核每移动一步，会旋转一个角度）
         //
         virtual int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) = 0;
@@ -35,11 +40,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         virtual int createConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
 
-        //
-        // 创建循环神经网络
-        //
-        virtual int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
-    
+
         //
         // 创建循环神经网络
         //
@@ -93,6 +94,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         virtual int createConvUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPaddingMode, const char* szActivator, SNnUnit& spUnit) = 0;
         virtual int createPoolUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode, SNnUnit& spUnit) = 0;
         virtual int createRnnUnit(int nCells, const char* szActivator, SNnUnit& spUnit) = 0;
+        virtual int createGruUnit(int nCells, SNnUnit& spUnit) = 0;
         virtual int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) = 0;
 
         //

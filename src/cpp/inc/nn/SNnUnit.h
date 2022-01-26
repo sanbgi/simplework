@@ -42,6 +42,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnUnit, "sw.nn.NnUnit")
         SNnFactory::getFactory()->createRnnUnit(nCells, szActivator, spUnit);
         return spUnit;
     }
+    static SNnUnit createGruUnit(int nCells) {
+        SNnUnit spUnit;
+        SNnFactory::getFactory()->createGruUnit(nCells, spUnit);
+        return spUnit;
+    }
     static SNnUnit createSequenceUnit(int nUnits, const SNnUnit pUnits[]) {
         SNnUnit spUnit;
         SNnFactory::getFactory()->createSequenceUnit(nUnits, pUnits, spUnit);

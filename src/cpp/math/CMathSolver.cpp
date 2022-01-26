@@ -16,8 +16,9 @@ public:
     int add(int nSize, void* pDesc, void* pSrc) {
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
-        while(nSize>=0) {
+        while(nSize-->=0) {
             *pTarget += *pSource;
+            pTarget++, pSource++;
         }
         return sCtx.success();
     }
@@ -25,8 +26,9 @@ public:
     int del(int nSize, void* pDesc, void* pSrc){
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
-        while(nSize>=0) {
+        while(nSize-->=0) {
             *pTarget -= *pSource;
+            pTarget++, pSource++;
         }
         return sCtx.success();
     }
@@ -34,16 +36,18 @@ public:
     int copy(int nSize, void* pDesc, void* pSrc){
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
-        while(nSize>=0) {
+        while(nSize-->=0) {
             *pTarget = *pSource;
+            pTarget++, pSource++;
         }
         return sCtx.success();
     }
 
     int zero(int nSize, void* pDesc){
         Q* pTarget = (Q*)pDesc;
-        while(nSize>=0) {
+        while(nSize-->=0) {
             *pTarget = 0;
+            pTarget++;
         }
         return sCtx.success();
     }
@@ -129,7 +133,7 @@ public:
         Q* pD1 = (Q*)vIn.devia;
         Q* pWeights = (Q*)vWeights.data;
         Q* pWeightDeviations = (Q*)vWeights.devia;
-        Q* pDeviaOut = (Q*)vOut.data;
+        Q* pDeviaOut = (Q*)vOut.devia;
         Q* pDeviaOutEnd = pDeviaOut + vOut.size;
         Q* pInput1End = pInput1 + vIn.size;
         Q* pIn, *pInDeviation;

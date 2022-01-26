@@ -11,6 +11,8 @@ class CStoreStateOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+        VERIFY(nInVars==2)
+        VERIFY(inVars[0].size == inVars[1].size)
         Q* pIn1 = (Q*)inVars[0].data;
         Q* pIn1End = pIn1 + inVars[0].size;
         Q* pIn2 = (Q*)inVars[1].data;
@@ -22,6 +24,8 @@ public:
 
     template<typename Q>
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+        VERIFY(nInVars==2)
+        VERIFY(inVars[0].size == inVars[1].size)
         Q* pDevia1 = (Q*)inVars[0].devia;
         Q* pDevia1End = pDevia1 + inVars[0].size;
         Q* pDevia2 = (Q*)inVars[1].devia;
