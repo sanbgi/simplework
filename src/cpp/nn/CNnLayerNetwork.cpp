@@ -161,9 +161,6 @@ int CNnLayerNetwork::initNetwork() {
         vector<PSolveVar>::iterator it = arrVars.begin(); 
         for(;it != arrVars.end(); it++) {
             switch(it->type) {
-            case ENnVariableType::EVInput:
-                break;
-
             case ENnVariableType::EVState:
                 nStateSize += it->size;
                 break;
@@ -177,7 +174,6 @@ int CNnLayerNetwork::initNetwork() {
                 break;
             }
         }
-
 
         spDimension = solveCtx.arrVars[solveCtx.iOutVar].dimension();
         switch(eMode) {
@@ -362,6 +358,11 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 switch(pVars[i].type) {
                 case ENnVariableType::EVOperator:
                     pVars[i].data = pOpVarBuf;
+
+                    #ifdef _DEBUG
+                    pVars[i].devia = pVars[i].data;
+                    #endif//_DEBUG
+
                     pOpVarBuf += pVars[i].size * nBatchs;
                     break;
                 }
@@ -437,6 +438,26 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                     }
                 }
             }
+            #ifdef _DEBUG
+                for(int i=0; i<nVars; i++) {
+                    switch(pVars[i].type) {
+                    case ENnVariableType::EVInput:
+                        {
+
+                        }
+                        break;
+
+                    case ENnVariableType::EVOperator:
+                        if(pLayer->eMode == ENnLayerMode::EMODE_BATCH){
+                            VERIFY(pVars[i].data == pVars[i].devia);
+                        }else
+                        if(pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE) {
+                            VERIFY(((Q*)pVars[i].data - (Q*)pVars[i].devia) == (nBatchs-1)*pVars[i].size)
+                        }
+                        break;
+                    }
+                }
+            #endif//_DEBUG
 
             //
             // 如果是最后一层，则拷贝输出结果，注意：此时输出变量的指针指向一批次中的最后一次结果，
@@ -451,7 +472,11 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         pInData += m_nInputTensorSize;
         pOutData += m_nOutputTensorSize;
         pOpSolvedBuffer += m_nOpSize;
+        VERIFY(pOpVarBuf==pOpSolvedBuffer)
     }
+    VERIFY(pInData==pInDataEnd)
+    VERIFY(pOutData==(m_spBatchOut.data<Q>()+m_nOutputTensorSize*m_nBatchIns))
+    VERIFY((pOpSolvedBuffer-m_spOpSolveBuffer.data<Q>())==(m_nOpSize*m_nBatchIns))
 
     m_spBatchOut.updateVer();
     m_nBatchOutVer = m_spBatchOut.ver();
@@ -570,9 +595,11 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         }
         itPpLayer++;
     }
-    if(pItDevia - pDeviaBuffer != nDeviaBuffer || pItWeightDevia - pWeightDeviaBuffer != m_nWeightSize) {
-        return sCtx.error("内部异常");
-    }
+    #ifdef _DEBUG
+        if(pItDevia - pDeviaBuffer != nDeviaBuffer || pItWeightDevia - pWeightDeviaBuffer != m_nWeightSize) {
+            return sCtx.error("内部异常");
+        }
+    #endif//_DEBUG
 
     //
     // 准备计算参数
@@ -629,6 +656,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             }
             itPpLayer++;
         }
+        VERIFY(pOpVarBuf-pOpSolvedBuffer==m_nOpSize)
 
         //
         // 反向求解
@@ -676,7 +704,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 pInVar->devia = ((Q*)pInVar->devia) + offset;
             }
 
-            //如果是最后一层，则数据的指针指向输出的指针
+            //如果是最后一层，拷贝偏导数
             if(iLayer==nLayers-1) {
                 PSolveVar * pOutVar = pVars + pLayer->iOutVar;
                 memcpy(pOutVar->devia, pOutDevia, sizeof(Q)*m_nOutputTensorSize);
@@ -685,6 +713,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             //
             // 如果是BATCH模式，由于输出的时候是指向第一个，但计算的时候需要从最后一个开始计算，
             //  所以，所有op的指针向后移一个偏置
+            // 如果是SEQUENCE模式，则指针已经在前面初始化的时候，指向最后一个了
             //
             if( pLayer->eMode == ENnLayerMode::EMODE_BATCH ) {
                 for(int i=0; i<nVars; i++) {
@@ -707,9 +736,9 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 //
                 // 遍历计算序列并执行
                 //
-                for(int i=nSolvers-1; i>=0; i--) {
+                for(int iSolver=nSolvers-1; iSolver>=0; iSolver--) {
                     //准备输入输出计算参数
-                    PSolveInstruct instruct = pSolver[i];
+                    PSolveInstruct instruct = pSolver[iSolver];
                     int nInVars = instruct.nInVar;
                     for(int j=0; j<nInVars; j++) {
                         int iVar = instruct.pInVarIndex[j];
@@ -727,20 +756,6 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
 
                     //实际计算函数调用
                     (*instruct.solver.pDeviaFun)(instruct.solver.pParameter, nInVars, evalIn, evalOut);
-
-                    /*
-                    if(pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE) {
-                        Q dOut = 0, dIn = 0;
-                        for(int nn=0; nn<evalIn[0].size; nn++) {
-                            dIn += abs(((Q*)evalIn[0].devia)[nn]);
-                        }
-                        if(instruct.iOutVar>=0) {
-                            for(int nn=0; nn<evalIn[0].size; nn++) {
-                                dOut += abs(((Q*)evalOut.devia)[nn]);
-                            }
-                        }
-                        //cout << "out devia" << instruct.iOutVar << ":" << dOut << ", in devia"<<instruct.pInVarIndex[0]<<":" << dIn << "\n";
-                    }*/
                 }
 
                 //
@@ -770,9 +785,9 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                             case ENnVariableType::EVInput:
                             case ENnVariableType::EVOperator:
                                 {
-                                    int size = pVars[i].size * (nBatchs-1);
-                                    pVars[i].data = ((Q*)pVars[i].data) + size;
-                                    pVars[i].devia = ((Q*)pVars[i].devia) + size;
+                                    int nOffset = pVars[i].size * (nBatchs-1);
+                                    pVars[i].data = ((Q*)pVars[i].data) + nOffset;
+                                    pVars[i].devia = ((Q*)pVars[i].devia) + nOffset;
                                 }
                                 break;
                             }
@@ -783,12 +798,113 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             itPpLayer--;
         }
 
+        #ifdef _DEBUG
+            VERIFY(pOpVarBuf-pOpSolvedBuffer==m_nOpSize)
+            itPpLayer = ppLayers;
+            pOpVarBuf = pOpSolvedBuffer;
+            for( int iLayer=0; iLayer<nLayers; iLayer++) {
+                PLayerContext* pLayer = *itPpLayer;
+                int nBatchs = pLayer->nBatchs;
+                int nVars = pLayer->arrVars.size();
+                PSolveVar* pVars = pLayer->arrVars.data();
+
+                //
+                // SEQUENCE初始状态指向最后输出的一个
+                //
+                if(pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE) {
+                    for(int i=0; i<nVars; i++) {
+                        switch(pVars[i].type) {
+                        case ENnVariableType::EVOperator:
+                            {
+                                VERIFY(pVars[i].data == pOpVarBuf + pVars[i].size * (nBatchs-1));
+                                pOpVarBuf += pVars[i].size * nBatchs;
+                            }
+                            break;
+                        }
+                    }
+                }else{
+                    for(int i=0; i<nVars; i++) {
+                        switch(pVars[i].type) {
+                        case ENnVariableType::EVOperator:
+                            {
+                                VERIFY(pVars[i].data == pOpVarBuf);
+                                pOpVarBuf += pVars[i].size * nBatchs;
+                            }
+                            break;
+                        }
+                    }
+                }
+                itPpLayer++;
+            }
+        #endif//
+
         pInData += m_nInputTensorSize;
         pInDevial += m_nInputTensorSize;
         pOutData += m_nOutputTensorSize;
         pOutDevia += m_nOutputTensorSize;
         pOpSolvedBuffer += m_nOpSize;
     }
+
+
+    #ifdef _DEBUG
+    itPpLayer = ppLayers;
+    pItWeightDevia = pWeightDeviaBuffer;
+    pItDevia = pDeviaBuffer;
+    for(int iLayer=0; iLayer<nLayers; iLayer++) {
+        PLayerContext* pLayer = *itPpLayer;
+
+        int nBatchs = pLayer->nBatchs;
+        int nVars = pLayer->arrVars.size();
+
+        //
+        // 设置所有的权重、运算、状态的偏导指针，注意：
+        //  op的指针是指向它输出时的状态，便于接收下一层传递上来的偏导，所以：
+        //      SEQUENCE模式，指向最后一个
+        //      其它模式指向第一个
+        //
+        PSolveVar* pVars = pLayer->arrVars.data();
+        if(pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE) {
+            for(int i=0; i<nVars; i++) {
+                switch(pVars[i].type) {
+                case ENnVariableType::EVWeight:
+                    VERIFY(pVars[i].devia = pItWeightDevia);
+                    pItWeightDevia += pVars[i].size;
+                    break;
+
+                case ENnVariableType::EVState:
+                    VERIFY(pVars[i].devia == pItDevia);
+                    pItDevia += pVars[i].size;
+                    break;
+
+                case ENnVariableType::EVOperator:
+                    VERIFY(pVars[i].devia == pItDevia + pVars[i].size * (nBatchs-1));
+                    pItDevia += pVars[i].size*nBatchs;
+                    break;
+                }
+            }
+        }else{
+            for(int i=0; i<nVars; i++) {
+                switch(pVars[i].type) {
+                case ENnVariableType::EVWeight:
+                    VERIFY(pVars[i].devia == pItWeightDevia);
+                    pItWeightDevia += pVars[i].size;
+                    break;
+
+                case ENnVariableType::EVState:
+                    VERIFY(pVars[i].devia == pItDevia);
+                    pItDevia += pVars[i].size;
+                    break;
+
+                case ENnVariableType::EVOperator:
+                    VERIFY(pVars[i].devia == pItDevia);
+                    pItDevia += pVars[i].size*nBatchs;
+                    break;
+                }
+            }
+        }
+        itPpLayer++;
+    }
+    #endif//
 
     m_spOptimizer->updateDeviation(m_nBatchIns);
 
@@ -820,6 +936,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             }
             itPpLayer++;
         }
+        VERIFY(pItWeightDevia-pWeightDeviaBuffer==m_nWeightSize)
     }
 
     m_spBatchInDeviation.updateVer();
