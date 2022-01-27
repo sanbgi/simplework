@@ -6,6 +6,7 @@
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 class STensor;
+class SDimension;
 
 /**
  * 张量类定义
@@ -18,6 +19,31 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         // 张量相减
         //
         virtual int minus( const STensor& t1, const STensor& t2, STensor& spOut) = 0;
+
+        //
+        // 升维
+        //  @nDimSize 第一个维度(新维度)大小
+        //
+        virtual int upHighDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) = 0;
+
+        //
+        // 降维
+        //  @nDimSize 第一个维度(新维度)大小
+        //
+        virtual int downHighDimension(const SDimension& spIn, SDimension& spOut) = 0;
+
+        //
+        // 升维
+        //  @nDimSize 第一个维度(新维度)大小
+        //
+        virtual int upLowDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) = 0;
+
+        //
+        // 降维
+        //  @nDimSize 第一个维度(新维度)大小
+        //
+        virtual int downLowDimension(const SDimension& spIn, SDimension& spOut) = 0;
+
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -2,6 +2,7 @@
 #define __SimpleWork_Dimension_h__
 
 #include "SMathFactory.h"
+#include "STensorSolver.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -40,7 +41,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
         SMathFactory::getFactory()->createDimension(*this, nDim, pDimSizes);
     }
 
-    int size() {
+    int size() const {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getSize() : 0;
     }
@@ -53,6 +54,30 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
     int dataSize() {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getElementSize() : 0; 
+    }
+
+    SDimension upHighDimension(int nDimSize) {
+        SDimension spDim;
+        STensorSolver::getSolver()->upHighDimension(*this, nDimSize, spDim);
+        return spDim;
+    }
+
+    SDimension downHighDimension() {
+        SDimension spDim;
+        STensorSolver::getSolver()->downHighDimension(*this, spDim);
+        return spDim;
+    }
+
+    SDimension upLowDimension(int nDimSize) {
+        SDimension spDim;
+        STensorSolver::getSolver()->upLowDimension(*this, nDimSize, spDim);
+        return spDim;
+    }
+
+    SDimension downLowDimension() {
+        SDimension spDim;
+        STensorSolver::getSolver()->downLowDimension(*this, spDim);
+        return spDim;
     }
 
     static int createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {

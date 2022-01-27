@@ -89,6 +89,64 @@ public:
         resTensor.pDimSizes = nResDimSizes;
         return pRecerver->visit(resTensor);
     }
+
+    //
+    // 升维
+    //
+    int upHighDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) {
+        int nDims = spIn.size();
+        const int* pDimSizes = spIn.data();
+
+        int pNewDimSizes[nDims+1];
+        for(int i=0; i<nDims; i++) {
+            pNewDimSizes[i+1] = pDimSizes[i];
+        }
+        pNewDimSizes[0] = nDimSize;
+        spOut = SDimension(nDims+1,pNewDimSizes);
+        return sCtx.success();
+    }
+
+    //
+    // 降维
+    //
+    int downHighDimension(const SDimension& spIn, SDimension& spOut){
+        int nDims = spIn.size();
+        if(nDims < 2) {
+            sCtx.error("一维一下维度，无法降维");
+        }
+        const int* pDimSizes = spIn.data();
+        spOut = SDimension(nDims-1,pDimSizes+1);
+        return sCtx.success();
+    }
+
+    //
+    // 升维
+    //
+    int upLowDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) {
+        int nDims = spIn.size();
+        const int* pDimSizes = spIn.data();
+
+        int pNewDimSizes[nDims+1];
+        for(int i=0; i<nDims; i++) {
+            pNewDimSizes[i] = pDimSizes[i];
+        }
+        pNewDimSizes[nDims] = nDimSize;
+        spOut = SDimension(nDims+1,pNewDimSizes);
+        return sCtx.success();
+    }
+
+    //
+    // 降维
+    //
+    int downLowDimension(const SDimension& spIn, SDimension& spOut){
+        int nDims = spIn.size();
+        if(nDims < 2) {
+            sCtx.error("一维一下维度，无法降维");
+        }
+        const int* pDimSizes = spIn.data();
+        spOut = SDimension(nDims-1,pDimSizes);
+        return sCtx.success();
+    }
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSolver, STensorSolver::__getClassKey())
