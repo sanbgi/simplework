@@ -49,10 +49,7 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
     }
 
     SDimension spInDimension = pInVars[0].dimension();
-    STensor spDimension, spDimension2;
-    pInVars[0].dimension()->getVector(spDimension);
-    pInVars[1].dimension()->getVector(spDimension2);
-    if( !CUtils::isSameDimVector(spDimension, spDimension2) ) {
+    if( !CUtils::isSameDimension(pInVars[0].dimension(), pInVars[1].dimension()) ) {
         return sCtx.error("相加的两个元素维度不一致");
     }
 

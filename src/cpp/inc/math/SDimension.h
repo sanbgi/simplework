@@ -30,11 +30,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
         //
         virtual int getElementSize() = 0;
 
-        //
-        // 获取表示维度信息的张量
-        //
-        virtual int getVector(STensor& spDimVector) = 0;
-
     SIMPLEWORK_INTERFACE_LEAVE
     
     SDimension(int nDim, const int* pDimSizes) {

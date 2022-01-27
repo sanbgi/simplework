@@ -9,14 +9,14 @@ double CUtils::rand() {
 }
 
 
-bool CUtils::isSameDimVector(const STensor& spDimension1, const STensor& spDimension2) {
+bool CUtils::isSameDimension(const SDimension& spDimension1, const SDimension& spDimension2) {
     int size = spDimension1.size();
     if(spDimension2.size() != size) {
         return false;
     }
 
-    int* pDimSize1 = spDimension1.data<int>();
-    int* pDimSize2 = spDimension2.data<int>();
+    const int* pDimSize1 = spDimension1.data();
+    const int* pDimSize2 = spDimension2.data();
     while(size-->0) {
         if( *pDimSize1 != *pDimSize2 ) {
             return false;
