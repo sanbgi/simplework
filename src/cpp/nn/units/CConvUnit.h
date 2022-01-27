@@ -7,18 +7,18 @@
 using namespace sw;
 using namespace std;
 
-class CConvUnit : public CObject, public INnUnit, public IIoArchivable{
+class CConvUnit : public CObject, public INnUnit, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "ConvUnit"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 private://INnUnit
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);

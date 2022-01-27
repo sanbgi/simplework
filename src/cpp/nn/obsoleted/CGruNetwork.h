@@ -15,22 +15,22 @@ using namespace std;
 //      参考：  https://www.jianshu.com/p/9dc9f41f0b29
 //             https://blog.csdn.net/weixin_37621229/article/details/80245449
 //
-class CGruNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CGruNetwork : public CObject, public INnNetwork, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220118; }
     const char* getClassName() { return "GruNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 private:
     template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);

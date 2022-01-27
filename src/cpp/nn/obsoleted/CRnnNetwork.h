@@ -12,22 +12,22 @@ using namespace std;
 //
 //  循环神经网络（最简单版本）
 //
-class CRnnNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CRnnNetwork : public CObject, public INnNetwork, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220118; }
     const char* getClassName() { return "RnnNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 private:
     template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);

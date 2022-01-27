@@ -24,22 +24,22 @@ using namespace std;
 //  还不能提高精度，可能与conv(a)的计算偏差大相关，毕竟两个90度卷积的加权结果，未必
 //  能表示指定角度的卷积结果。
 //
-class CRotConvNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CRotConvNetwork : public CObject, public INnNetwork, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "RotConvNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.RotConvNetwork"; }

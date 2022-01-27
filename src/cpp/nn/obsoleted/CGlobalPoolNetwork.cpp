@@ -240,7 +240,7 @@ int CGlobalPoolNetwork::learn(const STensor& spBatchOut, const STensor& spBatchO
     return sCtx.error("数据类型不支持");
 }
 
-int CGlobalPoolNetwork::toArchive(const SIoArchive& ar) {
+int CGlobalPoolNetwork::toArchive(const SArchive& ar) {
     ar.visitString("mode", m_strMode);
     ar.visitString("activator", m_strActivator);
     return sCtx.success();

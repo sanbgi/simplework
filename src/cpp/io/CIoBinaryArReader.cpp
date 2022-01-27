@@ -21,7 +21,7 @@ int CIoBinaryArReader::visitArray(const char* szName, IArrayVisitee* pVisitee, i
     return sCtx.success();
 }
 
-int CIoBinaryArReader::visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer, int nMaxVer){
+int CIoBinaryArReader::visitObject(const char* szName, SArchivable& spVisitee, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         return loadEle(spVisitee);
     }
@@ -33,7 +33,7 @@ int CIoBinaryArReader::visitObjectArray(const char* szName, IObjectArrayVisitee*
         int nEles;
         m_stream.read((char*)&nEles, sizeof(int));
         for(int i=0; i<nEles; i++) {
-            SIoArchivable spVisitee;
+            SArchivable spVisitee;
             if( loadEle(spVisitee) != sCtx.success() ) {
                 return sCtx.error("读取对象数据失败");
             }
@@ -43,7 +43,7 @@ int CIoBinaryArReader::visitObjectArray(const char* szName, IObjectArrayVisitee*
     return sCtx.success();
 }
 
-int CIoBinaryArReader::loadArchive(const char* szFileName, SIoArchivable& spAr){
+int CIoBinaryArReader::loadArchive(const char* szFileName, SArchivable& spAr){
     CPointer<CIoBinaryArReader> spIn;
     CObject::createObject(spIn);
     spIn->m_stream.open(szFileName, ios_base::binary);
@@ -93,7 +93,7 @@ int CIoBinaryArReader::loadString(string& str) {
     return sCtx.success();
 }
 
-int CIoBinaryArReader::loadEle(SIoArchivable& spVisitee) {
+int CIoBinaryArReader::loadEle(SArchivable& spVisitee) {
     string classKey;
     if( loadString(classKey) != sCtx.success() ){
         return sCtx.error();
@@ -111,7 +111,7 @@ int CIoBinaryArReader::loadEle(SIoArchivable& spVisitee) {
 
     spVisitee = spObj;
     if( !spVisitee ) {
-        return sCtx.error(string("类型没有实现IIoArchivable接口，无法序列化，类型:" + classKey).c_str());
+        return sCtx.error(string("类型没有实现IArchivable接口，无法序列化，类型:" + classKey).c_str());
     }
 
     int nVer;
@@ -119,7 +119,7 @@ int CIoBinaryArReader::loadEle(SIoArchivable& spVisitee) {
 
     int retCode = sCtx.success();
     enterElement(nVer);
-    retCode = spVisitee->toArchive(SIoArchive((IIoArchive*)this));
+    retCode = spVisitee->toArchive(SArchive((IArchive*)this));
     leaveElement();
     return retCode;
 }

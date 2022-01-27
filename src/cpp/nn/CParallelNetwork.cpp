@@ -244,7 +244,7 @@ int CParallelNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOut
     return sCtx.error("数据类型不支持");
 }
 
-int CParallelNetwork::toArchive(const SIoArchive& ar) {
+int CParallelNetwork::toArchive(const SArchive& ar) {
     ar.visitObjectArray("nodes", m_arrNetworks);
     return sCtx.success();
 }

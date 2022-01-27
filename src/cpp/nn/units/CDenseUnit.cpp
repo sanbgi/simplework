@@ -40,7 +40,7 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
     return sCtx.success();
 }
 
-int CDenseUnit::toArchive(const SIoArchive& ar) {
+int CDenseUnit::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("cells", m_nCells);
     ar.visit("dropoutRate", m_dDropoutRate);

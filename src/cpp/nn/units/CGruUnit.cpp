@@ -48,7 +48,7 @@ int CGruUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
     return sCtx.success();
 }
 
-int CGruUnit::toArchive(const SIoArchive& ar) {
+int CGruUnit::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("cells", m_nCells);
     ar.visitObject("weight", m_spWeights);

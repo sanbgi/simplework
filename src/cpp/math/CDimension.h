@@ -16,7 +16,7 @@ public:
     int getClassVer() { return 220112; }
     const char* getClassName() { return "Dimension"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar) {
+    int toArchive(const SArchive& ar) {
         return CTensor::toArchive(ar);
     }
 

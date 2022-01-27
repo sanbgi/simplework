@@ -1,15 +1,15 @@
-#ifndef __SimpleWork_IO_SIoArchivable_h__
-#define __SimpleWork_IO_SIoArchivable_h__
+#ifndef __SimpleWork_IO_SArchivable_h__
+#define __SimpleWork_IO_SArchivable_h__
 
 #include "io.h"
 
 SIMPLEWORK_IO_NAMESPACE_ENTER
 
-class SIoArchive;
+class SArchive;
 
-SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchivable)
+SIMPLEWORK_INTERFACECLASS_ENTER0(Archivable)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IIoArchivable", 220112)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IArchivable", 220112)
 
         //
         // 获取版本号
@@ -29,12 +29,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchivable)
         //
         // 序列化
         //
-        virtual int toArchive(const SIoArchive& ar) = 0;
+        virtual int toArchive(const SArchive& ar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(IoArchivable)
+SIMPLEWORK_INTERFACECLASS_LEAVE(Archivable)
 
 SIMPLEWORK_IO_NAMESPACE_LEAVE
 
-#endif//__SimpleWork_IO_SIoArchivable_h__
+#endif//__SimpleWork_IO_SArchivable_h__

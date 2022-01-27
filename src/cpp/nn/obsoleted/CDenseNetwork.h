@@ -17,22 +17,22 @@ using namespace std;
 //
 //  比如：输入维度[10, 3, 1]，表示一共有十个输入数据，每一个数据数据包含3 X 1个输入神经元
 //
-class CDenseNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CDenseNetwork : public CObject, public INnNetwork, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "DenseNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 private:
     template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);

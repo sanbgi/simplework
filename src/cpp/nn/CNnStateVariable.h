@@ -7,16 +7,16 @@
 using namespace sw;
 using namespace std;
 
-class CNnStateVariable : public CNnVariable, public IIoArchivable {
+class CNnStateVariable : public CNnVariable, public IArchivable {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnVariable)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnVariable)
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "State"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.State"; }

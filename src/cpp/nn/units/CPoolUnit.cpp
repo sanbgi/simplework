@@ -24,7 +24,7 @@ int CPoolUnit::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOut
     return SNnVariable::solve("pool", CData<PNnPool>(poolParameter), nInVars, pInVars, spOutVar);
 }
 
-int CPoolUnit::toArchive(const SIoArchive& ar) {
+int CPoolUnit::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("width", m_nWidth);
     ar.visit("height", m_nHeight);

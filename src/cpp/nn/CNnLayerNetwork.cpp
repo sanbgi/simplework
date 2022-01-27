@@ -865,7 +865,7 @@ void CNnLayerNetwork::releaseCtx() {
 }
 
 
-int CNnLayerNetwork::toArchive(const SIoArchive& ar) {
+int CNnLayerNetwork::toArchive(const SArchive& ar) {
     ar.visitObjectArray("layers", m_arrLayers);
     ar.visitObject("inputDimension", m_spInDimension);
     ar.visitString("optimizer", m_strOptimizer);

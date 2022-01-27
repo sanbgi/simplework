@@ -44,7 +44,7 @@ int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
     return sCtx.success();
 }
 
-int CRnnUnit::toArchive(const SIoArchive& ar) {
+int CRnnUnit::toArchive(const SArchive& ar) {
     ar.visit("cells", m_nCells);
     ar.visitString("activator", m_strActivator);
     ar.visitObject("weight", m_spWeights);

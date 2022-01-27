@@ -10,11 +10,11 @@ using namespace SIMPLEWORK_NN_NAMESPACE;
 //
 // 并行计算神经网络，其中，每一个子网络的最后一个维度是图层深度，所以，所有节点输出合并是在最后一个维度上合并
 //
-class CParallelNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CParallelNetwork : public CObject, public INnNetwork, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
@@ -22,11 +22,11 @@ private://INnNetwork
     int learn(const STensor& spOutTensor, const STensor& spOutDeviation, STensor& spInTensor, STensor& spInDeviation);
 
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "ParrallelNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 private:
     template<typename Q> int evalT(const STensor& spInTensor, STensor& spOutTensor);

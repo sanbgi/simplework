@@ -321,7 +321,7 @@ int CPoolNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviatio
     return sCtx.success();
 }
 
-int CPoolNetwork::toArchive(const SIoArchive& ar) {
+int CPoolNetwork::toArchive(const SArchive& ar) {
     ar.visit("nPoolWidth", m_nPoolWidth);
     ar.visit("nPoolHeight", m_nPoolHeight);
     ar.visit("nStrideWidth", m_nStrideWidth);

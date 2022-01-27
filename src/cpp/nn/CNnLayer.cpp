@@ -35,7 +35,7 @@ ENnLayerMode CNnLayer::getMode() {
 }
 
 
-int CNnLayer::toArchive(const SIoArchive& ar) {
+int CNnLayer::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("mode", m_eMode);
     ar.visitObject("unit", m_spUnit);

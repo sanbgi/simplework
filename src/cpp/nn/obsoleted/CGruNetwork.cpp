@@ -567,7 +567,7 @@ int CGruNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDevia
     return sCtx.error("数据类型不支持");
 }
 
-int CGruNetwork::toArchive(const SIoArchive& ar) {
+int CGruNetwork::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("cells", m_nCells);
     ar.visit("keepGroup", m_bKeepGroup);

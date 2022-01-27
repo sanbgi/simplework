@@ -849,7 +849,7 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
     return sCtx.error("数据类型不支持");
 }
 
-int CConvolutionNetwork::toArchive(const SIoArchive& ar) {
+int CConvolutionNetwork::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("layers", m_nLayers);
     ar.visit("shiftConvs", m_sizeConv.batch);

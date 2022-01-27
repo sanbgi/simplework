@@ -65,7 +65,7 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
     return sCtx.success();
 }
 
-int CConvUnit::toArchive(const SIoArchive& ar) {
+int CConvUnit::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("width", m_nWidth);
     ar.visit("height", m_nHeight);

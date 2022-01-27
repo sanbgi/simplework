@@ -5,7 +5,7 @@
 
 SIMPLEWORK_IO_NAMESPACE_ENTER
 
-class SIoArchivable;
+class SArchivable;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(IoFactory, "sw.io.IoFactory")
 
@@ -14,12 +14,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(IoFactory, "sw.io.IoFactory")
         //
         // 保存文件
         //
-        virtual int saveArchive(const char* szFileName, const SIoArchivable& spAr) = 0;
+        virtual int saveArchive(const char* szFileName, const SArchivable& spAr) = 0;
 
         //
         // 读取文件
         //
-        virtual int loadArchive(const char* szFileName, SIoArchivable& spAr) = 0;
+        virtual int loadArchive(const char* szFileName, SArchivable& spAr) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

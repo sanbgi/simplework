@@ -7,21 +7,21 @@
 using namespace sw;
 using namespace std;
 
-class CGruUnit : public CObject, public INnUnit, public IIoArchivable{
+class CGruUnit : public CObject, public INnUnit, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnUnit
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "GruUnit"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.GruUnit"; }

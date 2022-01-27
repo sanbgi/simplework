@@ -490,7 +490,7 @@ int CDenseNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDev
     return sCtx.error("数据类型不支持");
 }
 
-int CDenseNetwork::toArchive(const SIoArchive& ar) {
+int CDenseNetwork::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("cells", m_nCells);
     ar.visit("dropoutRate", m_dDropoutRate);

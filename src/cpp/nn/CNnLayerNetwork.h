@@ -12,10 +12,10 @@ using namespace std;
 class CNnVariable;
 class PSolveContext;
 class PLayerContext;
-class CNnLayerNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CNnLayerNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
     //
@@ -23,11 +23,11 @@ class CNnLayerNetwork : public CObject, public INnNetwork, public IIoArchivable{
     //
     typedef void (*FEval)(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "LayerNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.LayerNetwork"; }

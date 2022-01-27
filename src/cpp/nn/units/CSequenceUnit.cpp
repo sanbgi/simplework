@@ -30,7 +30,7 @@ int CSequenceUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& 
     return sCtx.success();
 }
 
-int CSequenceUnit::toArchive(const SIoArchive& ar) {
+int CSequenceUnit::toArchive(const SArchive& ar) {
     ar.visitObjectArray("units", m_arrUnits);
     return sCtx.success();
 }

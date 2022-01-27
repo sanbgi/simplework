@@ -386,7 +386,7 @@ void CNnNetwork::runFile() {
 
     spNet.release();
 
-    SIoArchivable arObj; 
+    SArchivable arObj; 
     SIoFactory::getFactory()->loadArchive("D://Dense.bin", arObj);
     spNet = arObj;
     spNet.release();

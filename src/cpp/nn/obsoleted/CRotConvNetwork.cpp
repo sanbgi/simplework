@@ -652,7 +652,7 @@ template<typename Q> int CRotConvNetwork::initWeightT(int nWeights, int nConvs) 
     return 0;
 }
 
-int CRotConvNetwork::toArchive(const SIoArchive& ar) {
+int CRotConvNetwork::toArchive(const SArchive& ar) {
     //基础参数
     ar.visit("convs", m_sizeConv.batch);
     ar.visit("dropout", m_dDropoutRate);

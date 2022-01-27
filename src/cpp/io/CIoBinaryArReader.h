@@ -11,27 +11,27 @@ using namespace sw;
 using namespace sw;
 using namespace std;
 
-class CIoBinaryArReader : public CObject, public IIoArchive {
+class CIoBinaryArReader : public CObject, public IArchive {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchive)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchive)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public://IIoArchive
+public://IArchive
     bool isReading() { return true; }
     int visit(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999);
     int visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999);
-    int visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
+    int visitObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
     int visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999);
 
 public:
     void enterElement(int nVer);
     void leaveElement();
     int loadString(string& str);
-    int loadEle(SIoArchivable& sp);
+    int loadEle(SArchivable& sp);
 
 public:
-    static int loadArchive(const char* szFileName, SIoArchivable& spAr);
+    static int loadArchive(const char* szFileName, SArchivable& spAr);
 
 public:
     CIoBinaryArReader(){

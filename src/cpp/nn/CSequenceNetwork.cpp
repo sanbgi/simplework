@@ -45,7 +45,7 @@ int CSequenceNetwork::learn(const STensor& spBatchOut, const STensor& spOutDevia
     return sCtx.success();
 }
 
-int CSequenceNetwork::toArchive(const SIoArchive& ar) {
+int CSequenceNetwork::toArchive(const SArchive& ar) {
     ar.visitObjectArray("nodes", m_arrNetworks);
     return sCtx.success();
 }

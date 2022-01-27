@@ -7,8 +7,8 @@
 #define SIMPLEWORK_IO_NAMESPACE_ENTER namespace sw {
 #define SIMPLEWORK_IO_NAMESPACE_LEAVE }
 
-#include "SIoArchive.h"
-#include "SIoArchivable.h"
+#include "SArchive.h"
+#include "SArchivable.h"
 #include "SIoFactory.h"
 
 #endif//__SimpleWork_IO_h__

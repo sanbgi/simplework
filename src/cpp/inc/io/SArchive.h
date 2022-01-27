@@ -1,11 +1,11 @@
-#ifndef __SimpleWork_IO_SIoArchive_h__
-#define __SimpleWork_IO_SIoArchive_h__
+#ifndef __SimpleWork_IO_SArchive_h__
+#define __SimpleWork_IO_SArchive_h__
 
 #include "io.h"
 
 SIMPLEWORK_IO_NAMESPACE_ENTER
 
-class SIoArchivable;
+class SArchivable;
 
 struct IArrayVisitee {
     virtual unsigned int getElementType() = 0;
@@ -17,14 +17,14 @@ struct IArrayVisitee {
 
 struct IObjectArrayVisitee {
     virtual int size() = 0;
-    virtual int getEleAt(int iIndex, SIoArchivable& spEle) = 0;
-    virtual int addEle(const SIoArchivable& spEle) = 0;
+    virtual int getEleAt(int iIndex, SArchivable& spEle) = 0;
+    virtual int addEle(const SArchivable& spEle) = 0;
 };
 
 
-SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchive)
+SIMPLEWORK_INTERFACECLASS_ENTER0(Archive)
 
-    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IIoArchive", 220112)
+    SIMPLEWORK_INTERFACE_ENTER(sw::IObject, "sw.av.IArchive", 220112)
 
         //
         // 是否是读入
@@ -46,7 +46,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(IoArchive)
         //
         // 对象
         //
-        virtual int visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) = 0;
+        virtual int visitObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) = 0;
 
         //
         // 对象数组
@@ -166,13 +166,13 @@ public:
     //
     //
     //
-    int visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) const {
+    int visitObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) const {
         return (*this)->visitObject(szName, spVisitee, nMinVer, nMaxVer);
     }
 
     template<typename Q>
     int visitObject(const char* szName, Q& spObj, int nMinVer=0, int nMaxVer=999999999) const {
-        SIoArchivable arObj = spObj;
+        SArchivable arObj = spObj;
         int retcode = (*this)->visitObject(szName, arObj, nMinVer, nMaxVer);
         spObj = arObj;
         return retcode;
@@ -194,11 +194,11 @@ public:
         public:
             unsigned int getElementType() { return sw::CBasicData<char*>::getStaticType(); }
             int size() { return m_pArray->size(); }
-            int getEleAt(int iIndex, SIoArchivable& spEle){
+            int getEleAt(int iIndex, SArchivable& spEle){
                 spEle = (*m_pArray)[iIndex];
                 return 0;
             }
-            int addEle(const SIoArchivable& spEle) {
+            int addEle(const SArchivable& spEle) {
                 m_pArray->push_back(spEle);
                 return 0;
             }
@@ -217,9 +217,9 @@ public:
         return (*this)->visitObjectArray(szName, CEleArrayVisitee(arrEles), nMinVer, nMaxVer);
     }
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(IoArchive)
+SIMPLEWORK_INTERFACECLASS_LEAVE(Archive)
 
 
 SIMPLEWORK_IO_NAMESPACE_LEAVE
 
-#endif//__SimpleWork_IO_SIoArchive_h__
+#endif//__SimpleWork_IO_SArchive_h__

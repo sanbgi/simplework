@@ -20,7 +20,7 @@ int CIoBinaryArWriter::visitArray(const char* szName, IArrayVisitee* pVisitee, i
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visitObject(const char* szName, SIoArchivable& spVisitee, int nMinVer, int nMaxVer){
+int CIoBinaryArWriter::visitObject(const char* szName, SArchivable& spVisitee, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         return saveEle(spVisitee);
     }
@@ -32,7 +32,7 @@ int CIoBinaryArWriter::visitObjectArray(const char* szName, IObjectArrayVisitee*
         int nEles = pVisitee->size();
         m_stream.write((const char*)&nEles, sizeof(int));
         for(int i=0; i<nEles; i++) {
-            SIoArchivable spVisitee;
+            SArchivable spVisitee;
             pVisitee->getEleAt(i, spVisitee);
             if( saveEle(spVisitee) != sCtx.success() ) {
                 return sCtx.error("保存对象失败");
@@ -42,7 +42,7 @@ int CIoBinaryArWriter::visitObjectArray(const char* szName, IObjectArrayVisitee*
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::saveArchive(const char* szFileName, const SIoArchivable& spAr) {
+int CIoBinaryArWriter::saveArchive(const char* szFileName, const SArchivable& spAr) {
     CPointer<CIoBinaryArWriter> spOut;
     CObject::createObject(spOut);
     spOut->m_stream.open(szFileName, ios_base::binary);
@@ -60,12 +60,12 @@ int CIoBinaryArWriter::saveArchive(const char* szFileName, const SIoArchivable& 
     return sCtx.success();
 }
 
-void CIoBinaryArWriter::enterElement(SIoArchivable& spEle) {
+void CIoBinaryArWriter::enterElement(SArchivable& spEle) {
     m_arrEles.push_back(spEle);                                        
     m_nEleVer = spEle->getClassVer();
 }
 
-void CIoBinaryArWriter::leaveElement(SIoArchivable& spEle) {
+void CIoBinaryArWriter::leaveElement(SArchivable& spEle) {
     m_arrEles.pop_back();
     if(m_arrEles.size() > 0) {
         m_nEleVer = (*m_arrEles.rbegin())->getClassVer();
@@ -84,7 +84,7 @@ void CIoBinaryArWriter::saveString(string str) {
         m_stream.write(pChar, nChar);
 }
 
-int CIoBinaryArWriter::saveEle(SIoArchivable spVisitee) {
+int CIoBinaryArWriter::saveEle(SArchivable spVisitee) {
     string classKey;
     if( spVisitee ) {
         classKey = spVisitee->getClassKey();
@@ -97,7 +97,7 @@ int CIoBinaryArWriter::saveEle(SIoArchivable spVisitee) {
         m_stream.write((const char*)&nVer, sizeof(int));
 
         enterElement(spVisitee);
-        retCode = spVisitee->toArchive(SIoArchive((IIoArchive*)this));
+        retCode = spVisitee->toArchive(SArchive((IArchive*)this));
         leaveElement(spVisitee);
     }
     return retCode;

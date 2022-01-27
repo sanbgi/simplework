@@ -11,17 +11,17 @@ using namespace sw;
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 class CTypeAssist;
-class CTensor : public CObject, public ITensor, public IIoArchivable {
+class CTensor : public CObject, public ITensor, public IArchivable {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(ITensor)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-protected://IIoArchivable
+protected://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "Tensor"; } 
     const char* getClassKey() { return __getClassKey(); }
-    virtual int toArchive(const SIoArchive& ar);
+    virtual int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.math.Tensor"; }

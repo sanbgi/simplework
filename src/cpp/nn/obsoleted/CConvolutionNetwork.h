@@ -28,22 +28,22 @@ using namespace std;
 // 果nShiftConvs = 1, 则退化为普通的卷积网络。
 //
 //
-class CConvolutionNetwork : public CObject, public INnNetwork, public IIoArchivable{
+class CConvolutionNetwork : public CObject, public INnNetwork, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
-        SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spOutDeviation, STensor& spBatchIn, STensor& spInDeviation);
 
-private://IIoArchivable
+private://IArchivable
     int getClassVer() { return 220114; }
     const char* getClassName() { return "ConvolutionNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
-    int toArchive(const SIoArchive& ar);
+    int toArchive(const SArchive& ar);
 
 private:
     template<typename Q> int evalT(const STensor& spBatchIn, STensor& spBatchOut);

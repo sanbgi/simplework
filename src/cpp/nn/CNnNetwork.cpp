@@ -12,7 +12,7 @@ int CNnNetwork::saveNetwork(const char* szFileName, const SNnNetwork& spNet){
 }
 
 int CNnNetwork::loadNetwork(const char* szFileName, SNnNetwork& spNet){
-    SIoArchivable spObj; 
+    SArchivable spObj; 
     if( SIoFactory::getFactory()->loadArchive(szFileName, spObj) != sCtx.success() ) {
         return sCtx.error("读取网络文件错误");
     }
