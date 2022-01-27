@@ -37,6 +37,15 @@ public:
     CData(const PData& rData){
         init(rData);
     }
+    CData(const PData* pData){
+        if(pData == nullptr) {
+            m_pInternalPointer = this;
+            m_idInternalType = 0;
+            m_pInternalData = nullptr;
+        }else{
+            init(*pData);
+        }
+    }
 
 public:
     //
