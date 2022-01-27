@@ -2,6 +2,7 @@
 #define __SimpleWork_IO_SArchivable_h__
 
 #include "io.h"
+#include "SIoFactory.h"
 
 SIMPLEWORK_IO_NAMESPACE_ENTER
 
@@ -32,6 +33,15 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Archivable)
         virtual int toArchive(const SArchive& ar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
+
+    static int saveBinaryFile(const char* szFileName, const SArchivable& spAr) {
+        return SIoFactory::getFactory()->saveArchive(szFileName, spAr);
+    }
+
+    static int loadBinaryFile(const char* szFileName, SArchivable& spAr) {
+        return SIoFactory::getFactory()->loadArchive(szFileName, spAr);
+    }
+
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Archivable)
 

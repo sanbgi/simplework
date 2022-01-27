@@ -2,6 +2,7 @@
 #define __SimpleWork_IO_SArchive_h__
 
 #include "io.h"
+#include "SIoFactory.h"
 
 SIMPLEWORK_IO_NAMESPACE_ENTER
 
