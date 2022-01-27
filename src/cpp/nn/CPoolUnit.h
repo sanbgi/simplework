@@ -31,7 +31,8 @@ private:
     //基础参数
     int m_nWidth;
     int m_nHeight;
-    int m_nStride;
+    int m_nStrideWidth;
+    int m_nStrideHeight;
     double m_dDropoutRate;
     string m_strPaddingMode;
 

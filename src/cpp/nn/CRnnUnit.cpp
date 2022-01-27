@@ -48,11 +48,10 @@ int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
 }
 
 int CRnnUnit::toArchive(const SIoArchive& ar) {
-    //基础参数
+    ar.visit("cells", m_nCells);
     ar.visitString("activator", m_strActivator);
-
-    //TODO
-
+    ar.visitObject("weight", m_spWeights);
+    ar.visitObject("state", m_spState);
     return sCtx.success();
 }
 

@@ -32,27 +32,27 @@ public:
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
         VERIFY(inVars[0].size * outVar.size == inVars[1].size)
-        Q* pInput1 = (Q*)inVars[0].data;
-        Q* pD1 = (Q*)inVars[0].devia;
+        Q* pInput = (Q*)inVars[0].data;
+        Q* pInputDeiva = (Q*)inVars[0].devia;
         Q* pWeights = (Q*)inVars[1].data;
-        Q* pWeightDeviations = (Q*)inVars[1].devia;
+        Q* pWeightDevia = (Q*)inVars[1].devia;
         Q* pDeviaOut = (Q*)outVar.devia;
         Q* pDeviaOutEnd = pDeviaOut + outVar.size;
-        Q* pInput1End = pInput1 + inVars[0].size;
-        Q* pIn, *pInDeviation;
+        Q* pInputEnd = pInput + inVars[0].size;
+        Q* pItIn, *pItInDevia;
         Q deviationOut;
         while(pDeviaOut != pDeviaOutEnd) {
-            pIn = pInput1;
-            pInDeviation = pD1;
+            pItIn = pInput;
+            pItInDevia = pInputDeiva;
             deviationOut = *pDeviaOut;
-            while(pIn < pInput1End) {
-                *pInDeviation += deviationOut * (*pWeights);
-                *pWeightDeviations += deviationOut * (*pIn);
-                pIn++, pInDeviation++, pWeights++, pWeightDeviations++;
+            while(pItIn < pInputEnd) {
+                *pItInDevia += deviationOut * (*pWeights);
+                *pWeightDevia += deviationOut * (*pItIn);
+                pItIn++, pItInDevia++, pWeights++, pWeightDevia++;
             }
             pDeviaOut++;
         }
-        VERIFY(pWeightDeviations - (Q*)inVars[1].devia == inVars[1].size )
+        VERIFY(pWeightDevia - (Q*)inVars[1].devia == inVars[1].size )
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {

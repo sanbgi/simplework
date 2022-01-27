@@ -7,7 +7,7 @@
 // 参考：https://cloud.tencent.com/developer/article/1468547
 //
 template<typename Q>
-class CNAdamOptimizer : CObject, IOptimizer {
+class CNAdamOptimizer : protected CObject, IOptimizer {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IOptimizer)

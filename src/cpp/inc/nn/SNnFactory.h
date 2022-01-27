@@ -13,6 +13,8 @@ class SNnUnit;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnFactory", 211223)
+
+        /*
         //
         // 创建循环神经网络
         //
@@ -21,8 +23,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //  创建直连神经网络
         //
         virtual int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) = 0;
-   
-        /*
         //
         //  创建池化神经网络
         //

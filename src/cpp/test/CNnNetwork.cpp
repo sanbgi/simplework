@@ -269,15 +269,16 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
     return SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
 }
 
-SNnNetwork CNnNetwork::createRnnNetwork() {/*
+SNnNetwork CNnNetwork::createRnnNetwork() {
+    /*
     std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createRnn(50));
+    arrNets.push_back(SNnNetwork::createRnn(50,true));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
     */
-
+    
     std::vector<SNnLayer> arrUnits;
-    arrUnits.push_back(SNnLayer::createRnnLayer(50, "sequence"));
+    arrUnits.push_back(SNnLayer::createRnnLayer(50, "batch"));
     arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);

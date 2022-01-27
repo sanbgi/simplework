@@ -33,3 +33,13 @@ int CNnLayer::getUnit(SNnUnit& spUnit) {
 ENnLayerMode CNnLayer::getMode() {
     return m_eMode;
 }
+
+
+int CNnLayer::toArchive(const SIoArchive& ar) {
+    //基础参数
+    ar.visit("mode", m_eMode);
+    ar.visitObject("unit", m_spUnit);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnLayer, CNnLayer::__getClassKey())

@@ -13,7 +13,7 @@ class SObject;
 SIMPLEWORK_INTERFACECLASS_ENTER0(Factory)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.IFactory", 211202)
-        virtual int createObject(SObject& rObject) const = 0;
+        virtual int createObject(SObject& rObject, const PData* pData=nullptr) const = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Factory)

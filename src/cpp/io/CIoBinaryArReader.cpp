@@ -104,7 +104,7 @@ int CIoBinaryArReader::loadEle(SIoArchivable& spVisitee) {
     }
 
     SObject spObj;
-    SObject::createObject(classKey.c_str(), spObj);
+    SObject::createObject(classKey.c_str(), nullptr, spObj);
     if( !spObj ) {
         return sCtx.error(string("创建对象失败，类型:" + classKey).c_str());
     }

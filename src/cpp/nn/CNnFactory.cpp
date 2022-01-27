@@ -14,8 +14,6 @@
 #include "CSequenceUnit.h"
 #include "CNnLayer.h"
 #include "CNnLayerNetwork.h"
-#include "CRnnNetwork.h"
-#include "CDenseNetwork.h"
 
 using namespace sw;
 
@@ -26,14 +24,14 @@ class CNnFactory : public CObject, public INnFactory{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
+   /*
     int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) {
         return CDenseNetwork::createNetwork(nCells, dDropoutRate, szActivator, spNetwork);
     }
     int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
         return CRnnNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
     }
-    /*
-
+ 
 
     int createConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) {
         return CConvolutionNetwork::createNetwork(nWidth, nHeight, nLayers, nShiftConvs, nStride, szPadding, szActivator, spNetwork);

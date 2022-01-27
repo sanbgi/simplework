@@ -62,15 +62,15 @@ protected://IModule
     //
     // 根据对象实现类名，创建对象
     //
-    int createObject(const char* szClassKey, SObject& rObject) {
+    int createObject(const char* szClassKey, const PData* pData, SObject& rObject) {
         if(m_spCoreApi) {
-            return m_spCoreApi->createObject(szClassKey, rObject);
+            return m_spCoreApi->createObject(szClassKey, pData, rObject);
         }
         IFactory* pFactory = findFactory(szClassKey);
         if(pFactory == nullptr) {
             return SError::ERRORTYPE_FAILURE;
         }
-        return pFactory->createObject(rObject);
+        return pFactory->createObject(rObject, pData);
     }
 
     //

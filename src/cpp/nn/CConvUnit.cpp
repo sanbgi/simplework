@@ -67,11 +67,15 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
 
 int CConvUnit::toArchive(const SIoArchive& ar) {
     //基础参数
-    ar.visit("dropoutRate", m_dDropoutRate);
+    ar.visit("width", m_nWidth);
+    ar.visit("height", m_nHeight);
+    ar.visit("layers", m_nLayers);
+    ar.visit("shiftconvs", m_nShiftConvs);
+    ar.visit("padding", m_strPaddingMode);
     ar.visitString("activator", m_strActivator);
-
-    //TODO
-
+    ar.visit("dropoutRate", m_dDropoutRate);
+    ar.visit("weight", m_spWeights);
+    ar.visit("bais", m_spBais);
     return sCtx.success();
 }
 

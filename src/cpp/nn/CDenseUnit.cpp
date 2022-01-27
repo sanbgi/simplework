@@ -47,9 +47,8 @@ int CDenseUnit::toArchive(const SIoArchive& ar) {
     ar.visit("cells", m_nCells);
     ar.visit("dropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
-
-    //TODO
-
+    ar.visitObject("weight", m_spWeights);
+    ar.visitObject("bais", m_spBais);
     return sCtx.success();
 }
 

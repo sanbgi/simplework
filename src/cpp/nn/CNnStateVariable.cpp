@@ -25,3 +25,11 @@ void* CNnStateVariable::getData(unsigned int idType) {
     }
     return m_spData->getDataPtr(idType);
 }
+
+
+int CNnStateVariable::toArchive(const SIoArchive& ar) {
+    ar.visitObject("value", m_spData);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnStateVariable, CNnStateVariable::__getClassKey())

@@ -7,7 +7,7 @@
 // 参考：https://www.cnblogs.com/rinroll/p/12162342.html
 //
 template<typename Q>
-class CRMSPropOptimizer : CObject, IOptimizer {
+class CRMSPropOptimizer : protected CObject, IOptimizer {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IOptimizer)

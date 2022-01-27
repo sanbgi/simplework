@@ -6,7 +6,7 @@
 //
 // 参考：https://www.cnblogs.com/rinroll/p/12162342.html
 //
-template<typename Q=float> class CAdagradOptimizer : CObject, public IOptimizer {
+template<typename Q=float> class CAdagradOptimizer : protected CObject, public IOptimizer {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IOptimizer)

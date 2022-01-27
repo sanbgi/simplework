@@ -54,12 +54,12 @@ public:
     //
     // 创建对象
     //
-    template<typename TObject> static int createObject(CPointer<TObject>& spObject) {
-        return __CObjectImp<TObject>::__createObject(spObject);
+    template<typename TObject> static int createObject(CPointer<TObject>& spObject, const PData* pData=nullptr) {
+        return __CObjectImp<TObject>::__createObject(spObject, pData);
     }
-    template<typename TObject> static SObject createObject() {
+    template<typename TObject> static SObject createObject(const PData* pData=nullptr) {
         CPointer<TObject> spObject;
-        __CObjectImp<TObject>::__createObject(spObject);
+        __CObjectImp<TObject>::__createObject(spObject, pData);
         return spObject;
     }
 
@@ -70,8 +70,13 @@ private:
         SIMPLEWORK_INTERFACE_ENTRY_LEAVE(TObject)
 
     public:
-        static int __createObject(CPointer<TObject>& spPointer) {
+        static int __createObject(CPointer<TObject>& spPointer, const PData* pData=nullptr) {
             __CObjectImp* pCreateObj = new __CObjectImp();
+            if(pData!=nullptr) {
+                if( int retCode = pCreateObj->__initialize(pData) != SError::ERRORTYPE_SUCCESS ) {
+                    return retCode;
+                }
+            }
             spPointer.take(pCreateObj,(__IObjectImp*)pCreateObj);
             return SError::ERRORTYPE_SUCCESS;
         }

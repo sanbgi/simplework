@@ -7,7 +7,7 @@
 // 参考：   https://zhuanlan.zhihu.com/p/102733819
 //
 template<typename Q>
-class CAdaModOptimizer : CObject, IOptimizer {
+class CAdaModOptimizer : protected CObject, IOptimizer {
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IOptimizer)

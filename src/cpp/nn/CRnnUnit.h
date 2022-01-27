@@ -14,14 +14,15 @@ class CRnnUnit : public CObject, public INnUnit, public IIoArchivable{
         SIMPLEWORK_INTERFACE_ENTRY(IIoArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+
+private://INnUnit
+    int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
+    
 private://IIoArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "RnnUnit"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
-
-private://INnUnit
-    int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.RnnUnit"; }

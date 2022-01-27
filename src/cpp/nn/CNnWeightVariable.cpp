@@ -41,3 +41,10 @@ template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWe
         ((Q*)pWeights)[i] = -xWeight + CUtils::rand() * xWeight * 2;
     }
 }
+
+int CNnWeightVariable::toArchive(const SIoArchive& ar) {
+    ar.visitObject("value", m_spData);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnWeightVariable, CNnWeightVariable::__getClassKey())

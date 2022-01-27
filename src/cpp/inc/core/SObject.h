@@ -18,14 +18,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Object)
 public:
     typedef IObject IFace;
 
-    template<typename TObject> static inline SObject createObject() {
+    template<typename TObject> static inline SObject createObject(const PData* pData=nullptr) {
         SObject spObject;
-        createObject(TObject::__getClassKey(), spObject);
+        createObject(TObject::__getClassKey(), pData, spObject);
         return spObject;
     }
 
-    static int createObject(const char* szClassKey, SObject& rObject) {
-        return SModule::getSimpleWork()->createObject(szClassKey, rObject);
+    static int createObject(const char* szClassKey, const PData* pData, SObject& rObject) {
+        return SModule::getSimpleWork()->createObject(szClassKey, pData, rObject);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Object)

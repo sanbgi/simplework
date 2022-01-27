@@ -108,6 +108,7 @@
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
+        int __initialize(const PData* pData) { return 0; }\
         int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return SError::ERRORTYPE_FAILURE; \
