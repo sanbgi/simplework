@@ -9,7 +9,7 @@ public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
-        VERIFY(inVars[0].size == inVars[1].size && inVars[1].size==outVar.size)
+        VERIFY(inVars[0].size % inVars[1].size == 0 && inVars[0].size==outVar.size)
         Q* pIn1 = (Q*)inVars[0].data;
         Q* pIn2 = (Q*)inVars[1].data;
         Q* pO = (Q*)outVar.data;
@@ -28,7 +28,7 @@ public:
     template<typename Q>
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
-        VERIFY(inVars[0].size == inVars[1].size && inVars[1].size==outVar.size)
+        VERIFY(inVars[0].size % inVars[1].size == 0 && inVars[0].size==outVar.size)
         Q* pDevia1 = (Q*)inVars[0].devia;
         Q* pDevia2 = (Q*)inVars[1].devia;
         Q* pDeviaO = (Q*)outVar.devia;
