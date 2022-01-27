@@ -156,6 +156,15 @@ public:
     CBasicData(const PData& rData){
         init(rData);
     }
+    CBasicData(const PData* pData){
+        if(pData == nullptr) {
+            m_pInternalPointer = this;
+            m_idInternalType = 0;
+            m_pInternalData = nullptr;
+        }else{
+            init(*pData);
+        }
+    }
 
 public:
     //
