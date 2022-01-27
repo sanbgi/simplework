@@ -23,7 +23,7 @@ struct PSolveVar {
 
 struct PSolveInstruct {
     //
-    // 输入参数个数及位置
+    // 输入参数及输出参数
     //
     int nInVar;
     PSolveVar *ppInVars[4];

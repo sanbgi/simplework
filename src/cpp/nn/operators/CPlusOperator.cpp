@@ -14,9 +14,14 @@ public:
         Q* pIn2 = (Q*)inVars[1].data;
         Q* pO = (Q*)outVar.data;
         Q* pOEnd = pO + outVar.size;
+        Q* pItIn2;
+        Q* pItIn2End = pIn2 + inVars[1].size;
         while(pO < pOEnd) {
-            *pO = *pIn1 + *pIn2;
-            pO++, pIn1++, pIn2++;
+            pItIn2 = pIn2;
+            while(pItIn2 < pItIn2End) {
+                *pO = *pIn1 + *pItIn2;
+                pO++, pIn1++, pItIn2++;
+            }
         }
     }
 
@@ -28,10 +33,14 @@ public:
         Q* pDevia2 = (Q*)inVars[1].devia;
         Q* pDeviaO = (Q*)outVar.devia;
         Q* pDeviaOEnd = pDeviaO + outVar.size;
+        Q* pItDevia2, *pItDevia2End = pDevia2 + inVars[1].size;
         while(pDeviaO < pDeviaOEnd) {
-            *pDevia1 += *pDeviaO;
-            *pDevia2 += *pDeviaO;
-            pDevia1++, pDevia2++, pDeviaO++;
+            pItDevia2 = pDevia2;
+            while(pItDevia2 < pItDevia2End) {
+                *pDevia1 += *pDeviaO;
+                *pItDevia2 += *pDeviaO;
+                pDevia1++, pItDevia2++, pDeviaO++;
+            }
         }
     }
 
