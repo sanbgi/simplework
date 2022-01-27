@@ -1,7 +1,4 @@
 #include "CSequenceUnit.h"
-#include "CType.h"
-#include "CUtils.h"
-#include "CNnOperator.h"
 
 static SCtx sCtx("CSequenceUnit");
 int CSequenceUnit::createUnit(int nInUnits, const SNnUnit pInUnits[], SNnUnit& spUnit) {

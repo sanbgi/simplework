@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_NN_CSequenceUnit_H__
 #define __SimpleWork_NN_CSequenceUnit_H__
 
-#include "nn.h"
+#include "unit.h"
 #include <vector>
 
 using namespace sw;

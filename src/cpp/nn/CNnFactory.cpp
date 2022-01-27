@@ -11,7 +11,7 @@
 #include "units/CPoolUnit.h"
 #include "units/CRnnUnit.h"
 #include "units/CGruUnit.h"
-#include "CSequenceUnit.h"
+#include "units/CSequenceUnit.h"
 #include "CNnLayer.h"
 #include "CNnLayerNetwork.h"
 
