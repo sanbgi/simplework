@@ -16,7 +16,7 @@ public:
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==1)
         VERIFY(inVars[0].size==outVar.size)
-        ((CActivator*)pParameters)->deactivate(inVars[0].size, outVar.data, outVar.devia, inVars[0].devia);
+        ((CActivator*)pParameters)->deactivate(inVars[0].size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {

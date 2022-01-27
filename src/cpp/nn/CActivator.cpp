@@ -17,7 +17,7 @@ public:
                     ((Q*)pYArray)[i] = ((Q*)pZArray)[i];
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
                     ((Q*)pDzArray)[i] = ((Q*)pYDeltaArray)[i];
                 }
@@ -37,17 +37,16 @@ public:
                     ((Q*)pYArray)[i] = z >= 0 ? ( z > 1 ? 1: z ) : 0;
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
-                    if(((Q*)pYArray)[i]>0) {
-                        if(((Q*)pYArray)[i] >= 1) 
-                            ((Q*)pDzArray)[i] = 0;//((Q*)pYDeltaArray)[i] >= 0 ? ((Q*)pYDeltaArray)[i] : 0;
+                    if(((Q*)pZArray)[i]>=0) {
+                        if(((Q*)pZArray)[i] > 1) 
+                            ((Q*)pDzArray)[i] = 0;
                         else    
                             ((Q*)pDzArray)[i] = ((Q*)pYDeltaArray)[i];
                     }else{
                         ((Q*)pDzArray)[i] = 0;
                     }
-                    //((Q*)pDzArray)[i] = ((Q*)pYDeltaArray)[i];
                 }
             }
         }s_activator;
@@ -61,9 +60,9 @@ public:
                     ((Q*)pYArray)[i] = ((Q*)pZArray)[i] >= 0 ? ((Q*)pZArray)[i] : 0;
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
-                    if(((Q*)pYArray)[i]>0) {
+                    if(((Q*)pZArray)[i]>=0) {
                         ((Q*)pDzArray)[i] = ((Q*)pYDeltaArray)[i];
                     }else{
                         ((Q*)pDzArray)[i] = 0;
@@ -80,21 +79,15 @@ public:
             static Q activate(Q x) {
                 return x>=0?x:(s_leaky_a*x);
             }
-            static Q deactivate(Q y) {
-                //
-                //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
-                //  好等于 delta，其中delta = Ycurrent - Yexpect 
-                //
-                return y>=0?1:s_leaky_a;
-            }
             void activate( int nData, void* pZArray, void* pYArray) {
                 for(int i=0; i<nData; i++) {
                     ((Q*)pYArray)[i] = activate(((Q*)pZArray)[i]);
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
-                    ((Q*)pDzArray)[i] = deactivate(((Q*)pYArray)[i]) * ((Q*)pYDeltaArray)[i];
+                    Q dz = ((Q*)pZArray)[i] < 0 ? s_leaky_a : 1;
+                    ((Q*)pDzArray)[i] = dz * ((Q*)pYDeltaArray)[i];
                 }
             }
             Q loss(int nData, void* pYArray, void* pYDeltaArray) {
@@ -115,21 +108,16 @@ public:
             static Q activate(Q x) {
                 return x>=0?x:(s_leaky_a*(exp(x)-1));
             }
-            static Q deactivate(Q y) {
-                //
-                //  目标函数 = 求和(delta * delta) / 2，所以，输出相对于目标函数的偏导数刚
-                //  好等于 delta，其中delta = Ycurrent - Yexpect 
-                //
-                return y>=0?1:(y+s_leaky_a);
-            }
             void activate( int nData, void* pZArray, void* pYArray) {
                 for(int i=0; i<nData; i++) {
                     ((Q*)pYArray)[i] = activate(((Q*)pZArray)[i]);
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
-                    ((Q*)pDzArray)[i] = deactivate(((Q*)pYArray)[i]) * ((Q*)pYDeltaArray)[i];
+                    Q z = ((Q*)pZArray)[i];
+                    Q dz = z >= 0 ? 1 : (activate(z) + s_leaky_a);
+                    ((Q*)pDzArray)[i] = dz * ((Q*)pYDeltaArray)[i];
                 }
             }
             Q loss(int nData, void* pYArray, void* pYDeltaArray) {
@@ -157,9 +145,10 @@ public:
                     ((Q*)pYArray)[i] = activate(((Q*)pZArray)[i]);
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
-                    ((Q*)pDzArray)[i] = deactivate(((Q*)pYArray)[i]) * ((Q*)pYDeltaArray)[i];
+                    Q y = activate(((Q*)pZArray)[i]);
+                    ((Q*)pDzArray)[i] = (y*(1-y)) * ((Q*)pYDeltaArray)[i];
                 }
             }
             Q loss(int nData, void* pYArray, void* pYDeltaArray) {
@@ -180,17 +169,15 @@ public:
                 Q v = exp(-2*x);
                 return (1-v)/(1+v);
             }
-            static Q deactivate(Q y) {
-                return 1-y*y;
-            }
             void activate( int nData, void* pZArray, void* pYArray) {
                 for(int i=0; i<nData; i++) {
                     ((Q*)pYArray)[i] = activate(((Q*)pZArray)[i]);
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
-                    ((Q*)pDzArray)[i] = deactivate(((Q*)pYArray)[i]) * ((Q*)pYDeltaArray)[i];
+                    Q y = activate(((Q*)pZArray)[i]);
+                    ((Q*)pDzArray)[i] = (1-y*y) * ((Q*)pYDeltaArray)[i];
                 }
             }
             Q loss(int nData, void* pYArray, void* pYDeltaArray) {
@@ -240,7 +227,7 @@ public:
                     ((Q*)pYArray)[i] = pExp[i]/dSum;
                 }
             }
-            void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) {
+            void deactivate( int nData, void* pZArray, void* pYDeltaArray, void* pDzArray) {
                 for(int i=0; i<nData; i++) {
                     //
                     //  参考地址：https://blog.csdn.net/jiongjiongai/article/details/88324000

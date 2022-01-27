@@ -412,7 +412,6 @@ public:
         struct CItOutVariables {
             Q* pIn;
             Q* pInDeviation;
-            Q* pOut;
             Q* pOutDeviation;
             Q* pWeights;
             Q* pWeightDevivation;
@@ -422,7 +421,6 @@ public:
         }it = {
             (Q*)inVars[0].data,
             (Q*)inVars[0].devia,
-            (Q*)outVar.data,
             (Q*)outVar.devia,
             (Q*)inVars[1].data,
             (Q*)inVars[1].devia,
@@ -459,7 +457,6 @@ public:
         for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
             itVars0.pIn = it.pIn;
             itVars0.pInDeviation = it.pInDeviation;
-            itVars0.pOut = it.pOut;
             itVars0.pOutDeviation = it.pOutDeviation; 
 
             it.pZDeviatioin = it.pOutDeviation;             
@@ -639,7 +636,6 @@ public:
             //  更新迭代参数
             it.pIn = itVars0.pIn + stepInMove.batch;
             it.pInDeviation = itVars0.pInDeviation + stepInMove.batch;
-            it.pOut = itVars0.pOut + stepOut.batch;
             it.pOutDeviation = itVars0.pOutDeviation + stepOut.batch;
         }
     }
