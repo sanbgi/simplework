@@ -26,12 +26,8 @@ struct PSolveInstruct {
     // 输入参数个数及位置
     //
     int nInVar;
-    int pInVarIndex[4];
-
-    //
-    // 输出参数位置
-    //
-    int iOutVar;
+    PSolveVar *ppInVars[4];
+    PSolveVar *pOutVar;
 
     //
     // 求解参数
@@ -41,7 +37,7 @@ struct PSolveInstruct {
     //
     // 求解器
     //
-    SNnOperator pOperator;
+    INnOperator* pOperator;
 };
 
 struct PSolveLayer {
@@ -72,7 +68,6 @@ struct PLayerContext {
     //解算参数数据
     PSolveLayer solveLayer;
 };
-
 
 int CNnLayerNetwork::createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension, SNnNetwork& spNet) {
     CPointer<CNnLayerNetwork> spNetwork;
@@ -155,11 +150,14 @@ int CNnLayerNetwork::initNetwork() {
             PSolveContext::PSolveOperator spOp = *itOp;
             PSolveInstruct solveParameter;
             solveParameter.nInVar = spOp.nInVars;
-            solveParameter.iOutVar = spOp.iOutVar;
+            if(spOp.iOutVar>=0)
+                solveParameter.pOutVar = arrVars.data() + spOp.iOutVar;
+            else
+                solveParameter.pOutVar = nullptr;
             for(int i=0; i<spOp.nInVars; i++) {
-                solveParameter.pInVarIndex[i] = spOp.pInVars[i];
+                solveParameter.ppInVars[i] = arrVars.data() + spOp.pInVars[i];
             }
-            solveParameter.pOperator = spOp.spOperator;
+            solveParameter.pOperator = spOp.spOperator.getPtr();
             arrSolvers.push_back(solveParameter);
             itOp++;
         }
@@ -425,15 +423,14 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                     //准备输入输出计算参数
                     PSolveInstruct instruct = *pSolver;
                     for(int j=0; j<instruct.nInVar; j++) {
-                        int iVar = instruct.pInVarIndex[j];
-                        evalIn[j].size = layer.pVars[iVar].size;
-                        evalIn[j].data = layer.pVars[iVar].data;
+                        pVar = instruct.ppInVars[j];
+                        evalIn[j].size = pVar->size;
+                        evalIn[j].data = pVar->data;
                     }
 
-                    if(instruct.iOutVar>=0) {
-                        int iOutVarIndex = instruct.iOutVar;
-                        evalOut.size = layer.pVars[iOutVarIndex].size;
-                        evalOut.data = layer.pVars[iOutVarIndex].data;
+                    if(instruct.pOutVar!=nullptr) {
+                        evalOut.size = instruct.pOutVar->size;
+                        evalOut.data = instruct.pOutVar->data;
                     }
 
                     //实际计算函数调用
@@ -723,26 +720,29 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 //
                 // 遍历计算序列并执行
                 //
-                for(int iSolver=layer.nSolvers-1; iSolver>=0; iSolver--) {
+                pItSolver = layer.pSolvers + layer.nSolvers - 1;
+                pItSolverEnd = layer.pSolvers;
+                while(pItSolver>=pItSolverEnd) {
+                    pSolver = pItSolver--;
+
                     //准备输入输出计算参数
-                    PSolveInstruct instruct = layer.pSolvers[iSolver];
-                    int nInVars = instruct.nInVar;
+                    int nInVars = pSolver->nInVar;
                     for(int j=0; j<nInVars; j++) {
-                        int iVar = instruct.pInVarIndex[j];
-                        evalIn[j].size = layer.pVars[iVar].size;
-                        evalIn[j].data = layer.pVars[iVar].data;
-                        evalIn[j].devia = layer.pVars[iVar].devia;
+                        pVar = pSolver->ppInVars[j];
+                        evalIn[j].size = pVar->size;
+                        evalIn[j].data = pVar->data;
+                        evalIn[j].devia = pVar->devia;
                     }
 
-                    if(instruct.iOutVar>=0){
-                        int iOutVarIndex = instruct.iOutVar;
-                        evalOut.size = layer.pVars[iOutVarIndex].size;
-                        evalOut.data = layer.pVars[iOutVarIndex].data;
-                        evalOut.devia = layer.pVars[iOutVarIndex].devia;
+                    if(pSolver->pOutVar!=nullptr){
+                        pVar = pSolver->pOutVar;
+                        evalOut.size = pVar->size;
+                        evalOut.data = pVar->data;
+                        evalOut.devia = pVar->devia;
                     }
 
                     //实际计算函数调用
-                    (*instruct.solver.pDeviaFun)(instruct.solver.pParameter, nInVars, evalIn, evalOut);
+                    (*pSolver->solver.pDeviaFun)(pSolver->solver.pParameter, nInVars, evalIn, evalOut);
                 }
 
                 //
