@@ -20,8 +20,6 @@ public:
     // 创建求解计算器 
     //
     static int solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    static int solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    static int solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
 
 public:
     int solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);

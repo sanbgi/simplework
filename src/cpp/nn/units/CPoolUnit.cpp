@@ -1,7 +1,4 @@
 #include "CPoolUnit.h"
-#include "CType.h"
-#include "CUtils.h"
-#include "CNnOperator.h"
 
 static SCtx sCtx("CPoolUnit");
 int CPoolUnit::createUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode, SNnUnit& spUnit) {
@@ -19,15 +16,12 @@ int CPoolUnit::createUnit(int nWidth, int nHeight, int nStride, const char* szPa
     return sCtx.success();
 }
 
-int CPoolUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+int CPoolUnit::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("池化单元输入参数必须为一个");
     }
-
-    if( CNnOperator::solvePool(m_strPaddingMode.c_str(), m_nWidth, m_nHeight, m_nStrideWidth, nInVars, spInVars, spOutVar ) != sCtx.success() ) {
-        return sCtx.error("卷积运算错误");
-    }
-    return sCtx.success();
+    PNnPool poolParameter = { m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight };
+    return SNnVariable::solve("pool", CData<PNnPool>(poolParameter), nInVars, pInVars, spOutVar);
 }
 
 int CPoolUnit::toArchive(const SIoArchive& ar) {

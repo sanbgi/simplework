@@ -1,6 +1,4 @@
 #include "CDenseUnit.h"
-#include "CType.h"
-#include "CUtils.h"
 
 static SCtx sCtx("CDenseUnit");
 int CDenseUnit::createUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) {

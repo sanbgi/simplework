@@ -126,6 +126,10 @@ public:
         return o;
     }
 
+    static int solve(const char* szOperator, const PData* pData,  int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+        return SNnVariableSolver::getSolver()->solveOp(szOperator, pData, nInVars, pInVars, spOutVar);
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnVariable)
 
 SIMPLEWORK_NN_NAMESPACE_LEAVE

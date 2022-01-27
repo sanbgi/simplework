@@ -1,7 +1,4 @@
 #include "CRnnUnit.h"
-#include "CType.h"
-#include "CUtils.h"
-#include "CNnOperator.h"
 
 static SCtx sCtx("CRnnUnit");
 int CRnnUnit::createUnit(int nCells, const char* szActivator, SNnUnit& spUnit) {

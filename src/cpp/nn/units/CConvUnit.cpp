@@ -1,7 +1,4 @@
 #include "CConvUnit.h"
-#include "CType.h"
-#include "CUtils.h"
-#include "CNnOperator.h"
 
 static SCtx sCtx("CConvUnit");
 int CConvUnit::createUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPaddingMode, const char* szActivator, SNnUnit& spUnit) {
@@ -53,7 +50,10 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
 
     SNnVariable y;
     SNnVariable inConv[3] = { spInVars[0], m_spWeights, m_spBais };
-    if( CNnOperator::solveConv(m_strPaddingMode.c_str(), 3, inConv, y ) != sCtx.success() ) {
+
+    PNnConv convData;
+    convData.szPadding = m_strPaddingMode.c_str();
+    if( SNnVariable::solve("conv", CData<PNnConv>(convData), 3, inConv, y ) != sCtx.success() ) {
         return sCtx.error("卷积运算错误");
     }
 

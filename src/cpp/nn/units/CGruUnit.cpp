@@ -1,7 +1,4 @@
 #include "CGruUnit.h"
-#include "CType.h"
-#include "CUtils.h"
-#include "CNnOperator.h"
 
 static SCtx sCtx("CGruUnit");
 int CGruUnit::createUnit(int nCells, SNnUnit& spUnit) {

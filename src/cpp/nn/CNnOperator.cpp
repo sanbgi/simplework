@@ -34,21 +34,6 @@ int CNnOperator::solveOp(const char* szOp, const PData* pData, int nInVars, cons
     return sCtx.error();
 }
 
-int CNnOperator::solveConv(const char* szPadding, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    PNnConv convData;
-    convData.szPadding = szPadding;
-    return solveOp("conv", CData<PNnConv>(convData), nInVars, pInVars, spOutVar);
-}
-
-int CNnOperator::solvePool(const char* szPadding, int nWidth, int nHeight, int nStride, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    PNnPool poolData;
-    poolData.nWidth = nWidth;
-    poolData.nHeight = nHeight;
-    poolData.nStrideWidth = nStride;
-    poolData.nStrideHeight = nStride;
-    return solveOp("pool", CData<PNnPool>(poolData), nInVars, pInVars, spOutVar);
-}
-
 int CNnOperator::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("参数个数不等于二");

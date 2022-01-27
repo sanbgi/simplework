@@ -1,7 +1,7 @@
 #ifndef __SimpleWork_NN_CDenseUnit_H__
 #define __SimpleWork_NN_CDenseUnit_H__
 
-#include "nn.h"
+#include "unit.h"
 #include <string>
 
 using namespace sw;
