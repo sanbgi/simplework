@@ -2,6 +2,7 @@
 #define __SimpleWork_NN_Operators_Operator_H__
 
 #include "../CNnOperator.h"
+#include "../CNnVariable.h"
 #include "../CSize.h"
 #include "../CActivator.h"
 

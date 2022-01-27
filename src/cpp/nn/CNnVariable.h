@@ -27,6 +27,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnInternalVariable)
         virtual CNnVariable* getVariablePtr() = 0;
         virtual ENnVariableType getVariableType() = 0;
         virtual int getDimension(SDimension& spDimension) = 0;
+        virtual void setSaveForDevia(bool bSaveForDevia) = 0;
+        virtual bool isSaveForDevia() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -70,8 +72,20 @@ public://INnVariable
         }
         return size;
     }
+    void setSaveForDevia(bool bSaveForDevia) {
+
+    }
+    bool isSaveForDevia(){
+        return false;
+    }
 
 protected:
+    bool m_bSaveForDevia;
     SDimension m_spDimension;
+
+protected:
+    CNnVariable() {
+        m_bSaveForDevia = false;
+    }
 };
 #endif//__SimpleWork_NN_CNnVariable_H__
