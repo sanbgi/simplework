@@ -23,61 +23,61 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
 
     SNnVariable operator + (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("plus", 2, pIns, o);
+        SNnVariableSolver::getSolver()->solveOp("plus", nullptr, 2, pIns, o);
         return o;
     }
 
     const SNnVariable& operator += (const SNnVariable& b) {
         SNnVariable pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("plus", 2, pIns, *this);
+        SNnVariableSolver::getSolver()->solveOp("plus", nullptr, 2, pIns, *this);
         return (*this);
     }
 
     SNnVariable operator - (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("minus", 2, pIns, o);
+        SNnVariableSolver::getSolver()->solveOp("minus", nullptr, 2, pIns, o);
         return o;
     }
 
     const SNnVariable& operator -= (const SNnVariable& b) {
         SNnVariable pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("minus", 2, pIns, *this);
+        SNnVariableSolver::getSolver()->solveOp("minus", nullptr, 2, pIns, *this);
         return (*this);
     }
 
     SNnVariable operator * (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("multiply", 2, pIns, o);
+        SNnVariableSolver::getSolver()->solveOp("multiply", nullptr, 2, pIns, o);
         return o;
     }
 
     const SNnVariable& operator *= (const SNnVariable& b) {
         SNnVariable pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("multiply", 2, pIns, *this);
+        SNnVariableSolver::getSolver()->solveOp("multiply", nullptr, 2, pIns, *this);
         return (*this);
     }
 
     SNnVariable operator / (const SNnVariable& b) const {
         SNnVariable o, pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("divide", 2, pIns, o);
+        SNnVariableSolver::getSolver()->solveOp("divide", nullptr, 2, pIns, o);
         return o;
     }
 
     const SNnVariable& operator /= (const SNnVariable& b) {
         SNnVariable pIns[] = {*this, b};
-        SNnVariableSolver::getSolver()->solveOp("divide", 2, pIns, *this);
+        SNnVariableSolver::getSolver()->solveOp("divide", nullptr, 2, pIns, *this);
         return (*this);
     }
 
     SNnVariable op(const char* szOp) {
         SNnVariable o;
-        SNnVariableSolver::getSolver()->solveOp(szOp, 1, this, o);
+        SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 1, this, o);
         return o;
     }
 
     SNnVariable product(const SNnVariable& mat) {
         SNnVariable o, in[2] = { *this, mat };
-        SNnVariableSolver::getSolver()->solveOp("product", 2, in, o);
+        SNnVariableSolver::getSolver()->solveOp("product", nullptr, 2, in, o);
         return o;
     }
 
@@ -109,20 +109,20 @@ public:
 
     static SNnVariable eval(const char* szOp, const SNnVariable& a) {
         SNnVariable o;
-        SNnVariableSolver::getSolver()->solveOp(szOp, 1, &a, o);
+        SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 1, &a, o);
         return o;
     }
 
     static SNnVariable eval(const char* szOp, const SNnVariable& a, const SNnVariable& b) {
         SNnVariable o;
         SNnVariable pInVars[2] = {a, b};
-        SNnVariableSolver::getSolver()->solveOp(szOp, 2, pInVars, o);
+        SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 2, pInVars, o);
         return o;
     }
 
     static SNnVariable eval(const char* szOp, int nInVars, const SNnVariable pInVars[]) {
         SNnVariable o;
-        SNnVariableSolver::getSolver()->solveOp(szOp, nInVars, pInVars, o);
+        SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, nInVars, pInVars, o);
         return o;
     }
 

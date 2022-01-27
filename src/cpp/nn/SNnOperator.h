@@ -26,7 +26,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
         //
         // 解算
         //
-        virtual int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) = 0;
+        virtual int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) = 0;
 
         //
         // 获取计算函数

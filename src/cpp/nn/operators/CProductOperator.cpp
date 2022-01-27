@@ -1,8 +1,8 @@
 #ifndef __SimpleWork_NN_Operators_CProductOperator_h__
 #define __SimpleWork_NN_Operators_CProductOperator_h__
 
-#include "../CNnOperator.h"
-
+#include "operator.h"
+static SCtx sCtx("ProductOperator");
 class CProductOperator : public CNnOperator {
 public:
     template<typename Q>
@@ -70,7 +70,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         SDimension spDim1 = pInVars[0].dimension();
         SDimension spDim2 = pInVars[1].dimension();
         if(spDim2.size() != 2 ) {
@@ -86,5 +86,7 @@ public:
         return createVariable(SDimension(1,pDimSize2), spVarOut);
     }
 };
+
+static SNnOperatorRegister s_Register("product", CNnOperator::createStaticOperator<CProductOperator>);
 
 #endif//__SimpleWork_NN_Operators_CProductOperator_h__

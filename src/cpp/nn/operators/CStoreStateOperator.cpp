@@ -1,8 +1,8 @@
 #ifndef __SimpleWork_NN_Operators_CStoreStateOperator_h__
 #define __SimpleWork_NN_Operators_CStoreStateOperator_h__
 
-#include "../CNnOperator.h"
-#include "../CSize.h"
+#include "operator.h"
+static SCtx sCtx("StoreStateOperator");
 
 //
 // 备份状态值到State中，并且在反向计算中，恢复偏导数
@@ -57,19 +57,14 @@ public:
         return sCtx.error("类型错误");
     }
     
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 2) {
             return sCtx.error("存储状态参数必须为两个，一个为状态变量，一个为计算变量");
         }
-
-        SNnInternalVariable spState = pInVars[0];
-        if( !spState || spState->getVariableType() != ENnVariableType::EVState ) {
-            return sCtx.error("存储状态参数必须为两个，一个为状态变量，一个为计算变量");
-        }
-
         return sCtx.success();
     }
 };
 
+static SNnOperatorRegister s_Register("storeState", CNnOperator::createStaticOperator<CStoreStateOperator>);
 
 #endif//__SimpleWork_NN_Operators_CStoreStateOperator_h__

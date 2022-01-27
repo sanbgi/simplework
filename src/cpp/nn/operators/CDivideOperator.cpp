@@ -1,8 +1,8 @@
 #ifndef __SimpleWork_NN_Operators_CDivideOperator_h__
 #define __SimpleWork_NN_Operators_CDivideOperator_h__
 
-#include "../CNnOperator.h"
-
+#include "operator.h"
+static SCtx sCtx("DividOperator");
 class CDivideOperator : public CNnOperator {
 public:
     template<typename Q>
@@ -48,9 +48,11 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         return solveTwoEleWise(nInVars, pInVars, spVarOut);
     }
 };
+
+static SNnOperatorRegister s_Register("divide", CNnOperator::createStaticOperator<CDivideOperator>);
 
 #endif//__SimpleWork_NN_Operators_CDivideOperator_h__

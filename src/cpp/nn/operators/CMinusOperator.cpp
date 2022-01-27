@@ -1,9 +1,9 @@
-#ifndef __SimpleWork_NN_Operators_CMultiplyOperator_h__
-#define __SimpleWork_NN_Operators_CMultiplyOperator_h__
+#ifndef __SimpleWork_NN_Operators_CMinusOperator_h__
+#define __SimpleWork_NN_Operators_CMinusOperator_h__
 
-#include "../CNnOperator.h"
-
-class CMultiplyOperator : public CNnOperator {
+#include "operator.h"
+static SCtx sCtx("MinusOperator");
+class CMinusOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
@@ -14,7 +14,7 @@ public:
         Q* pO = (Q*)outVar.data;
         Q* pOEnd = pO + outVar.size;
         while(pO < pOEnd) {
-            *pO = (*pIn1) * (*pIn2);
+            *pO = *pIn1 - *pIn2;
             pO++, pIn1++, pIn2++;
         }
     }
@@ -23,17 +23,14 @@ public:
     static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
         VERIFY(inVars[0].size == inVars[1].size && inVars[1].size==outVar.size)
-        Q* pIn1 = (Q*)inVars[0].data;
-        Q* pIn2 = (Q*)inVars[1].data;
         Q* pDevia1 = (Q*)inVars[0].devia;
         Q* pDevia2 = (Q*)inVars[1].devia;
         Q* pDeviaO = (Q*)outVar.devia;
         Q* pDeviaOEnd = pDeviaO + outVar.size;
         while(pDeviaO < pDeviaOEnd) {
-            *pDevia1 += (*pDeviaO)*(*pIn2);
-            *pDevia2 += (*pDeviaO)*(*pIn1);
+            *pDevia1 += *pDeviaO;
+            *pDevia2 += -*pDeviaO;
             pDevia1++, pDevia2++, pDeviaO++;
-            pIn1++, pIn2++;
         }
     }
 
@@ -52,9 +49,11 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         return solveTwoEleWise(nInVars, pInVars, spVarOut);
     }
 };
 
-#endif//__SimpleWork_NN_Operators_CMultiplyOperator_h__
+static SNnOperatorRegister s_Register("minus", CNnOperator::createStaticOperator<CMinusOperator>);
+
+#endif//__SimpleWork_NN_Operators_CMinusOperator_h__

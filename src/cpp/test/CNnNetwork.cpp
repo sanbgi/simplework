@@ -66,8 +66,8 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    //SNnNetwork nn = createLayerNetwork();
-    SNnNetwork nn = createRnnNetwork();
+    SNnNetwork nn = createLayerNetwork();
+    //SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();

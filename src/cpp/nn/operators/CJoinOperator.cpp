@@ -1,8 +1,8 @@
 #ifndef __SimpleWork_NN_Operators_CJoinOperator_h__
 #define __SimpleWork_NN_Operators_CJoinOperator_h__
 
-#include "../CNnOperator.h"
-
+#include "operator.h"
+static SCtx sCtx("JoinOperator");
 class CJoinOperator : public CNnOperator {
 public:
     template<typename Q>
@@ -66,7 +66,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 2) {
             return sCtx.error("连接需要两个参数");
         }
@@ -83,5 +83,7 @@ public:
         return createVariable(SDimension(1,&size), spVarOut);
     }
 };
+
+static SNnOperatorRegister s_Register("join", CNnOperator::createStaticOperator<CJoinOperator>);
 
 #endif//__SimpleWork_NN_Operators_CJoinOperator_h__

@@ -8,6 +8,8 @@
 #define SIMPLEWORK_NN_NAMESPACE_ENTER namespace sw { 
 #define SIMPLEWORK_NN_NAMESPACE_LEAVE }
 
+#include "PNnConv.h"
+#include "PNnPool.h"
 #include "SNnPipe.h"
 #include "SNnUnit.h"
 #include "SNnLayer.h"

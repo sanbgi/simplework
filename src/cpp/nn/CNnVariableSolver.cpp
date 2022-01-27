@@ -37,8 +37,8 @@ int CNnVariableSolver::createStateVariable(const SDimension& spDimension, SNnVar
     return CNnStateVariable::createStateVariable(spDimension, spVar);
 }
 
-int CNnVariableSolver::solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    return CNnOperator::solveOp(szOp, nInVars, pInVars, spOutVar);
+int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    return CNnOperator::solveOp(szOp, pData, nInVars, pInVars, spOutVar);
 }
 
 int CNnVariableSolver::registerSolvedOperator(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {

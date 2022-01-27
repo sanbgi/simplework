@@ -61,6 +61,10 @@ public:
         return (const TValue*)m_pInternalData;
     }
 
+    operator const PData*() {
+        return this;
+    }
+
 public:
     const TValue* getDataPtr() const {
         return (const TValue*)m_pInternalData;

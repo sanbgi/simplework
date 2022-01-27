@@ -1,8 +1,9 @@
 #ifndef __SimpleWork_NN_Operators_CConvOperator_h__
 #define __SimpleWork_NN_Operators_CConvOperator_h__
 
-#include "../CNnOperator.h"
-#include "../CSize.h"
+#include "operator.h"
+
+static SCtx sCtx("ConvOperator");
 
 //
 // 卷积核切换策略数组，w为宽度方向一步切换多少个卷积核
@@ -57,9 +58,6 @@ static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nCon
 
 
 class CConvOperator : public CNnOperator {
-private:
-    string m_strPadding;
-
 public:
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
@@ -76,18 +74,18 @@ public:
         return sCtx.error("类型错误");
     }
 
-    static int createOperator(const char* szPadding, SNnOperator& spOperator) {
-        CPointer<CConvOperator> spOut;
-        CObject::createObject(spOut);
-        if(szPadding != nullptr)
-            spOut->m_strPadding = szPadding;
-        spOperator.setPtr(spOut.getPtr());
-        return sCtx.success();
-    }
-
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 3) {
             return sCtx.error("卷积操作需要三个输入数据");
+        }
+
+        if(pData == nullptr) {
+            return sCtx.error("缺少初始化参数");
+        }
+
+        const PNnConv* pConv = CData<PNnConv>(*pData);
+        if(pConv == nullptr) {
+            return sCtx.error("错误的初始化参数");
         }
 
         SDimension spDim1 = pInVars[0].dimension();
@@ -142,7 +140,7 @@ public:
         //      same -- 步长为1时，保持输出尺寸与输入尺寸一致
         //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
         //
-        if( m_strPadding == "same" ) {
+        if( pConv != nullptr && string(pConv->szPadding) == "same" ) {
             m_sizeOut = {
                 nBatchs,
                 (m_sizeIn.height - 1) / m_nStrideHeight + 1,
@@ -668,5 +666,7 @@ private:
     CBatchSize2D m_stepOut;
     CBatchSize2D m_stepConv;
 };
+
+static SNnOperatorRegister s_Register("conv", CNnOperator::createOperator<CConvOperator>);
 
 #endif//__SimpleWork_NN_Operators_CConvOperator_h__

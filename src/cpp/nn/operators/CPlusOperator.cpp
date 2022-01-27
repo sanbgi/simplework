@@ -1,9 +1,10 @@
-#ifndef __SimpleWork_NN_Operators_CMinusOperator_h__
-#define __SimpleWork_NN_Operators_CMinusOperator_h__
+#ifndef __SimpleWork_NN_Operators_CPlusOperator_h__
+#define __SimpleWork_NN_Operators_CPlusOperator_h__
 
-#include "../CNnOperator.h"
+#include "operator.h"
 
-class CMinusOperator : public CNnOperator {
+static SCtx sCtx("PlusOperator");
+class CPlusOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
@@ -14,7 +15,7 @@ public:
         Q* pO = (Q*)outVar.data;
         Q* pOEnd = pO + outVar.size;
         while(pO < pOEnd) {
-            *pO = *pIn1 - *pIn2;
+            *pO = *pIn1 + *pIn2;
             pO++, pIn1++, pIn2++;
         }
     }
@@ -29,7 +30,7 @@ public:
         Q* pDeviaOEnd = pDeviaO + outVar.size;
         while(pDeviaO < pDeviaOEnd) {
             *pDevia1 += *pDeviaO;
-            *pDevia2 += -*pDeviaO;
+            *pDevia2 += *pDeviaO;
             pDevia1++, pDevia2++, pDeviaO++;
         }
     }
@@ -47,11 +48,13 @@ public:
             return sCtx.success();
         }
         return sCtx.error("类型错误");
-    }
-
-    int solve(int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    }    
+    
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         return solveTwoEleWise(nInVars, pInVars, spVarOut);
     }
 };
 
-#endif//__SimpleWork_NN_Operators_CMinusOperator_h__
+static SNnOperatorRegister s_Register("plus", CNnOperator::createStaticOperator<CPlusOperator>);
+
+#endif//__SimpleWork_NN_Operators_CPlusOperator_h__
