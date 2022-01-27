@@ -66,8 +66,8 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createLayerNetwork();
-    //SNnNetwork nn = createRnnNetwork();
+    //SNnNetwork nn = createLayerNetwork();
+    SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();
@@ -266,7 +266,9 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
     arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);
-    return SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
+    SNnNetwork spNet = SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
+    SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    return SNnNetwork::loadFile("D://snetwork.bin");
 }
 
 SNnNetwork CNnNetwork::createRnnNetwork() {
@@ -282,7 +284,9 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
     arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);
-    return SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
+    SNnNetwork spNet =  SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
+    SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    return SNnNetwork::loadFile("D://snetwork.bin");
 }
 
 SNnNetwork CNnNetwork::createNetwork() {

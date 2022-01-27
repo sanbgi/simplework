@@ -31,7 +31,7 @@ int CPoolUnit::toArchive(const SIoArchive& ar) {
     ar.visit("stridewidth", m_nStrideWidth);
     ar.visit("strideheight", m_nStrideHeight);
     ar.visit("dropoutRate", m_dDropoutRate);
-    ar.visit("padding", m_strPaddingMode);
+    ar.visitString("padding", m_strPaddingMode);
     return sCtx.success();
 }
 

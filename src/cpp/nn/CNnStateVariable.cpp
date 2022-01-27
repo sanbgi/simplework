@@ -28,6 +28,7 @@ void* CNnStateVariable::getData(unsigned int idType) {
 
 
 int CNnStateVariable::toArchive(const SIoArchive& ar) {
+    ar.visitObject("dimension", m_spDimension);
     ar.visitObject("value", m_spData);
     return sCtx.success();
 }

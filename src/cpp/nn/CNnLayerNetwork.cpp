@@ -863,3 +863,13 @@ void CNnLayerNetwork::releaseCtx() {
     }
     m_arrLayerCtx.clear();
 }
+
+
+int CNnLayerNetwork::toArchive(const SIoArchive& ar) {
+    ar.visitObjectArray("layers", m_arrLayers);
+    ar.visitObject("inputDimension", m_spInDimension);
+    ar.visitString("optimizer", m_strOptimizer);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnLayerNetwork, CNnLayerNetwork::__getClassKey())

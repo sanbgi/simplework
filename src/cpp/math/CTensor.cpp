@@ -42,23 +42,17 @@ public:
     }
 
     static int archiveAssist(CTypeAssist** ppAssist, const SIoArchive& ar) {
-        unsigned int idType = (*ppAssist)->m_idType;
-        ar.visit("idType", idType);
         if(ar->isReading()) {
+            unsigned int idType;
+            ar.visit("idType", idType);
             *ppAssist = getTypeAssist(idType);
+        }else{
+            ar.visit("idType", (*ppAssist)->m_idType);
         }
+
         return sCtx.success();
     }
 };
-
-int CTensor::toArchive(const SIoArchive& ar) {
-    CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
-    ar.visit("ver", m_nVer);
-    ar.visit("size", m_nElementSize);
-    ar.visitTaker("data", m_nElementSize * m_pTypeAssist->m_nTypeBytes, m_spElementData);
-    ar.visitObject("dimension", m_spDimVector);
-    return sCtx.success();
-}
 
 int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, void* pData) {
 
@@ -166,6 +160,15 @@ int CTensor::createDimension(SDimension& spDim, int nDims, const int* pDimSizes)
         return sCtx.error("创建维度失败");
     }
     spDim.setPtr(spTensor.getPtr());
+    return sCtx.success();
+}
+
+int CTensor::toArchive(const SIoArchive& ar) {
+    CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
+    ar.visit("ver", m_nVer);
+    ar.visit("size", m_nElementSize);
+    ar.visitTaker("data", m_nElementSize * m_pTypeAssist->m_nTypeBytes, m_spElementData);
+    ar.visitObject("dimension", m_spDimVector);
     return sCtx.success();
 }
 

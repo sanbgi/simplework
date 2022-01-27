@@ -71,11 +71,11 @@ int CConvUnit::toArchive(const SIoArchive& ar) {
     ar.visit("height", m_nHeight);
     ar.visit("layers", m_nLayers);
     ar.visit("shiftconvs", m_nShiftConvs);
-    ar.visit("padding", m_strPaddingMode);
+    ar.visitString("padding", m_strPaddingMode);
     ar.visitString("activator", m_strActivator);
     ar.visit("dropoutRate", m_dDropoutRate);
-    ar.visit("weight", m_spWeights);
-    ar.visit("bais", m_spBais);
+    ar.visitObject("weight", m_spWeights);
+    ar.visitObject("bais", m_spBais);
     return sCtx.success();
 }
 

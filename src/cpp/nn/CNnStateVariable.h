@@ -14,12 +14,12 @@ class CNnStateVariable : public CNnVariable, public IIoArchivable {
 
 private://IIoArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "Weight"; } 
+    const char* getClassName() { return "State"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SIoArchive& ar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.Weight"; }
+    static const char* __getClassKey() { return "sw.nn.State"; }
     static int createStateVariable(const SDimension& spDimension, SNnVariable& spOutVar);
     
 private:
