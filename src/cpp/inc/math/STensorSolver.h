@@ -24,25 +24,25 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         // 升维
         //  @nDimSize 第一个维度(新维度)大小
         //
-        virtual int upHighDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) = 0;
+        virtual int upHighDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) = 0;
 
         //
         // 降维
         //  @nDimSize 第一个维度(新维度)大小
         //
-        virtual int downHighDimension(const SDimension& spIn, SDimension& spOut) = 0;
+        virtual int downHighDimension(const SDimension& spIn, int nDims, SDimension& spOut) = 0;
 
         //
         // 升维
         //  @nDimSize 第一个维度(新维度)大小
         //
-        virtual int upLowDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) = 0;
+        virtual int upLowDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) = 0;
 
         //
         // 降维
         //  @nDimSize 第一个维度(新维度)大小
         //
-        virtual int downLowDimension(const SDimension& spIn, SDimension& spOut) = 0;
+        virtual int downLowDimension(const SDimension& spIn, int nDims, SDimension& spOut) = 0;
 
         //
         // 判断维度是否相同

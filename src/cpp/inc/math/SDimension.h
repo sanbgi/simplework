@@ -53,25 +53,25 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
 
     SDimension upHighDimension(int nDimSize) {
         SDimension spDim;
-        STensorSolver::getSolver()->upHighDimension(*this, nDimSize, spDim);
+        STensorSolver::getSolver()->upHighDimension(*this, 1, &nDimSize, spDim);
         return spDim;
     }
 
-    SDimension downHighDimension() {
+    SDimension downHighDimension(int nDims = 1) {
         SDimension spDim;
-        STensorSolver::getSolver()->downHighDimension(*this, spDim);
+        STensorSolver::getSolver()->downHighDimension(*this, nDims, spDim);
         return spDim;
     }
 
     SDimension upLowDimension(int nDimSize) {
         SDimension spDim;
-        STensorSolver::getSolver()->upLowDimension(*this, nDimSize, spDim);
+        STensorSolver::getSolver()->upLowDimension(*this, 1, &nDimSize, spDim);
         return spDim;
     }
 
-    SDimension downLowDimension() {
+    SDimension downLowDimension(int nDims = 1) {
         SDimension spDim;
-        STensorSolver::getSolver()->downLowDimension(*this, spDim);
+        STensorSolver::getSolver()->downLowDimension(*this, nDims, spDim);
         return spDim;
     }
 

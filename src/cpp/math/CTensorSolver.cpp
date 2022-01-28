@@ -93,58 +93,62 @@ public:
     //
     // 升维
     //
-    int upHighDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) {
-        int nDims = spIn.size();
-        const int* pDimSizes = spIn.data();
+    int upHighDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) {
+        int nPrevDims = spIn.size();
+        const int* pPrevDimSizes = spIn.data();
 
-        int pNewDimSizes[nDims+1];
-        for(int i=0; i<nDims; i++) {
-            pNewDimSizes[i+1] = pDimSizes[i];
+        int pNewDimSizes[nPrevDims+nDims];
+        for(int i=0; i<nPrevDims; i++) {
+            pNewDimSizes[nDims+i] = pPrevDimSizes[i];
         }
-        pNewDimSizes[0] = nDimSize;
-        spOut = SDimension(nDims+1,pNewDimSizes);
+        for(int i=0; i<nDims; i++) {
+            pNewDimSizes[i] = pDimSizes[i];
+        }
+        spOut = SDimension(nPrevDims+nDims,pNewDimSizes);
         return sCtx.success();
     }
 
     //
     // 降维
     //
-    int downHighDimension(const SDimension& spIn, SDimension& spOut){
-        int nDims = spIn.size();
-        if(nDims < 2) {
+    int downHighDimension(const SDimension& spIn, int nDims, SDimension& spOut){
+        int nPrevDims = spIn.size();
+        if(nPrevDims-nDims < 1) {
             sCtx.error("一维一下维度，无法降维");
         }
         const int* pDimSizes = spIn.data();
-        spOut = SDimension(nDims-1,pDimSizes+1);
+        spOut = SDimension(nPrevDims-nDims,pDimSizes+1);
         return sCtx.success();
     }
 
     //
     // 升维
     //
-    int upLowDimension(const SDimension& spIn, int nDimSize, SDimension& spOut) {
-        int nDims = spIn.size();
-        const int* pDimSizes = spIn.data();
+    int upLowDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) {
+        int nPrevDims = spIn.size();
+        const int* pPrevDimSizes = spIn.data();
 
-        int pNewDimSizes[nDims+1];
-        for(int i=0; i<nDims; i++) {
-            pNewDimSizes[i] = pDimSizes[i];
+        int pNewDimSizes[nPrevDims+nDims];
+        for(int i=0; i<nPrevDims; i++) {
+            pNewDimSizes[i] = pPrevDimSizes[i];
         }
-        pNewDimSizes[nDims] = nDimSize;
-        spOut = SDimension(nDims+1,pNewDimSizes);
+        for(int i=0; i<nDims; i++) {
+            pNewDimSizes[nPrevDims+i] = pDimSizes[i];
+        }
+        spOut = SDimension(nPrevDims+nDims,pNewDimSizes);
         return sCtx.success();
     }
 
     //
     // 降维
     //
-    int downLowDimension(const SDimension& spIn, SDimension& spOut){
-        int nDims = spIn.size();
-        if(nDims < 2) {
+    int downLowDimension(const SDimension& spIn, int nDims, SDimension& spOut){
+        int nPrevDims = spIn.size();
+        if(nPrevDims - nDims < 1) {
             sCtx.error("一维一下维度，无法降维");
         }
         const int* pDimSizes = spIn.data();
-        spOut = SDimension(nDims-1,pDimSizes);
+        spOut = SDimension(nPrevDims-nDims,pDimSizes);
         return sCtx.success();
     }
 
