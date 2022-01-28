@@ -73,7 +73,7 @@ void CIoBinaryArReader::enterElement(int nVer) {
 void CIoBinaryArReader::leaveElement() {
     m_arrVers.pop_back();
     if(m_arrVers.size() > 0) {
-        m_nEleVer = *m_arrVers.rend();
+        m_nEleVer = *m_arrVers.rbegin();
     }else{
         m_nEleVer = -1;
     }

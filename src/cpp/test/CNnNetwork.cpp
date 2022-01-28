@@ -66,8 +66,8 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createLayerNetwork();
-    //SNnNetwork nn = createRnnNetwork();
+    //SNnNetwork nn = createLayerNetwork();
+    SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();
@@ -280,7 +280,7 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
     */
     
     std::vector<SNnLayer> arrUnits;
-    arrUnits.push_back(SNnLayer::createRnnLayer(50, "batch"));
+    arrUnits.push_back(SNnLayer::createGruLayer(50, "batch"));
     arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);
