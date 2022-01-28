@@ -13,7 +13,7 @@ int CSequenceUnit::createUnit(int nInUnits, const SNnUnit pInUnits[], SNnUnit& s
 
 int CSequenceUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
-        return sCtx.error("池化单元输入参数必须为一个");
+        return sCtx.error("序列执行单元输入参数必须为一个");
     }
 
     SNnVariable x = spInVars[0];
