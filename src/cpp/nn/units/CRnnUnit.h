@@ -33,7 +33,7 @@ private:
     int m_nCells;
     string m_strActivator;
     SNnVariable m_spWeights;
-    SNnVariable m_spState;
+    SNnState m_spState;
 
 public:
     CRnnUnit() {

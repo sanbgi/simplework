@@ -33,7 +33,7 @@ private:
     SNnVariable m_spWeights;
     SNnVariable m_spWeightsZ;
     SNnVariable m_spWeightsR;
-    SNnVariable m_spState;
+    SNnState m_spState;
 
 public:
     CGruUnit() {

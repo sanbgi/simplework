@@ -7,9 +7,10 @@
 using namespace sw;
 using namespace std;
 
-class CNnStateVariable : public CNnVariable, public IArchivable {
+class CNnStateVariable : public CNnVariable, public INnState, public IArchivable {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnVariable)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(INnState)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnVariable)
 
 private://IArchivable
@@ -18,9 +19,14 @@ private://IArchivable
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
+public://INnState
+    int getDimension(SDimension& spDimension) {
+        return CNnVariable::getDimension(spDimension);
+    }
+
 public://Factory
     static const char* __getClassKey() { return "sw.nn.State"; }
-    static int createStateVariable(const SDimension& spDimension, SNnVariable& spOutVar);
+    static int createState(const SDimension& spDimension, SNnState& spOutVar);
     
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }

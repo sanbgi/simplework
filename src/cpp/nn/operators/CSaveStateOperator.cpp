@@ -1,13 +1,13 @@
-#ifndef __SimpleWork_NN_Operators_CStoreStateOperator_h__
-#define __SimpleWork_NN_Operators_CStoreStateOperator_h__
+#ifndef __SimpleWork_NN_Operators_CSaveStateOperator_h__
+#define __SimpleWork_NN_Operators_CSaveStateOperator_h__
 
 #include "operator.h"
-static SCtx sCtx("StoreStateOperator");
+static SCtx sCtx("CSaveStateOperator");
 
 //
 // 备份状态值到State中，并且在反向计算中，恢复偏导数
 //
-class CStoreStateOperator : public CNnOperator {
+class CSaveStateOperator : public CNnOperator {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
@@ -65,6 +65,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("storeState", CNnOperator::createStaticOperator<CStoreStateOperator>);
+static SNnOperatorRegister s_Register("saveState", CNnOperator::createStaticOperator<CSaveStateOperator>);
 
-#endif//__SimpleWork_NN_Operators_CStoreStateOperator_h__
+#endif//__SimpleWork_NN_Operators_CSaveStateOperator_h__

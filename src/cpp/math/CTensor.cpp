@@ -63,6 +63,8 @@ int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, void* pData) {
     });
     if(pData) {
         memcpy(m_spElementData, pData, nBytes);
+    }else{
+        memset(m_spElementData, 0, nBytes);
     }
     m_pTypeAssist = pTypeAssist;
     m_nElementSize = nSize;

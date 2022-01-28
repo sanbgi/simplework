@@ -14,14 +14,13 @@ static SCtx sCtx("CNnVariableSolver");
 static struct PRunCtx {
     PSolveContext* pSolveCtx;
     map<INnVariable*, int> mapSolvedVars;
-    int registerVar(const SNnVariable& spVar, bool bReplacement = true) {
+    int registerVar(const SNnVariable& spVar) {
         int iVar = -1;
-        SNnVariable spInternalVar = spVar;
-        map<INnVariable*, int>::iterator it = mapSolvedVars.find(spInternalVar.getPtr());
+        map<INnVariable*, int>::iterator it = mapSolvedVars.find(spVar.getPtr());
         if(it == mapSolvedVars.end()) {
             iVar = pSolveCtx->arrVars.size();
-            mapSolvedVars[spInternalVar.getPtr()] = iVar;
-            pSolveCtx->arrVars.push_back(spInternalVar);
+            mapSolvedVars[spVar.getPtr()] = iVar;
+            pSolveCtx->arrVars.push_back(spVar);
         }else{
             iVar = it->second;
         }
@@ -33,8 +32,19 @@ int CNnVariableSolver::createWeightVariable(const SDimension& spDimension, SNnVa
     return CNnWeightVariable::createWeightVariable(spDimension, spVar);
 }
 
-int CNnVariableSolver::createStateVariable(const SDimension& spDimension, SNnVariable& spVar){
-    return CNnStateVariable::createStateVariable(spDimension, spVar);
+int CNnVariableSolver::createState(const SDimension& spDimension, SNnState& spVar){
+    return CNnStateVariable::createState(spDimension, spVar);
+}
+
+int CNnVariableSolver::loadState(const SNnState spState, SNnVariable& spVar) {
+    SNnVariable spIn = spState;
+    return solveOp("loadState", nullptr, 1, &spIn, spVar);
+}
+
+int CNnVariableSolver::saveState(const SNnState spState, const SNnVariable& spVar) {
+    SNnVariable o;
+    SNnVariable pIn[2] = { spState, spVar };
+    return solveOp("saveState", nullptr, 2, pIn, o);
 }
 
 int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
@@ -98,8 +108,8 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
         return sCtx.error("网络单元求解失败");
     }
 
-    pCtx->iInVar = runCtx.registerVar(spInput,false);
-    pCtx->iOutVar = runCtx.registerVar(spOutVariable,false);
+    pCtx->iInVar = runCtx.registerVar(spInput);
+    pCtx->iOutVar = runCtx.registerVar(spOutVariable);
     return sCtx.success();
 }
 

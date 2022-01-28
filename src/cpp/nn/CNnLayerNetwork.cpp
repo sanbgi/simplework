@@ -605,6 +605,9 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         if(pItOpDevia - pOpDeviaBuffer != m_nOpSize || pItWeightDevia - pWeightDeviaBuffer != m_nWeightSize) {
             return sCtx.error("内部异常");
         }
+        static int s = 0;
+        s++;
+        bool bTrace = s%100==0;
     #endif//_DEBUG
 
     //
@@ -630,21 +633,20 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         Q* pOpVarBuf = pOpSolvedBuffer;
         for( int iLayer=0; iLayer<nSolveLayers; iLayer++) {
             pLayer = pItLayer++;
-            layer = *pLayer;
-            pItVar = layer.pVars, pItVarEnd = pItVar+layer.nVars;
+            pItVar = pLayer->pVars, pItVarEnd = pItVar+pLayer->nVars;
             while(pItVar < pItVarEnd) {
                 pVar = pItVar++;
                 switch(pVar->type) {
                 case ENnVariableType::EVOperator:
                     {
                         pVar->data = pOpVarBuf;
-                        pOpVarBuf += pVar->size * layer.nBatchs;
+                        pOpVarBuf += pVar->size * pLayer->nBatchs;
                     }
                     break;
                 }
             }
 
-            PSolveVar* pOutVar = layer.pVars + layer.iOutVar;
+            PSolveVar* pOutVar = pLayer->pVars + pLayer->iOutVar;
             pLayer->pOutData = pOutVar->data;
             pLayer->pOutDevia = pOutVar->devia;
 
@@ -652,9 +654,9 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             // 如果是SEQUENCE模式，则把层输出指针指向最后一个计算数据
             //
             if(pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE) {
-                int nOffset = pOutVar->size*(layer.nBatchs-1);
-                layer.pOutData = ((Q*)layer.pOutData)+nOffset;
-                layer.pOutDevia = ((Q*)layer.pOutDevia)+nOffset;
+                int nOffset = pOutVar->size*(pLayer->nBatchs-1);
+                pLayer->pOutData = ((Q*)pLayer->pOutData)+nOffset;
+                pLayer->pOutDevia = ((Q*)pLayer->pOutDevia)+nOffset;
             }
         }
         VERIFY(pOpVarBuf-pOpSolvedBuffer==m_nOpSize)
@@ -662,9 +664,9 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         //
         // 反向求解
         //
-        pItLayer = pSolveLayers + nSolveLayers - 1;
+        pItLayer = pSolveLayers + nSolveLayers;
         for(int iLayer=nSolveLayers-1; iLayer>=0; iLayer--){
-            pLayer = pItLayer--;
+            pLayer = --pItLayer;
             layer = *pLayer;
 
             //
@@ -837,6 +839,10 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
 
     m_spOptimizer->updateDeviation(m_nBatchIns);
 
+#ifdef _DEBUG
+Q wMax=-100, wMin=100, wSum=0;
+#endif//_DEBUG
+
     //更新权重值
     {
         Q* pItWeightDevia = pWeightDeviaBuffer;
@@ -855,6 +861,21 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                         Q* pDataEnd = pItData + nWeights;
                         while(pItData < pDataEnd) {
                             *pItData -= *pItDevia;
+                            if(*pItData > 1) {
+                                *pItData = 1;
+                            }else if( *pItData < -1){
+                                *pItData = -1;
+                            }
+                            #ifdef _DEBUG
+                                if(*pItData > wMax) {
+                                    wMax = *pItData;
+                                }
+                                if(*pItData < wMin) {
+                                    wMin = *pItData;
+                                }
+                                wSum += *pItData;
+                            #endif//_DEBUG
+
                             pItData++, pItDevia++;
                         }
                         pItWeightDevia += nWeights;
@@ -865,6 +886,13 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         }
         VERIFY(pItWeightDevia-pWeightDeviaBuffer==m_nWeightSize)
     }
+
+    #ifdef _DEBUG
+    
+    if( bTrace ) {
+        cout << "weight : max ->" << wMax << ", min -> " << wMin << ", avg -> "<< wSum / m_nWeightSize << "\n";
+    }
+    #endif//_DEBUG
 
     m_spBatchInDeviation.updateVer();
     spBatchInDeviation = m_spBatchInDeviation;

@@ -6,6 +6,8 @@
 
 SIMPLEWORK_NN_NAMESPACE_ENTER
 
+class SNnState;
+
 //
 // 抽象变量定义，变量可以表示任何可运算的对象，包括：值/向量/矩阵/张量/单位等等
 //
@@ -21,7 +23,17 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariableSolver, "sw.nn.NnVariableSolver")
         //
         // 创建权重变量
         //
-        virtual int createStateVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
+        virtual int createState(const SDimension& spDimension, SNnState& spVar) = 0;
+
+        //
+        // 加载状态值
+        //
+        virtual int loadState(const SNnState spState, SNnVariable& spVar) = 0;
+
+        //
+        // 保存状态值
+        //
+        virtual int saveState(const SNnState spState, const SNnVariable& spVar) = 0;
 
         //
         // 运算求解

@@ -31,7 +31,7 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
     }
 
     SNnVariable x = spInVars[0];
-    SNnVariable y = x.product(m_spWeights) + m_spBais;
+    SNnVariable y = SNnVariable::product(x, m_spWeights) + m_spBais;
     if(m_strActivator.length() > 0) {
         spOutVar = y.op(m_strActivator.c_str());
     }else{

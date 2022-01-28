@@ -14,54 +14,13 @@ static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
     runLearn();
-    //runTestNetwork();
+    //runTest();
 }
 
 void CNnNetwork::runTestNetwork(){
-
-    class CMyUnit : public CObject, public INnUnit {
-    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
-    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
-    public:
-        int eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-            spOutVar = pInVars[0];
-            spOutVar = spOutVar + spOutVar;
-            return sCtx.success();
-        }
-    };
-
-    CPointer<CMyUnit> spObject;
-    CObject::createObject<CMyUnit>(spObject);
-    SNnUnit spUnit;
-    spUnit.setPtr(spObject.getPtr());
-
-    int nIn = 2;
-    SNnNetwork spNet = SNnNetwork::createNetwork(spUnit, SDimension::createDimension(1,&nIn));
-    
-    double inVar[4] = { 2.1, 3.2, 4.1, 5.1 };
-    int pInDimSize[2] = { 2, 2};
-
-    STensor spBatchIn;
-    STensor::createTensor<double>(spBatchIn, SDimension::createDimension(2,pInDimSize), 4, inVar);
-
-    STensor spBatchOut;
-    spNet->eval(spBatchIn, spBatchOut);
-    int nSizeOut = spBatchOut.size();
-    double pOutV[nSizeOut];
-    double* pOut = spBatchOut.data<double>();
-    for(int i=0; i<nSizeOut; i++) {
-        pOutV[i] = pOut[i];
-    }
-
-    spNet.release();
 }
 
 void CNnNetwork::runLearn() {
-
-    SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
-    SNnPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
-
     //
     // 一次读取10个
     //
@@ -74,72 +33,77 @@ void CNnNetwork::runLearn() {
     //SNnNetwork nn = createLeNet_5();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
-    //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin")
+    //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
+    int nLoops = 50;
+    while(nLoops-->0)
+    {
+        SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
+        SNnPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
 
-    double sumAcc = 0;
-    double sumLoss = 0;
-    double sumX = 0.98;
-    int nHit = 0;
+        double sumAcc = 0;
+        double sumLoss = 0;
+        double sumX = 0.98;
+        int nHit = 0;
 
-    STensor spBatchImage, spBatchLabel;
-    while( spImageReader->push(spPipeIn, spBatchImage) == sCtx.success() && spLabelReader->push(spPipeIn, spBatchLabel) == sCtx.success() ) {
-        // 
-        // 分类信息
-        //
-        STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
+        STensor spBatchImage, spBatchLabel;
+        while( spImageReader->push(spPipeIn, spBatchImage) == sCtx.success() && spLabelReader->push(spPipeIn, spBatchLabel) == sCtx.success() ) {
+            // 
+            // 分类信息
+            //
+            STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
 
-        //
-        // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
-        //
-        STensor spIn = SNnNetwork::normalizeTensor(spBatchImage);
+            //
+            // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
+            //
+            STensor spIn = SNnNetwork::normalizeTensor(spBatchImage);
 
-        //
-        // 神经网络求解
-        //
-        STensor spOut = nn.eval(spIn);
+            //
+            // 神经网络求解
+            //
+            STensor spOut = nn.eval(spIn);
 
-        //
-        // 计算偏差量
-        //
-        STensor spOutDeviation = spOut - spClassify;
+            //
+            // 计算偏差量
+            //
+            STensor spOutDeviation = spOut - spClassify;
 
-        //
-        // 学习更新神经网络
-        //
-        nn.learn(spOut, spOutDeviation);
+            //
+            // 学习更新神经网络
+            //
+            nn.learn(spOut, spOutDeviation);
 
-        //
-        // 打印一些结果信息
-        //
-        {
-            int nOutDeviation = spOutDeviation->getDataSize();
-            double* pOutDeviation = spOutDeviation->getDataPtr<double>();
-            double* pOutTarget = spClassify->getDataPtr<double>();
-            int nAcc = 0;
-            double xAcc = 0;
-            double delta = 0;
-            for(int i=0; i<nOutDeviation; i++) {
-                if( pOutTarget[i] > 0.8 ) {
-                    if(pOutDeviation[i] > -0.1) {
-                        nAcc++;
-                        nHit++;
+            //
+            // 打印一些结果信息
+            //
+            {
+                int nOutDeviation = spOutDeviation->getDataSize();
+                double* pOutDeviation = spOutDeviation->getDataPtr<double>();
+                double* pOutTarget = spClassify->getDataPtr<double>();
+                int nAcc = 0;
+                double xAcc = 0;
+                double delta = 0;
+                for(int i=0; i<nOutDeviation; i++) {
+                    if( pOutTarget[i] > 0.8 ) {
+                        if(pOutDeviation[i] > -0.1) {
+                            nAcc++;
+                            nHit++;
+                        }
+                        xAcc += abs(pOutDeviation[i]) / nOutDeviation * 10;
                     }
-                    xAcc += abs(pOutDeviation[i]) / nOutDeviation * 10;
+                    delta += abs(pOutDeviation[i]) / nOutDeviation;
                 }
-                delta += abs(pOutDeviation[i]) / nOutDeviation;
-            }
-            sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
-            sumLoss = sumLoss * sumX + delta * (1-sumX);
-            static int t = 0;
-            if( t++ % 10 == 0) {
-                std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
-                            <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
-                            << sumAcc << ",\tavgAcc:" << nHit / 10.0 / t  << "\n";
+                sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
+                sumLoss = sumLoss * sumX + delta * (1-sumX);
+                static int t = 0;
+                if( t++ % 100 == 0) {
+                    std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
+                                <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
+                                << sumAcc << ",\tavgAcc:" << nHit / 10.0 / t  << "\n";
+                }
             }
         }
+        SNnNetwork::saveFile("D://snetwork.bin", nn);
     }
-
-    //SNnNetwork::saveFile("D://snetwork.bin", nn);
 }
 
 void CNnNetwork::runTest() {
@@ -151,17 +115,18 @@ void CNnNetwork::runTest() {
     //
     STensor spPipeIn = STensor::createValue(10);
     //SNnNetwork nn = createRnnNetwork();
-    SNnNetwork nn = createLayerNetwork();
+    //SNnNetwork nn = createLayerNetwork();
     //SNnNetwork nn = createTestNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createRotNetwork();
     //SNnNetwork nn = createShiftNetwork();
-    //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
+    SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
 
     double sumAcc = 0;
     double sumLoss = 0;
     double sumX = 0.98;
     int nHit = 0;
+    int nData = 0;
 
     STensor spBatchImage, spBatchLabel;
     while( spImageReader->push(spPipeIn, spBatchImage) == sCtx.success() && spLabelReader->push(spPipeIn, spBatchLabel) == sCtx.success() ) {
@@ -194,6 +159,7 @@ void CNnNetwork::runTest() {
         // 打印一些结果信息
         //
         {
+            nData += 10;    
             int nOutDeviation = spOutDeviation->getDataSize();
             double* pOutDeviation = spOutDeviation->getDataPtr<double>();
             double* pOutTarget = spClassify->getDataPtr<double>();
@@ -213,10 +179,10 @@ void CNnNetwork::runTest() {
             sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
             sumLoss = sumLoss * sumX + delta * (1-sumX);
             static int t = 0;
-            if( t++ % 10 == 0) {
+            if( t++ % 100 == 0) {
                 std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
                             <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
-                            << sumAcc << ",\tavgAcc:" << nHit / 10.0 / t  << "\n";
+                            << sumAcc << ",\tavgAcc:" << nHit * 1.0 / nData  << "\n";
             }
         }
     }
@@ -280,7 +246,7 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
     */
     
     std::vector<SNnLayer> arrUnits;
-    arrUnits.push_back(SNnLayer::createGruLayer(50, "batch"));
+    arrUnits.push_back(SNnLayer::createRnnLayer(50, "sequence"));
     arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);

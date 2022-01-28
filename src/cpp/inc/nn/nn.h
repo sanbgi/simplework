@@ -15,6 +15,7 @@
 #include "SNnLayer.h"
 #include "SNnNetwork.h"
 #include "SNnDevia.h"
+#include "SNnState.h"
 #include "SNnVariable.h"
 #include "SNnVariableSolver.h"
 #include "SNnFactory.h"

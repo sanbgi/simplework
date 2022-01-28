@@ -41,9 +41,11 @@ class CNnVariableSolver : public CObject, public INnVariableSolver{
 
 public:
     int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar);
-    int createStateVariable(const SDimension& spDimension, SNnVariable& spVar);
+    int createState(const SDimension& spDimension, SNnState& spVar);
     int solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-
+    int loadState(const SNnState spState, SNnVariable& spVar);
+    int saveState(const SNnState spState, const SNnVariable& spVar);
+    
 public:
     static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PSolveContext* pCtx);
     static int registerSolvedOperator(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);

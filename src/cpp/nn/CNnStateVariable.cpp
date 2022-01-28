@@ -1,7 +1,7 @@
 #include "CNnStateVariable.h"
 
 static SCtx sCtx("CNnStateVariable");
-int CNnStateVariable::createStateVariable(const SDimension& spDimension, SNnVariable& spOutVar) { 
+int CNnStateVariable::createState(const SDimension& spDimension, SNnState& spOutVar) { 
     CPointer<CNnStateVariable> spState;
     CObject::createObject(spState);
     spState->m_spDimension = spDimension;

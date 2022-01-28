@@ -38,13 +38,14 @@ int CGruUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
         }
     }
 
-    SNnVariable joinedx = SNnVariable::eval("join", m_spState, spInVars[0] );
-    SNnVariable z = joinedx.product(m_spWeightsZ).op("sigmod");
-    SNnVariable r = joinedx.product(m_spWeightsR).op("sigmod");
-    SNnVariable hh = SNnVariable::eval("join", r * m_spState, spInVars[0]);
-    hh = hh.product(m_spWeights).op("tanh");
-    spOutVar = hh - z * m_spState + z * hh; 
-    SNnVariable::eval("storeState", m_spState, spOutVar);
+    SNnVariable state = SNnVariable::loadState(m_spState);
+    SNnVariable joinedx = SNnVariable::eval("join", state, spInVars[0] );
+    SNnVariable z = SNnVariable::product(joinedx, m_spWeightsZ).op("sigmod");
+    SNnVariable r = SNnVariable::product(joinedx, m_spWeightsR).op("sigmod");
+    SNnVariable hh = SNnVariable::eval("join", r * state, spInVars[0]);
+    hh = SNnVariable::product(hh,m_spWeights).op("tanh");
+    spOutVar = hh - z * state + z * hh; 
+    SNnVariable::saveState(m_spState, spOutVar);
     return sCtx.success();
 }
 

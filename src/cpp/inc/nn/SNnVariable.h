@@ -12,7 +12,7 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnVariable", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnVariable", 211202)
 
         //
         // 获取变量维度
@@ -75,11 +75,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return o;
     }
 
-    SNnVariable product(const SNnVariable& mat) {
-        SNnVariable o, in[2] = { *this, mat };
-        SNnVariableSolver::getSolver()->solveOp("product", nullptr, 2, in, o);
-        return o;
-    }
 
     SDimension dimension() const{
         SDimension spDimension;
@@ -91,17 +86,26 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
     }
 
 public:
-    static int createState(int nDims, const int pDimSizes[], SNnVariable& spVar) {
-        return SNnVariableSolver::getSolver()->createStateVariable(SDimension(nDims, pDimSizes), spVar);
+    static int createState(const SDimension& spDim, SNnState& spVar) {
+        return SNnVariableSolver::getSolver()->createState(spDim, spVar);
+    }
+    static int loadState(const SNnState spState, SNnVariable& spVar) {
+        return SNnVariableSolver::getSolver()->loadState(spState, spVar);
+    }
+    static SNnVariable loadState(const SNnState spState) {
+        SNnVariable o;
+        SNnVariableSolver::getSolver()->loadState(spState, o);
+        return o;
+    }
+
+    static int saveState(const SNnState spState, const SNnVariable& spVar) {
+        return SNnVariableSolver::getSolver()->saveState(spState, spVar);
     }
 
     static int createWeight(int nDims, const int pDimSizes[], SNnVariable& spVar) {
         return SNnVariableSolver::getSolver()->createWeightVariable(SDimension(nDims, pDimSizes), spVar);
     }    
     
-    static int createState(const SDimension& spDim, SNnVariable& spVar) {
-        return SNnVariableSolver::getSolver()->createStateVariable(spDim, spVar);
-    }
 
     static int createWeight(const SDimension& spDim, SNnVariable& spVar) {
         return SNnVariableSolver::getSolver()->createWeightVariable(spDim, spVar);
@@ -129,6 +133,13 @@ public:
     static int solve(const char* szOperator, const PData* pData,  int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
         return SNnVariableSolver::getSolver()->solveOp(szOperator, pData, nInVars, pInVars, spOutVar);
     }
+
+    static SNnVariable product(const SNnVariable& vec, const SNnVariable& mat) {
+        SNnVariable o, in[2] = { vec, mat };
+        SNnVariableSolver::getSolver()->solveOp("product", nullptr, 2, in, o);
+        return o;
+    }
+
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnVariable)
 
