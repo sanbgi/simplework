@@ -33,14 +33,15 @@ int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
         }
     }
 
-    SNnVariable joinedx = SNnVariable::eval("join", m_spState, spInVars[0]);
-    SNnVariable y = joinedx.product(m_spWeights);
+    SNnVariable state = SNnVariable::loadState(m_spState);
+    SNnVariable joinedx = SNnVariable::eval("join", state, spInVars[0]);
+    SNnVariable y = SNnVariable::product(joinedx,m_spWeights);
     if(m_strActivator.length() > 0) {
         spOutVar = y.op(m_strActivator.c_str());
     }else{
         spOutVar = y.op("relu");
     }
-    SNnVariable::eval("storeState", m_spState, spOutVar);
+    SNnVariable::saveState(m_spState, spOutVar);
     return sCtx.success();
 }
 
