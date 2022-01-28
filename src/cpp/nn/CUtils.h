@@ -8,9 +8,7 @@ using namespace sw;
 class CUtils {
 public:
     static double rand(); 
-    static bool isSameDimension(const SDimension& spDimension1, const SDimension& spDimension2);
-
-
+    
     //
     // 反向计算偏导数，注意计算模式
     //  1，权重偏导数会累加

@@ -66,7 +66,7 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
         }
     }else
     {
-        if( !CUtils::isSameDimension(spInDimension1,spInDimension2) ) {
+        if( !spInDimension1.isEqual(spInDimension2) ) {
             return sCtx.error("相加的两个元素维度不一致");
         }
     }

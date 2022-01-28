@@ -75,6 +75,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
         return spDim;
     }
 
+    bool isEqual(const SDimension& spDim) {
+        return STensorSolver::getSolver()->isEqual(*this, spDim);;
+    }
+
     static int createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {
         return SMathFactory::getFactory()->createDimension(spDim, nDims, pDimSizes);
     }

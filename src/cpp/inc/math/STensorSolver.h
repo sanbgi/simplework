@@ -44,6 +44,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //
         virtual int downLowDimension(const SDimension& spIn, SDimension& spOut) = 0;
 
+        //
+        // 判断维度是否相同
+        //
+        virtual bool isEqual(const SDimension& spDim1, const SDimension& spDim2) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

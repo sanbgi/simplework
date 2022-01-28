@@ -147,6 +147,28 @@ public:
         spOut = SDimension(nDims-1,pDimSizes);
         return sCtx.success();
     }
+
+    bool isEqual(const SDimension& spDim1, const SDimension& spDim2) {
+        if(spDim1.getPtr() == spDim2.getPtr()) {
+            return true;
+        }
+
+        int nSize1 = spDim1.size();
+        int nSize2 = spDim2.size();
+        const int* pDimSize1 = spDim1.data();
+        const int* pDimSize2 = spDim2.data();
+        if( nSize1 != nSize2 ) {
+            return false;
+        }
+
+        while(nSize1>0) {
+            if(*pDimSize2 != *pDimSize1) {
+                return false;
+            }
+            nSize1--, pDimSize1++, pDimSize2++;
+        }
+        return true;
+    }
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSolver, STensorSolver::__getClassKey())
