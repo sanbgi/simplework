@@ -15,6 +15,10 @@ int CNnLayer::createLayer(const SNnUnit& spUnit, const char* szMode, SNnLayer& s
             sp->m_eMode = ENnLayerMode::EMODE_BATCH;
         }else if(strMode == "sequence") {
             sp->m_eMode = ENnLayerMode::EMODE_SEQUENCE;
+        }else if( strMode == "rbatch" ) {
+            sp->m_eMode = ENnLayerMode::EMODE_RBATCH;
+        }else if(strMode == "rsequence") {
+            sp->m_eMode = ENnLayerMode::EMODE_RSEQUENCE;
         }else{
             return sCtx.error("无效的层模式");
         }

@@ -17,8 +17,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnLayer)
     //
     enum ENnLayerMode {
         EMODE_NONE,
-        EMODE_BATCH,
-        EMODE_SEQUENCE,
+        EMODE_BATCH,        //从前到后访问输入数据，并且打包输出
+        EMODE_SEQUENCE,     //从前到后访问输入数据，只保留最后一个输出
+        EMODE_RBATCH,       //从后到前访问输入数据，并且打包输出
+        EMODE_RSEQUENCE,    //从后到前访问输入数据，只保留最后一个输出(也就是位置在第一个位置的输出)
     };
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnLayer", 211223)

@@ -1,6 +1,49 @@
-#include "CConvUnit.h"
 
+#include "unit.h"
+#include <string>
+
+using namespace sw;
+using namespace std;
 static SCtx sCtx("CConvUnit");
+class CConvUnit : public CObject, public INnUnit, public IArchivable{
+
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+public://CObject
+    int __initialize(const PData* pData);
+
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "ConvUnit"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar);
+
+private://INnUnit
+    int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.ConvUnit"; }
+
+private:
+    //基础参数
+    int m_nWidth;
+    int m_nHeight;
+    int m_nLayers;
+    int m_nShiftConvs;
+    double m_dDropoutRate;
+    string m_strPaddingMode;
+    string m_strActivator;
+    SNnVariable m_spWeights;
+    SNnVariable m_spBais;
+
+public:
+    CConvUnit() {
+    }
+};
+
 int CConvUnit::__initialize(const PData* pData) {
     const PNnConv* pConv = CData<PNnConv>(pData);
     if(pConv == nullptr) {

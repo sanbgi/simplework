@@ -1,6 +1,45 @@
-#include "CRnnUnit.h"
+
+#include "unit.h"
+#include <string>
+
+using namespace sw;
+using namespace std;
 
 static SCtx sCtx("CRnnUnit");
+class CRnnUnit : public CObject, public INnUnit, public IArchivable{
+
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
+        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
+
+public://CObject
+    int __initialize(const PData* pData);
+
+private://INnUnit
+    int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
+    
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "RnnUnit"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar);
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.RnnUnit"; }
+
+private:
+    //基础参数
+    int m_nCells;
+    string m_strActivator;
+    SNnVariable m_spWeights;
+    SNnState m_spState;
+
+public:
+    CRnnUnit() {
+    }
+};
+
 int CRnnUnit::__initialize(const PData* pData) {
     const PNnRnn* pRnn = CData<PNnRnn>(pData);
     if(pRnn == nullptr) {
