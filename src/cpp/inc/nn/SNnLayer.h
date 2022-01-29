@@ -9,7 +9,7 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 
 
 //
-// 神经网络核心接口定义
+// 神经网络层
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(NnLayer)
     //
@@ -58,11 +58,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnLayer)
     static SNnLayer createGruLayer(int nCells, const char* szMode=nullptr){
         return createLayer(SNnUnit::createGruUnit(nCells), szMode);
     }
-    static SNnLayer createConvLayer(int nWidth, int nHeight, int nLayers, int nShiftConvs = 1, const char* szPaddingMode = nullptr, const char* szActivator = nullptr) {
-        return createLayer(SNnUnit::createConvUnit(nWidth,nHeight,nLayers,nShiftConvs,szPaddingMode,szActivator));
+    static SNnLayer createConvLayer(const PNnConv& rConv) {
+        return createLayer(SNnUnit::createConvUnit(rConv));
     }
-    static SNnLayer createPoolLayer(int nWidth, int nHeight, int nStride, const char* szPaddingMode=nullptr){
-        return createLayer(SNnUnit::createPoolUnit(nWidth,nHeight,nStride,szPaddingMode));
+    static SNnLayer createPoolLayer(const PNnPool& rPool){
+        return createLayer(SNnUnit::createPoolUnit(rPool));
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnLayer)

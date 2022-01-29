@@ -27,14 +27,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnUnit, "sw.nn.NnUnit")
         SNnFactory::getFactory()->createDenseUnit(nCells, dDropoutRate, szActivator, spUnit);
         return spUnit;
     }
-    static SNnUnit createConvUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs = 1, const char* szPaddingMode = nullptr, const char* szActivator = nullptr) {
+    static SNnUnit createConvUnit(const PNnConv& rData) {
         SNnUnit spUnit;
-        SNnFactory::getFactory()->createConvUnit(nWidth, nHeight, nLayers, nShiftConvs, szPaddingMode, szActivator, spUnit);
+        SNnFactory::getFactory()->createConvUnit(CData<PNnConv>(rData), spUnit);
         return spUnit;
     }
-    static SNnUnit createPoolUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode=nullptr){
+    static SNnUnit createPoolUnit(const PNnPool& rData){
         SNnUnit spUnit;
-        SNnFactory::getFactory()->createPoolUnit(nWidth, nHeight, nStride, szPaddingMode, spUnit);
+        SNnFactory::getFactory()->createPoolUnit(CData<PNnPool>(rData), spUnit);
         return spUnit;
     }
     static SNnUnit createRnnUnit(int nCells, const char* szActivator=nullptr) {

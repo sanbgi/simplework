@@ -1,19 +1,23 @@
 #include "CConvUnit.h"
 
 static SCtx sCtx("CConvUnit");
-int CConvUnit::createUnit(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPaddingMode, const char* szActivator, SNnUnit& spUnit) {
+int CConvUnit::createUnit(const PData& rData, SNnUnit& spUnit) {
+    const PNnConv* pConv = CData<PNnConv>(rData);
+    if(pConv == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
     CPointer<CConvUnit> spConv;
     CObject::createObject(spConv);
-    spConv->m_nWidth = nWidth;
-    spConv->m_nHeight = nHeight;
-    spConv->m_nLayers = nLayers;
-    spConv->m_nShiftConvs = nShiftConvs;
+    spConv->m_nWidth = pConv->nWidth;
+    spConv->m_nHeight = pConv->nHeight;
+    spConv->m_nLayers = pConv->nLayers;
+    spConv->m_nShiftConvs = pConv->nShiftConvs;
     spConv->m_dDropoutRate = 0;
-    if( szPaddingMode != nullptr) {
-        spConv->m_strPaddingMode = szPaddingMode;
+    if( pConv->szPadding != nullptr) {
+        spConv->m_strPaddingMode = pConv->szPadding;
     }
-    if( szActivator!=nullptr ){
-        spConv->m_strActivator = szActivator;
+    if( pConv->szActivator!=nullptr ){
+        spConv->m_strActivator = pConv->szActivator;
     }
     spUnit.setPtr(spConv.getPtr());
     return sCtx.success();

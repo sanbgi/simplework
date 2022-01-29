@@ -25,7 +25,7 @@ private://INnUnit
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.PoolUnit"; }
-    static int createUnit(int nWidth, int nHeight, int nStride, const char* szPaddingMode, SNnUnit& spUnit);
+    static int createUnit(const PData& rData, SNnUnit& spUnit);
 
 private:
     //基础参数

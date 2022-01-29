@@ -25,8 +25,8 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    //SNnNetwork nn = createLayerNetwork();
-    SNnNetwork nn = createRnnNetwork();
+    SNnNetwork nn = createLayerNetwork();
+    //SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();
@@ -209,10 +209,10 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 
 SNnNetwork CNnNetwork::createUnitNetwork() {
     std::vector<SNnUnit> arrUnits;
-    arrUnits.push_back(SNnUnit::createConvUnit(5,5,32));
-    arrUnits.push_back(SNnUnit::createPoolUnit(2,2,2));
-    arrUnits.push_back(SNnUnit::createConvUnit(7,7,64));
-    arrUnits.push_back(SNnUnit::createPoolUnit(2,2,2));
+    arrUnits.push_back(SNnUnit::createConvUnit({5,5,32}));
+    arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
+    arrUnits.push_back(SNnUnit::createConvUnit({7,7,64}));
+    arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
     arrUnits.push_back(SNnUnit::createDenseUnit(576));
     arrUnits.push_back(SNnUnit::createDenseUnit(10, 0, "softmax"));
     SNnUnit spSeq = SNnUnit::createSequenceUnit(arrUnits.size(), arrUnits.data());
@@ -224,10 +224,10 @@ SNnNetwork CNnNetwork::createUnitNetwork() {
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
     std::vector<SNnLayer> arrUnits;
-    arrUnits.push_back(SNnLayer::createConvLayer(5,5,32));
-    arrUnits.push_back(SNnLayer::createPoolLayer(2,2,2));
-    arrUnits.push_back(SNnLayer::createConvLayer(7,7,64));
-    arrUnits.push_back(SNnLayer::createPoolLayer(2,2,2));
+    arrUnits.push_back(SNnLayer::createConvLayer({5,5,32}));
+    arrUnits.push_back(SNnLayer::createPoolLayer({2,2,2,2}));
+    arrUnits.push_back(SNnLayer::createConvLayer({7,7,64}));
+    arrUnits.push_back(SNnLayer::createPoolLayer({2,2,2,2}));
     arrUnits.push_back(SNnLayer::createDenseLayer(576));
     arrUnits.push_back(SNnLayer::createDenseLayer(10, 0, "softmax"));
     int pDimSizes[] = {28, 28};

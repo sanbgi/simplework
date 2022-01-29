@@ -6,7 +6,7 @@
 SIMPLEWORK_NN_NAMESPACE_ENTER
 
 //
-// 神经网络权重偏差定义，用于更新神经网络权重
+// 神经网络权重偏差定义，用于更新神经网络权重(未来并行训练时启用)
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(NnDevia, "sw.nn.NnDevia")
 
