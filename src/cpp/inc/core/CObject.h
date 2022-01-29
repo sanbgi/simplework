@@ -72,10 +72,11 @@ private:
     public:
         static int __createObject(CPointer<TObject>& spPointer, const PData* pData=nullptr) {
             __CObjectImp* pCreateObj = new __CObjectImp();
-            if( int retCode = pCreateObj->__initialize(pData) != SError::ERRORTYPE_SUCCESS ) {
-                return retCode;
+            if(pData!=nullptr) {
+                if( int retCode = pCreateObj->__initialize(pData) != SError::ERRORTYPE_SUCCESS ) {
+                    return retCode;
+                }
             }
-            
             spPointer.take(pCreateObj,(__IObjectImp*)pCreateObj);
             return SError::ERRORTYPE_SUCCESS;
         }
