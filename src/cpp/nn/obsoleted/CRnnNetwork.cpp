@@ -453,8 +453,8 @@ template<typename Q> int CRnnNetwork::learnT(const STensor& spBatchOut, const ST
     }
 
     m_spOptimizer->updateDeviation(nTensor);
-    pSolver->del(nWeights, it.pWeight, pWeightDerivationArray);
-    pSolver->del(nCells, (Q*)(void*)m_spBais, pBaisDeviationArray);
+    pSolver->minus(nWeights, it.pWeight, pWeightDerivationArray);
+    pSolver->minus(nCells, (Q*)(void*)m_spBais, pBaisDeviationArray);
     return sCtx.success();
 }
 

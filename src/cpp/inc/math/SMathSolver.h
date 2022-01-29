@@ -18,11 +18,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathSolver, "sw.math.MathSolver")
         // 将一个向量加入另外一个向量或减去
         //
         virtual int add(int nSize, void* pDesc, void* pSrc) = 0;
-        virtual int del(int nSize, void* pDesc, void* pSrc) = 0;
+        virtual int minus(int nSize, void* pDesc, void* pSrc) = 0;
         virtual int copy(int nSize, void* pDesc, void* pSrc) = 0;
         virtual int zero(int nSize, void* pDesc) = 0;
         virtual int add(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
-        virtual int del(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        virtual int minus(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
         //
         //  加权求和，y = in1 * weight + in2 * (1-weight)
         //
@@ -33,7 +33,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathSolver, "sw.math.MathSolver")
         // 向量（输入） * 矩阵 = 向量（输出）
         //
         virtual int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) = 0;
-        virtual int multiplyAccDeviation(PDeviaVector vecOut, PDeviaVector vecWeights, PDeviaVector vecIn) = 0;
 
         //
         // 两个向量连接

@@ -29,7 +29,7 @@ struct PVector {
 };
 
 struct PDeviaVector {
-    SIMPLEWORK_PDATAKEY(PVector, "sw.math.DeviaVector")
+    SIMPLEWORK_PDATAKEY(PDeviaVector, "sw.math.DeviaVector")
     
     //
     // 大小

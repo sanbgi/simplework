@@ -8,7 +8,6 @@
 #define SIMPLEWORK_MATH_NAMESPACE_LEAVE }
 
 #include "PVector.h"
-#include "PTensor.h"
 #include "STensor.h"
 #include "SDimension.h"
 #include "STensorSolver.h"

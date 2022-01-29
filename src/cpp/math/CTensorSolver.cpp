@@ -7,7 +7,6 @@ using namespace sw;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
-static unsigned int s_double_type_id = CBasicData<double>::getStaticType();
 static SCtx sCtx("CTensorSolver");
 
 //
@@ -25,69 +24,25 @@ public:
             return sCtx.error("大小不同的两个张量不能相减");
         }
 
-        if(t1->getDataType() != s_double_type_id || t2->getDataType() != s_double_type_id ) {
-            return sCtx.error("目前张量运算只支持双精度类型");
+        int idType1 = t1.type();
+        int idType2 = t2.type();
+        if(idType1 != idType2 ) {
+            return sCtx.error("类型不同的两个张量无法相减");
         }
 
-        if( STensor::createTensor<double>(spOut, t1.dimension(), nSize) != sCtx.success() ) {
+        if( STensor::createTensor(spOut, t1.dimension(), idType1, nSize) != sCtx.success() ) {
             return sCtx.error("创建结果张量失败");
         }
 
-        double* pT1 = t1->getDataPtr<double>();
-        double* pT2 = t2->getDataPtr<double>();
-        double* pOut = spOut->getDataPtr<double>();
-        for(int i=0; i<nSize; i++) {
-            pOut[i] = pT1[i] - pT2[i];
-        }
-        return sCtx.success();
-    }
-
-    int multiply( const PTensor& t1, const PTensor& t2, IVisitor<const PTensor&>* pRecerver) {
-        if( t1.idType != s_double_type_id || t2.idType != s_double_type_id ) {
-            return sCtx.error();
+        void* pT1 = t1->getDataPtr(idType1);
+        void* pT2 = t2->getDataPtr(idType1);
+        void* pOut = spOut->getDataPtr(idType1);
+        SMathSolver spSolver;
+        if( SMathSolver::getSolver(idType1, spSolver) ) {
+            return sCtx.error("数学计算器不支持的数据类型");
         }
 
-        if(t1.nDims < 1 || t2.nDims < 1 ) {
-            return sCtx.error();
-        }
-
-        if(t1.pDimSizes[t1.nDims-1] != t2.pDimSizes[0] ) {
-            return sCtx.error();
-        }
-
-        int mlength = t1.pDimSizes[t1.nDims-1];
-        int nT1vector = t1.nData / mlength;
-        int nT2vector = t2.nData / mlength;
-
-        // 计算结果数据
-        int nResSize = nT1vector * nT2vector;
-        double dResTensor[nResSize];
-        for( int i=0; i<nT1vector; i++) {
-            for(int j=0; j<nT2vector; j++) {
-                double dRes = 0;
-                for( int k=0; k<mlength; k++ ) {
-                    dRes += t1.pDoubleArray[i*mlength+k] * t2.pDoubleArray[k*nT2vector+j];
-                }
-                dResTensor[i*nT2vector+j] = dRes;
-            }
-        }
-        
-        // 计算结果维度
-        int nResDims = t1.nDims+t2.nDims-2;
-        int nResDimSizes[nResDims];
-        for(int i=0; i<t1.nDims-1; i++) {
-            nResDimSizes[i] = t1.pDimSizes[i];
-        }
-        for(int j=1; j<t2.nDims; j++) {
-            nResDimSizes[t1.nDims+j-2] = t2.pDimSizes[j];
-        }
-
-        PTensor resTensor;
-        resTensor.nData = nResSize;
-        resTensor.pDoubleArray = dResTensor;
-        resTensor.nDims = nResDims;
-        resTensor.pDimSizes = nResDimSizes;
-        return pRecerver->visit(resTensor);
+        return spSolver->minus(nSize, pT1, pT2, pOut);
     }
 
     //
@@ -114,7 +69,7 @@ public:
     int downHighDimension(const SDimension& spIn, int nDims, SDimension& spOut){
         int nPrevDims = spIn.size();
         if(nPrevDims-nDims < 1) {
-            sCtx.error("一维一下维度，无法降维");
+            return sCtx.error("一维一下维度，无法降维");
         }
         const int* pDimSizes = spIn.data();
         spOut = SDimension(nPrevDims-nDims,pDimSizes+1);

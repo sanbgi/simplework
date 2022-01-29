@@ -5,6 +5,9 @@
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER 
 
+//
+// 备用类型，还未启用
+//
 struct PTensor {
     SIMPLEWORK_PDATAKEY(PTensor, "sw.math.Tensor")
 

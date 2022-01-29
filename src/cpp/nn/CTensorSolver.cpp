@@ -5,14 +5,14 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
 
     int nSize = spIn->getDataSize();
     STensor spOutTensor;
-    if( STensor::createTensor<double>(spOutTensor, spIn.dimension(), nSize ) != sCtx.success() ) {
+    if( STensor::createTensor<float>(spOutTensor, spIn.dimension(), nSize ) != sCtx.success() ) {
         return sCtx.error("创建标准化张量失败");
     }
 
     unsigned int iInType = spIn->getDataType();
     if(iInType == CBasicData<unsigned char>::getStaticType() ) {
         unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
-        double* pDesc = spOutTensor->getDataPtr<double>();
+        float* pDesc = spOutTensor->getDataPtr<float>();
         for(int i=0; i<nSize; i++) {
             pDesc[i] = pSrc[i] / 255.0;
         }
@@ -44,7 +44,7 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     //
     int nSize = spIn->getDataSize();
     STensor spOutTensor;
-    if( STensor::createTensor<double>(spOutTensor, spNewDimVector, nSize*nClassify ) != sCtx.success() ) {
+    if( STensor::createTensor<float>(spOutTensor, spNewDimVector, nSize*nClassify ) != sCtx.success() ) {
         return sCtx.error("创建标准化张量失败");
     }
 
@@ -54,7 +54,7 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     unsigned int iInType = spIn->getDataType();
     if(iInType == CBasicData<unsigned char>::getStaticType() ) {
         unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
-        double* pDesc = spOutTensor->getDataPtr<double>();
+        float* pDesc = spOutTensor->getDataPtr<float>();
         for(int i=0; i<nSize; i++) {
             for( int j=0; j<nClassify; j++) {
                 pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0 : 0.0;

@@ -40,9 +40,9 @@ void CNnNetwork::runLearn() {
         SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
         SNnPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
 
-        double sumAcc = 0;
-        double sumLoss = 0;
-        double sumX = 0.98;
+        float sumAcc = 0;
+        float sumLoss = 0;
+        float sumX = 0.98;
         int nHit = 0;
 
         STensor spBatchImage, spBatchLabel;
@@ -77,11 +77,11 @@ void CNnNetwork::runLearn() {
             //
             {
                 int nOutDeviation = spOutDeviation->getDataSize();
-                double* pOutDeviation = spOutDeviation->getDataPtr<double>();
-                double* pOutTarget = spClassify->getDataPtr<double>();
+                float* pOutDeviation = spOutDeviation->getDataPtr<float>();
+                float* pOutTarget = spClassify->getDataPtr<float>();
                 int nAcc = 0;
-                double xAcc = 0;
-                double delta = 0;
+                float xAcc = 0;
+                float delta = 0;
                 for(int i=0; i<nOutDeviation; i++) {
                     if( pOutTarget[i] > 0.8 ) {
                         if(pOutDeviation[i] > -0.1) {
@@ -122,9 +122,9 @@ void CNnNetwork::runTest() {
     //SNnNetwork nn = createShiftNetwork();
     SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
 
-    double sumAcc = 0;
-    double sumLoss = 0;
-    double sumX = 0.98;
+    float sumAcc = 0;
+    float sumLoss = 0;
+    float sumX = 0.98;
     int nHit = 0;
     int nData = 0;
 
@@ -161,11 +161,11 @@ void CNnNetwork::runTest() {
         {
             nData += 10;    
             int nOutDeviation = spOutDeviation->getDataSize();
-            double* pOutDeviation = spOutDeviation->getDataPtr<double>();
-            double* pOutTarget = spClassify->getDataPtr<double>();
+            float* pOutDeviation = spOutDeviation->getDataPtr<float>();
+            float* pOutTarget = spClassify->getDataPtr<float>();
             int nAcc = 0;
-            double xAcc = 0;
-            double delta = 0;
+            float xAcc = 0;
+            float delta = 0;
             for(int i=0; i<nOutDeviation; i++) {
                 if( pOutTarget[i] > 0.8 ) {
                     if(pOutDeviation[i] > -0.6) {

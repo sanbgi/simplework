@@ -23,7 +23,7 @@ public:
         return sCtx.success();
     }
 
-    int del(int nSize, void* pDesc, void* pSrc){
+    int minus(int nSize, void* pDesc, void* pSrc){
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
         while(nSize-->=0) {
@@ -64,7 +64,7 @@ public:
         return sCtx.success();
     }
 
-    int del(int nSize, void* pIn1, void* pIn2, void* pOut) {
+    int minus(int nSize, void* pIn1, void* pIn2, void* pOut) {
         Q* pV1 = (Q*)pIn1;
         Q* pV2 = (Q*)pIn2;
         Q* pVO = (Q*)pOut;

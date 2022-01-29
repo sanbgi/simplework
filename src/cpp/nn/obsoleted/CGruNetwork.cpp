@@ -481,10 +481,10 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
 
             //求h偏导:dy * (1 - z)
             pSolver->multiply(nCells, it.pOutDeviation, it.pZ, it.pPrevStateDevia);
-            pSolver->del(nCells, it.pOut, it.pPrevStateDevia, it.pPrevStateDevia);
+            pSolver->minus(nCells, it.pOut, it.pPrevStateDevia, it.pPrevStateDevia);
 
             //求z偏导：dy * (hh-h)
-            pSolver->del(nCells, it.pHH, it.pPrevState, it.pZDeiva);
+            pSolver->minus(nCells, it.pHH, it.pPrevState, it.pZDeiva);
             pSolver->multiply(nCells, it.pZDeiva, it.pOut, it.pZDeiva);
         }
 
@@ -542,9 +542,9 @@ template<typename Q> int CGruNetwork::learnT(const STensor& spBatchOut, const ST
     }
 
     m_spOptimizer->updateDeviation(nTensor);
-    pSolver->del(nWeights, it.pWeightZ, pWeightZDerivationArray);
-    pSolver->del(nWeights, it.pWeightR, pWeightRDerivationArray);
-    pSolver->del(nWeights, it.pWeightH, pWeightHDerivationArray);
+    pSolver->minus(nWeights, it.pWeightZ, pWeightZDerivationArray);
+    pSolver->minus(nWeights, it.pWeightR, pWeightRDerivationArray);
+    pSolver->minus(nWeights, it.pWeightH, pWeightHDerivationArray);
     return sCtx.success();
 }
 
