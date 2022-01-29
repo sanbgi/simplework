@@ -13,46 +13,42 @@ class CMathSolverT : public CObject, public IMathSolver {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int add(int nSize, void* pDesc, void* pSrc) {
-        Q* pTarget = (Q*)pDesc;
-        Q* pSource = (Q*)pSrc;
-        while(nSize-->=0) {
-            *pTarget += *pSource;
-            pTarget++, pSource++;
+    void set(PVector vec, int value){
+        Q* pTarget = (Q*)vec.data;
+        while(vec.size-->=0) {
+            *pTarget = value;
+            pTarget++;
         }
-        return sCtx.success();
     }
 
-    int minus(int nSize, void* pDesc, void* pSrc){
-        Q* pTarget = (Q*)pDesc;
-        Q* pSource = (Q*)pSrc;
-        while(nSize-->=0) {
-            *pTarget -= *pSource;
-            pTarget++, pSource++;
-        }
-        return sCtx.success();
-    }
-
-    int copy(int nSize, void* pDesc, void* pSrc){
+    void copy(int nSize, void* pDesc, void* pSrc){
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
         while(nSize-->=0) {
             *pTarget = *pSource;
             pTarget++, pSource++;
         }
-        return sCtx.success();
     }
 
-    int zero(int nSize, void* pDesc){
+    void plus(int nSize, void* pDesc, void* pSrc) {
         Q* pTarget = (Q*)pDesc;
+        Q* pSource = (Q*)pSrc;
         while(nSize-->=0) {
-            *pTarget = 0;
-            pTarget++;
+            *pTarget += *pSource;
+            pTarget++, pSource++;
         }
-        return sCtx.success();
+   }
+
+    void minus(int nSize, void* pDesc, void* pSrc){
+        Q* pTarget = (Q*)pDesc;
+        Q* pSource = (Q*)pSrc;
+        while(nSize-->=0) {
+            *pTarget -= *pSource;
+            pTarget++, pSource++;
+        }
     }
 
-    int add(int nSize, void* pIn1, void* pIn2, void* pOut) {
+    void plus(int nSize, void* pIn1, void* pIn2, void* pOut) {
         Q* pV1 = (Q*)pIn1;
         Q* pV2 = (Q*)pIn2;
         Q* pVO = (Q*)pOut;
@@ -61,10 +57,9 @@ public:
             *pVO = *pV1 + *pV2;
             pVO++, pV1++, pV2++;
         }
-        return sCtx.success();
     }
 
-    int minus(int nSize, void* pIn1, void* pIn2, void* pOut) {
+    void minus(int nSize, void* pIn1, void* pIn2, void* pOut) {
         Q* pV1 = (Q*)pIn1;
         Q* pV2 = (Q*)pIn2;
         Q* pVO = (Q*)pOut;
@@ -73,10 +68,9 @@ public:
             *pVO = *pV1 - *pV2;
             pVO++, pV1++, pV2++;
         }
-        return sCtx.success();
     }
 
-    int addByWeight(int nSize, void* pIn1, void* pIn2, void* pWeight, void* pOut) {
+    void addByWeight(int nSize, void* pIn1, void* pIn2, void* pWeight, void* pOut) {
         Q* pV1 = (Q*)pIn1;
         Q* pV2 = (Q*)pIn2;
         Q* pVO = (Q*)pOut;
@@ -86,10 +80,9 @@ public:
             *pVO = *pV1 * (*pW) + *pV2 * (1-(*pW));
             pVO++, pV1++, pV2++, pW++;
         }
-        return sCtx.success();
     }
 
-    int multiply(int nSize, void* pIn1, void* pIn2, void* pOut) {
+    void multiply(int nSize, void* pIn1, void* pIn2, void* pOut) {
         Q* pV1 = (Q*)pIn1;
         Q* pV2 = (Q*)pIn2;
         Q* pVO = (Q*)pOut;
@@ -98,10 +91,9 @@ public:
             *pVO = *pV1 * *pV2;
             pVO++, pV1++, pV2++;
         }
-        return sCtx.success();
     }
 
-    int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) {
+    int product(PVector vecIn, PVector vecMatrix, PVector vecOut) {
         if( vecIn.size * vecOut.size != vecMatrix.size ) {
             return sCtx.error("乘法输入输出尺寸不一致");
         }
@@ -125,37 +117,9 @@ public:
         return sCtx.success();
     }
 
-    int multiplyAccDeviation(PDeviaVector vOut, PDeviaVector vWeights, PDeviaVector vIn) {
-        if( vIn.size * vOut.size != vWeights.size ) {
-            return sCtx.error("输入输出向量尺寸不相等，求偏导失败");
-        }
-        Q* pInput1 = (Q*)vIn.data;
-        Q* pD1 = (Q*)vIn.devia;
-        Q* pWeights = (Q*)vWeights.data;
-        Q* pWeightDeviations = (Q*)vWeights.devia;
-        Q* pDeviaOut = (Q*)vOut.devia;
-        Q* pDeviaOutEnd = pDeviaOut + vOut.size;
-        Q* pInput1End = pInput1 + vIn.size;
-        Q* pIn, *pInDeviation;
-        Q deviationOut;
-        while(pDeviaOut != pDeviaOutEnd) {
-            pIn = pInput1;
-            pInDeviation = pD1;
-            deviationOut = *pDeviaOut;
-            while(pIn < pInput1End) {
-                *pInDeviation += deviationOut * (*pWeights);
-                *pWeightDeviations += deviationOut * (*pIn);
-                pIn++, pInDeviation++, pWeights++, pWeightDeviations++;
-            }
-            pDeviaOut++;
-        }
-        return sCtx.success();
-    }
-
-
     int join(PVector vecIn1, PVector vecIn2, PVector vecOut) {
-        if(vecIn1.size + vecIn2.size != vecOut.size) {
-            return sCtx.error("输入输出尺寸不一致");
+        if( vecIn1.size + vecIn2.size != vecOut.size ) {
+            return sCtx.error("连接操作的向量尺寸不匹配");
         }
         Q* pV1 = (Q*)vecIn1.data;
         Q* pV2 = (Q*)vecIn2.data;

@@ -30,19 +30,21 @@ public:
             return sCtx.error("类型不同的两个张量无法相减");
         }
 
-        if( STensor::createTensor(spOut, t1.dimension(), idType1, nSize) != sCtx.success() ) {
+        STensor spRet;
+        if( STensor::createTensor(spRet, t1.dimension(), idType1, nSize) != sCtx.success() ) {
             return sCtx.error("创建结果张量失败");
         }
 
         void* pT1 = t1->getDataPtr(idType1);
         void* pT2 = t2->getDataPtr(idType1);
-        void* pOut = spOut->getDataPtr(idType1);
+        void* pOut = spRet->getDataPtr(idType1);
         SMathSolver spSolver;
         if( SMathSolver::getSolver(idType1, spSolver) ) {
             return sCtx.error("数学计算器不支持的数据类型");
         }
-
-        return spSolver->minus(nSize, pT1, pT2, pOut);
+        spSolver->minus(nSize, pT1, pT2, pOut);
+        spOut = spRet;
+        return sCtx.success();
     }
 
     //

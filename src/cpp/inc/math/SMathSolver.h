@@ -14,25 +14,30 @@ SIMPLEWORK_MATH_NAMESPACE_ENTER
 SIMPLEWORK_INTERFACECLASS_ENTER(MathSolver, "sw.math.MathSolver")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IMathSolver", 211202)
+
         //
-        // 将一个向量加入另外一个向量或减去
+        // 单元运算
         //
-        virtual int add(int nSize, void* pDesc, void* pSrc) = 0;
-        virtual int minus(int nSize, void* pDesc, void* pSrc) = 0;
-        virtual int copy(int nSize, void* pDesc, void* pSrc) = 0;
-        virtual int zero(int nSize, void* pDesc) = 0;
-        virtual int add(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
-        virtual int minus(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        virtual void set(PVector vec, int value) = 0;
+
         //
-        //  加权求和，y = in1 * weight + in2 * (1-weight)
+        // 双元运算
         //
-        virtual int addByWeight(int nSize, void* pIn1, void* pIn2, void* pWeight, void* pOut) = 0;
-        virtual int multiply(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        virtual void copy(int nSize, void* pDesc, void* pSrc) = 0;
+        virtual void plus(int nSize, void* pDesc, void* pSrc) = 0;
+        virtual void minus(int nSize, void* pDesc, void* pSrc) = 0;
+
+        //
+        // 三元运算
+        //
+        virtual void plus(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        virtual void minus(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
+        virtual void multiply(int nSize, void* pIn1, void* pIn2, void* pOut) = 0;
 
         //
         // 向量（输入） * 矩阵 = 向量（输出）
         //
-        virtual int multiply(PVector vecIn, PVector vecMatrix, PVector vecOut) = 0;
+        virtual int product(PVector vecIn, PVector vecMatrix, PVector vecOut) = 0;
 
         //
         // 两个向量连接
