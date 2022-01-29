@@ -6,11 +6,6 @@
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
-#include "units/CDenseUnit.h"
-#include "units/CConvUnit.h"
-#include "units/CPoolUnit.h"
-#include "units/CRnnUnit.h"
-#include "units/CGruUnit.h"
 #include "units/CSequenceUnit.h"
 #include "CNnLayer.h"
 #include "CNnLayerNetwork.h"
@@ -91,21 +86,6 @@ public:
         return CNnNetwork::loadNetwork(szFileName, spNet);
     }
     
-    int createDenseUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) {
-        return CDenseUnit::createUnit(nCells, dDropoutRate, szActivator, spUnit);
-    }
-    int createConvUnit(const PData& rData, SNnUnit& spUnit){
-        return CConvUnit::createUnit(rData, spUnit);
-    }
-    int createPoolUnit(const PData& rData, SNnUnit& spUnit) {
-        return CPoolUnit::createUnit(rData, spUnit);
-    }
-    int createRnnUnit(int nCells, const char* szActivator, SNnUnit& spUnit) {
-        return CRnnUnit::createUnit(nCells, szActivator, spUnit);
-    }
-    int createGruUnit(int nCells, SNnUnit& spUnit) {
-        return CGruUnit::createUnit(nCells, spUnit);
-    }
     int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) {
         return CSequenceUnit::createUnit(nUnits, pUnits, spUnit);
     }

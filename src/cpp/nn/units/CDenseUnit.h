@@ -22,6 +22,9 @@ class CDenseUnit : public CObject, public INnUnit, public IArchivable{
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "DenseUnit"; } 
@@ -33,7 +36,7 @@ private://INnUnit
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.DenseUnit"; }
-    static int createUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit);
+    static int createUnit(const PData& rData, SNnUnit& spUnit);
 
 private:
     //基础参数

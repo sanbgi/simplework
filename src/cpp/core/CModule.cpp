@@ -31,7 +31,7 @@ private:
         if( !spFactory ) {
             return sCtx.error();
         }
-        return spFactory->createObject(spObject);
+        return spFactory->createObject(spObject, pData);
     }
 
     //

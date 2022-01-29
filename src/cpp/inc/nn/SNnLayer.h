@@ -49,14 +49,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnLayer)
         SNnFactory::getFactory()->createLayer(spUnit, szMode, spLayer);
         return spLayer;
     }
-    static SNnLayer createDenseLayer(int nCells, double dDropoutRate=0, const char* szActivator = nullptr){
-        return createLayer(SNnUnit::createDenseUnit(nCells,dDropoutRate,szActivator));
+    static SNnLayer createDenseLayer(const PNnDense& rDense){
+        return createLayer(SNnUnit::createDenseUnit(rDense));
     }
-    static SNnLayer createRnnLayer(int nCells, const char* szMode=nullptr, const char* szActivator = nullptr){
-        return createLayer(SNnUnit::createRnnUnit(nCells,szActivator), szMode);
+    static SNnLayer createRnnLayer(const PNnRnn& rRnn, const char* szMode=nullptr){
+        return createLayer(SNnUnit::createRnnUnit(rRnn), szMode);
     }
-    static SNnLayer createGruLayer(int nCells, const char* szMode=nullptr){
-        return createLayer(SNnUnit::createGruUnit(nCells), szMode);
+    static SNnLayer createGruLayer(const PNnRnn& rRnn, const char* szMode=nullptr){
+        return createLayer(SNnUnit::createGruUnit(rRnn), szMode);
     }
     static SNnLayer createConvLayer(const PNnConv& rConv) {
         return createLayer(SNnUnit::createConvUnit(rConv));

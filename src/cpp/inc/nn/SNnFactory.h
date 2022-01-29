@@ -90,11 +90,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         // 创建神经网络单元
         //
-        virtual int createDenseUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) = 0;
-        virtual int createConvUnit(const PData& rData, SNnUnit& spUnit) = 0;
-        virtual int createPoolUnit(const PData& rData, SNnUnit& spUnit) = 0;
-        virtual int createRnnUnit(int nCells, const char* szActivator, SNnUnit& spUnit) = 0;
-        virtual int createGruUnit(int nCells, SNnUnit& spUnit) = 0;
         virtual int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) = 0;
 
         //

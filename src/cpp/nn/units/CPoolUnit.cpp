@@ -1,22 +1,20 @@
 #include "CPoolUnit.h"
 
 static SCtx sCtx("CPoolUnit");
-int CPoolUnit::createUnit(const PData& rData, SNnUnit& spUnit) {
-    const PNnPool* pPool = CData<PNnPool>(rData);
+int CPoolUnit::__initialize(const PData* pData) {
+    const PNnPool* pPool = CData<PNnPool>(pData);
     if(pPool == nullptr) {
         return sCtx.error("缺少构造参数");
     }
-    CPointer<CPoolUnit> spPool;
-    CObject::createObject(spPool);
-    spPool->m_nWidth = pPool->nWidth;
-    spPool->m_nHeight = pPool->nHeight;
-    spPool->m_nStrideWidth = pPool->nStrideWidth;
-    spPool->m_nStrideHeight = pPool->nStrideHeight;
-    spPool->m_dDropoutRate = 0;
+
+    m_nWidth = pPool->nWidth;
+    m_nHeight = pPool->nHeight;
+    m_nStrideWidth = pPool->nStrideWidth;
+    m_nStrideHeight = pPool->nStrideHeight;
+    m_dDropoutRate = 0;
     if( pPool->szPadding != nullptr) {
-        spPool->m_strPaddingMode = pPool->szPadding;
+        m_strPaddingMode = pPool->szPadding;
     }
-    spUnit.setPtr(spPool.getPtr());
     return sCtx.success();
 }
 

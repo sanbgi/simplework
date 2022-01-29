@@ -1,14 +1,15 @@
 #include "CRnnUnit.h"
 
 static SCtx sCtx("CRnnUnit");
-int CRnnUnit::createUnit(int nCells, const char* szActivator, SNnUnit& spUnit) {
-    CPointer<CRnnUnit> spRnn;
-    CObject::createObject(spRnn);
-    spRnn->m_nCells = nCells;
-    if( szActivator!=nullptr ){
-        spRnn->m_strActivator = szActivator;
+int CRnnUnit::__initialize(const PData* pData) {
+    const PNnRnn* pRnn = CData<PNnRnn>(pData);
+    if(pRnn == nullptr) {
+        return sCtx.error("缺少构造参数");
     }
-    spUnit.setPtr(spRnn.getPtr());
+    m_nCells = pRnn->nCells;
+    if( pRnn->szActivator!=nullptr ){
+        m_strActivator = pRnn->szActivator;
+    }
     return sCtx.success();
 }
 

@@ -11,7 +11,7 @@ class SNnVariable;
 //
 // 神经网络单元
 //
-SIMPLEWORK_INTERFACECLASS_ENTER(NnUnit, "sw.nn.NnUnit")
+SIMPLEWORK_INTERFACECLASS_ENTER0(NnUnit)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnUnit", 211202)
 
@@ -22,30 +22,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnUnit, "sw.nn.NnUnit")
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-    static SNnUnit createDenseUnit(int nCells, double dDropoutRate=0, const char* szActivator = nullptr){
-        SNnUnit spUnit;
-        SNnFactory::getFactory()->createDenseUnit(nCells, dDropoutRate, szActivator, spUnit);
-        return spUnit;
+    static SNnUnit createDenseUnit(const PNnDense& rData){
+        return SObject::createObject("sw.nn.DenseUnit", CData<PNnDense>(rData));
     }
     static SNnUnit createConvUnit(const PNnConv& rData) {
-        SNnUnit spUnit;
-        SNnFactory::getFactory()->createConvUnit(CData<PNnConv>(rData), spUnit);
-        return spUnit;
+        return SObject::createObject("sw.nn.ConvUnit", CData<PNnConv>(rData));
     }
     static SNnUnit createPoolUnit(const PNnPool& rData){
-        SNnUnit spUnit;
-        SNnFactory::getFactory()->createPoolUnit(CData<PNnPool>(rData), spUnit);
-        return spUnit;
+        return SObject::createObject("sw.nn.PoolUnit", CData<PNnPool>(rData));
     }
-    static SNnUnit createRnnUnit(int nCells, const char* szActivator=nullptr) {
-        SNnUnit spUnit;
-        SNnFactory::getFactory()->createRnnUnit(nCells, szActivator, spUnit);
-        return spUnit;
+    static SNnUnit createRnnUnit(const PNnRnn& rData) {
+        return SObject::createObject("sw.nn.RnnUnit", CData<PNnRnn>(rData));
     }
-    static SNnUnit createGruUnit(int nCells) {
-        SNnUnit spUnit;
-        SNnFactory::getFactory()->createGruUnit(nCells, spUnit);
-        return spUnit;
+    static SNnUnit createGruUnit(const PNnRnn& rData) {
+        return SObject::createObject("sw.nn.GruUnit", CData<PNnRnn>(rData));
     }
     static SNnUnit createSequenceUnit(int nUnits, const SNnUnit pUnits[]) {
         SNnUnit spUnit;

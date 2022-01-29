@@ -10,6 +10,8 @@
 
 #include "PNnConv.h"
 #include "PNnPool.h"
+#include "PNnDense.h"
+#include "PNnRnn.h"
 #include "SNnPipe.h"
 #include "SNnUnit.h"
 #include "SNnLayer.h"

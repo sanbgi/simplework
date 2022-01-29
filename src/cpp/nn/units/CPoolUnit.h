@@ -14,6 +14,9 @@ class CPoolUnit : public CObject, public INnUnit, public IArchivable{
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "PoolUnit"; } 
@@ -25,7 +28,6 @@ private://INnUnit
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.PoolUnit"; }
-    static int createUnit(const PData& rData, SNnUnit& spUnit);
 
 private:
     //基础参数

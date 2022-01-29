@@ -1,13 +1,30 @@
 #include "CDenseUnit.h"
 
 static SCtx sCtx("CDenseUnit");
-int CDenseUnit::createUnit(int nCells, double dDropoutRate, const char* szActivator, SNnUnit& spUnit) {
+
+int CDenseUnit::__initialize(const PData* pData){
+    const PNnDense* pDense = CData<PNnDense>(pData);
+    if(pDense == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
+    m_nCells = pDense->nCells;
+    m_dDropoutRate = 0;
+    if( pDense->szActivator!=nullptr )
+        m_strActivator = pDense->szActivator;
+    return sCtx.success();
+}
+
+int CDenseUnit::createUnit(const PData& rData, SNnUnit& spUnit) {
+    const PNnDense* pDense = CData<PNnDense>(rData);
+    if(pDense == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
     CPointer<CDenseUnit> spDense;
     CObject::createObject(spDense);
-    spDense->m_nCells = nCells;
-    spDense->m_dDropoutRate = dDropoutRate;
-    if( szActivator!=nullptr )
-        spDense->m_strActivator = szActivator;
+    spDense->m_nCells = pDense->nCells;
+    spDense->m_dDropoutRate = 0;
+    if( pDense->szActivator!=nullptr )
+        spDense->m_strActivator = pDense->szActivator;
     spUnit.setPtr(spDense.getPtr());
     return sCtx.success();
 }

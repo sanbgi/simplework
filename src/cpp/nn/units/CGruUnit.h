@@ -14,6 +14,9 @@ class CGruUnit : public CObject, public INnUnit, public IArchivable{
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://INnUnit
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
@@ -25,7 +28,6 @@ private://IArchivable
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.GruUnit"; }
-    static int createUnit(int nCells, SNnUnit& spUnit);
 
 private:
     //基础参数

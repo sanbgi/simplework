@@ -1,11 +1,12 @@
 #include "CGruUnit.h"
 
 static SCtx sCtx("CGruUnit");
-int CGruUnit::createUnit(int nCells, SNnUnit& spUnit) {
-    CPointer<CGruUnit> spRnn;
-    CObject::createObject(spRnn);
-    spRnn->m_nCells = nCells;
-    spUnit.setPtr(spRnn.getPtr());
+int CGruUnit::__initialize(const PData* pData) {
+    const PNnRnn* pRnn = CData<PNnRnn>(pData);
+    if(pRnn == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
+    m_nCells = pRnn->nCells;
     return sCtx.success();
 }
 

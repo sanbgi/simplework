@@ -24,6 +24,12 @@ public:
         return spObject;
     }
 
+    static SObject createObject(const char* szClassKey, const PData* pData) {
+        SObject spObject;
+        createObject(szClassKey, pData, spObject);
+        return spObject;
+    }
+
     static int createObject(const char* szClassKey, const PData* pData, SObject& rObject) {
         return SModule::getSimpleWork()->createObject(szClassKey, pData, rObject);
     }
