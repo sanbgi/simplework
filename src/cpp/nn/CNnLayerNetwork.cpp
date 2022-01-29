@@ -105,12 +105,14 @@ int CNnLayerNetwork::initNetwork() {
         {
         case SNnLayer::EMODE_BATCH:
         case SNnLayer::EMODE_SEQUENCE:
+        case SNnLayer::EMODE_RBATCH:
+        case SNnLayer::EMODE_RSEQUENCE:
             {
                 if(spDimension.size() < 2) {
                     return sCtx.error("输入张量维度小于二，不能启用BATCH和Sequence模式");
                 }
                 nBatchs = *spDimension.data();
-                spDimension = SDimension(spDimension.size()-1, spDimension.data() + 1);
+                spDimension = spDimension.downHighDimension();
             }
             break;
         }
@@ -127,7 +129,6 @@ int CNnLayerNetwork::initNetwork() {
         //
         // 更新计算变量数组
         //
-
         vector<PSolveVar>& arrVars = layerCtx.arrVars;
         vector<SNnVariable>::iterator itVar = solveCtx.arrVars.begin();
         while(itVar != solveCtx.arrVars.end()) {
@@ -188,14 +189,9 @@ int CNnLayerNetwork::initNetwork() {
         spDimension = solveCtx.arrVars[solveCtx.iOutVar].dimension();
         switch(eMode) {
         case SNnLayer::EMODE_BATCH:
+        case SNnLayer::EMODE_RBATCH:
             {
-                int nDims = spDimension.size();
-                int pDimSizes[nDims+1] = {nBatchs};
-                const int* pUnitDimSizes = spDimension.data();
-                for(int i=0; i<nDims; i++) {
-                    pDimSizes[i+1] = pUnitDimSizes[i];
-                }
-                spDimension = SDimension(nDims+1, pDimSizes);
+                spDimension = spDimension.upHighDimension(nBatchs);
             }
         }
         layerCtx.solveLayer.eMode = eMode;
@@ -312,6 +308,21 @@ int CNnLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 }
 
 template<typename Q>
+static void movePointer(int nVars, PSolveVar* pVars, int nSteps) {
+    int nMoveSize;
+    while(nVars-->0) {
+        switch(pVars->type) {
+            case ENnVariableType::EVInput:
+            case ENnVariableType::EVOperator:
+                nMoveSize = pVars->size * nSteps;
+                pVars->data = ((Q*)pVars->data) + nMoveSize;
+                break;
+        }
+        pVars++;
+    }
+}
+
+template<typename Q>
 int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //
     // 准备计算缓冲区
@@ -409,6 +420,14 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             }
 
             //
+            // 如果是反序计算，则先将指针指向最后一个数据
+            //
+            if( pLayer->eMode == ENnLayerMode::EMODE_RSEQUENCE ||
+                pLayer->eMode == ENnLayerMode::EMODE_RBATCH) {
+                movePointer<Q>(pLayer->nVars, pLayer->pVars, pLayer->nBatchs-1);
+            }
+
+            //
             // 遍历所有批次，依次运算
             //
             for(int iBatch=0; iBatch<layer.nBatchs; iBatch++) {
@@ -442,29 +461,23 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 //  如果是最后一个，当层模式为BATCH时，需要恢复指针位置
                 //
                 if(layer.nBatchs > 1) {
-                    if(iBatch < layer.nBatchs-1) {
-                        pItVar = layer.pVars, pItVarEnd = pItVar+layer.nVars;
-                        while(pItVar < pItVarEnd) {
-                            pVar = pItVar++;
-                            switch(pVar->type) {
-                            case ENnVariableType::EVInput:
-                            case ENnVariableType::EVOperator:
-                                pVar->data = ((Q*)pVar->data) + pVar->size;
-                                break;
-                            }
+                    switch(layer.eMode) {
+                    case ENnLayerMode::EMODE_BATCH:
+                    case ENnLayerMode::EMODE_SEQUENCE:
+                        if(iBatch < layer.nBatchs-1) {
+                            movePointer<Q>(pLayer->nVars, pLayer->pVars, 1);
                         }
-                    }
-                    else{
-                        pItVar = layer.pVars, pItVarEnd = pItVar+layer.nVars;
-                        while(pItVar < pItVarEnd) {
-                            pVar = pItVar++;
-                            switch(pVar->type) {
-                            case ENnVariableType::EVInput:
-                            case ENnVariableType::EVOperator:
-                                pVar->data = ((Q*)pVar->data) - pVar->size * (layer.nBatchs-1);
-                                break;
-                            }
+                        else{
+                            movePointer<Q>(pLayer->nVars, pLayer->pVars, 1-pLayer->nBatchs);
                         }
+                        break;
+
+                    case ENnLayerMode::EMODE_RBATCH:
+                    case ENnLayerMode::EMODE_RSEQUENCE:
+                        if(iBatch < layer.nBatchs-1) {
+                            movePointer<Q>(pLayer->nVars, pLayer->pVars, -1);
+                        }
+                        break;
                     }
                 }
             }
@@ -519,6 +532,22 @@ int CNnLayerNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutD
         return learnT<float>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
     }
     return sCtx.error("数据类型不支持");
+}
+
+template<typename Q>
+static void moveDeviaPointer(int nVars, PSolveVar* pVars, int nSteps) {
+    int nMoveSize;
+    while(nVars-->0) {
+        switch(pVars->type) {
+            case ENnVariableType::EVInput:
+            case ENnVariableType::EVOperator:
+                nMoveSize = pVars->size * nSteps;
+                pVars->data = ((Q*)pVars->data) + nMoveSize;
+                pVars->devia = ((Q*)pVars->devia) + nMoveSize;
+                break;
+        }
+        pVars++;
+    }
 }
 
 template<typename Q>
@@ -616,15 +645,14 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
     PDeviaVector evalIn[4], evalOut;
     Q* pOpSolvedBuffer = m_spOpSolveBuffer.data<Q>() + (m_nBatchIns-1)*m_nOpSize;
     Q* pInData = m_spBatchIn.data<Q>() + (m_nBatchIns-1)*m_nInputTensorSize;
-    Q* pInDevial = m_spBatchInDeviation.data<Q>() + (m_nBatchIns-1)*m_nInputTensorSize;
-    Q* pOutData = spBatchOut.data<Q>() + (m_nBatchIns-1)*m_nOutputTensorSize;
+    Q* pInDevia = m_spBatchInDeviation.data<Q>() + (m_nBatchIns-1)*m_nInputTensorSize;
     Q* pOutDevia = spBatchOutDeviation.data<Q>() + (m_nBatchIns-1)*m_nOutputTensorSize;
     Q* pInDataEnd = pInData - spBatchIn.size();
     memset(m_spBatchInDeviation.data<Q>(), 0, sizeof(Q)*m_nBatchInSize);
-    //重置Op和State的偏导缓冲
-    memset(pOpDeviaBuffer, 0, sizeof(Q)*nDeviaBuffer);
     while(pInData > pInDataEnd) {
-        memset(pOpDeviaBuffer, 0, sizeof(Q)*m_nOpSize);
+
+        //重置Op和State的偏导缓冲
+        memset(pOpDeviaBuffer, 0, sizeof(Q)*nDeviaBuffer);
 
         //
         // 正向设置指针运算数据指针，这一步以后，偏导数、数据指针都已经就绪
@@ -677,7 +705,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             PSolveVar * pInVar = layer.pVars + layer.iInVar;
             if(iLayer == 0) {
                 pInVar->data = pInData;
-                pInVar->devia = pInDevial;
+                pInVar->devia = pInDevia;
             }
             else {
                 PSolveLayer* pPrevLayer = pLayer-1;
@@ -699,20 +727,7 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
             //
             if( pLayer->eMode == ENnLayerMode::EMODE_BATCH ||
                 pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE ) {
-                pItVar = layer.pVars, pItVarEnd = pItVar+layer.nVars;
-                while(pItVar < pItVarEnd) {
-                    pVar = pItVar++;
-                    switch(pVar->type) {
-                    case ENnVariableType::EVInput:
-                    case ENnVariableType::EVOperator:
-                        {
-                            int offset = pVar->size * (layer.nBatchs-1);
-                            pVar->data = ((Q*)pVar->data) + offset;
-                            pVar->devia = ((Q*)pVar->devia) + offset;
-                        }
-                        break;
-                    }
-                }
+                moveDeviaPointer<Q>(layer.nVars, layer.pVars, layer.nBatchs-1);
             }
 
             //
@@ -750,23 +765,23 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 //
                 // 如果不是最后一个，则所有输入和运算的指针都要向前移动步长
                 //
-                if( pLayer->eMode == ENnLayerMode::EMODE_SEQUENCE ||
-                    pLayer->eMode == ENnLayerMode::EMODE_BATCH) {
-                    if(iBatch < layer.nBatchs-1) {
-                        pItVar = layer.pVars, pItVarEnd = pItVar+layer.nVars;
-                        while(pItVar < pItVarEnd) {
-                            pVar = pItVar++;
-                            switch(pVar->type) {
-                            case ENnVariableType::EVInput:
-                            case ENnVariableType::EVOperator:
-                                {
-                                    int size = pVar->size;
-                                    pVar->data = ((Q*)pVar->data) - size;
-                                    pVar->devia = ((Q*)pVar->devia) - size;
-                                }
-                                break;
-                            }
+                if(layer.nBatchs>1) {
+                    switch(pLayer->eMode) {
+                    case ENnLayerMode::EMODE_SEQUENCE:
+                    case ENnLayerMode::EMODE_BATCH:
+                        if(iBatch < layer.nBatchs-1) {
+                            moveDeviaPointer<Q>(layer.nVars, layer.pVars, -1);
                         }
+                        break;
+
+                    case ENnLayerMode::EMODE_RSEQUENCE:
+                    case ENnLayerMode::EMODE_RBATCH:
+                        if(iBatch < layer.nBatchs-1) {
+                            moveDeviaPointer<Q>(layer.nVars, layer.pVars, 1);
+                        }else{
+                            moveDeviaPointer<Q>(layer.nVars, layer.pVars, 1-layer.nBatchs);
+                        }
+                        break;
                     }
                 }
             }
@@ -793,8 +808,8 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         #endif//
 
         pInData -= m_nInputTensorSize;
-        pInDevial -= m_nInputTensorSize;
-        pOutData -= m_nOutputTensorSize;
+        pInDevia -= m_nInputTensorSize;
+        //pOutData -= m_nOutputTensorSize;
         pOutDevia -= m_nOutputTensorSize;
         pOpSolvedBuffer -= m_nOpSize;
     }
