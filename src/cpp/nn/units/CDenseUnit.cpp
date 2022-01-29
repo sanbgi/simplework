@@ -21,11 +21,11 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
         SDimension spDim = spInVars[0].dimension();
 
         int pWeightDimSizes[2] = {m_nCells, spDim->getElementSize()};
-        if( SNnVariable::createWeight(2, pWeightDimSizes, m_spWeights) != sCtx.success() ) {
+        if( SNnVariable::createWeight(SDimension(2, pWeightDimSizes), m_spWeights) != sCtx.success() ) {
             return sCtx.error("权重变量创建失败");
         }
 
-        if( SNnVariable::createWeight(1, &m_nCells, m_spBais) != sCtx.success() ) {
+        if( SNnVariable::createWeight(SDimension(1, &m_nCells), m_spBais) != sCtx.success() ) {
             return sCtx.error("偏置创建失败");
         }
     }
@@ -33,9 +33,9 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
     SNnVariable x = spInVars[0];
     SNnVariable y = SNnVariable::product(x, m_spWeights) + m_spBais;
     if(m_strActivator.length() > 0) {
-        spOutVar = y.op(m_strActivator.c_str());
+        spOutVar = y.solveOp(m_strActivator.c_str());
     }else{
-        spOutVar = y.op("relu");
+        spOutVar = y.solveOp("relu");
     }
     return sCtx.success();
 }

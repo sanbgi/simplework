@@ -69,12 +69,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return (*this);
     }
 
-    SNnVariable op(const char* szOp) {
+    SNnVariable solveOp(const char* szOp) {
         SNnVariable o;
         SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 1, this, o);
         return o;
     }
-
 
     SDimension dimension() const{
         SDimension spDimension;
@@ -86,6 +85,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
     }
 
 public:
+    SNnVariable relu() { return solveOp("relu"); }
+    SNnVariable tanh() { return solveOp("tanh"); }
+    SNnVariable sigmod() { return solveOp("sigmod"); }
+    SNnVariable softmax() { return solveOp("softmax"); }
+    SNnVariable gvp() { return solveOp("gvp"); }
+
+public:
+    static SNnVariable product(const SNnVariable& spVec, const SNnVariable& spMat) {
+        SNnVariable o, in[2] = { spVec, spMat };
+        SNnVariableSolver::getSolver()->solveOp("product", nullptr, 2, in, o);
+        return o;
+    }
+
     static int createState(const SDimension& spDim, SNnState& spVar) {
         return SNnVariableSolver::getSolver()->createState(spDim, spVar);
     }
@@ -97,47 +109,31 @@ public:
         SNnVariableSolver::getSolver()->loadState(spState, o);
         return o;
     }
-
     static int saveState(const SNnState spState, const SNnVariable& spVar) {
         return SNnVariableSolver::getSolver()->saveState(spState, spVar);
     }
-
-    static int createWeight(int nDims, const int pDimSizes[], SNnVariable& spVar) {
-        return SNnVariableSolver::getSolver()->createWeightVariable(SDimension(nDims, pDimSizes), spVar);
-    }    
-    
-
     static int createWeight(const SDimension& spDim, SNnVariable& spVar) {
         return SNnVariableSolver::getSolver()->createWeightVariable(spDim, spVar);
     }
-
-    static SNnVariable eval(const char* szOp, const SNnVariable& a) {
+    static SNnVariable solveOp(const char* szOp, const SNnVariable& a) {
         SNnVariable o;
         SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 1, &a, o);
         return o;
     }
 
-    static SNnVariable eval(const char* szOp, const SNnVariable& a, const SNnVariable& b) {
+    static SNnVariable solveOp(const char* szOp, const SNnVariable& a, const SNnVariable& b) {
         SNnVariable o;
         SNnVariable pInVars[2] = {a, b};
         SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 2, pInVars, o);
         return o;
     }
-
-    static SNnVariable eval(const char* szOp, int nInVars, const SNnVariable pInVars[]) {
+    static SNnVariable solveOp(const char* szOp, int nInVars, const SNnVariable pInVars[]) {
         SNnVariable o;
         SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, nInVars, pInVars, o);
         return o;
     }
-
-    static int solve(const char* szOperator, const PData* pData,  int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    static int solveOp(const char* szOperator, const PData* pData,  int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
         return SNnVariableSolver::getSolver()->solveOp(szOperator, pData, nInVars, pInVars, spOutVar);
-    }
-
-    static SNnVariable product(const SNnVariable& vec, const SNnVariable& mat) {
-        SNnVariable o, in[2] = { vec, mat };
-        SNnVariableSolver::getSolver()->solveOp("product", nullptr, 2, in, o);
-        return o;
     }
 
 
