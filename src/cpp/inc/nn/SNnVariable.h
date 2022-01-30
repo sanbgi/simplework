@@ -112,8 +112,8 @@ public:
     static int saveState(const SNnState spState, const SNnVariable& spVar) {
         return SNnVariableSolver::getSolver()->saveState(spState, spVar);
     }
-    static int createWeight(const SDimension& spDim, SNnVariable& spVar) {
-        return SNnVariableSolver::getSolver()->createWeightVariable(spDim, spVar);
+    static SNnVariable createWeight(const PNnWeight& rWeight) {
+        return SObject::createObject("sw.nn.Weight", CData<PNnWeight>(rWeight));
     }
     static SNnVariable solveOp(const char* szOp, const SNnVariable& a) {
         SNnVariable o;

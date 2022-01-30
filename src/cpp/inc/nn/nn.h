@@ -13,6 +13,7 @@
 #include "PNnDense.h"
 #include "PNnRnn.h"
 #include "PNnLinear.h"
+#include "PNnWeight.h"
 #include "SNnPipe.h"
 #include "SNnUnit.h"
 #include "SNnLayer.h"

@@ -322,6 +322,25 @@ static void movePointer(int nVars, PSolveVar* pVars, int nSteps) {
     }
 }
 
+
+template<typename Q>
+static Q getDevia(PSolveVar* pVar) {
+    Q sum = 0;
+    for(int i=0; i<pVar->size; i++) {
+        sum += abs(((Q*)pVar->devia)[i]);
+    }
+    return sum;
+}
+
+template<typename Q>
+static Q getV(PSolveVar* pVar) {
+    Q sum = 0;
+    for(int i=0; i<pVar->size; i++) {
+        sum += abs(((Q*)pVar->data)[i]);
+    }
+    return sum;
+}
+
 template<typename Q>
 int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //
@@ -427,10 +446,33 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 movePointer<Q>(pLayer->nVars, pLayer->pVars, pLayer->nBatchs-1);
             }
 
+
             //
             // 遍历所有批次，依次运算
             //
             for(int iBatch=0; iBatch<layer.nBatchs; iBatch++) {
+
+                #ifdef _DEBUG
+                if(false)
+                {
+                    cout << "in data:" << getV<Q>(pLayer->pVars+pLayer->iInVar) << "\n";
+                    pItVar = pLayer->pVars, pItVarEnd = pItVar+pLayer->nVars;
+                    while(pItVar < pItVarEnd) {
+                        pVar = pItVar++;
+                        switch(pVar->type) {
+                        case ENnVariableType::EVState:
+                            cout << "state data:" << getV<Q>(pVar) << "\n";
+                            break;
+                        case ENnVariableType::EVWeight:
+                            cout << "weight data:" << getV<Q>(pVar) << "\n";
+                            break;
+                        }
+                    }
+                }
+                #endif//
+
+
+
                 //
                 // 遍历计算序列并执行
                 //
@@ -454,6 +496,12 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
                     //实际计算函数调用
                     (*instruct.solver.pEvalFun)(instruct.solver.pParameter, instruct.nInVar, evalIn, evalOut);
+
+                    #ifdef _DEBUG
+                    if(instruct.pOutVar){
+                    //    cout << "out data:" << getV<Q>(instruct.pOutVar) << "\n";
+                    }
+                    #endif//
                 }
 
                 //
@@ -461,6 +509,9 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 //  如果是最后一个，当层模式为BATCH时，需要恢复指针位置
                 //
                 if(layer.nBatchs > 1) {
+                    #ifdef _DEBUG
+                    //    cout << "out data:" << getV<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
+                    #endif//
                     switch(layer.eMode) {
                     case ENnLayerMode::EMODE_BATCH:
                     case ENnLayerMode::EMODE_SEQUENCE:
@@ -549,6 +600,7 @@ static void moveDeviaPointer(int nVars, PSolveVar* pVars, int nSteps) {
         pVars++;
     }
 }
+
 
 template<typename Q>
 int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
@@ -766,6 +818,23 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 // 如果不是最后一个，则所有输入和运算的指针都要向前移动步长
                 //
                 if(layer.nBatchs>1) {
+                    #ifdef _DEBUG
+                    //cout << "out devia:" << getDevia<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
+                    //cout << "out data:" << getV<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
+                    pItVar = pLayer->pVars, pItVarEnd = pItVar+pLayer->nVars;
+                    while(pItVar < pItVarEnd) {
+                        pVar = pItVar++;
+                        switch(pVar->type) {
+                        case ENnVariableType::EVState:
+                            { 
+                                //cout << "state devia:" << getDevia<Q>(pVar) << "\n";
+                                //cout << "state data:" << getV<Q>(pVar) << "\n";
+                            }
+                            break;
+                        }
+                    }
+                    #endif//
+
                     switch(pLayer->eMode) {
                     case ENnLayerMode::EMODE_SEQUENCE:
                     case ENnLayerMode::EMODE_BATCH:
@@ -851,6 +920,25 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         }
     }
     #endif//
+
+    /*
+    pItLayer = pSolveLayers;
+    for(int iLayer=0; iLayer<nSolveLayers; iLayer++) {
+        pLayer = pItLayer++;
+        if(pLayer->nBatchs > 1) {
+            pItVar = pLayer->pVars, pItVarEnd = pItVar+pLayer->nVars;
+            while(pItVar < pItVarEnd) {
+                pVar = pItVar++;
+                switch(pVar->type) {
+                case ENnVariableType::EVWeight:
+                    {
+                        *((Q*)pVar->devia) /= pLayer->nBatchs;
+                    }
+                    break;
+                }
+            }
+        }
+    }*/
 
     m_spOptimizer->updateDeviation(m_nBatchIns);
 

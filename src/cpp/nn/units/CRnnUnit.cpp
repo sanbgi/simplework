@@ -33,6 +33,7 @@ private:
     int m_nCells;
     string m_strActivator;
     SNnVariable m_spWeights;
+    SNnVariable m_spBais;
     SNnState m_spState;
 
 public:
@@ -63,19 +64,22 @@ int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
             return sCtx.error("Rnn单元的输入必须大于等于1");
         }
 
-        if( SNnVariable::createState(SDimension(1, &m_nCells), m_spState) != sCtx.success() ) {
+        SDimension spOutDim(1, &m_nCells);
+        if( SNnVariable::createState(spOutDim, m_spState) != sCtx.success() ) {
             return sCtx.error("偏置状态失败");
         }
 
         int pDimSizes[2] = {m_nCells, m_nCells+nInputSize };
-        if( SNnVariable::createWeight(SDimension(2, pDimSizes), m_spWeights) != sCtx.success() ) {
+        m_spWeights = SNnVariable::createWeight({SDimension(2, pDimSizes), 1.0f/(m_nCells+nInputSize)});
+        m_spBais = SNnVariable::createWeight({SDimension(1, &m_nCells), 0});
+        if( !m_spWeights || !m_spBais ) {
             return sCtx.error("权重变量创建失败");
         }
     }
 
     SNnVariable state = SNnVariable::loadState(m_spState);
     SNnVariable joinedx = SNnVariable::solveOp("join", state, spInVars[0]);
-    SNnVariable y = SNnVariable::product(joinedx,m_spWeights);
+    SNnVariable y = SNnVariable::product(joinedx,m_spWeights) + m_spBais;
     if(m_strActivator.length() > 0) {
         spOutVar = y.solveOp(m_strActivator.c_str());
     }else{
@@ -89,6 +93,7 @@ int CRnnUnit::toArchive(const SArchive& ar) {
     ar.visit("cells", m_nCells);
     ar.visitString("activator", m_strActivator);
     ar.visitObject("weight", m_spWeights);
+    ar.visitObject("bais", m_spBais);
     ar.visitObject("state", m_spState);
     return sCtx.success();
 }

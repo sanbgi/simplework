@@ -12,6 +12,9 @@ class CNnWeightVariable : public CNnVariable, public IArchivable {
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnVariable)
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "Weight"; } 
@@ -32,5 +35,6 @@ private:
 
 private:
     STensor m_spData;
+    float m_dAvg;
 };
 #endif//__SimpleWork_NN_CNnWeight_H__

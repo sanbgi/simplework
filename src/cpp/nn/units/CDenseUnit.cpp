@@ -87,13 +87,12 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
     if(!m_spWeights) {
         SDimension spDim = spInVars[0].dimension();
 
-        int pWeightDimSizes[2] = {m_nCells, spDim->getElementSize()};
-        if( SNnVariable::createWeight(SDimension(2, pWeightDimSizes), m_spWeights) != sCtx.success() ) {
+        int nInputCells = spDim->getElementSize();
+        int pWeightDimSizes[2] = {m_nCells, nInputCells};
+        m_spWeights = SNnVariable::createWeight({SDimension(2, pWeightDimSizes), 1.0f/nInputCells});
+        m_spBais = SNnVariable::createWeight({SDimension(1, &m_nCells),0});
+        if( !m_spWeights || !m_spBais ) {
             return sCtx.error("权重变量创建失败");
-        }
-
-        if( SNnVariable::createWeight(SDimension(1, &m_nCells), m_spBais) != sCtx.success() ) {
-            return sCtx.error("偏置创建失败");
         }
     }
 

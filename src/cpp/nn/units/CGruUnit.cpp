@@ -63,16 +63,21 @@ int CGruUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
             return sCtx.error("偏置状态失败");
         }
 
-        int pDimSizes[2] = {m_nCells, m_nCells+nInputSize };
-        if( SNnVariable::createWeight(SDimension(2, pDimSizes), m_spWeights) != sCtx.success() ) {
+        int nJoinedSize = m_nCells+nInputSize;
+        int pDimSizes[2] = {m_nCells, nJoinedSize };
+        SDimension spDim(2, pDimSizes);
+        m_spWeights = SNnVariable::createWeight({spDim, 1.0f/nJoinedSize});
+        if( !m_spWeights ) {
             return sCtx.error("权重变量创建失败");
         }
 
-        if( SNnVariable::createWeight(SDimension(2, pDimSizes), m_spWeightsZ) != sCtx.success() ) {
+        m_spWeightsZ = SNnVariable::createWeight({spDim, 1.0f/nJoinedSize});
+        if( !m_spWeightsZ ) {
             return sCtx.error("权重变量创建失败");
         }
 
-        if( SNnVariable::createWeight(SDimension(2, pDimSizes), m_spWeightsR) != sCtx.success() ) {
+        m_spWeightsR = SNnVariable::createWeight({spDim, 1.0f/nJoinedSize});
+        if( !m_spWeightsR ) {
             return sCtx.error("权重变量创建失败");
         }
     }

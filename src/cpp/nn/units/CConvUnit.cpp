@@ -83,12 +83,10 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
         }
 
         int pWeightDimSizes[5] = { m_nLayers, m_nShiftConvs, m_nHeight, m_nWidth, nLayers };
-        if( SNnVariable::createWeight(SDimension(5, pWeightDimSizes), m_spWeights) != sCtx.success() ) {
-            return sCtx.error("权重变量创建失败");
-        }
-
-        if( SNnVariable::createWeight(SDimension(1, &m_nLayers), m_spBais) != sCtx.success() ) {
-            return sCtx.error("偏置创建失败");
+        m_spWeights = SNnVariable::createWeight({SDimension(5, pWeightDimSizes), 0.5});
+        m_spBais = SNnVariable::createWeight({SDimension(1, &m_nLayers), 0});
+        if( !m_spWeights || !m_spBais ) {
+            return sCtx.error("权重创建失败");
         }
     }
 

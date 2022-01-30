@@ -1,6 +1,17 @@
 #include "CNnWeightVariable.h"
 #include "CUtils.h"
 static SCtx sCtx("CNnWeightVariable");
+
+int CNnWeightVariable::__initialize(const PData* pData) {
+    const PNnWeight* pWeight = CData<PNnWeight>(pData);
+    if(pWeight == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
+    m_spDimension = pWeight->spDim;
+    m_dAvg = pWeight->dAvg;
+    return sCtx.success();
+}
+
 int CNnWeightVariable::createWeightVariable(const SDimension& spDimension, SNnVariable& spOutVar) { 
     CPointer<CNnWeightVariable> spWeight;
     CObject::createObject(spWeight);
@@ -35,10 +46,9 @@ void* CNnWeightVariable::getData(unsigned int idType) {
 }
 
 template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWeights) {
-    Q xWeight = 0.1;//sqrt(1.0/(m_nConvWidth*m_nConvHeight*nInLayers));
+    Q xWeight = 0.1;
     for(int i=0; i<nWeights; i++) {
-        //pWeights[i] = 0;
-        ((Q*)pWeights)[i] = -xWeight + CUtils::rand() * xWeight * 2;
+        ((Q*)pWeights)[i] = m_dAvg + -xWeight + CUtils::rand() * xWeight * 2;
     }
 }
 
