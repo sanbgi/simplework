@@ -32,7 +32,7 @@ private://IArchivable
 public://Factory
     static const char* __getClassKey() { return "sw.nn.LayerNetwork"; }
     static int createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension, SNnNetwork& spNet);
-
+    static int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet);
 public://INnLayerNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);

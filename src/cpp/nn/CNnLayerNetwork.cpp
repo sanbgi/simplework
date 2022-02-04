@@ -84,6 +84,11 @@ int CNnLayerNetwork::createNetwork(int nLayers, const SNnLayer pLayers[], const 
     return sCtx.success();
 }
 
+int CNnLayerNetwork::createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
+    SNnLayer spLayer = SNnLayer::createLayer(spUnit);
+    return createNetwork(1, &spLayer, spInDimVector, spNet);
+}
+
 int CNnLayerNetwork::initNetwork() {
     if(m_bInitialized) {
         return sCtx.success();
@@ -818,22 +823,24 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
                 // 如果不是最后一个，则所有输入和运算的指针都要向前移动步长
                 //
                 if(layer.nBatchs>1) {
+                    /*
                     #ifdef _DEBUG
-                    //cout << "out devia:" << getDevia<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
-                    //cout << "out data:" << getV<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
+                    cout << "out devia:" << getDevia<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
+                    cout << "out data:" << getV<Q>(pLayer->pVars+pLayer->iOutVar) << "\n";
                     pItVar = pLayer->pVars, pItVarEnd = pItVar+pLayer->nVars;
                     while(pItVar < pItVarEnd) {
                         pVar = pItVar++;
                         switch(pVar->type) {
                         case ENnVariableType::EVState:
                             { 
-                                //cout << "state devia:" << getDevia<Q>(pVar) << "\n";
-                                //cout << "state data:" << getV<Q>(pVar) << "\n";
+                                cout << "state devia:" << getDevia<Q>(pVar) << "\n";
+                                cout << "state data:" << getV<Q>(pVar) << "\n";
                             }
                             break;
                         }
                     }
-                    #endif//
+                    #endif
+                    */
 
                     switch(pLayer->eMode) {
                     case ENnLayerMode::EMODE_SEQUENCE:

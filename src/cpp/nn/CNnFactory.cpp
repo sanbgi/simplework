@@ -90,7 +90,7 @@ public:
         return CSequenceUnit::createUnit(nUnits, pUnits, spUnit);
     }
     int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
-        return CNnNetwork::createNetwork(spUnit, spInDimVector, spNet);
+        return CNnLayerNetwork::createNetwork(spUnit, spInDimVector, spNet);
     }
     int createLayer(const SNnUnit& spUnit, const char* szMode, SNnLayer& spLayer) {
         return CNnLayer::createLayer(spUnit, szMode, spLayer);

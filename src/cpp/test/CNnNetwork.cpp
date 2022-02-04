@@ -246,7 +246,7 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
     */
     
     std::vector<SNnLayer> arrUnits;
-    arrUnits.push_back(SNnLayer::createRnnLayer(50, "sequence"));
+    arrUnits.push_back(SNnLayer::createGruLayer(50, "sequence"));
     arrUnits.push_back(SNnLayer::createDenseLayer({10, "softmax"}));
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);
