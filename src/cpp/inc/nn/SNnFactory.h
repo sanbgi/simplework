@@ -45,7 +45,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         // 创建循环神经网络
         //
         virtual int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
-        */
         //
         //  创建顺序处理神经网络
         //
@@ -55,6 +54,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //  创建并行处理神经网络
         //
         virtual int createParallel(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) = 0;
+        */
 
         //
         //  读取整个IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
@@ -96,7 +96,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         // 创建神经网络
         //
         virtual int createLayer(const SNnUnit& spUnit, const char* szMode, SNnLayer& spLayer) = 0;
-        virtual int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) = 0;
+        virtual int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension, SNnNetwork& spNet) = 0;
         virtual int createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension, SNnNetwork& spNet) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 

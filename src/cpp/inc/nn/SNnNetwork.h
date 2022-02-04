@@ -89,19 +89,8 @@ public:
         SNnNetwork nn;
         SNnFactory::getFactory()->createGru(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
         return nn;
-    }*/
-    static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
-        SNnNetwork spNet;
-        SNnFactory::getFactory()->createNetwork(spUnit, spInDimension, spNet);
-        return spNet;
     }
-
-    static SNnNetwork createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension) {
-        SNnNetwork spNet;
-        SNnFactory::getFactory()->createNetwork(nLayers, pLayers, spInDimension, spNet);
-        return spNet;
-    }
-
+    
     static SNnNetwork createSequence(int nNetworks, SNnNetwork* pNetworks) {
         SNnNetwork nn;
         SNnFactory::getFactory()->createSequence(nNetworks, pNetworks, nn);
@@ -112,6 +101,19 @@ public:
         SNnNetwork nn;
         SNnFactory::getFactory()->createParallel(nNetworks, pNetworks, nn);
         return nn;
+    }
+
+    */
+    static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
+        SNnNetwork spNet;
+        SNnFactory::getFactory()->createNetwork(spUnit, spInDimension, spNet);
+        return spNet;
+    }
+
+    static SNnNetwork createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension) {
+        SNnNetwork spNet;
+        SNnFactory::getFactory()->createNetwork(nLayers, pLayers, spInDimension, spNet);
+        return spNet;
     }
 
     static SNnPipe openIdxFileReader(const char* szFilename) {

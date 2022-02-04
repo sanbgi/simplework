@@ -202,8 +202,10 @@ SNnNetwork CNnNetwork::createTestNetwork() {
     //arrNets.push_back(SNnNetwork::createConv(3,3,120));
     arrNets.push_back(SNnNetwork::createDense(84));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
-    */
+    
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    */
+    return SNnNetwork();
 }
 
 

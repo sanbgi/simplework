@@ -1,8 +1,6 @@
 
 #include "nn.h"
 #include "CNnNetwork.h"
-#include "CSequenceNetwork.h"
-#include "CParallelNetwork.h"
 #include "CIdxFileReader.h"
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
@@ -34,9 +32,8 @@ public:
 
     int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) {
         return CRotConvNetwork::createNetwork(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, spNetwork);
-    }*/
+    }
 
-    /*
     int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) {
         return CPoolNetwork::createNetwork(nWidth, nHeight, nStrideWidth, nStrideHeight, spNetwork);
     }
@@ -45,10 +42,9 @@ public:
         return CGlobalPoolNetwork::createNetwork(szMode, szActivitor, spNetwork);
     }
 
-
     int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) {
         return CGruNetwork::createNetwork(nCells, bKeepGroup, dDropoutRate, szActivitor, spNetwork);
-    }*/
+    }
 
     int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
         return CSequenceNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
@@ -57,6 +53,8 @@ public:
     int createParallel(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
         return CParallelNetwork::createNetwork(nNetworks, pNetworks, spNetwork);
     }
+    */
+
 
     int readIdxFile(const char* szFileName, STensor& spData) {
         return CIdxFileReader::readFile(szFileName, spData);
