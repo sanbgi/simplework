@@ -28,8 +28,8 @@ void* CNnStateVariable::getData(unsigned int idType) {
 
 
 int CNnStateVariable::toArchive(const SArchive& ar) {
-    ar.visitObject("dimension", m_spDimension);
-    ar.visitObject("value", m_spData);
+    ar.arObject("dimension", m_spDimension);
+    ar.arObject("value", m_spData);
     return sCtx.success();
 }
 

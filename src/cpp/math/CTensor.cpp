@@ -44,10 +44,10 @@ public:
     static int archiveAssist(CTypeAssist** ppAssist, const SArchive& ar) {
         if(ar->isReading()) {
             unsigned int idType;
-            ar.visit("idType", idType);
+            ar.arBlock("idType", idType);
             *ppAssist = getTypeAssist(idType);
         }else{
-            ar.visit("idType", (*ppAssist)->m_idType);
+            ar.arBlock("idType", (*ppAssist)->m_idType);
         }
 
         return sCtx.success();
@@ -167,10 +167,10 @@ int CTensor::createDimension(SDimension& spDim, int nDims, const int* pDimSizes)
 
 int CTensor::toArchive(const SArchive& ar) {
     CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
-    ar.visit("ver", m_nVer);
-    ar.visit("size", m_nElementSize);
+    ar.arBlock("ver", m_nVer);
+    ar.arBlock("size", m_nElementSize);
     ar.visitTaker("data", m_nElementSize * m_pTypeAssist->m_nTypeBytes, m_spElementData);
-    ar.visitObject("dimension", m_spDimVector);
+    ar.arObject("dimension", m_spDimVector);
     return sCtx.success();
 }
 

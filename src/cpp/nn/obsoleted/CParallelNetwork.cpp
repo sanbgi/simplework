@@ -245,7 +245,7 @@ int CParallelNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOut
 }
 
 int CParallelNetwork::toArchive(const SArchive& ar) {
-    ar.visitObjectArray("nodes", m_arrNetworks);
+    ar.arObjectArray("nodes", m_arrNetworks);
     return sCtx.success();
 }
 

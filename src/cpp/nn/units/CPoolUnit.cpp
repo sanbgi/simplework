@@ -68,11 +68,11 @@ int CPoolUnit::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOut
 
 int CPoolUnit::toArchive(const SArchive& ar) {
     //基础参数
-    ar.visit("width", m_nWidth);
-    ar.visit("height", m_nHeight);
-    ar.visit("stridewidth", m_nStrideWidth);
-    ar.visit("strideheight", m_nStrideHeight);
-    ar.visit("dropoutRate", m_dDropoutRate);
+    ar.arBlock("width", m_nWidth);
+    ar.arBlock("height", m_nHeight);
+    ar.arBlock("stridewidth", m_nStrideWidth);
+    ar.arBlock("strideheight", m_nStrideHeight);
+    ar.arBlock("dropoutRate", m_dDropoutRate);
     ar.visitString("padding", m_strPaddingMode);
     return sCtx.success();
 }

@@ -654,21 +654,21 @@ template<typename Q> int CRotConvNetwork::initWeightT(int nWeights, int nConvs) 
 
 int CRotConvNetwork::toArchive(const SArchive& ar) {
     //基础参数
-    ar.visit("convs", m_sizeConv.batch);
-    ar.visit("dropout", m_dDropoutRate);
-    ar.visit("width", m_sizeConv.width);
-    ar.visit("height", m_sizeConv.height);
-    ar.visit("strideWidth", m_nStrideWidth);
-    ar.visit("strideHeight", m_nStrideHeight);
-    ar.visit("widthRotAngle", m_dWRotAngle);
-    ar.visit("heightRotAngle", m_dHRotAngle);
+    ar.arBlock("convs", m_sizeConv.batch);
+    ar.arBlock("dropout", m_dDropoutRate);
+    ar.arBlock("width", m_sizeConv.width);
+    ar.arBlock("height", m_sizeConv.height);
+    ar.arBlock("strideWidth", m_nStrideWidth);
+    ar.arBlock("strideHeight", m_nStrideHeight);
+    ar.arBlock("widthRotAngle", m_dWRotAngle);
+    ar.arBlock("heightRotAngle", m_dHRotAngle);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
     ar.visitString("padding", m_strPadding);
 
     //运行参数
-    ar.visit("nInputLayers", m_nLayers);
-    ar.visit("dataType", m_idDataType);
+    ar.arBlock("nInputLayers", m_nLayers);
+    ar.arBlock("dataType", m_idDataType);
     if(m_nLayers) {
         int nBytes = CType::getTypeBytes(m_idDataType);
         ar.visitTaker("weights", nBytes * m_nLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch, m_spWeights);

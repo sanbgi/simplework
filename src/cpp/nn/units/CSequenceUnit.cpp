@@ -31,7 +31,7 @@ int CSequenceUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& 
 }
 
 int CSequenceUnit::toArchive(const SArchive& ar) {
-    ar.visitObjectArray("units", m_arrUnits);
+    ar.arObjectArray("units", m_arrUnits);
     return sCtx.success();
 }
 

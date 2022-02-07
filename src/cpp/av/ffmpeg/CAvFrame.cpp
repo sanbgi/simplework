@@ -4,6 +4,9 @@
 #include "CAvOutStreaming.h"
 #include "CAvSampleType.h"
 
+#include <string>
+#include "../tooljpeg/CJpegFileWriter.h"
+
 FFMPEG_NAMESPACE_ENTER
 
 static SCtx sCtx("CAvFrame");
@@ -197,7 +200,6 @@ end:
     return ret;
 }
 
-
 int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
     CPointer<CAvFrame> sp;
     CObject::createObject(sp);
@@ -234,16 +236,18 @@ int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
 }
 
 int CAvFrame::saveImage(const char* szFileName, const SAvFrame& spFrame) {
-    
     const PAvFrame* pFrame = spFrame ? spFrame->getFramePtr() : nullptr;
     if(pFrame == nullptr) {
         return sCtx.error("图片中无法写入无效的帧数据");
     }
     ((PAvFrame*)pFrame)->timeStamp = 0;
 
+    AVOutputFormat *oformat = NULL;
+    oformat = av_guess_format("image2pipe", szFileName, NULL);
+
     // 分配AVFormatContext对象
     AVFormatContext* pFormatContext = nullptr;
-    if( avformat_alloc_output_context2(&pFormatContext, nullptr, "image2", szFileName) < 0 ) {
+    if( avformat_alloc_output_context2(&pFormatContext, oformat, NULL, szFileName) < 0 ) {
         return sCtx.error("写入上下文创建失败");
     }
     CTaker<AVFormatContext*> spFormatCtx(pFormatContext, [](AVFormatContext* pCtx){
@@ -268,7 +272,6 @@ int CAvFrame::saveImage(const char* szFileName, const SAvFrame& spFrame) {
     }
 
     av_dump_format(pFormatContext, 0, szFileName, 1);
-
 
     // 创建并初始化一个和该url相关的AVIOContext
     if( avio_open(&pFormatContext->pb, szFileName, AVIO_FLAG_WRITE) < 0){

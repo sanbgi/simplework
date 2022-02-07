@@ -25,6 +25,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvFrame)
         return spFrame;
     }
 
+    static int saveImageFile(const char* szFileName, const SAvFrame& spFrame) {
+        return SAvFactory::getAvFactory()->saveAvImageFile(szFileName, spFrame);
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(AvFrame)
 
 SIMPLEWORK_AV_NAMESPACE_LEAVE

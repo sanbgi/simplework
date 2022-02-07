@@ -108,11 +108,11 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
 
 int CDenseUnit::toArchive(const SArchive& ar) {
     //基础参数
-    ar.visit("cells", m_nCells);
-    ar.visit("dropoutRate", m_dDropoutRate);
+    ar.arBlock("cells", m_nCells);
+    ar.arBlock("dropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
-    ar.visitObject("weight", m_spWeights);
-    ar.visitObject("bais", m_spBais);
+    ar.arObject("weight", m_spWeights);
+    ar.arObject("bais", m_spBais);
     return sCtx.success();
 }
 

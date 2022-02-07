@@ -35,24 +35,24 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Archive)
         //
         // 数据
         //
-        virtual int visit(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999) = 0;
+        virtual int arBlock(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999) = 0;
 
         //
         // 数据数组
         //    
         //      注意要确保数据缓冲区尺寸，或者提供pUpdater，供序列化时保存数据 
         //
-        virtual int visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999) = 0;
+        virtual int arBlockArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999) = 0;
 
         //
         // 对象
         //
-        virtual int visitObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) = 0;
+        virtual int arObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) = 0;
 
         //
         // 对象数组
         //
-        virtual int visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999) = 0;
+        virtual int arObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -60,21 +60,21 @@ public:
     //
     // 简单数据类型：bool, int, char, unsigned char ....
     //
-    template<typename Q> int visit(const char* szName, Q& v, int nMinVer=0, int nMaxVer=999999999 ) const {
-        return (*this)->visit(szName, sw::CBasicData<Q>::getStaticType(), sizeof(v), &v, nMinVer, nMaxVer);
+    template<typename Q> int arBlock(const char* szName, Q& v, int nMinVer=0, int nMaxVer=999999999 ) const {
+        return (*this)->arBlock(szName, sw::CBasicData<Q>::getStaticType(), sizeof(v), &v, nMinVer, nMaxVer);
     }
 
     //
     // 定长数组
     //
-    int visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999 ) const {
-        return (*this)->visitArray(szName, pVisitee, nMinVer, nMaxVer);
+    int arBlockArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999 ) const {
+        return (*this)->arBlockArray(szName, pVisitee, nMinVer, nMaxVer);
     }
     
     //
     // 定长数组
     //
-    template<typename Q> int visitArray(const char* szName, int nEle, Q* pEle, int nMinVer=0, int nMaxVer=999999999 ) const {
+    template<typename Q> int arBlockArray(const char* szName, int nEle, Q* pEle, int nMinVer=0, int nMaxVer=999999999 ) const {
         class CArrayVisitee : IArrayVisitee {
         public:
             unsigned int getElementType() { return sw::CBasicData<Q>::getStaticType(); }
@@ -100,7 +100,7 @@ public:
             int m_nEle;
             Q* m_pEle;
         };
-        return (*this)->visitArray(szName, CArrayVisitee(nEle, pEle), nMinVer, nMaxVer);
+        return (*this)->arBlockArray(szName, CArrayVisitee(nEle, pEle), nMinVer, nMaxVer);
     }
 
     //
@@ -133,7 +133,7 @@ public:
             int m_nEle;
             sw::CTaker<Q*>& m_spTaker;
         };
-        return (*this)->visitArray(szName, CTakerVisitee(nSize, spTaker), nMinVer, nMaxVer);
+        return (*this)->arBlockArray(szName, CTakerVisitee(nSize, spTaker), nMinVer, nMaxVer);
     }
 
     //
@@ -161,20 +161,20 @@ public:
         private:
             Q* m_pStr;
         };
-        return (*this)->visitArray(szName, CStringVisitee(str), nMinVer, nMaxVer);
+        return (*this)->arBlockArray(szName, CStringVisitee(str), nMinVer, nMaxVer);
     }
 
     //
     //
     //
-    int visitObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) const {
-        return (*this)->visitObject(szName, spVisitee, nMinVer, nMaxVer);
+    int arObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999) const {
+        return (*this)->arObject(szName, spVisitee, nMinVer, nMaxVer);
     }
 
     template<typename Q>
-    int visitObject(const char* szName, Q& spObj, int nMinVer=0, int nMaxVer=999999999) const {
+    int arObject(const char* szName, Q& spObj, int nMinVer=0, int nMaxVer=999999999) const {
         SArchivable arObj = spObj;
-        int retcode = (*this)->visitObject(szName, arObj, nMinVer, nMaxVer);
+        int retcode = (*this)->arObject(szName, arObj, nMinVer, nMaxVer);
         spObj = arObj;
         return retcode;
     }
@@ -182,14 +182,14 @@ public:
     //
     //
     //
-    int visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999 ) const  {
-        return (*this)->visitObjectArray(szName, pVisitee, nMinVer, nMaxVer);
+    int arObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999 ) const  {
+        return (*this)->arObjectArray(szName, pVisitee, nMinVer, nMaxVer);
     }
 
     //
     //
     //
-    template<typename Q> int visitObjectArray(const char* szName, Q& arrEles, int nMinVer=0, int nMaxVer=999999999 ) const  {
+    template<typename Q> int arObjectArray(const char* szName, Q& arrEles, int nMinVer=0, int nMaxVer=999999999 ) const  {
         
         class CEleArrayVisitee : IObjectArrayVisitee {
         public:
@@ -215,7 +215,7 @@ public:
         private:
             Q* m_pArray;
         };
-        return (*this)->visitObjectArray(szName, CEleArrayVisitee(arrEles), nMinVer, nMaxVer);
+        return (*this)->arObjectArray(szName, CEleArrayVisitee(arrEles), nMinVer, nMaxVer);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Archive)

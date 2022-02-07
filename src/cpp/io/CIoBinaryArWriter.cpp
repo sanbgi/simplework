@@ -3,14 +3,14 @@
 using std::string;
 
 SCtx CIoBinaryArWriter::sCtx("CIoBinaryArWriter");
-int CIoBinaryArWriter::visit(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer, int nMaxVer){
+int CIoBinaryArWriter::arBlock(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         m_stream.write((const char*)pByte, nByte);
     }
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
+int CIoBinaryArWriter::arBlockArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         int nEle = pVisitee->size();
         m_stream.write((const char*)&nEle, sizeof(int));
@@ -20,14 +20,14 @@ int CIoBinaryArWriter::visitArray(const char* szName, IArrayVisitee* pVisitee, i
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visitObject(const char* szName, SArchivable& spVisitee, int nMinVer, int nMaxVer){
+int CIoBinaryArWriter::arObject(const char* szName, SArchivable& spVisitee, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         return saveEle(spVisitee);
     }
     return sCtx.success();
 }
 
-int CIoBinaryArWriter::visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
+int CIoBinaryArWriter::arObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         int nEles = pVisitee->size();
         m_stream.write((const char*)&nEles, sizeof(int));

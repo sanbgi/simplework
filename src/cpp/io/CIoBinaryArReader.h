@@ -19,10 +19,10 @@ class CIoBinaryArReader : public CObject, public IArchive {
 
 public://IArchive
     bool isReading() { return true; }
-    int visit(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999);
-    int visitArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999);
-    int visitObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
-    int visitObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999);
+    int arBlock(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999);
+    int arBlockArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999);
+    int arObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
+    int arObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999);
 
 public:
     void enterElement(int nVer);

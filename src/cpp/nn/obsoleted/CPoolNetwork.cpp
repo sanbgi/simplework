@@ -322,10 +322,10 @@ int CPoolNetwork::learnT(const STensor& spBatchOut, const STensor& spOutDeviatio
 }
 
 int CPoolNetwork::toArchive(const SArchive& ar) {
-    ar.visit("nPoolWidth", m_nPoolWidth);
-    ar.visit("nPoolHeight", m_nPoolHeight);
-    ar.visit("nStrideWidth", m_nStrideWidth);
-    ar.visit("nStrideHeight", m_nStrideHeight);
+    ar.arBlock("nPoolWidth", m_nPoolWidth);
+    ar.arBlock("nPoolHeight", m_nPoolHeight);
+    ar.arBlock("nStrideWidth", m_nStrideWidth);
+    ar.arBlock("nStrideHeight", m_nStrideHeight);
     ar.visitString("padding", m_strPadding);
     return sCtx.success();
 }

@@ -95,11 +95,11 @@ int CGruUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
 
 int CGruUnit::toArchive(const SArchive& ar) {
     //基础参数
-    ar.visit("cells", m_nCells);
-    ar.visitObject("weight", m_spWeights);
-    ar.visitObject("weightz", m_spWeightsZ);
-    ar.visitObject("weightr", m_spWeightsR);
-    ar.visitObject("state", m_spState);
+    ar.arBlock("cells", m_nCells);
+    ar.arObject("weight", m_spWeights);
+    ar.arObject("weightz", m_spWeightsZ);
+    ar.arObject("weightr", m_spWeightsR);
+    ar.arObject("state", m_spState);
     return sCtx.success();
 }
 

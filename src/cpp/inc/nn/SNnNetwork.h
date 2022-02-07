@@ -28,7 +28,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
         //      @spBatchInDeviation 输入值与期望输入值的偏差 = 输入值 - 期望值
         //
         //  注意：
-        //      spOutTensor必须是由eval最有一次计算出来的张量，否则，学习会失败；
+        //      spOutTensor必须是由eval最有一次计算出来的张量，否则，学习会失败
         //
         virtual int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) = 0;
 

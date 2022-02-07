@@ -479,15 +479,15 @@ int CRnnNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDevia
 
 int CRnnNetwork::toArchive(const SArchive& ar) {
     //基础参数
-    ar.visit("cells", m_nCells);
-    ar.visit("keepGroup", m_bKeepGroup);
-    ar.visit("dropoutRate", m_dDropoutRate);
+    ar.arBlock("cells", m_nCells);
+    ar.arBlock("keepGroup", m_bKeepGroup);
+    ar.arBlock("dropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
 
     //运行参数
-    ar.visit("inputCells", m_nInputCells);
-    ar.visit("dataType", m_idDataType);
+    ar.arBlock("inputCells", m_nInputCells);
+    ar.arBlock("dataType", m_idDataType);
     if(m_nInputCells) {
         int nBytes = CType::getTypeBytes(m_idDataType);
         ar.visitTaker("weights", nBytes*m_nCells*(m_nInputCells+m_nCells), m_spWeights);

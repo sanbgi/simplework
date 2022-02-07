@@ -90,11 +90,11 @@ int CRnnUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOut
 }
 
 int CRnnUnit::toArchive(const SArchive& ar) {
-    ar.visit("cells", m_nCells);
+    ar.arBlock("cells", m_nCells);
     ar.visitString("activator", m_strActivator);
-    ar.visitObject("weight", m_spWeights);
-    ar.visitObject("bais", m_spBais);
-    ar.visitObject("state", m_spState);
+    ar.arObject("weight", m_spWeights);
+    ar.arObject("bais", m_spBais);
+    ar.arObject("state", m_spState);
     return sCtx.success();
 }
 

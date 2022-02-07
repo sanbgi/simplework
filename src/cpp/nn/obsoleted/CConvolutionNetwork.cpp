@@ -851,20 +851,20 @@ int CConvolutionNetwork::learn(const STensor& spBatchOut, const STensor& spOutDe
 
 int CConvolutionNetwork::toArchive(const SArchive& ar) {
     //基础参数
-    ar.visit("layers", m_nLayers);
-    ar.visit("shiftConvs", m_sizeConv.batch);
-    ar.visit("dropout", m_sizeConv.batch);
-    ar.visit("width", m_sizeConv.width);
-    ar.visit("height", m_sizeConv.height);
-    ar.visit("strideWidth", m_nStrideWidth);
-    ar.visit("strideHeight", m_nStrideHeight);
+    ar.arBlock("layers", m_nLayers);
+    ar.arBlock("shiftConvs", m_sizeConv.batch);
+    ar.arBlock("dropout", m_sizeConv.batch);
+    ar.arBlock("width", m_sizeConv.width);
+    ar.arBlock("height", m_sizeConv.height);
+    ar.arBlock("strideWidth", m_nStrideWidth);
+    ar.arBlock("strideHeight", m_nStrideHeight);
     ar.visitString("activator", m_strActivator);
     ar.visitString("optimizer", m_strOptimizer);
     ar.visitString("padding", m_strPadding);
 
     //运行参数
-    ar.visit("inputLayers", m_nInputLayers);
-    ar.visit("dataType", m_idDataType);
+    ar.arBlock("inputLayers", m_nInputLayers);
+    ar.arBlock("dataType", m_idDataType);
     if(m_nInputLayers) {
         int nBytes = CType::getTypeBytes(m_idDataType);
         ar.visitTaker("weights", nBytes * m_nInputLayers * m_sizeConv.width * m_sizeConv.height * m_sizeConv.batch * m_nLayers, m_spWeights);

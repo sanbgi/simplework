@@ -52,8 +52,8 @@ int main(int argc, char *argv[]){
     //testNN();
     //testIdx();
     //CNnNetwork::runFile();
-    CNnNetwork::run();
-    //CAvNetwork::runImage();
+    //CNnNetwork::run();
+    CAvNetwork::runImage();
 
     /*
     int i=10;

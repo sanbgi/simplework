@@ -16,7 +16,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnUnit)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnUnit", 211202)
 
         //
-        // 获取变量维度
+        // 单元求解
         //
         virtual int eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) = 0;
 
