@@ -5,10 +5,6 @@
 #include "CNnNetwork.h"
 
 using namespace sw;
-using namespace sw;
-using namespace sw;
-using namespace sw;
-using namespace sw;
 
 static SCtx sCtx("CNnNetwork.Test");
 
