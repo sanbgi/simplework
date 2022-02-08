@@ -9,43 +9,41 @@ public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
-        VERIFY(inVars[0].size % inVars[1].size == 0 && inVars[0].size==outVar.size)
         Q* pIn1 = (Q*)inVars[0].data;
         Q* pIn2 = (Q*)inVars[1].data;
         Q* pO = (Q*)outVar.data;
-        int iBatchSize, nBatchSize = outVar.size / nBatchs;
-        int nMovebackIn1 = inVars[0].size == nBatchSize ? nBatchSize : 0;
-        int nMovebackIn2 = inVars[1].size == nBatchSize ? nBatchSize : 0;
-        while(nBatchs-->0) {
-            iBatchSize = 0;
-            while(iBatchSize++ < nBatchSize) {
-                *pO = *pIn1 + *pIn2;
-                pO++, pIn1++, pIn2++;
+        Q* pIn1End = pIn1+inVars[0].size;
+        Q* pIn2End = pIn2+inVars[1].size;
+        while(outVar.size-->0) {
+            *pO = *pIn1 + *pIn2;
+            pO++, pIn1++, pIn2++;
+            if(pIn1 == pIn1End) {
+                pIn1 = (Q*)inVars[0].data;
             }
-            pIn1 -= nMovebackIn1;
-            pIn2 -= nMovebackIn2;
+            if(pIn2 == pIn2End) {
+                pIn2 = (Q*)inVars[1].data;
+            }
         }
     }
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
-        VERIFY(inVars[0].size % inVars[1].size == 0 && inVars[0].size==outVar.size)
         Q* pDevia1 = (Q*)inVars[0].devia;
         Q* pDevia2 = (Q*)inVars[1].devia;
         Q* pDeviaO = (Q*)outVar.devia;
-        int iBatchSize, nBatchSize = outVar.size / nBatchs;
-        int nMovebackIn1 = inVars[0].size == nBatchSize ? nBatchSize : 0;
-        int nMovebackIn2 = inVars[1].size == nBatchSize ? nBatchSize : 0;
-        while(nBatchs-->0) {
-            iBatchSize = 0;
-            while(iBatchSize++ < nBatchSize) {
-                *pDevia1 += (*pDeviaO);
-                *pDevia2 += (*pDeviaO);
-                pDevia1++, pDevia2++, pDeviaO++;
+        Q* pDevia1End = pDevia1 + inVars[0].size;
+        Q* pDevia2End = pDevia2 + inVars[1].size;
+        while(outVar.size-->0) {
+            *pDevia1 += (*pDeviaO);
+            *pDevia2 += (*pDeviaO);
+            pDevia1++, pDevia2++, pDeviaO++;
+            if(pDevia1 == pDevia1End) {
+                pDevia1 = (Q*)inVars[0].devia;
             }
-            pDevia1 -= nMovebackIn1;
-            pDevia2 -= nMovebackIn2;
+            if(pDevia2 == pDevia2End) {
+                pDevia2 = (Q*)inVars[1].devia;
+            }
         }
     }
 
