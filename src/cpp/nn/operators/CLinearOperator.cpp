@@ -9,71 +9,89 @@ public:
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
         CLinearOperator* pThis = (CLinearOperator*)pParameters;
+        int nIn = pThis->nIn;
+        int nMat = pThis->nMat;
+        int nOut = pThis->nOut;
         Q* pIn = (Q*)inVars[0].data;
         Q* pMat = (Q*)inVars[1].data;
         Q* pOut = (Q*)outVar.data;
-        Q* pItIn, *pItOut, *pItMat;
-        Q* pItOutEnd, *pItInEnd;
-        Q sumV;
-
-        int nIn = pThis->m_nInputSize;
-        int nOut = pThis->m_nOutputSize;
-        int nTensor = pThis->m_nTensor*nBatchs;
-        while(nTensor-->0) {
-            pItOut = pOut;
+        Q* pInEnd = pIn + inVars[0].size;
+        Q* pMatEnd = pMat + inVars[1].size;
+        Q* pItIn, *pItMat;
+        Q* pItInEnd, *pItOutEnd;
+        Q v;
+        while(nBatchs-->0) {
             pItMat = pMat;
-            pItOutEnd = pItOut+nOut;
-            while(pItOut<pItOutEnd) {
-                sumV = 0;
+            pItOutEnd = pOut + nOut;
+            while(pOut != pItOutEnd) {
+                v = 0;
                 pItIn = pIn;
-                pItInEnd = pIn+nIn;
-                while(pItIn<pItInEnd) {
-                    sumV = *pItIn * *pItMat;
-                    pIn++, pMat++;
+                pItInEnd = pIn + nIn;
+                while(pItIn < pItInEnd) {
+                    v += (*pItIn) * (*pItMat);
+                    pItIn++, pItMat++;
                 }
-                *pOut = sumV;
+                *pOut = v;
                 pOut++;
             }
             pIn += nIn;
-            pOut += nOut;
+            pMat += nMat;
+            if(pIn == pInEnd) {
+                pIn = (Q*)inVars[0].data;
+            }
+            if(pMat == pMatEnd) {
+                pMat = (Q*)inVars[1].data;
+            }
         }
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nBatch, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
         CLinearOperator* pThis = (CLinearOperator*)pParameters;
+        int nIn = pThis->nIn;
+        int nMat = pThis->nMat;
+        int nOut = pThis->nOut;
         Q* pIn = (Q*)inVars[0].data;
-        Q* pInDevia = (Q*)inVars[0].devia;
+        Q* pInDeiva = (Q*)inVars[0].devia;
         Q* pMat = (Q*)inVars[1].data;
         Q* pMatDevia = (Q*)inVars[1].devia;
         Q* pOutDevia = (Q*)outVar.devia;
-        Q *pItIn, *pItInDevia, *pItMat, *pItMatDevia, *pItOutDevia;
-        Q *pItOutDeviaEnd, *pItInEnd;
-        Q deviaV;
-        int nIn = pThis->m_nInputSize;
-        int nOut = pThis->m_nOutputSize;
-        int nTensor = pThis->m_nTensor*nBatch;
-        while(nTensor-->0) {
-            pItOutDevia = pOutDevia;
+        Q* pInEnd = pIn + inVars[0].size;
+        Q* pMatEnd = pMat + inVars[1].size;
+        Q* pItInEnd, *pOutDeviaEnd;
+        Q* pItIn, *pItInDevia;
+        Q deviationOut;
+        Q* pItMat;
+        Q* pItMatDevia;
+        while(nBatchs-->0) {
             pItMat = pMat;
             pItMatDevia = pMatDevia;
-            pItOutDeviaEnd = pItOutDevia+nOut;
-            while(pItOutDevia<pItOutDeviaEnd) {
-                deviaV = *pItOutDevia;
+            pOutDeviaEnd = pOutDevia + nOut;
+            while(pOutDevia != pOutDeviaEnd) {
                 pItIn = pIn;
-                pItInDevia = pInDevia;
-                pItInEnd = pIn+nIn;
-                while(pItIn<pItInEnd) {
-                    *pItInDevia += *pMat * deviaV;
-                    *pItMatDevia += *pIn * deviaV;
-                    pIn++, pInDevia++, pMat++, pMatDevia++;
+                pItInDevia = pInDeiva;
+                deviationOut = *pOutDevia;
+                pItInEnd = pIn + nIn;
+                while(pItIn < pItInEnd) {
+                    *pItInDevia += deviationOut * (*pItMat);
+                    *pItMatDevia += deviationOut * (*pItIn);
+                    pItIn++, pItInDevia++, pItMat++, pItMatDevia++;
                 }
-                pItOutDevia++;
+                pOutDevia++;
             }
             pIn += nIn;
-            pInDevia += nIn;
-            pOutDevia += nOut;
+            pInDeiva += nIn;
+            pMat += nMat;
+            pMatDevia += nMat;
+            if(pIn == pInEnd) {
+                pIn = (Q*)inVars[0].data;
+                pInDeiva = (Q*)inVars[0].devia;
+            }
+            if(pMat == pMatEnd) {
+                pMat = (Q*)inVars[1].data;
+                pMatDevia = (Q*)inVars[1].devia;
+            }
         }
     }
 
@@ -111,20 +129,20 @@ public:
             return sCtx.error("线性变换的两个张量尺寸不匹配，第一个张量的最低维度必须与第二个张量的最低维度一致");
         }
 
-        m_nTensor = spDim1.dataSize()/nInputSize;
-        m_nInputSize = nInputSize;
-        m_nOutputSize = nOutputSize;
+        nIn = nInputSize;
+        nOut = nOutputSize;
+        nMat = nIn * nOut;
         SDimension spOutDim = spDim1.downLowDimension().upLowDimension(nOutputSize);
         return createVariable(spOutDim, spVarOut);
     }
 
 private:
     //从多长的向量线性变化成另外一个长度向量，都是在最低维度，高纬度保留
-    int m_nTensor;
-    int m_nInputSize;
-    int m_nOutputSize;
+    int nIn;
+    int nMat;
+    int nOut;
 };
 
-static SNnOperatorRegister s_Register("Linear", CNnOperator::createOperator<CLinearOperator>);
+static SNnOperatorRegister s_Register("linear", CNnOperator::createOperator<CLinearOperator>);
 
 #endif//__SimpleWork_NN_Operators_CLinearOperator_h__

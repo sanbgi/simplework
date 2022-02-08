@@ -8,70 +8,93 @@ public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
-        //VERIFY(inVars[0].size * outVar.size == inVars[1].size)
-        Q* pV1 = (Q*)inVars[0].data;
-        Q* pV2 = (Q*)inVars[1].data;
-        Q* pVO = (Q*)outVar.data;
-        int nInSize = inVars[0].size / nBatchs;
-        int iOutSize, nOutSize = outVar.size / nBatchs;
+        CProductOperator* pThis = (CProductOperator*)pParameters;
+        int nIn = pThis->nIn;
+        int nMat = pThis->nMat;
+        int nOut = pThis->nOut;
+        Q* pIn = (Q*)inVars[0].data;
+        Q* pMat = (Q*)inVars[1].data;
+        Q* pOut = (Q*)outVar.data;
+        Q* pInEnd = pIn + inVars[0].size;
+        Q* pMatEnd = pMat + inVars[1].size;
         Q* pItIn, *pItMat;
-        Q* pV1End, *pVOEnd;
+        Q* pItInEnd, *pItOutEnd;
         Q v;
         while(nBatchs-->0) {
-            pItMat = pV2;
-            pVOEnd = pVO + nOutSize;
-            while(pVO != pVOEnd) {
+            pItMat = pMat;
+            pItOutEnd = pOut + nOut;
+            while(pOut != pItOutEnd) {
                 v = 0;
-                pItIn = pV1;
-                pV1End = pV1 + nInSize;
-                while(pItIn < pV1End) {
+                pItIn = pIn;
+                pItInEnd = pIn + nIn;
+                while(pItIn < pItInEnd) {
                     v += (*pItIn) * (*pItMat);
                     pItIn++, pItMat++;
                 }
-                *pVO = v;
-                pVO++;
+                *pOut = v;
+                pOut++;
             }
-            pV1 += nInSize;
+            pIn += nIn;
+            pMat += nMat;
+            if(pIn == pInEnd) {
+                pIn = (Q*)inVars[0].data;
+            }
+            if(pMat == pMatEnd) {
+                pMat = (Q*)inVars[1].data;
+            }
         }
     }
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
-        //VERIFY(inVars[0].size * outVar.size == inVars[1].size)
-        Q* pInput = (Q*)inVars[0].data;
-        Q* pInputDeiva = (Q*)inVars[0].devia;
-        Q* pWeights = (Q*)inVars[1].data;
-        Q* pWeightDevia = (Q*)inVars[1].devia;
-        Q* pDeviaOut = (Q*)outVar.devia;
-        int nInSize = inVars[0].size / nBatchs;
-        int nOutSize = outVar.size / nBatchs;
+        CProductOperator* pThis = (CProductOperator*)pParameters;
+        int nIn = pThis->nIn;
+        int nMat = pThis->nMat;
+        int nOut = pThis->nOut;
+        Q* pIn = (Q*)inVars[0].data;
+        Q* pInDeiva = (Q*)inVars[0].devia;
+        Q* pMat = (Q*)inVars[1].data;
+        Q* pMatDevia = (Q*)inVars[1].devia;
+        Q* pOutDevia = (Q*)outVar.devia;
+        Q* pInEnd = pIn + inVars[0].size;
+        Q* pMatEnd = pMat + inVars[1].size;
 
-        Q* pInputEnd, *pDeviaOutEnd;
+        Q* pItInEnd, *pOutDeviaEnd;
         Q* pItIn, *pItInDevia;
         Q deviationOut;
-        Q* pItWeight;
-        Q* pItWeightDevia;
+        Q* pItMat;
+        Q* pItMatDevia;
         while(nBatchs-->0) {
-            pItWeight = pWeights;
-            pItWeightDevia = pWeightDevia;
-            pDeviaOutEnd = pDeviaOut + nOutSize;
-            while(pDeviaOut != pDeviaOutEnd) {
-                pItIn = pInput;
-                pItInDevia = pInputDeiva;
-                deviationOut = *pDeviaOut;
-                pInputEnd = pInput + nInSize;
-                while(pItIn < pInputEnd) {
-                    *pItInDevia += deviationOut * (*pItWeight);
-                    *pItWeightDevia += deviationOut * (*pItIn);
-                    pItIn++, pItInDevia++, pItWeight++, pItWeightDevia++;
+            pItMat = pMat;
+            pItMatDevia = pMatDevia;
+            pOutDeviaEnd = pOutDevia + nOut;
+            while(pOutDevia != pOutDeviaEnd) {
+                pItIn = pIn;
+                pItInDevia = pInDeiva;
+                deviationOut = *pOutDevia;
+                pItInEnd = pIn + nIn;
+                while(pItIn < pItInEnd) {
+                    *pItInDevia += deviationOut * (*pItMat);
+                    *pItMatDevia += deviationOut * (*pItIn);
+                    pItIn++, pItInDevia++, pItMat++, pItMatDevia++;
                 }
-                pDeviaOut++;
+                pOutDevia++;
             }
-            pInput += nInSize;
-            pInputDeiva += nInSize;
+            pIn += nIn;
+            pInDeiva += nIn;
+            pMat += nMat;
+            pMatDevia += nMat;
+            if(pIn == pInEnd) {
+                pIn = (Q*)inVars[0].data;
+                pInDeiva = (Q*)inVars[0].devia;
+            }
+            if(pMat == pMatEnd) {
+                pMat = (Q*)inVars[1].data;
+                pMatDevia = (Q*)inVars[1].devia;
+            }
         }
-        //VERIFY(pWeightDevia - (Q*)inVars[1].devia == inVars[1].size )
+        //VERIFY(pMatDevia - (Q*)inVars[1].devia == inVars[1].size )
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
@@ -101,13 +124,16 @@ public:
         if(nInElementSize != pDimSize2[1]) {
             return sCtx.error("向量和矩阵点乘的尺寸不匹配");
         }
-        isBatchInVars[0] = isBatchInVariable(pInVars[0]);
-        isBatchInVars[1] = isBatchInVariable(pInVars[1]);
+        nIn = spDim1.dataSize();
+        nMat = spDim2.dataSize();
+        nOut = nMat / nIn;
         return createVariable(SDimension(1,pDimSize2), spVarOut);
     }
 
 private:
-    int isBatchInVars[2];
+    int nIn;
+    int nMat;
+    int nOut;
 };
 
 static SNnOperatorRegister s_Register("product", CNnOperator::createOperator<CProductOperator>);
