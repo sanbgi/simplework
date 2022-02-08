@@ -25,8 +25,8 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    //SNnNetwork nn = createLayerNetwork();
-    SNnNetwork nn = createRnnNetwork();
+    SNnNetwork nn = createLayerNetwork();
+    //SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();
@@ -95,7 +95,7 @@ void CNnNetwork::runLearn() {
                 sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
                 sumLoss = sumLoss * sumX + delta * (1-sumX);
                 static int t = 0;
-                if( t++ % 100 == 0) {
+                if( t++ % 10 == 0) {
                     std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
                                 <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
                                 << sumAcc << ",\tavgAcc:" << nHit / 10.0 / t  << "\n";
@@ -179,7 +179,7 @@ void CNnNetwork::runTest() {
             sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
             sumLoss = sumLoss * sumX + delta * (1-sumX);
             static int t = 0;
-            if( t++ % 100 == 0) {
+            if( t++ % 10 == 0) {
                 std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
                             <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
                             << sumAcc << ",\tavgAcc:" << nHit * 1.0 / nData  << "\n";
@@ -225,16 +225,17 @@ SNnNetwork CNnNetwork::createUnitNetwork() {
 }
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
-    std::vector<SNnLayer> arrUnits;
-    arrUnits.push_back(SNnLayer::createConvLayer({5,5,32}));
-    arrUnits.push_back(SNnLayer::createPoolLayer({2,2,2,2}));
-    arrUnits.push_back(SNnLayer::createConvLayer({7,7,64}));
-    arrUnits.push_back(SNnLayer::createPoolLayer({2,2,2,2}));
-    arrUnits.push_back(SNnLayer::createDenseLayer({576}));
-    arrUnits.push_back(SNnLayer::createDenseLayer({10, "softmax"}));
+    std::vector<SNnUnit> arrUnits;
+    arrUnits.push_back(SNnUnit::createConvUnit({5,5,32}));
+    arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
+    arrUnits.push_back(SNnUnit::createConvUnit({7,7,64}));
+    arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
+    arrUnits.push_back(SNnUnit::createDenseUnit({576}));
+    arrUnits.push_back(SNnUnit::createDenseUnit({10, "softmax"}));
+
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);
-    SNnNetwork spNet = SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
+    SNnNetwork spNet = SNnNetwork::createLayerNetwork(arrUnits.size(), arrUnits.data(),spDim);
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
     return SNnNetwork::loadFile("D://snetwork.bin");
 }
@@ -245,8 +246,7 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
     arrNets.push_back(SNnNetwork::createRnn(50,true));
     arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
     return SNnNetwork::createSequence(arrNets.size(), arrNets.data());
-    */
-    
+
     std::vector<SNnLayer> arrUnits;
     arrUnits.push_back(SNnLayer::createGruLayer(50, "sequence"));
     arrUnits.push_back(SNnLayer::createDenseLayer({10, "softmax"}));
@@ -255,6 +255,8 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
     SNnNetwork spNet =  SNnNetwork::createNetwork(arrUnits.size(),arrUnits.data(),spDim);
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
     return SNnNetwork::loadFile("D://snetwork.bin");
+    */
+    return SNnNetwork();
 }
 
 SNnNetwork CNnNetwork::createNetwork() {

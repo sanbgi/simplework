@@ -7,49 +7,60 @@ static SCtx sCtx("CGPoolOperator");
 class CGPoolOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         CGPoolOperator* pThis = (CGPoolOperator*)pParameters;
         int itPoolWidth;
         int nPoolWidth = pThis->m_nPoolWidth;
-        int nOutSize = outVar.size;
+        int nOutBatchSize = outVar.size / nBatchs;
+        int nInBatchSize = nPoolWidth * nOutBatchSize;
+
         Q sumPlane, xPlane = 1.0/nPoolWidth;
         Q* pItIn = (Q*)inVars[0].data;
         Q* pItPlaneIn;
         Q* pItOut = (Q*)outVar.data;
-        Q* pItOutEnd = pItOut+outVar.size;
-        while(pItOut<pItOutEnd) {
-            sumPlane = 0;
-            itPoolWidth = nPoolWidth;
-            pItPlaneIn = pItIn;
-            while(itPoolWidth-->0) {
-                sumPlane += *pItPlaneIn;
-                pItPlaneIn += nOutSize;
+        Q* pItOutEnd;
+        while(nBatchs-->0) {
+            pItOutEnd = pItOut + nOutBatchSize;
+            while(pItOut < pItOutEnd) {
+                sumPlane = 0;
+                pItPlaneIn = pItIn;
+                itPoolWidth = nPoolWidth;
+                while(itPoolWidth-->0) {
+                    sumPlane += *pItPlaneIn;
+                    pItPlaneIn += nOutBatchSize;
+                }
+                *pItOut = sumPlane*xPlane;
+                pItIn++,pItOut++;
             }
-            *pItOut = sumPlane*xPlane;
-            pItIn++,pItOut++;
+            pItIn += nInBatchSize - nOutBatchSize;
         }
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         CGPoolOperator* pThis = (CGPoolOperator*)pParameters;
         int itPoolWidth;
         int nPoolWidth = pThis->m_nPoolWidth;
-        int nOutSize = outVar.size;
+        int nOutBatchSize = outVar.size / nBatchs;
+        int nInBatchSize = nPoolWidth * nOutBatchSize;
         Q dDevia, xPlane = 1.0/nPoolWidth;
         Q* pItInDevia = (Q*)inVars[0].devia;
         Q* pItPlaneDevia;
         Q* pItOutDevia = (Q*)outVar.devia;
-        Q* pItOutDeviaEnd = pItOutDevia + outVar.size;
-        while(pItOutDevia<pItOutDeviaEnd) {
-            itPoolWidth = nPoolWidth;
-            dDevia = *pItOutDevia * xPlane;
-            pItPlaneDevia = pItInDevia;
-            while(itPoolWidth-->0) {
-                *pItPlaneDevia += dDevia;
-                pItPlaneDevia+=nOutSize;
+        Q* pItOutDeviaEnd;
+        while(nBatchs-->0) {
+            pItOutDeviaEnd = pItOutDevia + nOutBatchSize;
+            while(pItOutDevia<pItOutDeviaEnd) {
+                itPoolWidth = nPoolWidth;
+                dDevia = *pItOutDevia * xPlane;
+                pItPlaneDevia = pItInDevia;
+                while(itPoolWidth-->0) {
+                    *pItPlaneDevia += dDevia;
+                    pItPlaneDevia += nOutBatchSize;
+                }
+                pItInDevia++, pItOutDevia++;
             }
-            pItOutDevia++;
+            pItInDevia += nInBatchSize - nOutBatchSize;
         }
     }
 

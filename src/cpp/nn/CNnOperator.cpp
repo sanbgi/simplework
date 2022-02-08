@@ -47,6 +47,7 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
         return sCtx.error("参数个数不等于二");
     }
 
+    /*
     //
     // 两个张量进行元素级别的操作时，必须符合下面两种情况之一
     //  1，两个张量维度完全相同
@@ -64,11 +65,16 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
         if( spInDimension1.data()[size1-1] != spInDimension2.data()[size2-1]) {
             return sCtx.error("两个张量不能进行元素运算，因为维度不一致");
         }
-    }else
-    {
+    }else{
         if( !spInDimension1.isEqual(spInDimension2) ) {
             return sCtx.error("相加的两个元素维度不一致");
         }
+    }*/
+    
+    SDimension spInDimension1 = pInVars[0].dimension();
+    SDimension spInDimension2 = pInVars[1].dimension();
+    if( !spInDimension1.isEqual(spInDimension2) ) {
+        return sCtx.error("相加的两个元素维度不一致");
     }
 
     return CNnOperatorVariable::createOperatorVariable(spInDimension1, spOutVar);
@@ -76,4 +82,14 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
 
 int CNnOperator::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
     return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
+}
+
+int CNnOperator::isBatchInVariable(const SNnVariable& spVar) {
+    SNnInternalVariable spInternalVar = spVar;
+    switch(spInternalVar->getVariableType()) {
+        case ENnVariableType::EVState:
+        case ENnVariableType::EVWeight:
+            return 0;
+    }
+    return 1;
 }

@@ -110,9 +110,9 @@ public:
         return spNet;
     }
 
-    static SNnNetwork createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension) {
+    static SNnNetwork createLayerNetwork(int nUnits, const SNnUnit pUnits[], const SDimension& spInDimension) {
         SNnNetwork spNet;
-        SNnFactory::getFactory()->createNetwork(nLayers, pLayers, spInDimension, spNet);
+        SNnFactory::getFactory()->createNetwork(SNnUnit::createSequenceUnit(nUnits, pUnits), spInDimension, spNet);
         return spNet;
     }
 

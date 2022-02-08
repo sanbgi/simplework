@@ -15,7 +15,7 @@ class CMathSolverT : public CObject, public IMathSolver {
 public:
     void set(PVector vec, int value){
         Q* pTarget = (Q*)vec.data;
-        while(vec.size-->=0) {
+        while(vec.size-->0) {
             *pTarget = value;
             pTarget++;
         }
@@ -24,7 +24,7 @@ public:
     void copy(int nSize, void* pDesc, void* pSrc){
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
-        while(nSize-->=0) {
+        while(nSize-->0) {
             *pTarget = *pSource;
             pTarget++, pSource++;
         }
@@ -33,7 +33,7 @@ public:
     void plus(int nSize, void* pDesc, void* pSrc) {
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
-        while(nSize-->=0) {
+        while(nSize-->0) {
             *pTarget += *pSource;
             pTarget++, pSource++;
         }
@@ -42,7 +42,7 @@ public:
     void minus(int nSize, void* pDesc, void* pSrc){
         Q* pTarget = (Q*)pDesc;
         Q* pSource = (Q*)pSrc;
-        while(nSize-->=0) {
+        while(nSize-->0) {
             *pTarget -= *pSource;
             pTarget++, pSource++;
         }

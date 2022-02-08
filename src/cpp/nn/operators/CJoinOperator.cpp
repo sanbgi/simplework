@@ -6,47 +6,59 @@ static SCtx sCtx("JoinOperator");
 class CJoinOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
         VERIFY(inVars[0].size+inVars[1].size==outVar.size)
 
         Q* pIn1 = (Q*)inVars[0].data;
-        Q* pIn1End = pIn1 + inVars[0].size;
+        int nIn1 = inVars[0].size;
 
         Q* pIn2 = (Q*)inVars[1].data;
-        Q* pIn2End = pIn2 + inVars[1].size;
+        int nIn2 = inVars[1].size;
 
+        int iIn1, iIn2;
         Q* pO = (Q*)outVar.data;
-        while(pIn1 < pIn1End) {
-            *pO = *pIn1;
-            pO++, pIn1++;
-        }
-        while(pIn2 < pIn2End) {
-            *pO = *pIn2;
-            pO++, pIn2++;
+        while(nBatchs-->0) {
+            iIn1 = nIn1;
+            while(iIn1-->0) {
+                *pO = *pIn1;
+                pO++, pIn1++;
+            }
+
+            iIn2 = nIn2;
+            while(iIn2-->0) {
+                *pO = *pIn2;
+                pO++, pIn2++;
+            }
         }
         VERIFY(pO-(Q*)outVar.data==outVar.size)
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
         VERIFY(inVars[0].size+inVars[1].size==outVar.size)
 
         Q* pDevia1 = (Q*)inVars[0].devia;
-        Q* pDevia1End = pDevia1 + inVars[0].size;
+        int nIn1 = inVars[0].size;
 
         Q* pDevia2 = (Q*)inVars[1].devia;
-        Q* pDevia2End = pDevia2 + inVars[1].size;
+        int nIn2 = inVars[1].size;
 
+        int iIn1, iIn2;
         Q* pDeviaO = (Q*)outVar.devia;
-        while(pDevia1 < pDevia1End) {
-            *pDevia1 += *pDeviaO;
-            pDevia1++, pDeviaO++;
-        }
-        while(pDevia2 < pDevia2End) {
-            *pDevia2 += *pDeviaO;
-            pDevia2++, pDeviaO++;
+        while(nBatchs-->0) {
+            iIn1 = nIn1;
+            while(iIn1-->0) {
+                *pDevia1 += *pDeviaO;
+                pDevia1++, pDeviaO++;
+            }
+
+            iIn2 = nIn2;
+            while(iIn2-->0) {
+                *pDevia2 += *pDeviaO;
+                pDevia2++, pDeviaO++;
+            }
         }
         VERIFY(pDeviaO-(Q*)outVar.devia==outVar.size)
     }

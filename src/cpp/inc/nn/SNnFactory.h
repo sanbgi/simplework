@@ -95,9 +95,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         // 创建神经网络
         //
-        virtual int createLayer(const SNnUnit& spUnit, const char* szMode, SNnLayer& spLayer) = 0;
         virtual int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension, SNnNetwork& spNet) = 0;
-        virtual int createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension, SNnNetwork& spNet) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
     static SNnFactory& getFactory() {

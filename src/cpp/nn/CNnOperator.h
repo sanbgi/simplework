@@ -25,6 +25,7 @@ public:
     int solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     int solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     int createVariable(const SDimension& spDimension, SNnVariable& spOutVar);
+    int isBatchInVariable(const SNnVariable& spVar);
 
 public:
     static map<string, FCreateOperator>& getFactories();

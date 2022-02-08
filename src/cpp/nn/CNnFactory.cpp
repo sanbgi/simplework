@@ -5,7 +5,6 @@
 #include "CNormallizePipe.h"
 #include "CTensorSolver.h"
 #include "units/CSequenceUnit.h"
-#include "CNnLayer.h"
 #include "CNnLayerNetwork.h"
 
 using namespace sw;
@@ -87,14 +86,9 @@ public:
     int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) {
         return CSequenceUnit::createUnit(nUnits, pUnits, spUnit);
     }
+    
     int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
         return CNnLayerNetwork::createNetwork(spUnit, spInDimVector, spNet);
-    }
-    int createLayer(const SNnUnit& spUnit, const char* szMode, SNnLayer& spLayer) {
-        return CNnLayer::createLayer(spUnit, szMode, spLayer);
-    }
-    int createNetwork(int nLayers, const SNnLayer pLayers[], const SDimension& spInDimension, SNnNetwork& spNet) {
-        return CNnLayerNetwork::createNetwork(nLayers, pLayers, spInDimension, spNet);
     }
 };
 

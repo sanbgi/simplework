@@ -119,7 +119,8 @@ public:
             return sCtx.error("偏置量需要与卷积核数相等");
         }
 
-        m_nStrideHeight = m_nStrideWidth = 1;
+        m_nStrideHeight = pConv->nStrideHeight;
+        m_nStrideWidth = pConv->nStrideWidth;
         m_nLayers = pDimSize2[0];
         m_nInputLayers = pDimSize2[4];
         m_sizeConv = {
@@ -194,8 +195,9 @@ public:
         return createVariable(SDimension(3, pOutDimSizes), spVarOut);
     }
 
+    
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         CConvOperator* pThis = (CConvOperator*)pParameters;
         
         //
@@ -216,6 +218,7 @@ public:
         CBatchSize2D stepInConv = pThis->m_stepInConv;
         CBatchSize2D stepOut = pThis->m_stepOut;
         CBatchSize2D stepConv = pThis->m_stepConv;
+        sizeIn.batch = nBatchs;
         struct CItOutVariables {
             Q* pIn;
             Q* pOut;
@@ -391,7 +394,7 @@ public:
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         CConvOperator* pThis = (CConvOperator*)pParameters;
 
         //
@@ -404,6 +407,7 @@ public:
         CBatchSize2D stepInConv = pThis->m_stepInConv;
         CBatchSize2D stepOut = pThis->m_stepOut;
         CBatchSize2D stepConv = pThis->m_stepConv;
+        sizeIn.batch = nBatchs;
 
         CShiftPolicy stepPolicy;
         CShiftPolicies shiftPolicies;

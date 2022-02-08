@@ -7,14 +7,14 @@ static SCtx sCtx("PoolOperator");
 class CPoolOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         CPoolOperator* pThis = (CPoolOperator*)pParameters;
             
         int nPoolWidth = pThis->m_nPoolWidth;
         int nPoolHeight = pThis->m_nPoolHeight;
         int nOutWidth = pThis->m_nOutWidth;
         int nOutHeight = pThis->m_nOutHeight;
-        int nTensor = pThis->m_nBatchs;
+        int nTensor = nBatchs;
         int nLayer = pThis->m_nInputLayer;
         int nInputTensorSize = pThis->m_nInputTensorSize;
         int nOutputTensorSize = pThis->m_nOutTensorSize;
@@ -87,7 +87,7 @@ public:
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         CPoolOperator* pThis = (CPoolOperator*)pParameters;
             
         int nLayer = pThis->m_nInputLayer;
@@ -99,7 +99,7 @@ public:
         int nOutWidth = pThis->m_nOutWidth;
         int nOutHeight = pThis->m_nOutHeight;
 
-        int nTensor = pThis->m_nBatchs;
+        int nTensor = nBatchs;
         int nInputTensorSize = pThis->m_nInputTensorSize;
         int nOutputTensorSize = pThis->m_nOutTensorSize;
 
@@ -243,7 +243,6 @@ public:
 
         int nInputCells = nInputWidth * nInputHeight * nLayers;
 
-        m_nBatchs = 1;
         m_nInputHeight = pDimSizes[0];
         m_nInputWidth = pDimSizes[1];
         m_nInputLayer = 1;
@@ -268,7 +267,6 @@ private:
     int m_nStrideHeight;
 
     int m_nBatchInSize;
-    int m_nBatchs;
     int m_nInputWidth;
     int m_nInputHeight;
     int m_nInputLayer;

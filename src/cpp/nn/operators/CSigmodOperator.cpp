@@ -6,15 +6,15 @@ static SCtx sCtx("SigmodOperator");
 class CSigmodOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         CActivator* pThis = (CActivator*)pParameters;
-        pThis->activate(inVars[0].size, inVars[0].data, outVar.data);
+        pThis->activate(outVar.size, inVars[0].data, outVar.data);
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         CActivator* pThis = (CActivator*)pParameters;
-        pThis->deactivate(inVars[0].size, inVars[0].data, outVar.devia, inVars[0].devia);
+        pThis->deactivate(outVar.size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
     int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {

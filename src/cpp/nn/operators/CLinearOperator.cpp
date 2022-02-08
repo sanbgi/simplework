@@ -6,7 +6,7 @@ static SCtx sCtx("LinearOperator");
 class CLinearOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
         CLinearOperator* pThis = (CLinearOperator*)pParameters;
         Q* pIn = (Q*)inVars[0].data;
@@ -18,7 +18,7 @@ public:
 
         int nIn = pThis->m_nInputSize;
         int nOut = pThis->m_nOutputSize;
-        int nTensor = pThis->m_nTensor;
+        int nTensor = pThis->m_nTensor*nBatchs;
         while(nTensor-->0) {
             pItOut = pOut;
             pItMat = pMat;
@@ -40,7 +40,7 @@ public:
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatch, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
         CLinearOperator* pThis = (CLinearOperator*)pParameters;
         Q* pIn = (Q*)inVars[0].data;
@@ -53,7 +53,7 @@ public:
         Q deviaV;
         int nIn = pThis->m_nInputSize;
         int nOut = pThis->m_nOutputSize;
-        int nTensor = pThis->m_nTensor;
+        int nTensor = pThis->m_nTensor*nBatch;
         while(nTensor-->0) {
             pItOutDevia = pOutDevia;
             pItMat = pMat;

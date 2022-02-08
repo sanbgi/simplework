@@ -12,7 +12,7 @@ static SCtx sCtx("LoadStateOperator");
 class CLoadStateOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==1)
         VERIFY(inVars[0].size == outVar.size)
         Q* pIn = (Q*)inVars[0].data;
@@ -25,7 +25,7 @@ public:
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==1)
         VERIFY(inVars[0].size == outVar.size)
         Q* pInDevia = (Q*)inVars[0].devia;

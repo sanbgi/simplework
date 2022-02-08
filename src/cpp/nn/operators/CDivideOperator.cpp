@@ -6,41 +6,46 @@ static SCtx sCtx("DividOperator");
 class CDivideOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         Q* pIn1 = (Q*)inVars[0].data;
         Q* pIn2 = (Q*)inVars[1].data;
         Q* pO = (Q*)outVar.data;
-        Q* pOEnd = pO + outVar.size;
-        Q* pItIn2;
-        Q* pItIn2End = pIn2 + inVars[1].size;
-        while(pO < pOEnd) {
-            pItIn2 = pIn2;
-            while(pItIn2 < pItIn2End) {
-                *pO = *pIn1 / *pItIn2;
-                pO++, pIn1++, pItIn2++;
+        int iBatchSize, nBatchSize = outVar.size / nBatchs;
+        int nMovebackIn1 = inVars[0].size == nBatchSize ? nBatchSize : 0;
+        int nMovebackIn2 = inVars[1].size == nBatchSize ? nBatchSize : 0;
+        while(nBatchs-->0) {
+            iBatchSize = 0;
+            while(iBatchSize++ < nBatchSize) {
+                *pO = *pIn1 / *pIn2;
+                pO++, pIn1++, pIn2++;
             }
+            pIn1 -= nMovebackIn1;
+            pIn2 -= nMovebackIn2;
         }
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         Q* pIn1 = (Q*)inVars[0].data;
         Q* pIn2 = (Q*)inVars[1].data;
         Q* pDevia1 = (Q*)inVars[0].devia;
         Q* pDevia2 = (Q*)inVars[1].devia;
         Q* pDeviaO = (Q*)outVar.devia;
-        Q* pDeviaOEnd = pDeviaO + outVar.size;
-        Q* pItDevia2, *pItDevia2End = pDevia2 + inVars[1].size;
-        Q* pItIn2;
-        while(pDeviaO < pDeviaOEnd) {
-            pItIn2 = pIn2;
-            pItDevia2 = pDevia2;
-            while(pItDevia2 < pItDevia2End) {
-                *pDevia1 += (*pDeviaO) / (*pItIn2);
-                *pItDevia2 += - (*pDeviaO) * (*pIn1) / (*pItIn2) / (*pItIn2);
-                pDevia1++, pItDevia2++, pDeviaO++;
-                pIn1++, pItIn2++;
+        int iBatchSize, nBatchSize = outVar.size / nBatchs;
+        int nMovebackIn1 = inVars[0].size == nBatchSize ? nBatchSize : 0;
+        int nMovebackIn2 = inVars[1].size == nBatchSize ? nBatchSize : 0;
+        while(nBatchs-->0) {
+            iBatchSize = 0;
+            while(iBatchSize++ < nBatchSize) {
+                *pDevia1 += (*pDeviaO) / (*pIn2);
+                *pDevia2 += - (*pDeviaO) * (*pIn1) / (*pIn2) / (*pIn2);
+                pDevia1++, pDevia2++, pDeviaO++;
+                pIn1++, pIn2++;
             }
+            pIn1 -= nMovebackIn1;
+            pDevia1 -= nMovebackIn1;
+            pIn2 -= nMovebackIn2;
+            pDevia2 -= nMovebackIn2;
         }
     }
 

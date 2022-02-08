@@ -33,6 +33,14 @@ struct PNnConv {
     //
     int nShiftConvs;
     //
+    // 宽度步长
+    //
+    int nStrideWidth;
+    //
+    // 高度步长
+    //
+    int nStrideHeight;
+    //
     // 填充模式，"valid" 或者 "same"
     //
     const char *szPadding;
@@ -44,13 +52,15 @@ struct PNnConv {
     //
     // 构造函数
     //
-    PNnConv(int nConvWidth, int nConvHeight, int nConvLayers, int nShiftConvs = 1, const char* szPadding = nullptr, const char* szActivator = nullptr) {
+    PNnConv(int nConvWidth, int nConvHeight, int nConvLayers, int nShiftConvs = 1, int nStrideWidth = 1, int nStrideHeight = 1, const char* szPadding = nullptr, const char* szActivator = nullptr) {
         this->nWidth = nConvWidth;
         this->nHeight = nConvHeight;
         this->nLayers = nConvLayers;
         this->nShiftConvs = nShiftConvs;
         this->szActivator = szActivator;
         this->szPadding = szPadding;
+        this->nStrideWidth = nStrideWidth;
+        this->nStrideHeight = nStrideHeight;
     }
     PNnConv(){
         nShiftConvs = 1;

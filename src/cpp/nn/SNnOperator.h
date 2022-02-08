@@ -8,11 +8,11 @@ using namespace sw;
 //
 // 计算函数
 //
-typedef void (*FEval)(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
-
+typedef void (*FBatchEval)(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar);
+typedef void (*FBatchDevia)(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
 struct PSolveParameter {
-    FEval pEvalFun;
-    FEval pDeviaFun;
+    FBatchEval pEvalFun;
+    FBatchDevia pDeviaFun;
     void* pParameter;
 };
 

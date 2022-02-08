@@ -33,6 +33,8 @@ private:
     int m_nHeight;
     int m_nLayers;
     int m_nShiftConvs;
+    int m_nStrideWidth;
+    int m_nStrideHeight;
     double m_dDropoutRate;
     string m_strPaddingMode;
     string m_strActivator;
@@ -53,6 +55,8 @@ int CConvUnit::__initialize(const PData* pData) {
     m_nHeight = pConv->nHeight;
     m_nLayers = pConv->nLayers;
     m_nShiftConvs = pConv->nShiftConvs;
+    m_nStrideWidth = pConv->nStrideWidth;
+    m_nStrideHeight = pConv->nStrideHeight;
     m_dDropoutRate = 0;
     if( pConv->szPadding != nullptr) {
         m_strPaddingMode = pConv->szPadding;
@@ -95,6 +99,8 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
 
     PNnConv convData;
     convData.szPadding = m_strPaddingMode.c_str();
+    convData.nStrideHeight = m_nStrideHeight;
+    convData.nStrideWidth = m_nStrideWidth;
     if( SNnVariable::solveOp("conv", CData<PNnConv>(convData), 3, inConv, y ) != sCtx.success() ) {
         return sCtx.error("卷积运算错误");
     }
@@ -113,6 +119,8 @@ int CConvUnit::toArchive(const SArchive& ar) {
     ar.arBlock("height", m_nHeight);
     ar.arBlock("layers", m_nLayers);
     ar.arBlock("shiftconvs", m_nShiftConvs);
+    ar.arBlock("stridewidth", m_nStrideWidth);
+    ar.arBlock("strideheight", m_nStrideHeight);
     ar.visitString("padding", m_strPaddingMode);
     ar.visitString("activator", m_strActivator);
     ar.arBlock("dropoutRate", m_dDropoutRate);

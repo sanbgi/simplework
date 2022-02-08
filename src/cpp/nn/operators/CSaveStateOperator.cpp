@@ -10,7 +10,7 @@ static SCtx sCtx("CSaveStateOperator");
 class CSaveStateOperator : public CNnOperator {
 public:
     template<typename Q>
-    static void evalT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
         VERIFY(inVars[0].size == inVars[1].size)
         Q* pIn1 = (Q*)inVars[0].data;
@@ -23,7 +23,7 @@ public:
     }
 
     template<typename Q>
-    static void deviaT(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
+    static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
         VERIFY(inVars[0].size == inVars[1].size)
         Q* pDevia1 = (Q*)inVars[0].devia;
