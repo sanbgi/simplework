@@ -9,6 +9,7 @@ using namespace sw;
 using namespace std;
 
 class PLayerContext;
+class PNnSolver;
 class CNnLayerNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
@@ -42,12 +43,12 @@ private:
     int learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
 
 private:
-    SNnUnit m_spUnit;
     SDimension m_spInDimension;
     string m_strOptimizer;
 
     bool m_bInitialized;
     CTaker<PLayerContext*> m_spContext;
+    CTaker<PNnSolver*> m_spSolver;
 
     //单元求解后的变量
     int m_nInputTensorSize;
@@ -67,16 +68,7 @@ private:
 public:
     int initNetwork();
     int prepareNetwork(const STensor& spBatchIn);
-    void releaseCtx();
-
-    CNnLayerNetwork() {
-        m_bInitialized = false;
-        m_nBatchInSize = 0;
-        m_idType = 0;
-    }
-    ~CNnLayerNetwork() {
-        releaseCtx();
-    }
+    CNnLayerNetwork();
 };
 
 #endif//__SimpleWork_NN_CNnLayerNetwork_H__

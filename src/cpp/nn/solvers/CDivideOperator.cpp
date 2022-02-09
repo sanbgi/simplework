@@ -3,7 +3,11 @@
 
 #include "operator.h"
 static SCtx sCtx("DividOperator");
-class CDivideOperator : public CNnSolver {
+class CDivideOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -67,8 +71,21 @@ public:
     int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         return solveTwoEleWise(nInVars, pInVars, spVarOut);
     }
+
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "DivideSolver"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        return sCtx.success();
+    }
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.DivideSolver"; }
+
 };
 
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CDivideOperator, CDivideOperator::__getClassKey())
 static SNnSolverRegister s_Register("divide", CNnSolver::createStaticSolver<CDivideOperator>);
 
 #endif//__SimpleWork_NN_Operators_CDivideOperator_h__

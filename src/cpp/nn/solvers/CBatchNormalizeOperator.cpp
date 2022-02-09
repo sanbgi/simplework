@@ -5,7 +5,12 @@
 #include "operator.h"
 #include "PNnBatchNormalizeOperator.h"
 static SCtx sCtx("BatchNormalizeOperator");
-class CBatchNormalizeOperator : public CNnSolver {
+class CBatchNormalizeOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
+
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -113,36 +118,36 @@ public:
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
             solveParameter.pParameter = this;
-            if(!(*m_pAvgTensor)) {
-                if( STensor::createVector<float>(*m_pAvgTensor, m_nLayers) != sCtx.success() ||
-                    STensor::createVector<float>(*m_pVarianceTensor, m_nLayers) != sCtx.success() ) {
+            if(!(m_spAvgTensor)) {
+                if( STensor::createVector<float>(m_spAvgTensor, m_nLayers) != sCtx.success() ||
+                    STensor::createVector<float>(m_spVarianceTensor, m_nLayers) != sCtx.success() ) {
                     return sCtx.error("创建张量失败");
                 }
-                m_pAvg = (*m_pAvgTensor).data<float>();
-                m_pVariance = (*m_pVarianceTensor).data<float>();
+                m_pAvg = (m_spAvgTensor).data<float>();
+                m_pVariance = (m_spVarianceTensor).data<float>();
                 memset(m_pAvg, 0, sizeof(float)*m_nLayers);
                 memset(m_pVariance, 1, sizeof(float)*m_nLayers);
             }else{
-                m_pAvg = (*m_pAvgTensor).data<float>();
-                m_pVariance = (*m_pVarianceTensor).data<float>();
+                m_pAvg = (m_spAvgTensor).data<float>();
+                m_pVariance = (m_spVarianceTensor).data<float>();
             }
             return sCtx.success();
         }else if(idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
             solveParameter.pParameter = this;
-            if(!(*m_pAvgTensor)) {
-                if( STensor::createVector<double>(*m_pAvgTensor, m_nLayers) != sCtx.success() ||
-                    STensor::createVector<double>(*m_pVarianceTensor, m_nLayers) != sCtx.success() ) {
+            if(!(m_spAvgTensor)) {
+                if( STensor::createVector<double>(m_spAvgTensor, m_nLayers) != sCtx.success() ||
+                    STensor::createVector<double>(m_spVarianceTensor, m_nLayers) != sCtx.success() ) {
                     return sCtx.error("创建张量失败");
                 }
-                m_pAvg = (*m_pAvgTensor).data<double>();
-                m_pVariance = (*m_pVarianceTensor).data<double>();
+                m_pAvg = (m_spAvgTensor).data<double>();
+                m_pVariance = (m_spVarianceTensor).data<double>();
                 memset(m_pAvg, 0, sizeof(double)*m_nLayers);
                 memset(m_pVariance, 1, sizeof(double)*m_nLayers);
             }else{
-                m_pAvg = (*m_pAvgTensor).data<double>();
-                m_pVariance = (*m_pVarianceTensor).data<double>();
+                m_pAvg = (m_spAvgTensor).data<double>();
+                m_pVariance = (m_spVarianceTensor).data<double>();
             }
             return sCtx.success();
         }
@@ -175,10 +180,23 @@ public:
         m_nLayers = nLayers;
         m_dEsp = pParameter->dEsp;
         m_nMinBatch = pParameter->nMinBatchs;
-        m_pAvgTensor = pParameter->pAvg;
-        m_pVarianceTensor = pParameter->pVariance;
         return createVariable(spDim,spVarOut);
     }
+
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "BatchNormalizeSolver"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        ar.arBlock("nlayer", m_nLayers);
+        ar.arBlock("esp", m_dEsp);
+        ar.arObject("avg", m_spAvgTensor);
+        ar.arObject("variance", m_spVarianceTensor);
+        return sCtx.success();
+    }
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.BatchNormalizeSolver"; }
 
 private:
     int m_nLayers;
@@ -186,10 +204,11 @@ private:
     void* m_pAvg;
     void* m_pVariance;
     int m_nMinBatch;
-    STensor* m_pAvgTensor;
-    STensor* m_pVarianceTensor;
+    STensor m_spAvgTensor;
+    STensor m_spVarianceTensor;
 };
 
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CBatchNormalizeOperator, CBatchNormalizeOperator::__getClassKey())
 static SNnSolverRegister s_Register("batchnormalize", CNnSolver::createSolver<CBatchNormalizeOperator>);
 
 #endif//__SimpleWork_NN_Operators_CBatchNormalizeOperator_h__

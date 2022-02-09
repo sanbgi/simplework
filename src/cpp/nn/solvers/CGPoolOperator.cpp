@@ -4,7 +4,11 @@
 #include "operator.h"
 
 static SCtx sCtx("CGPoolOperator");
-class CGPoolOperator : public CNnSolver {
+class CGPoolOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -101,10 +105,23 @@ public:
         return createVariable(SDimension(nDims-2, pDimSizes+2),spVarOut);
     }
 
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "GPoolSolver"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        ar.arBlock("poolwidth", m_nPoolWidth);
+        return sCtx.success();
+    }
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.GPoolSolver"; }
+
 private:
     int m_nPoolWidth;
 };
 
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CGPoolOperator, CGPoolOperator::__getClassKey())
 static SNnSolverRegister s_Register("gap", CNnSolver::createSolver<CGPoolOperator>);
 
 #endif//__SimpleWork_NN_Operators_CGPoolOperator_h__

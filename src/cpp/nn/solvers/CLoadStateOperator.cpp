@@ -9,7 +9,11 @@ static SCtx sCtx("LoadStateOperator");
 //  inVar[0] : 普通变量
 //  inVar[1] : 状态变量
 //
-class CLoadStateOperator : public CNnSolver {
+class CLoadStateOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -58,8 +62,20 @@ public:
         }
         return createVariable(pInVars[0].dimension(), spVarOut);
     }
+
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "LoadStateSolver"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        return sCtx.success();
+    }
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.LoadStateSolver"; }
 };
 
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CLoadStateOperator, CLoadStateOperator::__getClassKey())
 static SNnSolverRegister s_Register("loadState", CNnSolver::createStaticSolver<CLoadStateOperator>);
 
 #endif//__SimpleWork_NN_Operators_CLoadStateOperator_h__

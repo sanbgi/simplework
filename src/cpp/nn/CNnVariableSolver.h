@@ -8,8 +8,14 @@
 using namespace sw;
 using namespace std;
 
+//
+// 求解定义
+//
 struct PNnSolver {
 
+    //
+    // 每一步求解参数信息定义
+    //
     struct PSolveParameter {
         //
         // 输入变量数以及对应的下标
@@ -21,11 +27,6 @@ struct PNnSolver {
         // 输出变量下标
         //
         int iOutVar;
-
-        //
-        // 求解函数
-        //
-        //SNnAtomSolver spOperator;
     };
     int iInVar;
     int iOutVar;

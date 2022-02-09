@@ -10,9 +10,8 @@ using namespace std;
 
 typedef int (*FCreateSolver)(SNnSolver& spOutSolver);
 
-class CNnSolver : public CObject, public INnAtomSolver, public INnSolver{
+class CNnSolver : public CObject, public INnSolver{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
         SIMPLEWORK_INTERFACE_ENTRY(INnSolver)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 

@@ -10,12 +10,13 @@ int CIoBinaryArReader::arBlock(const char* szName, unsigned int idType, int nByt
 
 int CIoBinaryArReader::arBlockArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer, int nMaxVer) {
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
-        int nBuffer;
-        m_stream.read((char*)&nBuffer, sizeof(int));
-        if(nBuffer) {
+        int nEles;
+        m_stream.read((char*)&nEles, sizeof(int));
+        if(nEles) {
+            int nBuffer = nEles*pVisitee->getElementBytes();
             char sBuffer[nBuffer];
             m_stream.read(sBuffer, nBuffer);
-            pVisitee->setArray(nBuffer / pVisitee->getElementBytes(), (const void*)sBuffer);
+            pVisitee->setArray(nEles, (const void*)sBuffer);
         }
     }
     return sCtx.success();

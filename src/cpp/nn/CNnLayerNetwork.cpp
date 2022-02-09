@@ -39,7 +39,7 @@ struct PSolveInstruct {
     //
     // 求解器
     //
-    INnAtomSolver* pOperator;
+    INnAtomSolver* pAtomSolver;
 };
 
 struct PSolveLayer {
@@ -57,8 +57,6 @@ struct PSolveLayer {
 };
 
 struct PLayerContext {
-    //求解结果
-    PNnSolver solveCtx;
     //解算参数列表
     vector<PSolveVar> arrVars;
     //解算步骤列表
@@ -67,15 +65,22 @@ struct PLayerContext {
     PSolveLayer solveLayer;
 };
 
+CNnLayerNetwork::CNnLayerNetwork() {
+    m_bInitialized = false;
+    m_nBatchInSize = 0;
+    m_idType = 0;
+    m_spSolver.take(new PNnSolver, [](PNnSolver* pSolver) {
+        delete pSolver;
+    });
+}
+
 int CNnLayerNetwork::createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
     CPointer<CNnLayerNetwork> spNetwork;
     CObject::createObject(spNetwork);
-    spNetwork->m_spUnit = spUnit;
-    spNetwork->m_spInDimension = spInDimVector;
-    if(spNetwork->initNetwork() != sCtx.success()) {
-        return sCtx.error("初始化网络失败");
+    if( CNnVariableSolver::solveUnit(spInDimVector, spUnit, spNetwork->m_spSolver) != sCtx.success()) {
+        return sCtx.error("解算网络单元错误");
     }
-
+    spNetwork->m_spInDimension = spInDimVector;
     spNet.setPtr(spNetwork.getPtr());
     return sCtx.success();
 }
@@ -89,22 +94,14 @@ int CNnLayerNetwork::initNetwork() {
     m_spContext.take(new PLayerContext, [](PLayerContext* pCtx){
         delete pCtx;
     });
-
-    //
-    // 解算计算单元
-    //
     PLayerContext& layerCtx = *m_spContext;
-    PNnSolver& solveCtx = layerCtx.solveCtx;
-    if( CNnVariableSolver::solveUnit(spDimension, m_spUnit, &solveCtx) != sCtx.success()) {
-        return sCtx.error("解算网络单元错误");
-    }
 
     //
     // 更新计算变量数组
     //
     vector<PSolveVar>& arrVars = layerCtx.arrVars;
-    vector<SNnVariable>::iterator itVar = solveCtx.arrVars.begin();
-    while(itVar != solveCtx.arrVars.end()) {
+    vector<SNnVariable>::iterator itVar = m_spSolver->arrVars.begin();
+    while(itVar != m_spSolver->arrVars.end()) {
         SNnInternalVariable spToSolveVar = *itVar;
         if(!spToSolveVar) {
             return sCtx.error("不认识的变量类型");
@@ -119,9 +116,9 @@ int CNnLayerNetwork::initNetwork() {
     }
 
     vector<PSolveInstruct>& arrSolvers = layerCtx.arrSolvers;
-    vector<PNnSolver::PSolveParameter>::iterator itParameter = solveCtx.arrParameters.begin();
-    vector<SNnAtomSolver>::iterator itOp = solveCtx.arrOperators.begin();
-    while(itParameter != solveCtx.arrParameters.end()) {
+    vector<PNnSolver::PSolveParameter>::iterator itParameter = m_spSolver->arrParameters.begin();
+    vector<SNnAtomSolver>::iterator itOp = m_spSolver->arrOperators.begin();
+    while(itParameter != m_spSolver->arrParameters.end()) {
         PNnSolver::PSolveParameter spOp = *itParameter;
         PSolveInstruct solveParameter;
         solveParameter.nInVar = spOp.nInVars;
@@ -132,7 +129,7 @@ int CNnLayerNetwork::initNetwork() {
         for(int i=0; i<spOp.nInVars; i++) {
             solveParameter.ppInVars[i] = arrVars.data() + spOp.pInVars[i];
         }
-        solveParameter.pOperator = (*itOp).getPtr();
+        solveParameter.pAtomSolver = (*itOp).getPtr();
         arrSolvers.push_back(solveParameter);
         itParameter++, itOp++;
     }
@@ -159,13 +156,13 @@ int CNnLayerNetwork::initNetwork() {
             break;
         }
     }
-    spDimension = solveCtx.arrVars[solveCtx.iOutVar].dimension();
+    spDimension = m_spSolver->arrVars[m_spSolver->iOutVar].dimension();
 
     layerCtx.solveLayer.nOpSize = nOpSize;
     layerCtx.solveLayer.nStateSize = nStateSize;
     layerCtx.solveLayer.nWeightSize = nWeightSize;
-    layerCtx.solveLayer.iInVar = solveCtx.iInVar;
-    layerCtx.solveLayer.iOutVar = solveCtx.iOutVar;
+    layerCtx.solveLayer.iInVar = m_spSolver->iInVar;
+    layerCtx.solveLayer.iOutVar = m_spSolver->iOutVar;
     layerCtx.solveLayer.nVars = layerCtx.arrVars.size();
     layerCtx.solveLayer.pVars = layerCtx.arrVars.data();
     layerCtx.solveLayer.nSolvers = layerCtx.arrSolvers.size();
@@ -221,7 +218,7 @@ int CNnLayerNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     vector<PSolveInstruct>::iterator it = layerCtx.arrSolvers.begin(); 
     for(;it != layerCtx.arrSolvers.end(); it++) {
-        it->pOperator->initSolveParameter(idType, it->solver);
+        it->pAtomSolver->initSolveParameter(idType, it->solver);
     }
 
     //
@@ -505,12 +502,13 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
     return sCtx.success();
 }
 
-void CNnLayerNetwork::releaseCtx() {
-}
-
-
 int CNnLayerNetwork::toArchive(const SArchive& ar) {
-    ar.arObject("unit", m_spUnit);
+    PNnSolver& spSolver = *m_spSolver;
+    ar.arBlock("iinvar", spSolver.iInVar);
+    ar.arBlock("ioutvar", spSolver.iOutVar);
+    ar.arObjectArray("operators", spSolver.arrOperators);
+    ar.arObjectArray("vars", spSolver.arrVars);
+    ar.arBlockArray<PNnSolver::PSolveParameter, vector<PNnSolver::PSolveParameter>>("parameters", spSolver.arrParameters);
     ar.arObject("inputDimension", m_spInDimension);
     ar.visitString("optimizer", m_strOptimizer);
     return sCtx.success();

@@ -3,7 +3,11 @@
 
 #include "operator.h"
 static SCtx sCtx("JoinOperator");
-class CJoinOperator : public CNnSolver {
+class CJoinOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -94,8 +98,21 @@ public:
         int size = size1 + size2;
         return createVariable(SDimension(1,&size), spVarOut);
     }
+
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "JoinSolver"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        return sCtx.success();
+    }
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.JoinSolver"; }
+
 };
 
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CJoinOperator, CJoinOperator::__getClassKey())
 static SNnSolverRegister s_Register("join", CNnSolver::createStaticSolver<CJoinOperator>);
 
 #endif//__SimpleWork_NN_Operators_CJoinOperator_h__

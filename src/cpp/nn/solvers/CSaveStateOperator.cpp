@@ -7,7 +7,11 @@ static SCtx sCtx("CSaveStateOperator");
 //
 // 备份状态值到State中，并且在反向计算中，恢复偏导数
 //
-class CSaveStateOperator : public CNnSolver {
+class CSaveStateOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -63,8 +67,21 @@ public:
         }
         return sCtx.success();
     }
+
+private://IArchivable
+    int getClassVer() { return 220112; }
+    const char* getClassName() { return "SaveStateSolver"; } 
+    const char* getClassKey() { return __getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        return sCtx.success();
+    }
+
+public://Factory
+    static const char* __getClassKey() { return "sw.nn.SaveStateSolver"; }
+
 };
 
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CSaveStateOperator, CSaveStateOperator::__getClassKey())
 static SNnSolverRegister s_Register("saveState", CNnSolver::createStaticSolver<CSaveStateOperator>);
 
 #endif//__SimpleWork_NN_Operators_CSaveStateOperator_h__

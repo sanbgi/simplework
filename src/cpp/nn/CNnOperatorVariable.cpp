@@ -9,3 +9,10 @@ int CNnOperatorVariable::createOperatorVariable(const SDimension& spDimension, S
     spOutVar.setPtr(spVar.getPtr());
     return sCtx.success();
 }
+
+int CNnOperatorVariable::toArchive(const SArchive& ar) {
+    ar.arObject("dimension", m_spDimension);
+    return sCtx.success();
+}
+
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnOperatorVariable, CNnOperatorVariable::__getClassKey())

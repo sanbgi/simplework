@@ -106,6 +106,38 @@ public:
     //
     // 变长数组
     //
+    template<typename Q, typename Arr> int arBlockArray(const char* szName, Arr& arrEles, int nMinVer=0, int nMaxVer=999999999 ) const {
+        class CArrayVisitee : IArrayVisitee {
+        public:
+            unsigned int getElementType() { return sw::CBasicData<Q>::getStaticType(); }
+            int size() { return m_pEles->size(); }
+            const void* data() { return m_pEles->data(); }
+            int getElementBytes() { return sizeof(Q); }
+            void setArray(int nEle, const void* pEle) {
+                Q* pArr = (Q*)pEle;
+                while(nEle-->0) {
+                    m_pEles->push_back(*pArr);
+                    pArr++;
+                }
+            }
+
+        public:
+            CArrayVisitee(Arr* pEles) {
+                m_pEles = pEles;
+            }
+            operator IArrayVisitee*() {
+                return this;
+            }
+
+        private:
+            Arr* m_pEles;
+        };
+        return (*this)->arBlockArray(szName, CArrayVisitee(&arrEles), nMinVer, nMaxVer);
+    }
+
+    //
+    // 变长数组
+    //
     template<typename Q> int visitTaker(const char* szName, int nSize, sw::CTaker<Q*>& spTaker, int nMinVer=0, int nMaxVer = 999999999) const {
         
         class CTakerVisitee : public IArrayVisitee {
