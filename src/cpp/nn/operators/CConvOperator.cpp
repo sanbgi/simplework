@@ -75,8 +75,9 @@ public:
     }
 
     int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        if(nInVars != 3) {
-            return sCtx.error("卷积操作需要三个输入数据");
+        //if(nInVars != 3) {
+        if(nInVars != 2) {
+            return sCtx.error("卷积操作需要两个输入数据");
         }
 
         if(pData == nullptr) {
@@ -90,7 +91,7 @@ public:
 
         SDimension spDim1 = pInVars[0].dimension();
         SDimension spDim2 = pInVars[1].dimension();
-        SDimension spDimBais = pInVars[2].dimension();
+        //SDimension spDimBais = pInVars[2].dimension();
         if(spDim2.size() != 5) {
             return sCtx.error("卷积核需要一个五维矩阵nLayer*nShiftConvs*nWidth*nHeight*nDeep");
         }
@@ -115,9 +116,9 @@ public:
             return sCtx.error("卷积核尺寸不应该大于输入尺寸");
         }
 
-        if(spDimBais.dataSize() != pDimSize2[0] * pDimSize2[1]) {
-            return sCtx.error("偏置量需要与卷积核数相等");
-        }
+        //if(spDimBais.dataSize() != pDimSize2[0] * pDimSize2[1]) {
+        //    return sCtx.error("偏置量需要与卷积核数相等");
+        //}
 
         m_nStrideHeight = pConv->nStrideHeight;
         m_nStrideWidth = pConv->nStrideWidth;
@@ -223,13 +224,13 @@ public:
             Q* pIn;
             Q* pOut;
             Q* pWeights;
-            Q* pBais;
+            //Q* pBais;
             int index;
         }itVars, itVars0, itVars2, itVars3, itVars1, itVars4, itVars5, itVars6, it = {
             (Q*)inVars[0].data,
             (Q*)outVar.data,
             (Q*)inVars[1].data,
-            (Q*)inVars[2].data,
+            //(Q*)inVars[2].data,
         };
 
         CShiftPolicy stepPolicy;
@@ -276,19 +277,19 @@ public:
             itVars0.pIn = it.pIn;
             itVars0.pOut = it.pOut;
             it.pWeights = itVars.pWeights;  //重置weight
-            it.pBais = itVars.pBais;        //重置bais
+            //it.pBais = itVars.pBais;        //重置bais
             for(itVars1.index = 0; itVars1.index < nLayers; itVars1.index++) {
                 itVars1.pIn = it.pIn;
                 itVars1.pOut = it.pOut;
                 itVars1.pWeights = it.pWeights;
-                itVars1.pBais = it.pBais;
+                //itVars1.pBais = it.pBais;
                 pWeightEnd = it.pWeights + nLayerStepShifts;
                 stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
                 for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
                     itVars2.pIn = it.pIn;
                     itVars2.pOut = it.pOut;
                     itVars2.pWeights = it.pWeights;
-                    itVars2.pBais = it.pBais;
+                    //itVars2.pBais = it.pBais;
 
                     //左边填充了都填充了空值，不能参与运算
                     if(itVars2.index < rcPading.top) {
@@ -313,7 +314,7 @@ public:
                         itVars3.pIn = it.pIn;
                         itVars3.pOut = it.pOut;
                         itVars3.pWeights = it.pWeights;
-                        itVars3.pBais = it.pBais;
+                        //itVars3.pBais = it.pBais;
 
                         //左边填充了都填充了空值，不能参与运算
                         if(itVars3.index < rcPading.left) {
@@ -355,7 +356,7 @@ public:
                             it.pWeights = itVars4.pWeights + stepConv.height;
                         }
                         //卷积结果减去偏置
-                        (*it.pOut) = dConv - (*it.pBais);
+                        (*it.pOut) = dConv;// - (*it.pBais);
 
                         it.pIn = itVars3.pIn + stepInMove.width;
                         it.pOut = itVars3.pOut + stepOut.width;
@@ -366,26 +367,26 @@ public:
                         //                 步长：w * h * l
                         //
                         it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
-                        it.pBais = itVars3.pBais + stepPolicy.wBais;
+                        //it.pBais = itVars3.pBais + stepPolicy.wBais;
                         if(it.pWeights >= pWeightEnd ) {
                             it.pWeights -= nLayerStepShifts;
-                            it.pBais -= sizeConv.batch;
+                            //it.pBais -= sizeConv.batch;
                         }
                     }
 
                     it.pIn = itVars2.pIn + stepInMove.height;
                     it.pOut = itVars2.pOut + stepOut.height;
                     it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
-                    it.pBais = itVars2.pBais + stepPolicy.hBais;
+                    //it.pBais = itVars2.pBais + stepPolicy.hBais;
                     if(it.pWeights >= pWeightEnd ) {
                         it.pWeights -= nLayerStepShifts;
-                        it.pBais -= sizeConv.batch;
+                        //it.pBais -= sizeConv.batch;
                     }
                 }
                 it.pIn = itVars1.pIn;
                 it.pOut = itVars1.pOut + 1;
                 it.pWeights = itVars1.pWeights + nLayerStepShifts;
-                it.pBais = itVars1.pBais + sizeConv.batch;
+                //it.pBais = itVars1.pBais + sizeConv.batch;
             }
             
             it.pIn = itVars0.pIn + stepInMove.batch;
@@ -419,7 +420,7 @@ public:
             Q* pOutDeviation;
             Q* pWeights;
             Q* pWeightDevivation;
-            Q* pBaisDeviation;
+            //Q* pBaisDeviation;
             Q* pZDeviatioin;
             int index;
         }it = {
@@ -428,7 +429,7 @@ public:
             (Q*)outVar.devia,
             (Q*)inVars[1].data,
             (Q*)inVars[1].devia,
-            (Q*)inVars[2].devia
+            //(Q*)inVars[2].devia
         }, itVars, itVars0,itVars2,itVars3,itVars1,itVars4,itVars5,itVars6;
 
         Q deviationZ;
@@ -466,14 +467,14 @@ public:
             it.pZDeviatioin = it.pOutDeviation;             
             it.pWeights = itVars.pWeights;                  //重置Weight
             it.pWeightDevivation = itVars.pWeightDevivation;//重置偏差
-            it.pBaisDeviation = itVars.pBaisDeviation;      //重置Bais
+            //it.pBaisDeviation = itVars.pBaisDeviation;      //重置Bais
             for(itVars1.index = 0; itVars1.index < nLayers; itVars1.index++) {
                 itVars1.pIn = it.pIn;
                 itVars1.pInDeviation = it.pInDeviation;
                 itVars1.pZDeviatioin = it.pZDeviatioin;
                 itVars1.pWeights = it.pWeights;
                 itVars1.pWeightDevivation = it.pWeightDevivation;
-                itVars1.pBaisDeviation = it.pBaisDeviation;
+                //itVars1.pBaisDeviation = it.pBaisDeviation;
                 pWeightEnd = it.pWeights + nLayerStepShifts;
                 stepPolicy = shiftPolicies.s[itVars1.index%s_nShiftPolicy];
                 for(itVars2.index=0; itVars2.index < sizeOut.height; itVars2.index++) {
@@ -482,7 +483,7 @@ public:
                     itVars2.pZDeviatioin = it.pZDeviatioin;
                     itVars2.pWeights = it.pWeights;
                     itVars2.pWeightDevivation = it.pWeightDevivation;
-                    itVars2.pBaisDeviation = it.pBaisDeviation;
+                    //itVars2.pBaisDeviation = it.pBaisDeviation;
 
                     //上下填充了都填充了控空制，不能参与运算
                     if(itVars2.index < rcPading.top) {
@@ -513,7 +514,7 @@ public:
                         itVars3.pZDeviatioin = it.pZDeviatioin;
                         itVars3.pWeights = it.pWeights;
                         itVars3.pWeightDevivation = it.pWeightDevivation;
-                        itVars3.pBaisDeviation = it.pBaisDeviation;
+                        //itVars3.pBaisDeviation = it.pBaisDeviation;
 
                         //
                         //  计算目标函数对当前输出值的偏导数
@@ -595,7 +596,7 @@ public:
                             //
                             //  偏置的偏导数刚好是输出的偏导数的负数，所以，下降梯度值为(-deviationZ)
                             //
-                            (*it.pBaisDeviation) += (-deviationZ);
+                            //(*it.pBaisDeviation) += (-deviationZ);
                         }
 
                         it.pIn = itVars3.pIn + stepInMove.width;
@@ -609,11 +610,11 @@ public:
                         //
                         it.pWeights = itVars3.pWeights + stepPolicy.wWeight;
                         it.pWeightDevivation = itVars3.pWeightDevivation + stepPolicy.wWeight;
-                        it.pBaisDeviation = itVars3.pBaisDeviation + stepPolicy.wBais;
+                        //it.pBaisDeviation = itVars3.pBaisDeviation + stepPolicy.wBais;
                         if(it.pWeights >= pWeightEnd ) {
                             it.pWeights -= nLayerStepShifts;
                             it.pWeightDevivation -= nLayerStepShifts;
-                            it.pBaisDeviation -= sizeConv.batch;
+                            //it.pBaisDeviation -= sizeConv.batch;
                         }
                     }
                     it.pIn = itVars2.pIn + stepInMove.height;
@@ -621,11 +622,11 @@ public:
                     it.pZDeviatioin = itVars2.pZDeviatioin + stepOut.height;
                     it.pWeights = itVars2.pWeights + stepPolicy.hWeight;
                     it.pWeightDevivation = itVars2.pWeightDevivation + stepPolicy.hWeight;
-                    it.pBaisDeviation = itVars2.pBaisDeviation + stepPolicy.hBais;
+                    //it.pBaisDeviation = itVars2.pBaisDeviation + stepPolicy.hBais;
                     if(it.pWeights >= pWeightEnd ) {
                         it.pWeights -= nLayerStepShifts;
                         it.pWeightDevivation -= nLayerStepShifts;
-                        it.pBaisDeviation -= sizeConv.batch;
+                        //it.pBaisDeviation -= sizeConv.batch;
                     }
                 }
 
@@ -634,7 +635,7 @@ public:
                 it.pZDeviatioin = itVars1.pZDeviatioin + 1 ;
                 it.pWeights = itVars1.pWeights + nLayerStepShifts;
                 it.pWeightDevivation = itVars1.pWeightDevivation + nLayerStepShifts;
-                it.pBaisDeviation = itVars1.pBaisDeviation + sizeConv.batch;
+                //it.pBaisDeviation = itVars1.pBaisDeviation + sizeConv.batch;
             }
 
             //  更新迭代参数

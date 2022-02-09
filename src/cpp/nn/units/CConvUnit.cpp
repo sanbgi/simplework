@@ -101,9 +101,11 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
     convData.szPadding = m_strPaddingMode.c_str();
     convData.nStrideHeight = m_nStrideHeight;
     convData.nStrideWidth = m_nStrideWidth;
-    if( SNnVariable::solveOp("conv", CData<PNnConv>(convData), 3, inConv, y ) != sCtx.success() ) {
+    if( SNnVariable::solveOp("conv", CData<PNnConv>(convData), 2, inConv, y ) != sCtx.success() ) {
         return sCtx.error("卷积运算错误");
     }
+
+    y = y + m_spBais;
 
     if(m_strActivator.length() > 0) {
         spOutVar = y.solveOp(m_strActivator.c_str());
