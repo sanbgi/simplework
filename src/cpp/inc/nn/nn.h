@@ -17,7 +17,6 @@
 #include "SNnPipe.h"
 #include "SNnUnit.h"
 #include "SNnNetwork.h"
-#include "SNnDevia.h"
 #include "SNnState.h"
 #include "SNnVariable.h"
 #include "SNnVariableSolver.h"

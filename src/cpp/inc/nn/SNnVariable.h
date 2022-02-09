@@ -69,7 +69,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
         return (*this);
     }
 
-    SNnVariable solveOp(const char* szOp) {
+    SNnVariable solveOp(const char* szOp) const{
         SNnVariable o;
         SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 1, this, o);
         return o;
@@ -85,11 +85,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
     }
 
 public:
-    SNnVariable relu() { return solveOp("relu"); }
-    SNnVariable tanh() { return solveOp("tanh"); }
-    SNnVariable sigmod() { return solveOp("sigmod"); }
-    SNnVariable softmax() { return solveOp("softmax"); }
-    SNnVariable gvp() { return solveOp("gvp"); }
+    SNnVariable relu() const { return solveOp("relu"); }
+    SNnVariable tanh() const { return solveOp("tanh"); }
+    SNnVariable sigmod() const { return solveOp("sigmod"); }
+    SNnVariable softmax() const { return solveOp("softmax"); }
+    SNnVariable gvp() const { return solveOp("gvp"); }
 
 public:
     static SNnVariable product(const SNnVariable& spVec, const SNnVariable& spMat) {
