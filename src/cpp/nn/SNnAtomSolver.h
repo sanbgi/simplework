@@ -17,16 +17,16 @@ struct PSolveParameter {
 };
 
 //
-// 神经网络计算器，为了实现高速计算，参数和函数地址，都是直接的指针
+// 神经网络原子计算器，为了实现高速计算，参数和函数地址，都是直接的指针
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(NnAtomSolver)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnAtomSolver", 211202)
 
         //
-        // 获取计算函数
+        // 准备计算参数
         //
-        virtual int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;
+        virtual int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

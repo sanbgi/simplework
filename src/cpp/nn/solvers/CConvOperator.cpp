@@ -63,7 +63,7 @@ class CConvOperator : public CNnSolver, public INnAtomSolver, public IArchivable
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
-    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;

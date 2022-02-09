@@ -21,7 +21,7 @@ public:
         pThis->deactivate(outVar.size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
-    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
         solveParameter.pParameter = CActivator::getActivation(idType, "sigmod");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;

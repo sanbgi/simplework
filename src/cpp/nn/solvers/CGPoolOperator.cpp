@@ -68,7 +68,7 @@ public:
         }
     }
 
-    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;

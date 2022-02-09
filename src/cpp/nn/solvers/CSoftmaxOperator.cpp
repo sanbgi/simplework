@@ -37,7 +37,7 @@ public:
         }
     }
 
-    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
         solveParameter.pParameter = CActivator::getActivation(idType, "softmax");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;

@@ -101,7 +101,7 @@ public:
         //VERIFY(pMatDevia - (Q*)inVars[1].devia == inVars[1].size )
     }
 
-    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;

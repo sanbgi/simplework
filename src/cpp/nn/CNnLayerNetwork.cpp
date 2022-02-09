@@ -218,7 +218,7 @@ int CNnLayerNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     vector<PSolveInstruct>::iterator it = layerCtx.arrSolvers.begin(); 
     for(;it != layerCtx.arrSolvers.end(); it++) {
-        it->pAtomSolver->initSolveParameter(idType, it->solver);
+        it->pAtomSolver->prepareSolver(idType, it->solver);
     }
 
     //
