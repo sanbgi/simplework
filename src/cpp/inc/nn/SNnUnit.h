@@ -37,6 +37,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnUnit)
     static SNnUnit createGruUnit(const PNnRnn& rData) {
         return SObject::createObject("sw.nn.GruUnit", CData<PNnRnn>(rData));
     }
+    static SNnUnit createBatchNormalizeUnit(const PNnBatchNormalize& rData) {
+        return SObject::createObject("sw.nn.BatchNormalizeUnit", CData<PNnBatchNormalize>(rData));
+    }
     static SNnUnit createGvpUnit() {
         return SObject::createObject("sw.nn.GvpUnit", nullptr);
     }

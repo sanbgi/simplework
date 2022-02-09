@@ -223,7 +223,7 @@ public:
         m_nStrideHeight = pPool->nStrideHeight;
 
         SDimension spDim1 = pInVars[0].dimension();
-        if(spDim1.dataSize() < 2) {
+        if(spDim1.size() < 2) {
             return sCtx.error("池化操作输入张量至少需要二维，代表高度和宽度");
         }
         int nDims = spDim1.size();
