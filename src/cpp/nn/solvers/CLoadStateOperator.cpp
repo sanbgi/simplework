@@ -9,7 +9,7 @@ static SCtx sCtx("LoadStateOperator");
 //  inVar[0] : 普通变量
 //  inVar[1] : 状态变量
 //
-class CLoadStateOperator : public CNnOperator {
+class CLoadStateOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -37,7 +37,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -60,6 +60,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("loadState", CNnOperator::createStaticOperator<CLoadStateOperator>);
+static SNnSolverRegister s_Register("loadState", CNnSolver::createStaticSolver<CLoadStateOperator>);
 
 #endif//__SimpleWork_NN_Operators_CLoadStateOperator_h__

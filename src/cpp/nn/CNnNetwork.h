@@ -3,7 +3,6 @@
 
 #include "nn.h"
 #include "COptimizer.h"
-#include "CNnOperator.h"
 #include <vector>
 #include <string>
 

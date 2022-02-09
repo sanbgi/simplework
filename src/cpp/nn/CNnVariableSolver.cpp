@@ -5,14 +5,14 @@
 #include "CNnOperatorVariable.h"
 #include "CNnVariableSolver.h"
 #include "CNnInputVariable.h"
-#include "CNnOperator.h"
+#include "CNnSolver.h"
 
 #include <map>
 
 static SCtx sCtx("CNnVariableSolver");
 
 static struct PRunCtx {
-    PSolveContext* pSolveCtx;
+    PNnSolver* pSolveCtx;
     map<INnVariable*, int> mapSolvedVars;
     int registerVar(const SNnVariable& spVar) {
         int iVar = -1;
@@ -48,13 +48,13 @@ int CNnVariableSolver::saveState(const SNnState spState, const SNnVariable& spVa
 }
 
 int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    return CNnOperator::solveOp(szOp, pData, nInVars, pInVars, spOutVar);
+    return CNnSolver::solveOp(szOp, pData, nInVars, pInVars, spOutVar);
 }
 
-int CNnVariableSolver::registerSolvedOperator(const SNnOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
+int CNnVariableSolver::registerSolvedOperator(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
     if(s_pRunCtx) {
-        PSolveContext* pCtx = s_pRunCtx->pSolveCtx;
-        PSolveContext::PSolveOperator solveParameter;
+        PNnSolver* pCtx = s_pRunCtx->pSolveCtx;
+        PNnSolver::PSolveParameter solveParameter;
         solveParameter.nInVars = nInVars;
         for( int i=0; i<nInVars; i++) {
             solveParameter.pInVars[i] = s_pRunCtx->registerVar(pInVars[i]);
@@ -68,8 +68,8 @@ int CNnVariableSolver::registerSolvedOperator(const SNnOperator& spOp, int nInVa
         }else{
             solveParameter.iOutVar = -1;
         }
-        solveParameter.spOperator = spOp;
-        pCtx->arrOperators.push_back(solveParameter);
+        pCtx->arrParameters.push_back(solveParameter);
+        pCtx->arrOperators.push_back(spOp);
     }
     return sCtx.success();
 }
@@ -77,7 +77,7 @@ int CNnVariableSolver::registerSolvedOperator(const SNnOperator& spOp, int nInVa
 //
 // 求解单元函数，虽然做了避免重入处理，但仍然不可以多线程操作
 //
-int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PSolveContext* pCtx) {
+int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PNnSolver* pCtx) {
     if(s_pRunCtx != nullptr) {
         return sCtx.error("求解单元函数，不允许重入");
     }

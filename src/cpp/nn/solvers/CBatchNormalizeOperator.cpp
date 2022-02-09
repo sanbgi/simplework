@@ -5,7 +5,7 @@
 #include "operator.h"
 #include "PNnBatchNormalizeOperator.h"
 static SCtx sCtx("BatchNormalizeOperator");
-class CBatchNormalizeOperator : public CNnOperator {
+class CBatchNormalizeOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -108,7 +108,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -190,6 +190,6 @@ private:
     STensor* m_pVarianceTensor;
 };
 
-static SNnOperatorRegister s_Register("batchnormalize", CNnOperator::createOperator<CBatchNormalizeOperator>);
+static SNnSolverRegister s_Register("batchnormalize", CNnSolver::createSolver<CBatchNormalizeOperator>);
 
 #endif//__SimpleWork_NN_Operators_CBatchNormalizeOperator_h__

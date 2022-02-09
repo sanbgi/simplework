@@ -3,7 +3,7 @@
 
 #include "operator.h"
 static SCtx sCtx("JoinOperator");
-class CJoinOperator : public CNnOperator {
+class CJoinOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -63,7 +63,7 @@ public:
         VERIFY(pDeviaO-(Q*)outVar.devia==outVar.size)
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -96,6 +96,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("join", CNnOperator::createStaticOperator<CJoinOperator>);
+static SNnSolverRegister s_Register("join", CNnSolver::createStaticSolver<CJoinOperator>);
 
 #endif//__SimpleWork_NN_Operators_CJoinOperator_h__

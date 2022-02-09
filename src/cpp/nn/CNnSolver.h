@@ -2,17 +2,18 @@
 #define __SimpleWork_NN_COperator_H__
 
 #include "nn.h"
-#include "SNnOperator.h"
+#include "SNnAtomSolver.h"
 #include <map>
 
 using namespace sw;
 using namespace std;
 
-typedef int (*FCreateOperator)(SNnOperator& spOutVar);
+typedef int (*FCreateSolver)(SNnSolver& spOutSolver);
 
-class CNnOperator : public CObject, public INnOperator {
+class CNnSolver : public CObject, public INnAtomSolver, public INnSolver{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnOperator)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnSolver)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
@@ -28,16 +29,16 @@ public:
     int isBatchInVariable(const SNnVariable& spVar);
 
 public:
-    static map<string, FCreateOperator>& getFactories();
-    static int regisetOperator(const char* szOperator, FCreateOperator funCreator);
+    static map<string, FCreateSolver>& getFactories();
+    static int regisetOperator(const char* szOperator, FCreateSolver funCreator);
 
 public:
-    template<typename T> static int createStaticOperator(SNnOperator& spOperator) {
-        static SNnOperator s_operator = CObject::createObject<T>();
+    template<typename T> static int createStaticSolver(SNnSolver& spOperator) {
+        static SNnSolver s_operator = CObject::createObject<T>();
         spOperator = s_operator;
         return 0;
     }
-    template<typename T> static int createOperator(SNnOperator& spOperator) {
+    template<typename T> static int createSolver(SNnSolver& spOperator) {
         CPointer<T> spObj;
         CObject::createObject(spObj);
         spOperator.setPtr(spObj.getPtr());
@@ -45,10 +46,10 @@ public:
     }
 };
 
-class SNnOperatorRegister {
+class SNnSolverRegister {
 public:
-    SNnOperatorRegister(const char* szOperator, FCreateOperator funCreator) {
-        CNnOperator::regisetOperator(szOperator, funCreator);
+    SNnSolverRegister(const char* szOperator, FCreateSolver funCreator) {
+        CNnSolver::regisetOperator(szOperator, funCreator);
     }
 };
 

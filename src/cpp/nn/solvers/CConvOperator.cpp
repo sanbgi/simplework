@@ -57,9 +57,9 @@ static void s_GetShiftPolicy(CShiftPolicies& shiftPolicies, int nConvs, int nCon
 };
 
 
-class CConvOperator : public CNnOperator {
+class CConvOperator : public CNnSolver {
 public:
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -668,6 +668,6 @@ private:
     CBatchSize2D m_stepConv;
 };
 
-static SNnOperatorRegister s_Register("conv", CNnOperator::createOperator<CConvOperator>);
+static SNnSolverRegister s_Register("conv", CNnSolver::createSolver<CConvOperator>);
 
 #endif//__SimpleWork_NN_Operators_CConvOperator_h__

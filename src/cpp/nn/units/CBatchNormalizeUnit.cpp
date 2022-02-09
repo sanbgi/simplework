@@ -1,11 +1,10 @@
 
 #include "unit.h"
-#include "../operators/PNnBatchNormalizeOperator.h"
+#include "../solvers/PNnBatchNormalizeOperator.h"
 #include <string>
 
 using namespace sw;
 using namespace std;
-
 
 //
 //  标准化数据

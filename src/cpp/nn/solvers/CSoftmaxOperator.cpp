@@ -3,7 +3,7 @@
 
 #include "operator.h"
 static SCtx sCtx("SoftmaxOperator");
-class CSoftmaxOperator : public CNnOperator {
+class CSoftmaxOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -33,7 +33,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         solveParameter.pParameter = CActivator::getActivation(idType, "softmax");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
@@ -52,6 +52,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("softmax", CNnOperator::createStaticOperator<CSoftmaxOperator>);
+static SNnSolverRegister s_Register("softmax", CNnSolver::createStaticSolver<CSoftmaxOperator>);
 
 #endif//__SimpleWork_NN_Operators_CSoftmaxOperator_h__

@@ -1,39 +1,43 @@
-#include "CNnOperator.h"
+#include "CNnSolver.h"
 #include "CNnOperatorVariable.h"
 #include "CUtils.h"
 #include "CActivator.h"
 #include "CNnVariableSolver.h"
 #include <map>
 
-static SCtx sCtx("CNnOperator");
-map<string, FCreateOperator>& CNnOperator::getFactories() {
-    static map<string, FCreateOperator> s_opFactories;
+static SCtx sCtx("CNnSolver");
+map<string, FCreateSolver>& CNnSolver::getFactories() {
+    static map<string, FCreateSolver> s_opFactories;
     return s_opFactories;
 }
 
-int CNnOperator::regisetOperator(const char* szOperator, FCreateOperator funCreator) {
+int CNnSolver::regisetOperator(const char* szOperator, FCreateSolver funCreator) {
     getFactories()[szOperator] = funCreator;
     return sCtx.success();
 }
 
-int CNnOperator::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
-    map<string, FCreateOperator>::iterator it = getFactories().find(szOp);
+int CNnSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    map<string, FCreateSolver>::iterator it = getFactories().find(szOp);
     if(it != getFactories().end()) {
-        SNnOperator spOperator;
-        if( it->second(spOperator) != sCtx.success() ) {
+        SNnSolver spSolver;
+        if( it->second(spSolver) != sCtx.success() ) {
             return sCtx.error("创建计算器失败");
         }
 
-        if( spOperator->solve(pData, nInVars, pInVars, spOutVar) != sCtx.success() ) {
-            return sCtx.error("计算错误");
+        SNnAtomSolver spOperator = spSolver;
+        if(spOperator) {
+            if( spSolver->solve(pData, nInVars, pInVars, spOutVar) != sCtx.success() ) {
+                return sCtx.error("计算错误");
+            }
+            
+            return CNnVariableSolver::registerSolvedOperator(spSolver, nInVars, pInVars, spOutVar);
         }
-
-        return CNnVariableSolver::registerSolvedOperator(spOperator, nInVars, pInVars, spOutVar);
+        return spSolver->solve(pData, nInVars, pInVars, spOutVar);
     }
     return sCtx.error();
 }
 
-int CNnOperator::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CNnSolver::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("参数个数不等于二");
     }
@@ -42,7 +46,7 @@ int CNnOperator::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
     return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
 }
 
-int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
+int CNnSolver::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
     if(nInVars != 2) {
         return sCtx.error("参数个数不等于二");
     }
@@ -72,11 +76,11 @@ int CNnOperator::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVa
     return CNnOperatorVariable::createOperatorVariable(spInDimension1, spOutVar);
 }
 
-int CNnOperator::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
+int CNnSolver::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
     return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
 }
 
-int CNnOperator::isBatchInVariable(const SNnVariable& spVar) {
+int CNnSolver::isBatchInVariable(const SNnVariable& spVar) {
     SNnInternalVariable spInternalVar = spVar;
     switch(spInternalVar->getVariableType()) {
         case ENnVariableType::EVState:

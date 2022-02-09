@@ -7,7 +7,7 @@ static SCtx sCtx("CSaveStateOperator");
 //
 // 备份状态值到State中，并且在反向计算中，恢复偏导数
 //
-class CSaveStateOperator : public CNnOperator {
+class CSaveStateOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -42,7 +42,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -65,6 +65,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("saveState", CNnOperator::createStaticOperator<CSaveStateOperator>);
+static SNnSolverRegister s_Register("saveState", CNnSolver::createStaticSolver<CSaveStateOperator>);
 
 #endif//__SimpleWork_NN_Operators_CSaveStateOperator_h__

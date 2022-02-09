@@ -1,26 +1,24 @@
-#ifndef __SimpleWork_NN_Operators_CReLUOperator_h__
-#define __SimpleWork_NN_Operators_CReLUOperator_h__
+#ifndef __SimpleWork_NN_Operators_CSigmodOperator_h__
+#define __SimpleWork_NN_Operators_CSigmodOperator_h__
 
 #include "operator.h"
-static SCtx sCtx("ReluOperator");
-class CReLUOperator : public CNnOperator {
+static SCtx sCtx("SigmodOperator");
+class CSigmodOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
-        VERIFY(nInVars==1)
-        VERIFY(inVars[0].size==outVar.size)
-        ((CActivator*)pParameters)->activate(outVar.size, inVars[0].data, outVar.data);
+        CActivator* pThis = (CActivator*)pParameters;
+        pThis->activate(outVar.size, inVars[0].data, outVar.data);
     }
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        VERIFY(nInVars==1)
-        VERIFY(inVars[0].size==outVar.size)
-        ((CActivator*)pParameters)->deactivate(outVar.size, inVars[0].data, outVar.devia, inVars[0].devia);
+        CActivator* pThis = (CActivator*)pParameters;
+        pThis->deactivate(outVar.size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(idType, "relu");
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+        solveParameter.pParameter = CActivator::getActivation(idType, "sigmod");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -38,6 +36,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("relu", CNnOperator::createStaticOperator<CReLUOperator>);
+static SNnSolverRegister s_Register("sigmod", CNnSolver::createStaticSolver<CSigmodOperator>);
 
-#endif//__SimpleWork_NN_Operators_CReLUOperator_h__
+#endif//__SimpleWork_NN_Operators_CSigmodOperator_h__

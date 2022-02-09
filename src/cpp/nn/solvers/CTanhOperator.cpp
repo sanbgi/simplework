@@ -3,7 +3,7 @@
 
 #include "operator.h"
 static SCtx sCtx("TanhOperator");
-class CTanhOperator : public CNnOperator {
+class CTanhOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -17,7 +17,7 @@ public:
         pThis->deactivate(inVars[0].size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         solveParameter.pParameter = CActivator::getActivation(idType, "tanh");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
@@ -36,6 +36,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("tanh", CNnOperator::createStaticOperator<CTanhOperator>);
+static SNnSolverRegister s_Register("tanh", CNnSolver::createStaticSolver<CTanhOperator>);
 
 #endif//__SimpleWork_NN_Operators_CTanhOperator_h__

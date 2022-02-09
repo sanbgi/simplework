@@ -223,10 +223,9 @@ SNnNetwork CNnNetwork::createUnitNetwork() {
 SNnNetwork CNnNetwork::createLayerNetwork() {
     std::vector<SNnUnit> arrUnits;
     arrUnits.push_back(SNnUnit::createConvUnit({5,5,32}));
-    arrUnits.push_back(SNnUnit::createBatchNormalizeUnit({1.0e-8}));
     arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
-    arrUnits.push_back(SNnUnit::createConvUnit({7,7,64}));
     arrUnits.push_back(SNnUnit::createBatchNormalizeUnit({1.0e-8}));
+    arrUnits.push_back(SNnUnit::createConvUnit({7,7,64}));
     arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
     arrUnits.push_back(SNnUnit::createBatchNormalizeUnit({1.0e-8}));
     arrUnits.push_back(SNnUnit::createDenseUnit({576}));

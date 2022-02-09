@@ -2,7 +2,7 @@
 #include "CNnInputVariable.h"
 #include "CNnOperatorVariable.h"
 #include "CNnVariableSolver.h"
-#include "SNnOperator.h"
+#include "SNnAtomSolver.h"
 
 #include <map>
 #include <iostream>
@@ -39,7 +39,7 @@ struct PSolveInstruct {
     //
     // 求解器
     //
-    INnOperator* pOperator;
+    INnAtomSolver* pOperator;
 };
 
 struct PSolveLayer {
@@ -58,7 +58,7 @@ struct PSolveLayer {
 
 struct PLayerContext {
     //求解结果
-    PSolveContext solveCtx;
+    PNnSolver solveCtx;
     //解算参数列表
     vector<PSolveVar> arrVars;
     //解算步骤列表
@@ -94,7 +94,7 @@ int CNnLayerNetwork::initNetwork() {
     // 解算计算单元
     //
     PLayerContext& layerCtx = *m_spContext;
-    PSolveContext& solveCtx = layerCtx.solveCtx;
+    PNnSolver& solveCtx = layerCtx.solveCtx;
     if( CNnVariableSolver::solveUnit(spDimension, m_spUnit, &solveCtx) != sCtx.success()) {
         return sCtx.error("解算网络单元错误");
     }
@@ -119,9 +119,10 @@ int CNnLayerNetwork::initNetwork() {
     }
 
     vector<PSolveInstruct>& arrSolvers = layerCtx.arrSolvers;
-    vector<PSolveContext::PSolveOperator>::iterator itOp = solveCtx.arrOperators.begin();
-    while(itOp != solveCtx.arrOperators.end()) {
-        PSolveContext::PSolveOperator spOp = *itOp;
+    vector<PNnSolver::PSolveParameter>::iterator itParameter = solveCtx.arrParameters.begin();
+    vector<SNnAtomSolver>::iterator itOp = solveCtx.arrOperators.begin();
+    while(itParameter != solveCtx.arrParameters.end()) {
+        PNnSolver::PSolveParameter spOp = *itParameter;
         PSolveInstruct solveParameter;
         solveParameter.nInVar = spOp.nInVars;
         if(spOp.iOutVar>=0)
@@ -131,9 +132,9 @@ int CNnLayerNetwork::initNetwork() {
         for(int i=0; i<spOp.nInVars; i++) {
             solveParameter.ppInVars[i] = arrVars.data() + spOp.pInVars[i];
         }
-        solveParameter.pOperator = spOp.spOperator.getPtr();
+        solveParameter.pOperator = (*itOp).getPtr();
         arrSolvers.push_back(solveParameter);
-        itOp++;
+        itParameter++, itOp++;
     }
 
     //
@@ -220,7 +221,7 @@ int CNnLayerNetwork::prepareNetwork(const STensor& spBatchIn) {
     //
     vector<PSolveInstruct>::iterator it = layerCtx.arrSolvers.begin(); 
     for(;it != layerCtx.arrSolvers.end(); it++) {
-        it->pOperator->getSolveParameter(idType, it->solver);
+        it->pOperator->initSolveParameter(idType, it->solver);
     }
 
     //

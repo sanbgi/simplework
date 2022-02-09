@@ -3,7 +3,7 @@
 
 #include "operator.h"
 static SCtx sCtx("ProductOperator");
-class CProductOperator : public CNnOperator {
+class CProductOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -97,7 +97,7 @@ public:
         //VERIFY(pMatDevia - (Q*)inVars[1].devia == inVars[1].size )
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -136,6 +136,6 @@ private:
     int nOut;
 };
 
-static SNnOperatorRegister s_Register("product", CNnOperator::createOperator<CProductOperator>);
+static SNnSolverRegister s_Register("product", CNnSolver::createSolver<CProductOperator>);
 
 #endif//__SimpleWork_NN_Operators_CProductOperator_h__

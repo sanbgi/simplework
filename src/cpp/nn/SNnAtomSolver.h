@@ -1,5 +1,5 @@
-#ifndef __SimpleWork_NN_SNnOperator_H__
-#define __SimpleWork_NN_SNnOperator_H__
+#ifndef __SimpleWork_NN_SNnAtomSolver_H__
+#define __SimpleWork_NN_SNnAtomSolver_H__
 
 #include "nn.h"
 
@@ -19,23 +19,18 @@ struct PSolveParameter {
 //
 // 神经网络计算器，为了实现高速计算，参数和函数地址，都是直接的指针
 //
-SIMPLEWORK_INTERFACECLASS_ENTER0(NnOperator)
+SIMPLEWORK_INTERFACECLASS_ENTER0(NnAtomSolver)
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnOperator", 211202)
-
-        //
-        // 解算
-        //
-        virtual int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) = 0;
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnAtomSolver", 211202)
 
         //
         // 获取计算函数
         //
-        virtual int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;
+        virtual int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(NnOperator)
+SIMPLEWORK_INTERFACECLASS_LEAVE(NnAtomSolver)
 
 
-#endif//__SimpleWork_NN_SNnOperator_H__
+#endif//__SimpleWork_NN_SNnAtomSolver_H__

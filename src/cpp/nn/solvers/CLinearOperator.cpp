@@ -3,7 +3,7 @@
 
 #include "operator.h"
 static SCtx sCtx("LinearOperator");
-class CLinearOperator : public CNnOperator {
+class CLinearOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -95,7 +95,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -143,6 +143,6 @@ private:
     int nOut;
 };
 
-static SNnOperatorRegister s_Register("linear", CNnOperator::createOperator<CLinearOperator>);
+static SNnSolverRegister s_Register("linear", CNnSolver::createSolver<CLinearOperator>);
 
 #endif//__SimpleWork_NN_Operators_CLinearOperator_h__

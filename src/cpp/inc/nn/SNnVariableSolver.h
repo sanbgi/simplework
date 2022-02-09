@@ -9,7 +9,7 @@ SIMPLEWORK_NN_NAMESPACE_ENTER
 class SNnState;
 
 //
-// 抽象变量定义，变量可以表示任何可运算的对象，包括：值/向量/矩阵/张量/单位等等
+// 解算器
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(NnVariableSolver, "sw.nn.NnVariableSolver")
 

@@ -4,7 +4,7 @@
 #include "operator.h"
 
 static SCtx sCtx("PoolOperator");
-class CPoolOperator : public CNnOperator {
+class CPoolOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -189,7 +189,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -277,6 +277,6 @@ private:
     int m_nOutTensorSize;
 };
 
-static SNnOperatorRegister s_Register("pool", CNnOperator::createOperator<CPoolOperator>);
+static SNnSolverRegister s_Register("pool", CNnSolver::createSolver<CPoolOperator>);
 
 #endif//__SimpleWork_NN_Operators_CPoolOperator_h__

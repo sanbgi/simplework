@@ -4,7 +4,7 @@
 #include "operator.h"
 
 static SCtx sCtx("PlusOperator");
-class CPlusOperator : public CNnOperator {
+class CPlusOperator : public CNnSolver {
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
@@ -47,7 +47,7 @@ public:
         }
     }
 
-    int getSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
+    int initSolveParameter(unsigned int idType, PSolveParameter& solveParameter) {
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -67,6 +67,6 @@ public:
     }
 };
 
-static SNnOperatorRegister s_Register("plus", CNnOperator::createStaticOperator<CPlusOperator>);
+static SNnSolverRegister s_Register("plus", CNnSolver::createStaticSolver<CPlusOperator>);
 
 #endif//__SimpleWork_NN_Operators_CPlusOperator_h__
