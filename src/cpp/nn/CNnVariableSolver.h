@@ -50,7 +50,7 @@ public:
     
 public:
     static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PNnSolver* pCtx);
-    static int registerSolvedOperator(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
+    static int registerAtomSolver(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

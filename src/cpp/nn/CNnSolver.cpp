@@ -24,13 +24,16 @@ int CNnSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const 
             return sCtx.error("创建计算器失败");
         }
 
+        //
+        // 如果是原子运算，则像系统注册原子运算
+        //
         SNnAtomSolver spOperator = spSolver;
         if(spOperator) {
             if( spSolver->solve(pData, nInVars, pInVars, spOutVar) != sCtx.success() ) {
                 return sCtx.error("计算错误");
             }
             
-            return CNnVariableSolver::registerSolvedOperator(spSolver, nInVars, pInVars, spOutVar);
+            return CNnVariableSolver::registerAtomSolver(spSolver, nInVars, pInVars, spOutVar);
         }
         return spSolver->solve(pData, nInVars, pInVars, spOutVar);
     }
