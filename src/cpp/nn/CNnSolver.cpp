@@ -23,33 +23,26 @@ int CNnSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const 
         if( it->second(spSolver) != sCtx.success() ) {
             return sCtx.error("创建计算器失败");
         }
-
-        //
-        // 如果是原子运算，则像系统注册原子运算
-        //
-        SNnAtomSolver spOperator = spSolver;
-        if(spOperator) {
-            if( spSolver->solve(pData, nInVars, pInVars, spOutVar) != sCtx.success() ) {
-                return sCtx.error("计算错误");
-            }
-            
-            return CNnVariableSolver::registerAtomSolver(spSolver, nInVars, pInVars, spOutVar);
-        }
         return spSolver->solve(pData, nInVars, pInVars, spOutVar);
     }
     return sCtx.error();
 }
 
-int CNnSolver::solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CNnSolver::addAtomSolver(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar){
+    return CNnVariableSolver::addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
+}
+
+int CNnSolver::solveOneEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("参数个数不等于二");
     }
 
     SDimension spDimension = pInVars[0].dimension();
-    return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
+    CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
+    return addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
 }
 
-int CNnSolver::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
+int CNnSolver::solveTwoEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
     if(nInVars != 2) {
         return sCtx.error("参数个数不等于二");
     }
@@ -76,19 +69,10 @@ int CNnSolver::solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVari
             return sCtx.error("相加的两个元素维度不一致");
         }
     }
-    return CNnOperatorVariable::createOperatorVariable(spInDimension1, spOutVar);
+    CNnOperatorVariable::createOperatorVariable(spInDimension1, spOutVar);
+    return addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
 }
 
 int CNnSolver::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
     return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
-}
-
-int CNnSolver::isBatchInVariable(const SNnVariable& spVar) {
-    SNnInternalVariable spInternalVar = spVar;
-    switch(spInternalVar->getVariableType()) {
-        case ENnVariableType::EVState:
-        case ENnVariableType::EVWeight:
-            return 0;
-    }
-    return 1;
 }

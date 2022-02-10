@@ -40,8 +40,6 @@ private:
     int m_bBais;
     double m_dDropoutRate;
     string m_strActivator;
-    SNnVariable m_spWeights;
-    SNnVariable m_spBais;
 
 public:
     CLinearUnit() {
@@ -81,35 +79,7 @@ int CLinearUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& sp
         return sCtx.error("全连接网络输入参数必须为一个");
     }
 
-    if(!m_spWeights) {
-        SDimension spDim = spInVars[0].dimension();
-        if(spDim.size() < 1) {
-            return sCtx.error("线性变化输入的数据，维度不能小于一");
-        }
-
-        int pWeightDimSizes[2] = {m_nCells, spDim.data()[spDim.size()-1]};
-        m_spWeights = SNnVariable::createWeight({SDimension(2, pWeightDimSizes),0});
-        if( !m_spWeights ) {
-            return sCtx.error("权重变量创建失败");
-        }
-
-        if(m_bBais) {
-            m_spBais = SNnVariable::createWeight( {SDimension(1, &m_nCells), 0});
-            if( !m_spBais ) {
-                return sCtx.error("偏置创建失败");
-            }
-        }
-    }
-
-    SNnVariable x = spInVars[0];
-    SNnVariable y = SNnVariable::product(x, m_spWeights);
-    if(m_bBais)
-        y = y + m_spBais;
-    if(m_strActivator.length() > 0) {
-        spOutVar = y.solveOp(m_strActivator.c_str());
-    }else{
-        spOutVar = y;
-    }
+    spOutVar = spInVars[0].linear({m_nCells, m_bBais, m_strActivator.c_str()});
     return sCtx.success();
 }
 
@@ -119,8 +89,6 @@ int CLinearUnit::toArchive(const SArchive& ar) {
     ar.arBlock("usebais", m_bBais);
     ar.arBlock("dropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
-    ar.arObject("weight", m_spWeights);
-    ar.arObject("bais", m_spBais);
     return sCtx.success();
 }
 

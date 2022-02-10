@@ -13,49 +13,6 @@ class SNnUnit;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnFactory", 211223)
-
-        /*
-        //
-        // 创建循环神经网络
-        //
-        virtual int createRnn(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
-        //
-        //  创建直连神经网络
-        //
-        virtual int createDense(int nCells, double dDropoutRate, const char* szActivator, SNnNetwork& spNetwork) = 0;
-        //
-        //  创建池化神经网络
-        //
-        virtual int createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight, SNnNetwork& spNetwork) = 0;
-        //
-        //  创建整体池化神经网络，每一层(channel)池化为一个平均值
-        //
-        virtual int createGlobalPool(const char* szMode, const char* szActivitor, SNnNetwork& spNetwork) = 0;
-        //
-        //  创建旋转卷积神经网络，（卷积核每移动一步，会旋转一个角度）
-        //
-        virtual int createRotConvolution(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator, SNnNetwork& spNetwork) = 0;
-        //
-        //  创建轮换卷积核，卷积核在x或有轴方向，每一层都有nShiftConvs个卷积核轮换使用
-        //
-        virtual int createConvolution(int nWidth, int nHeight, int nLayers, int nShiftConvs, int nStride, const char* szPadding, const char* szActivator, SNnNetwork& spNetwork) = 0;
-
-
-        //
-        // 创建循环神经网络
-        //
-        virtual int createGru(int nCells, bool bKeepGroup, double dDropoutRate, const char* szActivitor, SNnNetwork& spNetwork) = 0;
-        //
-        //  创建顺序处理神经网络
-        //
-        virtual int createSequence(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) = 0;
-
-        //
-        //  创建并行处理神经网络
-        //
-        virtual int createParallel(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) = 0;
-        */
-
         //
         //  读取整个IDX格式的文件，格式参考：http://yann.lecun.com/exdb/mnist/
         //
@@ -91,11 +48,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         // 创建神经网络单元
         //
         virtual int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) = 0;
-
-        //
-        // 创建神经网络
-        //
-        virtual int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension, SNnNetwork& spNet) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
     static SNnFactory& getFactory() {

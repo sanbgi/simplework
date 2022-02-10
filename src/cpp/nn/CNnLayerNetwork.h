@@ -21,6 +21,9 @@ class CNnLayerNetwork : public CObject, public INnNetwork, public IArchivable{
     //
     typedef void (*FEval)(void* pParameters, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "LayerNetwork"; } 
@@ -29,7 +32,6 @@ private://IArchivable
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.LayerNetwork"; }
-    static int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet);
 
 public://INnLayerNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);

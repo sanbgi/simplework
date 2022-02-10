@@ -102,7 +102,8 @@ public:
         }
 
         m_nPoolWidth = nInputHeight*nInputHeight;
-        return createVariable(SDimension(nDims-2, pDimSizes+2),spVarOut);
+        createVariable(SDimension(nDims-2, pDimSizes+2),spVarOut);
+        return addAtomSolver(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

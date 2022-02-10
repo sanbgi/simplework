@@ -86,10 +86,6 @@ public:
     int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) {
         return CSequenceUnit::createUnit(nUnits, pUnits, spUnit);
     }
-    
-    int createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
-        return CNnLayerNetwork::createNetwork(spUnit, spInDimVector, spNet);
-    }
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNnFactory, SNnFactory::__getClassKey())

@@ -49,8 +49,8 @@ public:
     int saveState(const SNnState spState, const SNnVariable& spVar);
     
 public:
-    static int solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PNnSolver* pCtx);
-    static int registerAtomSolver(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
+    static int solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx);
+    static int addAtomSolver(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

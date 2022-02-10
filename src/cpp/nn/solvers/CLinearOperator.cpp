@@ -114,9 +114,52 @@ public:
         return sCtx.error("类型错误");
     }
 
+    int createMat(const PNnLinear* pLinear, const SNnVariable& spIn, SNnVariable& spMat) {
+        SDimension spDim = spIn.dimension();
+        if(spDim.size() < 1) {
+            return sCtx.error("线性变化输入的数据，维度不能小于一");
+        }
+
+        int pWeightDimSizes[2] = {pLinear->nCells, spDim.data()[spDim.size()-1]};
+        spMat = SNnVariable::createWeight({SDimension(2, pWeightDimSizes),0});
+        if( !spMat ) {
+            return sCtx.error("偏置矩阵失败");
+        }
+        return sCtx.success();
+    }
+
+    int createBais(const PNnLinear* pLinear, SNnVariable& spBais) {
+        spBais = SNnVariable::createWeight( {SDimension(1, &pLinear->nCells), 0});
+        if( !spBais ) {
+            return sCtx.error("偏置创建失败");
+        }
+        return sCtx.success();
+    }
+
     int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        SDimension spDim1 = pInVars[0].dimension();
-        SDimension spDim2 = pInVars[1].dimension();
+        const PNnLinear* pLinear = CData<PNnLinear>(pData);
+        if(pLinear == nullptr) {
+            return sCtx.error("缺少配置参数");
+        }
+        SNnVariable spIn, spMat, spBais;
+        if(nInVars == 1) {
+            spIn = pInVars[0];
+            if( createMat(pLinear, spIn, spMat) != sCtx.success() ) {
+                return sCtx.error("创建线性变换矩阵失败");
+            }
+            if(pLinear->bBais) {
+                if( createBais(pLinear, spBais) != sCtx.success() ) {
+                    return sCtx.error("创建偏置失败");
+                }
+            }
+        }else if(nInVars == 2) {
+            spIn = pInVars[0];
+            spMat = pInVars[1];
+        }else{
+            return sCtx.error("输入参数数量错误");
+        }
+        SDimension spDim1 = spIn.dimension();
+        SDimension spDim2 = spMat.dimension();
         if(spDim2.size() != 2 ) {
             return sCtx.error("线性变换第二个参数必须是变换矩阵");
         }
@@ -137,7 +180,15 @@ public:
         nOut = nOutputSize;
         nMat = nIn * nOut;
         SDimension spOutDim = spDim1.downLowDimension().upLowDimension(nOutputSize);
-        return createVariable(spOutDim, spVarOut);
+        createVariable(spOutDim, spVarOut);
+        addAtomSolver(this, nInVars, pInVars, spVarOut);
+        if(spBais) {
+            spVarOut = spVarOut + spBais;
+        }
+        if(pLinear->szActivator && pLinear->szActivator[0] != 0){
+            spVarOut = spVarOut.solveOp(pLinear->szActivator);
+        }
+        return sCtx.success();
     }
 
 private://IArchivable

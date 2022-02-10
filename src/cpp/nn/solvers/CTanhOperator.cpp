@@ -37,7 +37,7 @@ public:
     }
 
     int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        return solveOneEleWise(nInVars, pInVars, spVarOut);
+        return solveOneEleWise(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

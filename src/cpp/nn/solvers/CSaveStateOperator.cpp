@@ -65,7 +65,7 @@ public:
         if(nInVars != 2) {
             return sCtx.error("存储状态参数必须为两个，一个为状态变量，一个为计算变量");
         }
-        return sCtx.success();
+        return addAtomSolver(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

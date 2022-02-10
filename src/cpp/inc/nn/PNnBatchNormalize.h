@@ -17,13 +17,16 @@ struct PNnBatchNormalize {
     double dEsp;
 
     //
+    // 最小计算批量
+    //
+    int nMinBatch;
+
+    //
     // 构造函数
     //
-    PNnBatchNormalize(double esp=1.0e-8) {
+    PNnBatchNormalize(double esp=1.0e-8, int nMinBatch=10) {
         this->dEsp = esp;
-    }
-    PNnBatchNormalize(){
-        dEsp = 1.0e-8;
+        this->nMinBatch = nMinBatch;
     }
 };
 

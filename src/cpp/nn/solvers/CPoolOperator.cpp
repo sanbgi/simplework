@@ -261,7 +261,8 @@ public:
         m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;
         pOutDimSizes[0] = m_nOutHeight;
         pOutDimSizes[1] = m_nOutWidth;
-        return createVariable(SDimension(nDims, pOutDimSizes),spVarOut);
+        createVariable(SDimension(nDims, pOutDimSizes),spVarOut);
+        return addAtomSolver(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable
@@ -286,7 +287,6 @@ private://IArchivable
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.PoolSolver"; }
-
 
 private:
     int m_nPoolWidth;

@@ -35,85 +35,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    /*
-    static SNnNetwork createDense(int nCells, double dDropoutRate = 0, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createDense(nCells,dDropoutRate,szActivator,nn);
-        return nn;
-    }
-    
-    static SNnNetwork createRnn(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createRnn(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
-        return nn;
+    static SNnNetwork createNetwork(const PNnNetwork& rNet) {
+        return SObject::createObject("sw.nn.LayerNetwork", CData<PNnNetwork>(rNet));
     }
 
-    static SNnNetwork createPool(int nWidth, int nHeight, int nStrideWidth, int nStrideHeight) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createPool(nWidth, nHeight, nStrideWidth, nStrideHeight, nn);
-        return nn;
-    }
-
-    static SNnNetwork createGlobalPool(const char* szMode = nullptr, const char* szActivator=nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createGlobalPool(szMode, szActivator, nn);
-        return nn;
-    }
-
-    static SNnNetwork createConv(int nWidth, int nHeight, int nConv, const char* szPadding=nullptr, const char* szActivator = nullptr ) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, 1, 1, szPadding, szActivator, nn);
-        return nn;
-    }
-
-    static SNnNetwork createShiftConv(int nWidth, int nHeight, int nLayers, int nShiftConvs, const char* szPadding = nullptr, const char* szActivator = nullptr ) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nLayers, nShiftConvs, 1, szPadding, szActivator, nn);
-        return nn;
-    }
-
-    static SNnNetwork createStrideConv(int nWidth, int nHeight, int nConv, int nStride, const char* szPadding=nullptr, const char* szActivator = nullptr ) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createConvolution(nWidth, nHeight, nConv, 1, nStride, szPadding, szActivator, nn);
-        return nn;
-    }
-
-    static SNnNetwork createRotConv(int nWidth, int nHeight, int nConv, double dWidthRotAngle, double dHeightRotAngle, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createRotConvolution(nWidth, nHeight, nConv, dWidthRotAngle, dHeightRotAngle, szActivator, nn);
-        return nn;
-    }
-
-
-    static SNnNetwork createGru(int nCells, bool bKeepGroup = false, double dDropoutRate = 0, const char* szActivator = nullptr) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createGru(nCells,bKeepGroup,dDropoutRate,szActivator,nn);
-        return nn;
-    }
-    
-    static SNnNetwork createSequence(int nNetworks, SNnNetwork* pNetworks) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createSequence(nNetworks, pNetworks, nn);
-        return nn;
-    }
-
-    static SNnNetwork createParallel(int nNetworks, SNnNetwork* pNetworks) {
-        SNnNetwork nn;
-        SNnFactory::getFactory()->createParallel(nNetworks, pNetworks, nn);
-        return nn;
-    }
-
-    */
     static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
-        SNnNetwork spNet;
-        SNnFactory::getFactory()->createNetwork(spUnit, spInDimension, spNet);
-        return spNet;
-    }
-
-    static SNnNetwork createLayerNetwork(int nUnits, const SNnUnit pUnits[], const SDimension& spInDimension) {
-        SNnNetwork spNet;
-        SNnFactory::getFactory()->createNetwork(SNnUnit::createSequenceUnit(nUnits, pUnits), spInDimension, spNet);
-        return spNet;
+        struct SNetSolver : public INnNetworkSolver {
+            int solve(const SNnVariable& spIn, SNnVariable& spOut) {
+                return m_spUnit->eval(1,&spIn, spOut);
+            }
+        public:
+            SNnUnit m_spUnit;
+        }sSolver;
+        sSolver.m_spUnit = spUnit;
+        return createNetwork({spInDimension, &sSolver});
     }
 
     static SNnPipe openIdxFileReader(const char* szFilename) {

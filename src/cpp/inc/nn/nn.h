@@ -15,6 +15,7 @@
 #include "PNnLinear.h"
 #include "PNnBatchNormalize.h"
 #include "PNnWeight.h"
+#include "PNnNetwork.h"
 #include "SNnPipe.h"
 #include "SNnUnit.h"
 #include "SNnNetwork.h"

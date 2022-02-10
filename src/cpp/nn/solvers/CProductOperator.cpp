@@ -131,7 +131,8 @@ public:
         nIn = spDim1.dataSize();
         nMat = spDim2.dataSize();
         nOut = nMat / nIn;
-        return createVariable(SDimension(1,pDimSize2), spVarOut);
+        createVariable(SDimension(1,pDimSize2), spVarOut);
+        return addAtomSolver(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

@@ -78,24 +78,55 @@ public:
         return sCtx.error("类型错误");
     }
 
+    int createConv(const PNnConv* pConv, const SNnVariable& spIn, SNnVariable& spOut) {
+        SDimension spInDim = spIn.dimension();
+
+        int nDims = spInDim.size();
+        const int* pDimSizes = spInDim.data();
+        if(nDims < 2) {
+            return sCtx.error("卷积的输入张量维度至少要大于2");
+        }
+
+        int nLayers = 1;
+        for(int i=2; i<nDims; i++) {
+            nLayers *= pDimSizes[i];
+        }
+
+        int pWeightDimSizes[5] = { pConv->nLayers, pConv->nShiftConvs, pConv->nHeight, pConv->nWidth, nLayers };
+        spOut = SNnVariable::createWeight({SDimension(5, pWeightDimSizes), 0.5});
+        return sCtx.success();
+    }
+
     int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         //if(nInVars != 3) {
-        if(nInVars != 2) {
-            return sCtx.error("卷积操作需要两个输入数据");
-        }
-
-        if(pData == nullptr) {
-            return sCtx.error("缺少初始化参数");
-        }
-
         const PNnConv* pConv = CData<PNnConv>(*pData);
         if(pConv == nullptr) {
             return sCtx.error("错误的初始化参数");
         }
 
-        SDimension spDim1 = pInVars[0].dimension();
-        SDimension spDim2 = pInVars[1].dimension();
-        //SDimension spDimBais = pInVars[2].dimension();
+        SNnVariable spIn;
+        SNnVariable spConv;
+        SNnVariable spBais;
+        if(nInVars == 2) {
+            spIn = pInVars[0];
+            spConv = pInVars[1];
+        }
+        else if(nInVars == 1) {
+            spIn = pInVars[0];
+            if( createConv(pConv, spIn, spConv) != sCtx.success() ) {
+                return sCtx.error("创建卷积核错误");
+            }
+            spBais = SNnVariable::createWeight({SDimension(1, &pConv->nLayers), 0});
+            if( !spBais ) {
+                return sCtx.error("权重创建失败");
+            }
+        }
+        else{
+            return sCtx.error("卷积操作需要两个输入数据");
+        }
+
+        SDimension spDim1 = spIn.dimension();
+        SDimension spDim2 = spConv.dimension();
         if(spDim2.size() != 5) {
             return sCtx.error("卷积核需要一个五维矩阵nLayer*nShiftConvs*nWidth*nHeight*nDeep");
         }
@@ -146,7 +177,7 @@ public:
         //      same -- 步长为1时，保持输出尺寸与输入尺寸一致
         //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
         //
-        if( pConv != nullptr && string(pConv->szPadding) == "same" ) {
+        if( pConv != nullptr && pConv->szPadding != nullptr && string(pConv->szPadding) == "same" ) {
             m_sizeOut = {
                 nBatchs,
                 (m_sizeIn.height - 1) / m_nStrideHeight + 1,
@@ -197,10 +228,23 @@ public:
         };
 
         int pOutDimSizes[3] = { m_sizeOut.height, m_sizeOut.width, m_sizeOut.layers };
-        return createVariable(SDimension(3, pOutDimSizes), spVarOut);
+        if( createVariable(SDimension(3, pOutDimSizes), spVarOut) != sCtx.success() ) {
+            return sCtx.error("创建卷积运算结果异常");
+        }
+
+        SNnVariable pConvVars[] = {spIn, spConv};
+        if( addAtomSolver(this, 2, pConvVars, spVarOut) != sCtx.success() ) {
+            return sCtx.error("添加卷积运算异常");
+        }
+        if(spBais) {
+            spVarOut = spVarOut + spBais;
+        }
+        if(pConv->szActivator && pConv->szActivator[0] != 0){
+            spVarOut = spVarOut.solveOp(pConv->szActivator);
+        }
+        return sCtx.success();
     }
 
-    
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         CConvOperator* pThis = (CConvOperator*)pParameters;

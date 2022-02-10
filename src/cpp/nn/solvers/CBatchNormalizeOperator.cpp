@@ -155,7 +155,7 @@ public:
     }
 
     int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        const PNnBatchNormalizeOperator* pParameter = CData<PNnBatchNormalizeOperator>(pData);
+        const PNnBatchNormalize* pParameter = CData<PNnBatchNormalize>(pData);
         if( pParameter == nullptr ) {
             return sCtx.error("缺少构造参数");
         }
@@ -179,8 +179,9 @@ public:
 
         m_nLayers = nLayers;
         m_dEsp = pParameter->dEsp;
-        m_nMinBatch = pParameter->nMinBatchs;
-        return createVariable(spDim,spVarOut);
+        m_nMinBatch = pParameter->nMinBatch;
+        createVariable(spDim,spVarOut);
+        return addAtomSolver(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

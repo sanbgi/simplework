@@ -51,7 +51,7 @@ int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars
     return CNnSolver::solveOp(szOp, pData, nInVars, pInVars, spOutVar);
 }
 
-int CNnVariableSolver::registerAtomSolver(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
+int CNnVariableSolver::addAtomSolver(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
     if(s_pRunCtx) {
         PNnSolver* pCtx = s_pRunCtx->pSolveCtx;
         PNnSolver::PSolveParameter solveParameter;
@@ -77,7 +77,7 @@ int CNnVariableSolver::registerAtomSolver(const SNnAtomSolver& spOp, int nInVars
 //
 // 求解单元函数，虽然做了避免重入处理，但仍然不可以多线程操作
 //
-int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit& spUnit, PNnSolver* pCtx) {
+int CNnVariableSolver::solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx) {
     if(s_pRunCtx != nullptr) {
         return sCtx.error("求解单元函数，不允许重入");
     }
@@ -96,7 +96,7 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
     // 创建输入变量
     //
     SNnVariable spInput;
-    if( CNnInputVariable::createVariable(spInDimension, spInput) != sCtx.success()) {
+    if( CNnInputVariable::createVariable(pNet->spInDimension, spInput) != sCtx.success()) {
         return sCtx.error("创建输入变量失败");
     }
 
@@ -104,7 +104,7 @@ int CNnVariableSolver::solveUnit(const SDimension& spInDimension, const SNnUnit&
     // 求解网络单元，生成网络计算图
     //
     SNnVariable spOutVariable;
-    if(spUnit->eval(1, &spInput, spOutVariable) != sCtx.success()) {
+    if(pNet->pSolver->solve(spInput, spOutVariable) != sCtx.success()) {
         return sCtx.error("网络单元求解失败");
     }
 

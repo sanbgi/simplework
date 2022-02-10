@@ -62,8 +62,8 @@ int CPoolUnit::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOut
     if(nInVars != 1) {
         return sCtx.error("池化单元输入参数必须为一个");
     }
-    PNnPool poolParameter = { m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight };
-    return SNnVariable::solveOp("pool", CData<PNnPool>(poolParameter), nInVars, pInVars, spOutVar);
+    spOutVar = pInVars[0].pool({ m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight });
+    return sCtx.success();
 }
 
 int CPoolUnit::toArchive(const SArchive& ar) {

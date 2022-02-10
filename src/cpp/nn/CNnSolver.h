@@ -22,10 +22,10 @@ public:
     static int solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
 
 public:
-    int solveOneEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    int solveTwoEleWise(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     int createVariable(const SDimension& spDimension, SNnVariable& spOutVar);
-    int isBatchInVariable(const SNnVariable& spVar);
+    int solveOneEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    int solveTwoEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    int addAtomSolver(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 
 public:
     static map<string, FCreateSolver>& getFactories();

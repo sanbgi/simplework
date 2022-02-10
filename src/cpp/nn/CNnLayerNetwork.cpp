@@ -74,14 +74,15 @@ CNnLayerNetwork::CNnLayerNetwork() {
     });
 }
 
-int CNnLayerNetwork::createNetwork(const SNnUnit& spUnit, const SDimension& spInDimVector, SNnNetwork& spNet) {
-    CPointer<CNnLayerNetwork> spNetwork;
-    CObject::createObject(spNetwork);
-    if( CNnVariableSolver::solveUnit(spInDimVector, spUnit, spNetwork->m_spSolver) != sCtx.success()) {
+int CNnLayerNetwork::__initialize(const PData* pData){
+    const PNnNetwork* pNet = CData<PNnNetwork>(pData);
+    if(pNet == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
+    if( CNnVariableSolver::solveNetwork(pNet, m_spSolver) != sCtx.success()) {
         return sCtx.error("解算网络单元错误");
     }
-    spNetwork->m_spInDimension = spInDimVector;
-    spNet.setPtr(spNetwork.getPtr());
+    m_spInDimension = pNet->spInDimension;
     return sCtx.success();
 }
 

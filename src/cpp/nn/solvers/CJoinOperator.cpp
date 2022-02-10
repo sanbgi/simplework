@@ -96,7 +96,8 @@ public:
         int size1 = *spDim1.data();
         int size2 = *spDim2.data();
         int size = size1 + size2;
-        return createVariable(SDimension(1,&size), spVarOut);
+        createVariable(SDimension(1,&size), spVarOut);
+        return addAtomSolver(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

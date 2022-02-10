@@ -221,6 +221,25 @@ SNnNetwork CNnNetwork::createUnitNetwork() {
 }
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
+    int pDimSizes[] = {28, 28};
+    SNnNetwork spNetwork = SNnNetwork::createNetwork({
+        SDimension::createDimension(2,pDimSizes),
+        [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
+            SNnVariable x = spIn;
+            x = x.conv({5,5,32});
+            x = x.pool({2,2,2,2});
+            x = x.batchNormalize(PNnBatchNormalize());
+            x = x.conv({7,7,64});
+            x = x.pool({2,2,2,2});
+            x = x.batchNormalize(PNnBatchNormalize());
+            x = x.dense({576});
+            x = x.dense({10, "softmax"});
+            spOut = x;
+            return sCtx.success();
+        }
+    });
+    SNnNetwork::saveFile("D://snetwork.bin", spNetwork);
+    /*
     std::vector<SNnUnit> arrUnits;
     arrUnits.push_back(SNnUnit::createConvUnit({5,5,32}));
     arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
@@ -233,8 +252,9 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
 
     int pDimSizes[] = {28, 28};
     SDimension spDim = SDimension::createDimension(2,pDimSizes);
-    SNnNetwork spNet = SNnNetwork::createLayerNetwork(arrUnits.size(), arrUnits.data(),spDim);
+    SNnNetwork spNet = SNnNetwork::createNetwork(SNnUnit::createSequenceUnit(arrUnits.size(), arrUnits.data()),spDim);
     SNnNetwork::saveFile("D://snetwork.bin", spNet);
+    */
     return SNnNetwork::loadFile("D://snetwork.bin");
 }
 

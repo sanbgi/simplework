@@ -55,7 +55,6 @@ int CBatchNormalizeUnit::__initialize(const PData* pData){
         return sCtx.error("缺少构造参数");
     }
     m_dEsp = pBatchNormalize->dEsp;
-    m_nMinBatch = 10;
     return sCtx.success();
 }
 
@@ -65,12 +64,8 @@ int CBatchNormalizeUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVari
     }
 
     SNnVariable x = spInVars[0];
-    PNnBatchNormalizeOperator parameter;
-    parameter.dEsp = m_dEsp;
-    parameter.nMinBatchs = m_nMinBatch;
-    parameter.pAvg = &m_spAvg;
-    parameter.pVariance = &m_spVariance;
-    return SNnVariable::solveOp("batchnormalize", CData<PNnBatchNormalizeOperator>(parameter), 1, &x, spOutVar);
+    spOutVar = x.batchNormalize({1.0e-8});
+    return sCtx.success();
 }
 
 int CBatchNormalizeUnit::toArchive(const SArchive& ar) {

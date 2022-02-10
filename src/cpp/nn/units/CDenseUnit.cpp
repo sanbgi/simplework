@@ -43,8 +43,6 @@ private:
     int m_nCells;
     double m_dDropoutRate;
     string m_strActivator;
-    SNnVariable m_spWeights;
-    SNnVariable m_spBais;
 
 public:
     CDenseUnit() {
@@ -83,26 +81,7 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
     if(nInVars != 1) {
         return sCtx.error("全连接网络输入参数必须为一个");
     }
-
-    if(!m_spWeights) {
-        SDimension spDim = spInVars[0].dimension();
-
-        int nInputCells = spDim->getElementSize();
-        int pWeightDimSizes[2] = {m_nCells, nInputCells};
-        m_spWeights = SNnVariable::createWeight({SDimension(2, pWeightDimSizes), 1.0f/nInputCells});
-        m_spBais = SNnVariable::createWeight({SDimension(1, &m_nCells),0});
-        if( !m_spWeights || !m_spBais ) {
-            return sCtx.error("权重变量创建失败");
-        }
-    }
-
-    SNnVariable x = spInVars[0];
-    SNnVariable y = SNnVariable::product(x, m_spWeights) + m_spBais;
-    if(m_strActivator.length() > 0) {
-        spOutVar = y.solveOp(m_strActivator.c_str());
-    }else{
-        spOutVar = y.solveOp("relu");
-    }
+    spOutVar = spInVars[0].dense({m_nCells, m_strActivator.c_str()});
     return sCtx.success();
 }
 
@@ -111,8 +90,6 @@ int CDenseUnit::toArchive(const SArchive& ar) {
     ar.arBlock("cells", m_nCells);
     ar.arBlock("dropoutRate", m_dDropoutRate);
     ar.visitString("activator", m_strActivator);
-    ar.arObject("weight", m_spWeights);
-    ar.arObject("bais", m_spBais);
     return sCtx.success();
 }
 
