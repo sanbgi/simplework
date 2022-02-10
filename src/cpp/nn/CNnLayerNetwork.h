@@ -45,31 +45,20 @@ private:
     int learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
 
 private:
+    CTaker<PNnSolver*> m_spSolver;
     SDimension m_spInDimension;
+    SDimension m_spOutDimension;
     string m_strOptimizer;
+    int m_nInputTensorSize;
+    int m_nOutputTensorSize;
 
     bool m_bInitialized;
     CTaker<PLayerContext*> m_spContext;
-    CTaker<PNnSolver*> m_spSolver;
-
-    //单元求解后的变量
-    int m_nInputTensorSize;
-    int m_nOutputTensorSize;
-    SDimension m_spOutDimension;
-
-    int m_nBatchs;
-    int m_nBatchInSize;
     unsigned int m_idType;
     SOptimizer m_spOptimizer;
 
-    STensor m_spOpSolveBuffer;
-    STensor m_spBatchIn;
-    STensor m_spBatchOut;
-    int m_nBatchOutVer;
-
 public:
-    int initNetwork();
-    int prepareNetwork(const STensor& spBatchIn);
+    int initNetwork(unsigned int idType);
     CNnLayerNetwork();
 };
 

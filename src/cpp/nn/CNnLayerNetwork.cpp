@@ -3,6 +3,7 @@
 #include "CNnOperatorVariable.h"
 #include "CNnVariableSolver.h"
 #include "SNnAtomSolver.h"
+#include "CNnResizeTensor.h"
 
 #include <map>
 #include <iostream>
@@ -67,8 +68,6 @@ struct PLayerContext {
 
 CNnLayerNetwork::CNnLayerNetwork() {
     m_bInitialized = false;
-    m_nBatchInSize = 0;
-    m_idType = 0;
     m_spSolver.take(new PNnSolver, [](PNnSolver* pSolver) {
         delete pSolver;
     });
@@ -86,7 +85,7 @@ int CNnLayerNetwork::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CNnLayerNetwork::initNetwork() {
+int CNnLayerNetwork::initNetwork(unsigned int idType) {
     if(m_bInitialized) {
         return sCtx.success();
     }
@@ -112,6 +111,7 @@ int CNnLayerNetwork::initNetwork() {
         solveVar.data = nullptr;
         solveVar.eVarType = spToSolveVar->getVariableType();
         solveVar.pVar = spToSolveVar->getVariablePtr();
+        solveVar.data = solveVar.pVar->getData(idType);
         arrVars.push_back(solveVar);
         itVar++;
     }
@@ -131,6 +131,7 @@ int CNnLayerNetwork::initNetwork() {
             solveParameter.ppInVars[i] = arrVars.data() + spOp.pInVars[i];
         }
         solveParameter.pAtomSolver = (*itOp).getPtr();
+        solveParameter.pAtomSolver->prepareSolver(idType, solveParameter.solver);
         arrSolvers.push_back(solveParameter);
         itParameter++, itOp++;
     }
@@ -169,6 +170,11 @@ int CNnLayerNetwork::initNetwork() {
     layerCtx.solveLayer.nSolvers = layerCtx.arrSolvers.size();
     layerCtx.solveLayer.pSolvers = layerCtx.arrSolvers.data();
 
+    if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
+        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
+    }
+
+    m_idType = idType;
     m_nInputTensorSize = m_spInDimension.dataSize();
     m_nOutputTensorSize = spDimension.dataSize();
     m_spOutDimension = spDimension;
@@ -176,86 +182,16 @@ int CNnLayerNetwork::initNetwork() {
     return sCtx.success();
 }
 
-int CNnLayerNetwork::prepareNetwork(const STensor& spBatchIn) {
-    unsigned int idType = spBatchIn.type();
-    if(spBatchIn.size() == m_nBatchInSize && spBatchIn.type() == m_idType) {
-        return sCtx.success();
-    }
-
-    if(initNetwork() != sCtx.success()) {
-        return sCtx.error("网络初始化失败");
-    }
-
-    //
-    // 检查输入维度
-    //
-    SDimension spInDimVector = spBatchIn.dimension();
-    int size = spInDimVector.size() - 1;
-    if( size != m_spInDimension.size()) {
-        return sCtx.error("输入张量的维度不符合一批输入数据的维度要求");
-    }
-
-    const int* pInDimSize = spInDimVector.data();
-    {
-        const int* pDim1 = spInDimVector.data() + 1;
-        const int* pDim2 = m_spInDimension.data();
-        while(size-->0) {
-            if(*pDim1 != *pDim2) {
-                return sCtx.error("输入张量的维度不符合一批输入数据的维度要求");
-            }
-            pDim1++, pDim2++;
-        }
-    }
-
-    if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
-        return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
-    }
-
-    int nBatchIns = pInDimSize[0];
-    PLayerContext& layerCtx = *m_spContext;
-
-    //
-    // 初始化求值函数指针
-    //
-    vector<PSolveInstruct>::iterator it = layerCtx.arrSolvers.begin(); 
-    for(;it != layerCtx.arrSolvers.end(); it++) {
-        it->pAtomSolver->prepareSolver(idType, it->solver);
-    }
-
-    //
-    // 初始化权重和状态值的指针
-    //
-    vector<PSolveVar>::iterator itVar = layerCtx.arrVars.begin();
-    for(; itVar != layerCtx.arrVars.end(); itVar++) {
-        switch(itVar->eVarType) {
-        case ENnVariableType::EVState:
-        case ENnVariableType::EVWeight:
-            itVar->size = itVar->nVarSize;
-            itVar->data = itVar->pVar->getData(idType);
-            break;
-
-        default:
-            itVar->size = itVar->nVarSize * nBatchIns;
-            break;
-        }
-    }
-
-
-    m_nBatchs = nBatchIns;
-    m_nBatchInSize = spBatchIn.size();
-    m_idType = spBatchIn.type();
-    return sCtx.success();
-}
-
 int CNnLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
-    if( prepareNetwork(spBatchIn) != sCtx.success() ) {
+    unsigned int idType = spBatchIn.type();
+    if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
     }
 
-    if(m_idType == CBasicData<double>::getStaticType()) {
+    if(idType == CBasicData<double>::getStaticType()) {
         return evalT<double>(spBatchIn, spBatchOut);
     }else
-    if(m_idType == CBasicData<float>::getStaticType()) {
+    if(idType == CBasicData<float>::getStaticType()) {
         return evalT<float>(spBatchIn, spBatchOut);
     }
 
@@ -265,26 +201,21 @@ int CNnLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 template<typename Q>
 int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
-    int nBatchs = m_nBatchs;
+    SDimension spInDimension = spBatchIn.dimension();
+    int nBatchs = *spInDimension.data();
+    int nInputSize = spInDimension.dataSize();
+    if(nInputSize != nBatchs * m_nInputTensorSize) {
+        return sCtx.error("输入张量尺寸和网络需要的尺寸不匹配");
+    }
+
     PSolveLayer& solveLayer = m_spContext->solveLayer;
 
     //
     // 准备计算缓冲区
     //
-    if(!m_spOpSolveBuffer || m_spOpSolveBuffer.size() != solveLayer.nOpSize * nBatchs) {
-        if( STensor::createVector<Q>(m_spOpSolveBuffer, solveLayer.nOpSize * nBatchs) != sCtx.success()) {
-            return sCtx.error("创建计算缓冲区失败");
-        }
-    }
-
-    //
-    // 准备输出张量
-    //
-    if(!m_spBatchOut || m_spBatchOut.size() != m_nOutputTensorSize * nBatchs) {
-        SDimension spOutDim = m_spOutDimension.upHighDimension(nBatchs);
-        if( STensor::createTensor<Q>(m_spBatchOut, spOutDim, m_nOutputTensorSize * nBatchs) != sCtx.success()) {
-            return sCtx.error("创建输出张量失败");
-        }
+    STensor spOpSolveBuffer;
+    if( STensor::createVector<Q>(spOpSolveBuffer, solveLayer.nOpSize * nBatchs) != sCtx.success()) {
+        return sCtx.error("创建计算缓冲区失败");
     }
 
     //  
@@ -295,20 +226,28 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     PSolveVar *pVar, *pItVar, *pItVarEnd;
     pItVar = solveLayer.pVars;
     pItVarEnd = solveLayer.pVars+solveLayer.nVars;
-    Q* pOpSolvedBuffer = m_spOpSolveBuffer.data<Q>();
+    Q* pOpSolvedBuffer = spOpSolveBuffer.data<Q>();
+    Q* pItOpBuffer = pOpSolvedBuffer;
     while(pItVar<pItVarEnd) {
         pVar = pItVar++;
         switch(pVar->eVarType) {
         case ENnVariableType::EVOperator:
-            pVar->data = pOpSolvedBuffer;
-            pOpSolvedBuffer += pVar->size;
+            pVar->size = pVar->nVarSize * nBatchs;
+            pVar->data = pItOpBuffer;
+            pItOpBuffer += pVar->size;
+            break;
+
+        case ENnVariableType::EVState:
+        case ENnVariableType::EVWeight:
+            pVar->size = pVar->nVarSize;
+            break;
+
+        case ENnVariableType::EVInput:
+            pVar->size = pVar->nVarSize * nBatchs;
+            pVar->data = spBatchIn.data<Q>();
             break;
         }
     }
-    PSolveVar* pInVar = solveLayer.pVars + solveLayer.iInVar;
-    PSolveVar* pOutVar = solveLayer.pVars + solveLayer.iOutVar;
-    pInVar->data = spBatchIn.data<Q>();
-    pOutVar->data = m_spBatchOut.data<Q>();
 
     //
     // 遍历计算序列并执行
@@ -337,27 +276,26 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         (*instruct.solver.pEvalFun)(instruct.solver.pParameter, nBatchs, instruct.nInVar, evalIn, evalOut);
     }
 
-
-    m_spBatchOut.updateVer();
-    m_nBatchOutVer = m_spBatchOut.ver();
-    m_spBatchIn = spBatchIn;
-    spBatchOut = m_spBatchOut;
-    return sCtx.success();
+    SDimension spOutDim = m_spOutDimension.upHighDimension(nBatchs);
+    PSolveVar* pOutVar = solveLayer.pVars + solveLayer.iOutVar;
+    int iOffset = ((Q*)pOutVar->data)-pOpSolvedBuffer;
+    return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
 }
 
 int CNnLayerNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
-    if(spBatchOut.getPtr() != m_spBatchOut.getPtr() || spBatchOut.ver() != m_nBatchOutVer) {
-        return sCtx.error("神经网络已经更新，原有数据不能用于学习");
+    int idType = spBatchOut.type();
+    if( initNetwork(idType) != sCtx.success() ) {
+        return sCtx.error("网络初始化失败");
     }
 
-    if(spBatchOutDeviation.type() != m_idType || spBatchOutDeviation.size() != spBatchOut.size() ) {
+    if(spBatchOutDeviation.type() != idType || spBatchOutDeviation.size() != spBatchOut.size() ) {
         return sCtx.error("偏差数据类型或尺寸错误");
     }
 
-    if(m_idType == CBasicData<double>::getStaticType()) {
+    if(idType == CBasicData<double>::getStaticType()) {
         return learnT<double>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
     }else
-    if(m_idType == CBasicData<float>::getStaticType()) {
+    if(idType == CBasicData<float>::getStaticType()) {
         return learnT<float>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
     }
     return sCtx.error("数据类型不支持");
@@ -365,7 +303,22 @@ int CNnLayerNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutD
 
 template<typename Q>
 int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
-    int nBatchs = m_nBatchs;
+    SDimension spBatchOutDimension = spBatchOut.dimension();
+    int nBatchs = *spBatchOutDimension.data();
+    int nOutputSize = spBatchOutDimension.dataSize();
+    if(nOutputSize != nBatchs * m_nOutputTensorSize) {
+        return sCtx.error("输出张量尺寸和网络需要的尺寸不匹配");
+    }
+
+    SNnResizeTensor spResizeOut = spBatchOut;
+    if( !spResizeOut ) {
+        return sCtx.error("非有效的输出，无法用于学习");
+    }
+
+    PNnResizeTensor sResizeTensor;
+    spResizeOut->getResizeData(sResizeTensor);
+    spBatchIn = sResizeTensor.spExtra;
+
     PSolveLayer& solveLayer = m_spContext->solveLayer;
 
     //
@@ -386,11 +339,11 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
     Q* pWeightDeviaBuffer = (Q*)m_spOptimizer->getDeviationPtr(nWeights);
     memset(pWeightDeviaBuffer, 0, sizeof(Q)*nWeights);
 
-    if( int errCode = STensor::createTensor(spBatchInDeviation, m_spBatchIn.dimension(), m_idType, m_spBatchIn->getDataSize()) != sCtx.success() ) {
+    int nBatchInSize = spBatchIn.size();
+    if( int errCode = STensor::createTensor(spBatchInDeviation, spBatchIn.dimension(), m_idType, nBatchInSize) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
-    memset(spBatchInDeviation.data<Q>(), 0, sizeof(Q)*m_nBatchInSize);
-    spBatchIn = m_spBatchIn;
+    memset(spBatchInDeviation.data<Q>(), 0, sizeof(Q)*nBatchInSize);
 
     PSolveVar *pItVar, *pItVarEnd;
     PSolveInstruct *pSolver, *pItSolver, *pItSolverEnd;
@@ -401,43 +354,46 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
     Q* pItOpDevia = pOpDeviaBuffer;
     Q* pItStateDevia = pStateDeviaBuffer;
     Q* pItWeightDevia = pWeightDeviaBuffer;
-    Q* pOpVarBuf = m_spOpSolveBuffer.data<Q>();
+    Q* pOpVarBuf = sResizeTensor.spSrc.data<Q>();
     pItVar = solveLayer.pVars;
     pItVarEnd = pItVar + solveLayer.nVars;
     while(pItVar < pItVarEnd) {
         switch(pItVar->eVarType) {
         case ENnVariableType::EVWeight:
+            pItVar->size = pItVar->nVarSize;
             pItVar->devia = pItWeightDevia;
             pItWeightDevia += pItVar->size;
             break;
 
         case ENnVariableType::EVState:
+            pItVar->size = pItVar->nVarSize;
             pItVar->devia = pItStateDevia;
             pItStateDevia += pItVar->size;
             break;
 
         case ENnVariableType::EVOperator:
+            pItVar->size = pItVar->nVarSize*nBatchs;
             pItVar->devia = pItOpDevia;
             pItOpDevia += pItVar->size;
             pItVar->data = pOpVarBuf;
             pOpVarBuf += pItVar->size;
+            break;
+
+        case ENnVariableType::EVInput:
+            pItVar->size = pItVar->nVarSize*nBatchs;
+            pItVar->devia = spBatchInDeviation.data<Q>();
+            pItVar->data = spBatchIn.data<Q>();
             break;
         }
         pItVar++;
     }
 
     //
-    // 准备输入数据指针
-    //
-    PSolveVar* pInVar = solveLayer.pVars + solveLayer.iInVar;
-    pInVar->data = m_spBatchIn.data<Q>();
-    pInVar->devia = spBatchInDeviation.data<Q>();
-
-    //
     // 拷贝输出偏差
     //
     PSolveVar* pOutVar = solveLayer.pVars + solveLayer.iOutVar;
     pOutVar->devia = spBatchOutDeviation.data<Q>();
+
 
     //
     // 遍历计算序列并执行

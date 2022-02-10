@@ -46,7 +46,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
         return pFace != nullptr ? pFace->getData() : nullptr;
     }
 
-    int dataSize() {
+    int dataSize() const {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getElementSize() : 0; 
     }
