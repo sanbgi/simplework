@@ -282,7 +282,7 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
 }
 
-int CNnLayerNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int CNnLayerNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     int idType = spBatchOut.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -293,16 +293,16 @@ int CNnLayerNetwork::learn(const STensor& spBatchOut, const STensor& spBatchOutD
     }
 
     if(idType == CBasicData<double>::getStaticType()) {
-        return learnT<double>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
+        return deviaT<double>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
     }else
     if(idType == CBasicData<float>::getStaticType()) {
-        return learnT<float>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
+        return deviaT<float>(spBatchOut, spBatchOutDeviation, spBatchIn, spBatchInDeviation);
     }
     return sCtx.error("数据类型不支持");
 }
 
 template<typename Q>
-int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int CNnLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     SDimension spBatchOutDimension = spBatchOut.dimension();
     int nBatchs = *spBatchOutDimension.data();
     int nOutputSize = spBatchOutDimension.dataSize();
@@ -426,13 +426,45 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
     }
 
     m_spOptimizer->updateDeviation(nBatchs);
+    STensor spWeightDevia = STensor::createVector<Q>(nWeights, pWeightDeviaBuffer);
+    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spBatchInDeviation.dimension(), 0, spWeightDevia}, spBatchInDeviation);
+}
 
-    //
-    // 更新权重值
-    //
-    pItWeightDevia = pWeightDeviaBuffer;
-    pItVar = solveLayer.pVars;
-    pItVarEnd = pItVar+solveLayer.nVars;
+int CNnLayerNetwork::update(const STensor& spBatchInDeviation) {
+    int idType = spBatchInDeviation.type();
+    if( initNetwork(idType) != sCtx.success() ) {
+        return sCtx.error("网络初始化失败");
+    }
+
+    if(idType == CBasicData<double>::getStaticType()) {
+        return updateT<double>(spBatchInDeviation);
+    }else
+    if(idType == CBasicData<float>::getStaticType()) {
+        return updateT<float>(spBatchInDeviation);
+    }
+    return sCtx.error("数据类型不支持");
+}
+
+template<typename Q>
+int CNnLayerNetwork::updateT(const STensor& spBatchInDeviation) {
+    SNnResizeTensor spResizeDevia = spBatchInDeviation;
+    if( !spResizeDevia ) {
+        return sCtx.error("非有效的输出，无法用于学习");
+    }
+
+    PNnResizeTensor sResizeTensor;
+    spResizeDevia->getResizeData(sResizeTensor);
+    STensor spWeightDevia = sResizeTensor.spExtra;
+
+    PSolveLayer& solveLayer = m_spContext->solveLayer;
+    int nWeights = solveLayer.nWeightSize;
+    if(spWeightDevia.size() != nWeights) {
+        return sCtx.error("数据错误，无法用于更新权重");
+    }
+
+    Q* pItWeightDevia = spWeightDevia.data<Q>();
+    PSolveVar* pItVar = solveLayer.pVars;
+    PSolveVar* pItVarEnd = pItVar+solveLayer.nVars;
     while(pItVar < pItVarEnd) {
         switch(pItVar->eVarType) {
         case ENnVariableType::EVWeight:
@@ -455,7 +487,6 @@ int CNnLayerNetwork::learnT(const STensor& spBatchOut, const STensor& spBatchOut
         }
         pItVar++;
     }
-
     return sCtx.success();
 }
 

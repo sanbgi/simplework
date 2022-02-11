@@ -21,17 +21,21 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
         virtual int eval(const STensor& spBatchIn, STensor& spBatchOut) = 0;
 
         //
-        //  学习
+        //  求偏差（偏导）
         //      @spBatchOut 由eval计算输出的结果
         //      @spBatchOutDeviation 计算结果与实际期望的偏差 = 计算值 - 期望值
         //      @spBatchIn 返回上次计算的输入值
         //      @spBatchInDeviation 输入值与期望输入值的偏差 = 输入值 - 期望值
         //
         //  注意：
-        //      spOutTensor必须是由eval最有一次计算出来的张量，否则，学习会失败
+        //      spOutTensor必须是由eval最有一次计算出来的张量，否则，计算会失败
         //
-        virtual int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) = 0;
+        virtual int devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) = 0;
 
+        //
+        // 更新网络
+        //
+        virtual int update(const STensor& spBatchInDeviation) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
@@ -86,9 +90,14 @@ public:
         return spOut;
     }
 
-    int learn(const STensor& spOut, const STensor& spOutDeviation) {
+    STensor devia(const STensor& spOut, const STensor& spOutDeviation) {
         STensor spIn, spInDeviation;
-        return (*this)->learn(spOut, spOutDeviation, spIn, spInDeviation);
+        (*this)->devia(spOut, spOutDeviation, spIn, spInDeviation);
+        return spInDeviation;
+    }
+
+    int update(const STensor& spInDeviation) {
+        return (*this)->update(spInDeviation);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnNetwork)

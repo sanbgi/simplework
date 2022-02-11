@@ -25,7 +25,7 @@ int CNnResizeTensor::__initialize(const PData* pData){
 }
 
 int CNnResizeTensor::createResizeTensor(const PNnResizeTensor& rTenser, STensor& spTensor) {
-    if(rTenser.iResizeOffset <= 0 || rTenser.iResizeOffset >= rTenser.spSrc.size() ) {
+    if(rTenser.iResizeOffset < 0 || rTenser.iResizeOffset >= rTenser.spSrc.size() ) {
         return sCtx.error("不允许偏移位置超出原始张量尺寸范围");
     }
 

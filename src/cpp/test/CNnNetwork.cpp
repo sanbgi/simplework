@@ -66,7 +66,12 @@ void CNnNetwork::runLearn() {
             //
             // 学习更新神经网络
             //
-            nn.learn(spOut, spOutDeviation);
+            STensor spInDeviation = nn.devia(spOut, spOut - spClassify);
+
+            //
+            // 更新网络
+            //
+            nn.update(spInDeviation);
 
             //
             // 打印一些结果信息

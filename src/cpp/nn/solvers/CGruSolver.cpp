@@ -61,7 +61,6 @@ int CGruSolver::solve(const PData* pData, int nInVars, const SNnVariable spInVar
         return sCtx.error("权重变量创建失败");
     }
     
-
     SNnVariable state = SNnVariable::loadState(spState);
     SNnVariable joinedx = SNnVariable::solveOp("join", state, spInVars[0] );
     SNnVariable z = SNnVariable::product(joinedx, spWeightsZ).solveOp("sigmod");

@@ -35,14 +35,18 @@ public://Factory
 
 public://INnLayerNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
-    int learn(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
+    int devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
+    int update(const STensor& spBatchInDeviation);
 
 private:
     template<typename Q>
     int evalT(const STensor& spBatchIn, STensor& spBatchOut);
 
     template<typename Q>
-    int learnT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
+    int deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
+
+    template<typename Q>
+    int updateT(const STensor& spBatchInDeviation);
 
 private:
     CTaker<PNnSolver*> m_spSolver;
