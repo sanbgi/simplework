@@ -105,6 +105,12 @@ public:
     SNnVariable batchNormalize(const PNnBatchNormalize& rNormalize) const {
         return solveOp("batchnormalize", *this, (const PData*)CData<PNnBatchNormalize>(rNormalize));
     }
+    SNnVariable rnn(const PNnRnn& rData) const {
+        return solveOp("rnn", *this, (const PData*)CData<PNnRnn>(rData));
+    }
+    SNnVariable gru(const PNnRnn& rData) const {
+        return solveOp("gru", *this, (const PData*)CData<PNnRnn>(rData));
+    }
 
 public:
     static SNnVariable product(const SNnVariable& spVec, const SNnVariable& spMat) {

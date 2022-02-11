@@ -1,5 +1,5 @@
 
-#include "unit.h"
+#include "module.h"
 #include <string>
 
 using namespace sw;
@@ -14,11 +14,11 @@ using namespace std;
 //
 //  比如：输入维度[10, 3, 1]，表示一共有十个输入数据，每一个数据数据包含3 X 1个输入神经元
 //
-static SCtx sCtx("CDenseUnit");
-class CDenseUnit : public CObject, public INnUnit, public IArchivable{
+static SCtx sCtx("CDenseModule");
+class CDenseModule : public CObject, public INnModule, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+        SIMPLEWORK_INTERFACE_ENTRY(INnModule)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -27,16 +27,16 @@ public://CObject
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "DenseUnit"; } 
+    const char* getClassName() { return "DenseModule"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
-private://INnUnit
+private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.DenseUnit"; }
-    static int createUnit(const PData& rData, SNnUnit& spUnit);
+    static const char* __getClassKey() { return "sw.nn.DenseModule"; }
+    static int createModule(const PData& rData, SNnModule& spModule);
 
 private:
     //基础参数
@@ -45,12 +45,12 @@ private:
     string m_strActivator;
 
 public:
-    CDenseUnit() {
+    CDenseModule() {
         m_nCells = 0;
     }
 };
 
-int CDenseUnit::__initialize(const PData* pData){
+int CDenseModule::__initialize(const PData* pData){
     const PNnDense* pDense = CData<PNnDense>(pData);
     if(pDense == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -62,22 +62,22 @@ int CDenseUnit::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CDenseUnit::createUnit(const PData& rData, SNnUnit& spUnit) {
+int CDenseModule::createModule(const PData& rData, SNnModule& spModule) {
     const PNnDense* pDense = CData<PNnDense>(rData);
     if(pDense == nullptr) {
         return sCtx.error("缺少构造参数");
     }
-    CPointer<CDenseUnit> spDense;
+    CPointer<CDenseModule> spDense;
     CObject::createObject(spDense);
     spDense->m_nCells = pDense->nCells;
     spDense->m_dDropoutRate = 0;
     if( pDense->szActivator!=nullptr )
         spDense->m_strActivator = pDense->szActivator;
-    spUnit.setPtr(spDense.getPtr());
+    spModule.setPtr(spDense.getPtr());
     return sCtx.success();
 }
 
-int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+int CDenseModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("全连接网络输入参数必须为一个");
     }
@@ -85,7 +85,7 @@ int CDenseUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spO
     return sCtx.success();
 }
 
-int CDenseUnit::toArchive(const SArchive& ar) {
+int CDenseModule::toArchive(const SArchive& ar) {
     //基础参数
     ar.arBlock("cells", m_nCells);
     ar.arBlock("dropoutRate", m_dDropoutRate);
@@ -93,4 +93,4 @@ int CDenseUnit::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CDenseUnit, CDenseUnit::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CDenseModule, CDenseModule::__getClassKey())

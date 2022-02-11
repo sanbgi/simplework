@@ -1,14 +1,14 @@
-#include "unit.h"
+#include "module.h"
 #include <string>
 
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("CPoolUnit");
-class CPoolUnit : public CObject, public INnUnit, public IArchivable{
+static SCtx sCtx("CPoolModule");
+class CPoolModule : public CObject, public INnModule, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+        SIMPLEWORK_INTERFACE_ENTRY(INnModule)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -17,15 +17,15 @@ public://CObject
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "PoolUnit"; } 
+    const char* getClassName() { return "PoolModule"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
-private://INnUnit
+private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.PoolUnit"; }
+    static const char* __getClassKey() { return "sw.nn.PoolModule"; }
 
 private:
     //基础参数
@@ -37,11 +37,11 @@ private:
     string m_strPaddingMode;
 
 public:
-    CPoolUnit() {
+    CPoolModule() {
     }
 };
 
-int CPoolUnit::__initialize(const PData* pData) {
+int CPoolModule::__initialize(const PData* pData) {
     const PNnPool* pPool = CData<PNnPool>(pData);
     if(pPool == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -58,15 +58,15 @@ int CPoolUnit::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-int CPoolUnit::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CPoolModule::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("池化单元输入参数必须为一个");
     }
-    spOutVar = pInVars[0].pool({ m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight });
+    spOutVar = pInVars[0].pool({ m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight, m_strPaddingMode.c_str() });
     return sCtx.success();
 }
 
-int CPoolUnit::toArchive(const SArchive& ar) {
+int CPoolModule::toArchive(const SArchive& ar) {
     //基础参数
     ar.arBlock("width", m_nWidth);
     ar.arBlock("height", m_nHeight);
@@ -77,4 +77,4 @@ int CPoolUnit::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CPoolUnit, CPoolUnit::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CPoolModule, CPoolModule::__getClassKey())

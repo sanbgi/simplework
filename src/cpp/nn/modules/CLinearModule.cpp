@@ -1,5 +1,5 @@
 
-#include "unit.h"
+#include "module.h"
 #include <string>
 
 using namespace sw;
@@ -10,11 +10,11 @@ using namespace std;
 //  线性变换神经网络，注意数据格式：
 //
 //
-static SCtx sCtx("CLinearUnit");
-class CLinearUnit : public CObject, public INnUnit, public IArchivable{
+static SCtx sCtx("CLinearModule");
+class CLinearModule : public CObject, public INnModule, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+        SIMPLEWORK_INTERFACE_ENTRY(INnModule)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -23,16 +23,16 @@ public://CObject
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "LinearUnit"; } 
+    const char* getClassName() { return "LinearModule"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
-private://INnUnit
+private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.LinearUnit"; }
-    static int createUnit(const PData& rData, SNnUnit& spUnit);
+    static const char* __getClassKey() { return "sw.nn.LinearModule"; }
+    static int createModule(const PData& rData, SNnModule& spModule);
 
 private:
     //基础参数
@@ -42,12 +42,12 @@ private:
     string m_strActivator;
 
 public:
-    CLinearUnit() {
+    CLinearModule() {
         m_nCells = 0;
     }
 };
 
-int CLinearUnit::__initialize(const PData* pData){
+int CLinearModule::__initialize(const PData* pData){
     const PNnLinear* pLinear = CData<PNnLinear>(pData);
     if(pLinear == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -59,22 +59,7 @@ int CLinearUnit::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CLinearUnit::createUnit(const PData& rData, SNnUnit& spUnit) {
-    const PNnLinear* pLinear = CData<PNnLinear>(rData);
-    if(pLinear == nullptr) {
-        return sCtx.error("缺少构造参数");
-    }
-    CPointer<CLinearUnit> spLinear;
-    CObject::createObject(spLinear);
-    spLinear->m_nCells = pLinear->nCells;
-    spLinear->m_dDropoutRate = 0;
-    if( pLinear->szActivator!=nullptr )
-        spLinear->m_strActivator = pLinear->szActivator;
-    spUnit.setPtr(spLinear.getPtr());
-    return sCtx.success();
-}
-
-int CLinearUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+int CLinearModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("全连接网络输入参数必须为一个");
     }
@@ -83,7 +68,7 @@ int CLinearUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& sp
     return sCtx.success();
 }
 
-int CLinearUnit::toArchive(const SArchive& ar) {
+int CLinearModule::toArchive(const SArchive& ar) {
     //基础参数
     ar.arBlock("cells", m_nCells);
     ar.arBlock("usebais", m_bBais);
@@ -92,4 +77,4 @@ int CLinearUnit::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CLinearUnit, CLinearUnit::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CLinearModule, CLinearModule::__getClassKey())

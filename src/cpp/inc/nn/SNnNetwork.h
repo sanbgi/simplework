@@ -2,9 +2,12 @@
 #define __SimpleWork_NnNetwork_h__
 
 #include "nn.h"
+#include "SNnModule.h"
 #include "SNnFactory.h"
 
 SIMPLEWORK_NN_NAMESPACE_ENTER
+
+
 
 //
 // 神经网络核心接口定义
@@ -43,6 +46,17 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
 public:
     static SNnNetwork createNetwork(const PNnNetwork& rNet) {
         return SObject::createObject("sw.nn.LayerNetwork", CData<PNnNetwork>(rNet));
+    }
+    static SNnNetwork createNetwork(const SDimension spInDimension, const SNnModule& spModule) {
+        class CNnNetworkSolver : public INnNetworkSolver {
+            int solve(const SNnVariable& spIn, SNnVariable& spOut) {
+                return spModule->eval(1, &spIn, spOut);
+            }
+        public:
+            SNnModule spModule;
+        }sSolver;
+        sSolver.spModule = spModule;
+        return createNetwork({spInDimension, &sSolver});
     }
 
     static SNnPipe openIdxFileReader(const char* szFilename) {

@@ -22,6 +22,7 @@
 #include "SNnSolver.h"
 #include "SNnVariable.h"
 #include "SNnVariableSolver.h"
+#include "SNnModule.h"
 #include "SNnFactory.h"
 
 

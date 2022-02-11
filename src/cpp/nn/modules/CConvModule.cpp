@@ -1,14 +1,14 @@
 
-#include "unit.h"
+#include "module.h"
 #include <string>
 
 using namespace sw;
 using namespace std;
-static SCtx sCtx("CConvUnit");
-class CConvUnit : public CObject, public INnUnit, public IArchivable{
+static SCtx sCtx("CConvModule");
+class CConvModule : public CObject, public INnModule, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(INnUnit)
+        SIMPLEWORK_INTERFACE_ENTRY(INnModule)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -17,15 +17,15 @@ public://CObject
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "ConvUnit"; } 
+    const char* getClassName() { return "ConvModule"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
-private://INnUnit
+private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.ConvUnit"; }
+    static const char* __getClassKey() { return "sw.nn.ConvModule"; }
 
 private:
     //基础参数
@@ -40,11 +40,11 @@ private:
     string m_strActivator;
 
 public:
-    CConvUnit() {
+    CConvModule() {
     }
 };
 
-int CConvUnit::__initialize(const PData* pData) {
+int CConvModule::__initialize(const PData* pData) {
     const PNnConv* pConv = CData<PNnConv>(pData);
     if(pConv == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -65,7 +65,7 @@ int CConvUnit::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+int CConvModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("卷积单元输入参数必须为一个");
     }
@@ -74,7 +74,7 @@ int CConvUnit::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOu
     return sCtx.success();
 }
 
-int CConvUnit::toArchive(const SArchive& ar) {
+int CConvModule::toArchive(const SArchive& ar) {
     //基础参数
     ar.arBlock("width", m_nWidth);
     ar.arBlock("height", m_nHeight);
@@ -88,4 +88,4 @@ int CConvUnit::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CConvUnit, CConvUnit::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CConvModule, CConvModule::__getClassKey())
