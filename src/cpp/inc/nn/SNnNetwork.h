@@ -65,7 +65,7 @@ public:
         int nNetworks;
         SNnNetwork* pNetworks;
     };
-    static SNnNetwork createCompositeModule(const PNnCompositeNetwork& rData) {
+    static SNnNetwork createCompositeNetwork(const PNnCompositeNetwork& rData) {
         return SObject::createObject("sw.nn.CompositeNetwork", CData<PNnCompositeNetwork>(rData));
     }
 

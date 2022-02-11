@@ -9,6 +9,9 @@ class CCompositeNetwork : public CObject, public INnNetwork, public IArchivable{
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
@@ -22,19 +25,20 @@ private://IArchivable
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.CompositeNetwork"; }
-    static int createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork);
 
 public:
     std::vector<SNnNetwork> m_arrNetworks;
 };
 
-int CCompositeNetwork::createNetwork(int nNetworks, SNnNetwork* pNetworks, SNnNetwork& spNetwork) {
-    CPointer<CCompositeNetwork> spSequence;
-    CObject::createObject(spSequence);
-    for(int i=0; i<nNetworks; i++) {
-        spSequence->m_arrNetworks.push_back( *(pNetworks+i) );
+int CCompositeNetwork::__initialize(const PData* pData){
+    const SNnNetwork::PNnCompositeNetwork* pNet = CData<SNnNetwork::PNnCompositeNetwork>(pData);
+    if(pNet == nullptr) {
+        return sCtx.error("缺少构造参数");
     }
-    spNetwork.setPtr(spSequence.getPtr());
+
+    for(int i=0; i<pNet->nNetworks; i++) {
+        m_arrNetworks.push_back(pNet->pNetworks[i]);
+    }
     return sCtx.success();
 }
 
