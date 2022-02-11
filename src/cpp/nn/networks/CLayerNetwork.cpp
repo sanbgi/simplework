@@ -7,7 +7,7 @@
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("CNnLayerNetwork");
+static SCtx sCtx("CLayerNetwork");
 
 //
 // 计算变量
@@ -64,7 +64,7 @@ struct PSolveContext {
     PSolveLayer solveLayer;
 };
 
-class CNnLayerNetwork : public CObject, public INnNetwork, public IArchivable{
+class CLayerNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
@@ -117,17 +117,17 @@ private:
 
 public:
     int initNetwork(unsigned int idType);
-    CNnLayerNetwork();
+    CLayerNetwork();
 };
 
-CNnLayerNetwork::CNnLayerNetwork() {
+CLayerNetwork::CLayerNetwork() {
     m_bInitialized = false;
     m_spSolver.take(new PNnSolver, [](PNnSolver* pSolver) {
         delete pSolver;
     });
 }
 
-int CNnLayerNetwork::__initialize(const PData* pData){
+int CLayerNetwork::__initialize(const PData* pData){
     const PNnNetwork* pNet = CData<PNnNetwork>(pData);
     if(pNet == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -139,7 +139,7 @@ int CNnLayerNetwork::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CNnLayerNetwork::initNetwork(unsigned int idType) {
+int CLayerNetwork::initNetwork(unsigned int idType) {
     if(m_bInitialized) {
         return sCtx.success();
     }
@@ -236,7 +236,7 @@ int CNnLayerNetwork::initNetwork(unsigned int idType) {
     return sCtx.success();
 }
 
-int CNnLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+int CLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     unsigned int idType = spBatchIn.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -253,7 +253,7 @@ int CNnLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 }
 
 template<typename Q>
-int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
+int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
 
     SDimension spInDimension = spBatchIn.dimension();
     int nBatchs = *spInDimension.data();
@@ -336,7 +336,7 @@ int CNnLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
 }
 
-int CNnLayerNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int CLayerNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     int idType = spBatchOut.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -356,7 +356,7 @@ int CNnLayerNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutD
 }
 
 template<typename Q>
-int CNnLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     SDimension spBatchOutDimension = spBatchOut.dimension();
     int nBatchs = *spBatchOutDimension.data();
     int nOutputSize = spBatchOutDimension.dataSize();
@@ -484,7 +484,7 @@ int CNnLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOut
     return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spBatchInDeviation.dimension(), 0, spWeightDevia}, spBatchInDeviation);
 }
 
-int CNnLayerNetwork::update(const STensor& spBatchInDeviation) {
+int CLayerNetwork::update(const STensor& spBatchInDeviation) {
     int idType = spBatchInDeviation.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -500,7 +500,7 @@ int CNnLayerNetwork::update(const STensor& spBatchInDeviation) {
 }
 
 template<typename Q>
-int CNnLayerNetwork::updateT(const STensor& spBatchInDeviation) {
+int CLayerNetwork::updateT(const STensor& spBatchInDeviation) {
     SNnResizeTensor spResizeDevia = spBatchInDeviation;
     if( !spResizeDevia ) {
         return sCtx.error("非有效的输出，无法用于学习");
@@ -544,7 +544,7 @@ int CNnLayerNetwork::updateT(const STensor& spBatchInDeviation) {
     return sCtx.success();
 }
 
-int CNnLayerNetwork::toArchive(const SArchive& ar) {
+int CLayerNetwork::toArchive(const SArchive& ar) {
     PNnSolver& spSolver = *m_spSolver;
     ar.arBlock("iinvar", spSolver.iInVar);
     ar.arBlock("ioutvar", spSolver.iOutVar);
@@ -556,4 +556,4 @@ int CNnLayerNetwork::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnLayerNetwork, CNnLayerNetwork::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CLayerNetwork, CLayerNetwork::__getClassKey())

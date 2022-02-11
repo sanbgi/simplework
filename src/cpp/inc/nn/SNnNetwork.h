@@ -59,6 +59,16 @@ public:
         return createNetwork({spInDimension, &sSolver});
     }
 
+    struct PNnCompositeNetwork {
+        SIMPLEWORK_PDATAKEY(PNnCompositeNetwork, "sw.nn.PNnCompositeNetwork")
+
+        int nNetworks;
+        SNnNetwork* pNetworks;
+    };
+    static SNnNetwork createCompositeModule(const PNnCompositeNetwork& rData) {
+        return SObject::createObject("sw.nn.CompositeNetwork", CData<PNnCompositeNetwork>(rData));
+    }
+
     static SNnPipe openIdxFileReader(const char* szFilename) {
         SNnPipe pipe;
         SNnFactory::getFactory()->openIdxFileReader(szFilename, pipe);
