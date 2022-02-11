@@ -44,7 +44,7 @@ private://INnUnit
         SDimension spDim = spInVars[0].dimension();
         int nInputCells = spDim->getElementSize();
         int pWeightDimSizes[2] = {pDense->nCells, nInputCells};
-        SNnVariable spWeights = SNnVariable::createWeight({SDimension(2, pWeightDimSizes), 1.0f/nInputCells});
+        SNnVariable spWeights = SNnVariable::createWeight({SDimension(2, pWeightDimSizes), 0});
         SNnVariable spBais = SNnVariable::createWeight({SDimension(1, &pDense->nCells),0});
         if( !spWeights || !spBais ) {
             return sCtx.error("权重变量创建失败");

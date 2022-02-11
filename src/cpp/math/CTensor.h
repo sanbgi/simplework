@@ -52,7 +52,7 @@ protected:
     CTypeAssist* m_pTypeAssist;
     int m_nVer;
     int m_nElementSize;
-    CTaker<char*> m_spElementData;
+    CTaker<void*> m_spElementData;
     SDimension m_spDimVector;
 };
 

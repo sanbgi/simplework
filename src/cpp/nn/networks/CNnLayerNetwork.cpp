@@ -120,7 +120,6 @@ public:
     CNnLayerNetwork();
 };
 
-
 CNnLayerNetwork::CNnLayerNetwork() {
     m_bInitialized = false;
     m_spSolver.take(new PNnSolver, [](PNnSolver* pSolver) {

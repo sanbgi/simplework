@@ -13,7 +13,7 @@ __SimpleWork_Core_Namespace_Enter__
 //  1, 所有对象接口都需要直接或间接从这个接口派生
 //  2, IObject的接口函数都不允许直接访问，避免引用计数错误，或者非法指针访问，请适用智能指针
 //
-SIMPLEWORK_INTERFACECLASS_ENTER0(Object)
+SIMPLEWORK_INTERFACECLASS_ENTER(Object, "sw.core.Object")
 
 public:
     typedef IObject IFace;

@@ -17,7 +17,7 @@ int CNnWeightVariable::createWeightVariable(const SDimension& spDimension, SNnVa
     CObject::createObject(spWeight);
     spWeight->m_spDimension = spDimension;
     spOutVar.setPtr(spWeight.getPtr());
-    return 0;
+    return sCtx.success();
 }
 
 void* CNnWeightVariable::getData(unsigned int idType) {
@@ -55,6 +55,7 @@ template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWe
 int CNnWeightVariable::toArchive(const SArchive& ar) {
     ar.arObject("dimension", m_spDimension);
     ar.arObject("value", m_spData);
+    ar.arBlock("avg", m_dAvg);
     return sCtx.success();
 }
 

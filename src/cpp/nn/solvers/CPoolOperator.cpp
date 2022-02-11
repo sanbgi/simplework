@@ -274,7 +274,6 @@ private://IArchivable
         ar.arBlock("poolheight", m_nPoolHeight);
         ar.arBlock("stridewidth", m_nStrideWidth);
         ar.arBlock("strideheight", m_nStrideHeight);
-        ar.arBlock("batchInsize", m_nBatchInSize);
         ar.arBlock("inputwidth", m_nInputWidth);
         ar.arBlock("inputheight", m_nInputHeight);
         ar.arBlock("inputlayer", m_nInputLayer);
@@ -294,7 +293,6 @@ private:
     int m_nStrideWidth;
     int m_nStrideHeight;
 
-    int m_nBatchInSize;
     int m_nInputWidth;
     int m_nInputHeight;
     int m_nInputLayer;

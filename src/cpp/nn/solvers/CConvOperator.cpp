@@ -93,7 +93,7 @@ public:
         }
 
         int pWeightDimSizes[5] = { pConv->nLayers, pConv->nShiftConvs, pConv->nHeight, pConv->nWidth, nLayers };
-        spOut = SNnVariable::createWeight({SDimension(5, pWeightDimSizes), 0.5});
+        spOut = SNnVariable::createWeight({SDimension(5, pWeightDimSizes), 0});
         return sCtx.success();
     }
 

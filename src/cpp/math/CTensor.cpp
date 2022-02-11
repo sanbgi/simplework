@@ -2,6 +2,7 @@
 #include "CDimension.h"
 
 #include <map>
+#include <vector>
 using namespace std;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
@@ -11,7 +12,31 @@ static SCtx sCtx("CTensor");
 class CTypeAssist {
 public:
     unsigned int m_idType;
-    int m_nTypeBytes;
+
+    enum EArMode {
+        None,
+        Block,
+        Object,
+    };
+    static EArMode getArMode(unsigned idType) {
+        static map<unsigned int, EArMode> s_assistMap = {
+            { CBasicData<bool>::getStaticType(), EArMode::Block },
+            { CBasicData<char>::getStaticType(), EArMode::Block },
+            { CBasicData<unsigned char>::getStaticType(), EArMode::Block },
+            { CBasicData<short>::getStaticType(), EArMode::Block },
+            { CBasicData<int>::getStaticType(), EArMode::Block },
+            { CBasicData<long>::getStaticType(), EArMode::Block },
+            { CBasicData<unsigned int>::getStaticType(), EArMode::Block },
+            { CBasicData<float>::getStaticType(), EArMode::Block },
+            { CBasicData<double>::getStaticType(), EArMode::Block },
+            { CData<SObject>::getStaticType(), EArMode::Object },
+        };
+        map<unsigned int, EArMode>::iterator it = s_assistMap.find(idType);
+        if( it == s_assistMap.end() ) {
+            return EArMode::None;
+        }
+        return it->second;
+    }
     static CTypeAssist* getTypeAssist(unsigned int idType) {
         static map<unsigned int, CTypeAssist*> s_assistMap = {
             { CBasicData<bool>::getStaticType(), getTypeAssist<bool>() },
@@ -23,6 +48,7 @@ public:
             { CBasicData<unsigned int>::getStaticType(), getTypeAssist<unsigned int>() },
             { CBasicData<float>::getStaticType(), getTypeAssist<float>() },
             { CBasicData<double>::getStaticType(), getTypeAssist<double>() },
+            { CData<SObject>::getStaticType(), getTypeAssist<SObject>() },
         };
         map<unsigned int, CTypeAssist*>::iterator it = s_assistMap.find(idType);
         if( it == s_assistMap.end() ) {
@@ -30,12 +56,58 @@ public:
         }
         return it->second;
     }
+
+    template<typename Q> static void FreeMemory(void* pQ) {
+        delete[] (Q*)pQ;
+    }
     template<typename Q> static CTypeAssist* getTypeAssist() {
         static class CTypeAssistT : public CTypeAssist {
         public:
             CTypeAssistT() {
                 m_idType = CBasicData<Q>::getStaticType();
-                m_nTypeBytes = sizeof(Q);
+            }
+
+            void initData(CTaker<void*>& spTaker, int nSize, void* pData) {
+                spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
+                if(pData != nullptr) {
+                    Q* pDest = (Q*)(void*)spTaker;
+                    Q* pSrc = (Q*)pData;
+                    while(nSize-->0) {
+                        *pDest = *pSrc;
+                        pDest++, pSrc++;
+                    }
+                }
+            }
+
+            void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) {
+                switch(CTypeAssist::getArMode(m_idType)) {
+                case EArMode::Block:
+                    {
+                        if(ar->isReading()) {
+                            spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
+                        }
+                        ar.arBlockArray("data", nSize, (Q*)(void*)spTaker);
+                    }
+                    break;
+
+                case EArMode::Object: 
+                    {
+                        if(ar->isReading()) {
+                            spTaker.take(new SObject[nSize], CTypeAssist::FreeMemory<SObject>);
+                        }
+                        SObject* pQ = (SObject*)(void*)spTaker;
+                        while(nSize-->0) {
+                            ar.arObject("data", *pQ);
+                            pQ++;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            void* getDataPtr(CTaker<void*>& spTaker, int iPos) {
+                Q* pQ = (Q*)(void*)spTaker;
+                return pQ+iPos;
             }
         }s_assist;
         return &s_assist;
@@ -52,20 +124,15 @@ public:
 
         return sCtx.success();
     }
+
+    virtual void initData(CTaker<void*>& spTaker, int nSize, void* pData) = 0;
+    virtual void* getDataPtr(CTaker<void*>& spTaker, int iPos) = 0;
+    virtual void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) = 0;
 };
 
 int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, void* pData) {
-
     release();
-    int nBytes = nSize * pTypeAssist->m_nTypeBytes;
-    m_spElementData.take(new char[nBytes], [](char* pPtr){ 
-        delete[] pPtr;
-    });
-    if(pData) {
-        memcpy(m_spElementData, pData, nBytes);
-    }else{
-        memset(m_spElementData, 0, nBytes);
-    }
+    pTypeAssist->initData(m_spElementData, nSize, pData);
     m_pTypeAssist = pTypeAssist;
     m_nElementSize = nSize;
     return SError::ERRORTYPE_SUCCESS;
@@ -115,9 +182,7 @@ int CTensor::getDataSize() {
 
 void* CTensor::getDataPtr(unsigned int idElementType, int iPos) {
     if( idElementType == getDataType() ){
-        if( iPos >= 0 && iPos < m_nElementSize ) {
-            return (char*)m_spElementData + iPos * m_pTypeAssist->m_nTypeBytes;
-        }
+        return m_pTypeAssist->getDataPtr(m_spElementData, iPos);
     }
     return nullptr;
 }
@@ -169,7 +234,7 @@ int CTensor::toArchive(const SArchive& ar) {
     CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
     ar.arBlock("ver", m_nVer);
     ar.arBlock("size", m_nElementSize);
-    ar.visitTaker("data", m_nElementSize * m_pTypeAssist->m_nTypeBytes, m_spElementData);
+    m_pTypeAssist->archiveData(ar, m_spElementData, m_nElementSize);
     ar.arObject("dimension", m_spDimVector);
     return sCtx.success();
 }
