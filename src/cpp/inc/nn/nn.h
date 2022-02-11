@@ -17,7 +17,6 @@
 #include "PNnWeight.h"
 #include "PNnNetwork.h"
 #include "SNnPipe.h"
-#include "SNnUnit.h"
 #include "SNnNetwork.h"
 #include "SNnState.h"
 #include "SNnSolver.h"

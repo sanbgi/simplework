@@ -39,18 +39,6 @@ public:
         return SObject::createObject("sw.nn.LayerNetwork", CData<PNnNetwork>(rNet));
     }
 
-    static SNnNetwork createNetwork(const SNnUnit& spUnit, const SDimension& spInDimension) {
-        struct SNetSolver : public INnNetworkSolver {
-            int solve(const SNnVariable& spIn, SNnVariable& spOut) {
-                return m_spUnit->eval(1,&spIn, spOut);
-            }
-        public:
-            SNnUnit m_spUnit;
-        }sSolver;
-        sSolver.m_spUnit = spUnit;
-        return createNetwork({spInDimension, &sSolver});
-    }
-
     static SNnPipe openIdxFileReader(const char* szFilename) {
         SNnPipe pipe;
         SNnFactory::getFactory()->openIdxFileReader(szFilename, pipe);

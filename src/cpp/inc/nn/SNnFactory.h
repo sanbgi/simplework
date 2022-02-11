@@ -9,7 +9,6 @@ class SNnLayer;
 class SNnNetwork;
 class SNnVariable;
 class SNnPipe;
-class SNnUnit;
 
 SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnFactory", 211223)
@@ -43,11 +42,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         //
         virtual int saveNetwork(const char* szFileName, const SNnNetwork& spNet) = 0;
         virtual int loadNetwork(const char* szFileName, SNnNetwork& spNet) = 0;
-
-        //
-        // 创建神经网络单元
-        //
-        virtual int createSequenceUnit(int nUnits, const SNnUnit pUnits[], SNnUnit& spUnit) = 0;
     SIMPLEWORK_INTERFACE_LEAVE
 
     static SNnFactory& getFactory() {

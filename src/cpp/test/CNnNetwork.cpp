@@ -204,22 +204,6 @@ SNnNetwork CNnNetwork::createTestNetwork() {
     return SNnNetwork();
 }
 
-
-SNnNetwork CNnNetwork::createUnitNetwork() {
-    std::vector<SNnUnit> arrUnits;
-    arrUnits.push_back(SNnUnit::createConvUnit({5,5,32}));
-    arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
-    arrUnits.push_back(SNnUnit::createConvUnit({7,7,64}));
-    arrUnits.push_back(SNnUnit::createPoolUnit({2,2,2,2}));
-    arrUnits.push_back(SNnUnit::createDenseUnit({576}));
-    arrUnits.push_back(SNnUnit::createDenseUnit({10, "softmax"}));
-    SNnUnit spSeq = SNnUnit::createSequenceUnit(arrUnits.size(), arrUnits.data());
-
-    int pDimSizes[] = {28, 28};
-    SDimension spDim = SDimension::createDimension(2,pDimSizes);
-    return SNnNetwork::createNetwork(spSeq,spDim);
-}
-
 SNnNetwork CNnNetwork::createLayerNetwork() {
     int pDimSizes[] = {28, 28};
     SNnNetwork spNetwork = SNnNetwork::createNetwork({
