@@ -17,8 +17,6 @@ public://CObject
     int __initialize(const PData* pData);
 
 public://ITensor
-    int getVer();
-    int updateVer();
     int getDimension(SDimension& spDim);
     unsigned int getDataType();
     int getDataSize();

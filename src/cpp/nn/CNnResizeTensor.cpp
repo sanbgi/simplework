@@ -40,14 +40,6 @@ int CNnResizeTensor::createResizeTensor(const PNnResizeTensor& rTenser, STensor&
     return sCtx.success();
 }
 
-int CNnResizeTensor::getVer() {
-    return m_src.spSrc.ver();
-}
-
-int CNnResizeTensor::updateVer() {
-    return m_src.spSrc.updateVer();
-}
-
 int CNnResizeTensor::getDimension(SDimension& spDim) {
     spDim = m_src.spResizeDimension;
     return sCtx.success();
