@@ -3,7 +3,6 @@
 
 #include "math.h"
 #include "operator.h"
-#include "PNnBatchNormalizeOperator.h"
 static SCtx sCtx("BatchNormalizeOperator");
 class CBatchNormalizeOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
