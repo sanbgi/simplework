@@ -12,43 +12,18 @@ static SCtx sCtx("CTensor");
 class CTypeAssist {
 public:
     unsigned int m_idType;
-
-    enum EArMode {
-        None,
-        Block,
-        Object,
-    };
-    static EArMode getArMode(unsigned idType) {
-        static map<unsigned int, EArMode> s_assistMap = {
-            { CBasicData<bool>::getStaticType(), EArMode::Block },
-            { CBasicData<char>::getStaticType(), EArMode::Block },
-            { CBasicData<unsigned char>::getStaticType(), EArMode::Block },
-            { CBasicData<short>::getStaticType(), EArMode::Block },
-            { CBasicData<int>::getStaticType(), EArMode::Block },
-            { CBasicData<long>::getStaticType(), EArMode::Block },
-            { CBasicData<unsigned int>::getStaticType(), EArMode::Block },
-            { CBasicData<float>::getStaticType(), EArMode::Block },
-            { CBasicData<double>::getStaticType(), EArMode::Block },
-            { CData<SObject>::getStaticType(), EArMode::Object },
-        };
-        map<unsigned int, EArMode>::iterator it = s_assistMap.find(idType);
-        if( it == s_assistMap.end() ) {
-            return EArMode::None;
-        }
-        return it->second;
-    }
     static CTypeAssist* getTypeAssist(unsigned int idType) {
         static map<unsigned int, CTypeAssist*> s_assistMap = {
-            { CBasicData<bool>::getStaticType(), getTypeAssist<bool>() },
-            { CBasicData<char>::getStaticType(), getTypeAssist<char>() },
-            { CBasicData<unsigned char>::getStaticType(), getTypeAssist<unsigned char>() },
-            { CBasicData<short>::getStaticType(), getTypeAssist<short>() },
-            { CBasicData<int>::getStaticType(), getTypeAssist<int>() },
-            { CBasicData<long>::getStaticType(), getTypeAssist<long>() },
-            { CBasicData<unsigned int>::getStaticType(), getTypeAssist<unsigned int>() },
-            { CBasicData<float>::getStaticType(), getTypeAssist<float>() },
-            { CBasicData<double>::getStaticType(), getTypeAssist<double>() },
-            { CData<SObject>::getStaticType(), getTypeAssist<SObject>() },
+            { CBasicData<bool>::getStaticType(), getBasicTypeAssist<bool>() },
+            { CBasicData<char>::getStaticType(), getBasicTypeAssist<char>() },
+            { CBasicData<unsigned char>::getStaticType(), getBasicTypeAssist<unsigned char>() },
+            { CBasicData<short>::getStaticType(), getBasicTypeAssist<short>() },
+            { CBasicData<int>::getStaticType(), getBasicTypeAssist<int>() },
+            { CBasicData<long>::getStaticType(), getBasicTypeAssist<long>() },
+            { CBasicData<unsigned int>::getStaticType(), getBasicTypeAssist<unsigned int>() },
+            { CBasicData<float>::getStaticType(), getBasicTypeAssist<float>() },
+            { CBasicData<double>::getStaticType(), getBasicTypeAssist<double>() },
+            { CData<SObject>::getStaticType(), getObjectTypeAssist<SObject>() },
         };
         map<unsigned int, CTypeAssist*>::iterator it = s_assistMap.find(idType);
         if( it == s_assistMap.end() ) {
@@ -60,7 +35,8 @@ public:
     template<typename Q> static void FreeMemory(void* pQ) {
         delete[] (Q*)pQ;
     }
-    template<typename Q> static CTypeAssist* getTypeAssist() {
+
+    template<typename Q> static CTypeAssist* getBasicTypeAssist() {
         static class CTypeAssistT : public CTypeAssist {
         public:
             CTypeAssistT() {
@@ -80,28 +56,47 @@ public:
             }
 
             void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) {
-                switch(CTypeAssist::getArMode(m_idType)) {
-                case EArMode::Block:
-                    {
-                        if(ar->isReading()) {
-                            spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
-                        }
-                        ar.arBlockArray("data", nSize, (Q*)(void*)spTaker);
-                    }
-                    break;
+                if(ar->isReading()) {
+                    spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
+                }
+                ar.arBlockArray("data", nSize, (Q*)(void*)spTaker);
+            }
 
-                case EArMode::Object: 
-                    {
-                        if(ar->isReading()) {
-                            spTaker.take(new SObject[nSize], CTypeAssist::FreeMemory<SObject>);
-                        }
-                        SObject* pQ = (SObject*)(void*)spTaker;
-                        while(nSize-->0) {
-                            ar.arObject("data", *pQ);
-                            pQ++;
-                        }
+            void* getDataPtr(CTaker<void*>& spTaker, int iPos) {
+                Q* pQ = (Q*)(void*)spTaker;
+                return pQ+iPos;
+            }
+        }s_assist;
+        return &s_assist;
+    }
+
+    template<typename Q> static CTypeAssist* getObjectTypeAssist() {
+        static class CTypeAssistT : public CTypeAssist {
+        public:
+            CTypeAssistT() {
+                m_idType = CData<Q>::getStaticType();
+            }
+
+            void initData(CTaker<void*>& spTaker, int nSize, void* pData) {
+                spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
+                if(pData != nullptr) {
+                    Q* pDest = (Q*)(void*)spTaker;
+                    Q* pSrc = (Q*)pData;
+                    while(nSize-->0) {
+                        *pDest = *pSrc;
+                        pDest++, pSrc++;
                     }
-                    break;
+                }
+            }
+
+            void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) {
+                if(ar->isReading()) {
+                    spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
+                }
+                Q* pQ = (Q*)(void*)spTaker;
+                while(nSize-->0) {
+                    ar.arObject("data", *pQ);
+                    pQ++;
                 }
             }
 
@@ -121,7 +116,6 @@ public:
         }else{
             ar.arBlock("idType", (*ppAssist)->m_idType);
         }
-
         return sCtx.success();
     }
 
@@ -223,7 +217,7 @@ int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, unsig
 int CTensor::createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {
     CPointer<CDimension> spTensor;
     CObject::createObject(spTensor);
-    if( spTensor->initVector(CTypeAssist::getTypeAssist<int>(), nDims, (void*)pDimSizes) != sCtx.success()) {
+    if( spTensor->initVector(CTypeAssist::getBasicTypeAssist<int>(), nDims, (void*)pDimSizes) != sCtx.success()) {
         return sCtx.error("创建维度失败");
     }
     spDim.setPtr(spTensor.getPtr());
