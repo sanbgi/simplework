@@ -57,12 +57,6 @@ public:
         return data;
     }
 
-    static SNnPipe createNormalizePipe() {
-        SNnPipe pipe;
-        SNnFactory::getFactory()->createNormallizePipe(pipe);
-        return pipe;
-    }
-
     static STensor normalizeTensor(const STensor& spIn) {
         STensor spOut;
         SNnFactory::getFactory()->normalizeTensor(spIn, spOut);
