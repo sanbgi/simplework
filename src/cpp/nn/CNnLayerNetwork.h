@@ -8,7 +8,7 @@
 using namespace sw;
 using namespace std;
 
-class PLayerContext;
+class PSolveContext;
 class PNnSolver;
 class CNnLayerNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -47,13 +47,13 @@ private:
 private:
     CTaker<PNnSolver*> m_spSolver;
     SDimension m_spInDimension;
-    SDimension m_spOutDimension;
     string m_strOptimizer;
-    int m_nInputTensorSize;
-    int m_nOutputTensorSize;
 
     bool m_bInitialized;
-    CTaker<PLayerContext*> m_spContext;
+    SDimension m_spOutDimension;
+    int m_nInputTensorSize;
+    int m_nOutputTensorSize;
+    CTaker<PSolveContext*> m_spContext;
     unsigned int m_idType;
     SOptimizer m_spOptimizer;
 

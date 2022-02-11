@@ -15,13 +15,13 @@ static SCtx sCtx("CNnLayerNetwork");
 // 计算变量
 //
 struct PSolveVar {
+    CNnVariable* pVar;
     ENnVariableType eVarType;//ENnVariableType
     int nVarSize;
 
     int size;
     void* data; //存储状态及权重值的指针
     void* devia;//存储偏倒数的指针
-    CNnVariable* pVar;
 };
 
 struct PSolveInstruct {
@@ -57,7 +57,7 @@ struct PSolveLayer {
     int iOutVar;
 };
 
-struct PLayerContext {
+struct PSolveContext {
     //解算参数列表
     vector<PSolveVar> arrVars;
     //解算步骤列表
@@ -91,10 +91,10 @@ int CNnLayerNetwork::initNetwork(unsigned int idType) {
     }
 
     SDimension spDimension = m_spInDimension;
-    m_spContext.take(new PLayerContext, [](PLayerContext* pCtx){
+    m_spContext.take(new PSolveContext, [](PSolveContext* pCtx){
         delete pCtx;
     });
-    PLayerContext& layerCtx = *m_spContext;
+    PSolveContext& layerCtx = *m_spContext;
 
     //
     // 更新计算变量数组
