@@ -14,14 +14,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnNetwork", 211223)
 
         //
-        //  计算
+        //  计算值
         //      @spBatchIn 输入张量，多维张量，其中第一个维度为实际张量的个数
         //      @spBatchOut 输出张量
         //
         virtual int eval(const STensor& spBatchIn, STensor& spBatchOut) = 0;
 
         //
-        //  求偏差（偏导）
+        //  计算偏差（偏导）
         //      @spBatchOut 由eval计算输出的结果
         //      @spBatchOutDeviation 计算结果与实际期望的偏差 = 计算值 - 期望值
         //      @spBatchIn 返回上次计算的输入值
@@ -34,8 +34,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
 
         //
         // 更新网络
+        //      @spBatchInDevia 由devia计算出来的输入偏差值
         //
         virtual int update(const STensor& spBatchInDeviation) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
@@ -86,18 +88,33 @@ public:
 public:
     STensor eval(const STensor& spIn) {
         STensor spOut;
-        (*this)->eval(spIn, spOut);
+        if(*this){
+            (*this)->eval(spIn, spOut);
+        }
         return spOut;
     }
 
     STensor devia(const STensor& spOut, const STensor& spOutDeviation) {
         STensor spIn, spInDeviation;
-        (*this)->devia(spOut, spOutDeviation, spIn, spInDeviation);
+        if(*this) {
+            (*this)->devia(spOut, spOutDeviation, spIn, spInDeviation);
+        }
+        return spInDeviation;
+    }
+
+    STensor devia(const STensor& spOut, const STensor& spOutDeviation, STensor& spIn) {
+        STensor spInDeviation;
+        if(*this) {
+            (*this)->devia(spOut, spOutDeviation, spIn, spInDeviation);
+        }
         return spInDeviation;
     }
 
     int update(const STensor& spInDeviation) {
-        return (*this)->update(spInDeviation);
+        if(*this){
+            return (*this)->update(spInDeviation);
+        }
+        return SError::ERRORTYPE_FAILURE;
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnNetwork)
