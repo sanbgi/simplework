@@ -1,10 +1,7 @@
 #ifndef __SimpleWork_NN_COperatorVariable_H__
 #define __SimpleWork_NN_COperatorVariable_H__
 
-#include "nn.h"
-#include "CNnVariable.h"
-
-using namespace sw;
+#include "variable.h"
 
 class CNnOperatorVariable : public CNnVariable, public IArchivable {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnVariable)

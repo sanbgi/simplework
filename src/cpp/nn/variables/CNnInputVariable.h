@@ -1,11 +1,7 @@
 #ifndef __SimpleWork_NN_CNnInput_H__
 #define __SimpleWork_NN_CNnInput_H__
 
-#include "nn.h"
-#include "CNnVariable.h"
-
-using namespace sw;
-using namespace std;
+#include "variable.h"
 
 class CNnInputVariable : public CNnVariable, public IArchivable {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnVariable)

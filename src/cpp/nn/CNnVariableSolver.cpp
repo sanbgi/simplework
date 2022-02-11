@@ -1,10 +1,10 @@
 
 #include "nn.h"
-#include "CNnWeightVariable.h"
-#include "CNnStateVariable.h"
-#include "CNnOperatorVariable.h"
+#include "variables/CNnInputVariable.h"
+#include "variables/CNnWeightVariable.h"
+#include "variables/CNnStateVariable.h"
+#include "variables/CNnOperatorVariable.h"
 #include "CNnVariableSolver.h"
-#include "CNnInputVariable.h"
 #include "CNnSolver.h"
 
 #include <map>

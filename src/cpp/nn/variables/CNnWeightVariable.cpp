@@ -1,5 +1,5 @@
 #include "CNnWeightVariable.h"
-#include "CUtils.h"
+
 static SCtx sCtx("CNnWeightVariable");
 
 int CNnWeightVariable::__initialize(const PData* pData) {

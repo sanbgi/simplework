@@ -1,8 +1,8 @@
 #include "CNnSolver.h"
-#include "CNnOperatorVariable.h"
 #include "CUtils.h"
 #include "CActivator.h"
 #include "CNnVariableSolver.h"
+#include "variables/CNnOperatorVariable.h"
 #include <map>
 
 static SCtx sCtx("CNnSolver");
