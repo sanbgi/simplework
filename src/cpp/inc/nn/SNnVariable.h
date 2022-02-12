@@ -89,7 +89,7 @@ public:
     SNnVariable tanh() const { return solveOp("tanh"); }
     SNnVariable sigmod() const { return solveOp("sigmod"); }
     SNnVariable softmax() const { return solveOp("softmax"); }
-    SNnVariable gvp() const { return solveOp("gvp"); }
+    SNnVariable gap() const { return solveOp("gap"); }
     SNnVariable dense(const PNnDense& rDense) const {
         return solveOp("dense", *this, (const PData*)CData<PNnDense>(rDense));
     }

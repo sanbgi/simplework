@@ -181,7 +181,9 @@ public:
         nMat = nIn * nOut;
         SDimension spOutDim = spDim1.downLowDimension().upLowDimension(nOutputSize);
         createVariable(spOutDim, spVarOut);
-        addAtomSolver(this, nInVars, pInVars, spVarOut);
+
+        SNnVariable pLinearVars[] = { spIn, spMat };
+        addAtomSolver(this, 2, pLinearVars, spVarOut);
         if(spBais) {
             spVarOut = spVarOut + spBais;
         }

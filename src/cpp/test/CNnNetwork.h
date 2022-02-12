@@ -11,16 +11,16 @@ public:
     static void run();
     static SNnNetwork createNetwork();
     static SNnNetwork createTestNetwork();
-    static SNnNetwork createRotNetwork();
+    static SNnNetwork createResNetwork();
     static SNnNetwork createShiftNetwork();
     static SNnNetwork createGlobalPollNetwork();
     static SNnNetwork createRnnNetwork();
     static SNnNetwork createLayerNetwork();
 
-    static SNnNetwork createLeNet_5(bool isStandardNet=false);
+    static SNnNetwork createLeNet();
+
     static void runLearn();
     static void runTest();
-    static void runFile();
     static void runTestNetwork();
 };
 

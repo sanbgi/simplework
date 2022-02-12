@@ -184,8 +184,8 @@ public:
                 (m_sizeIn.width - 1) / m_nStrideWidth + 1,
                 m_nLayers
             };
-            int nPadW = m_sizeOut.width * m_nStrideWidth - (m_sizeIn.width - m_sizeConv.width + 1);
-            int nPadH = m_sizeOut.height * m_nStrideHeight - (m_sizeIn.height - m_sizeConv.height + 1);
+            int nPadW = (m_sizeOut.width - 1) * m_nStrideWidth + m_sizeConv.width - m_sizeIn.width;
+            int nPadH = (m_sizeOut.height - 1) * m_nStrideHeight + m_sizeConv.height - m_sizeIn.height;
             m_padding.left = nPadW / 2;
             m_padding.right = nPadW - m_padding.left;
             m_padding.top = nPadH / 2;
@@ -315,11 +315,15 @@ public:
         //
         //  输出矩阵能够完整卷积的最大下标，再往下，则需要剪裁了
         //
-        int iCompleteConvHeightIndex = sizeOut.height - rcPading.bottom - 1;
+        int nStrideHeight = pThis->m_nStrideHeight;
+        int iMinCompleteHeight = (rcPading.top + nStrideHeight - 1) / nStrideHeight;
+        int iMaxCompleteHeight = sizeOut.height - 1 - (rcPading.bottom + nStrideHeight - 1) / nStrideHeight;
         //
         //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
         //
-        int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
+        int nStrideWidth = pThis->m_nStrideWidth;
+        int iMinCompleteWidth = (rcPading.left + nStrideWidth - 1) / nStrideWidth;
+        int iMaxCompleteWidth = sizeOut.width - 1 - (rcPading.right + nStrideWidth - 1) / nStrideWidth;
 
         for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
             itVars0.pIn = it.pIn;
@@ -339,20 +343,20 @@ public:
                     itVars2.pWeights = it.pWeights;
                     //itVars2.pBais = it.pBais;
 
-                    //左边填充了都填充了空值，不能参与运算
-                    if(itVars2.index < rcPading.top) {
+                    //上面填充了都填充了空值，不能参与运算
+                    if(itVars2.index < iMinCompleteHeight) {
                         //
                         // 卷积核顶部裁剪，相当于将起始坐标下移，同时
                         //      1,  输入矩阵的起始坐标也需要下移
                         //      2,  权重的其实位置也许要同步下移到实际的其实位置
                         //
-                        rcConv.top = rcPading.top;
+                        rcConv.top = rcPading.top - itVars2.index * nStrideHeight;
                         rcConv.bottom = sizeConv.height;
                         it.pIn += rcConv.top * stepInConv.height;
                         it.pWeights += rcConv.top * stepConv.height;
-                    }else if(itVars2.index > iCompleteConvHeightIndex) {
+                    }else if(itVars2.index > iMaxCompleteHeight) {
                         rcConv.top = 0;
-                        rcConv.bottom = sizeConv.height - (itVars2.index - iCompleteConvHeightIndex);
+                        rcConv.bottom = sizeConv.height - (itVars2.index - iMaxCompleteHeight) * nStrideHeight - rcPading.bottom;
                     }else{
                         rcConv.top = 0;
                         rcConv.bottom = sizeConv.height;
@@ -365,19 +369,19 @@ public:
                         //itVars3.pBais = it.pBais;
 
                         //左边填充了都填充了空值，不能参与运算
-                        if(itVars3.index < rcPading.left) {
+                        if(itVars3.index < iMinCompleteWidth) {
                             //
                             // 卷积核左部裁剪，相当于将起始坐标右移，同时
                             //      1，输入矩阵的起始坐标也需要右移
                             //      2，权重矩阵其实坐标也需要右移到对应的开始位置
                             //
-                            rcConv.left = rcPading.left;
+                            rcConv.left = rcPading.left - itVars3.index * nStrideWidth;
                             rcConv.right = sizeConv.width;
                             it.pIn += rcConv.left * stepInConv.width;
                             it.pWeights += rcConv.left * stepConv.width;
-                        }else if(itVars3.index > iCompleteConvWidthIndex) {
+                        }else if(itVars3.index > iMaxCompleteWidth) {
                             rcConv.left = 0;
-                            rcConv.right = sizeConv.width - (itVars3.index - iCompleteConvWidthIndex);
+                            rcConv.right = sizeConv.width - (itVars3.index - iMaxCompleteWidth) * nStrideWidth - rcPading.right;
                         }else{
                             rcConv.left = 0;
                             rcConv.right = sizeConv.width;
@@ -500,11 +504,15 @@ public:
         //将输入指针向Padding后的起点偏移，变成一个非法指针
         int nOffsetIn = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
         int nOffsetConv;
-        //输出矩阵能够完整卷积的下标，再往下，则需要剪裁了
-        int iCompleteConvHeightIndex = sizeOut.height - rcPading.bottom - 1;
-        //输出矩阵能够完整卷积的下标，再往右，则需要剪裁了
-        int iCompleteConvWidthIndex = sizeOut.width - rcPading.right - 1;
-
+        int nStrideHeight = pThis->m_nStrideHeight;
+        int iMinCompleteHeight = (rcPading.top + nStrideHeight - 1) / nStrideHeight;
+        int iMaxCompleteHeight = sizeOut.height - 1 - (rcPading.bottom + nStrideHeight - 1) / nStrideHeight;
+        //
+        //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
+        //
+        int nStrideWidth = pThis->m_nStrideWidth;
+        int iMinCompleteWidth = (rcPading.left + nStrideWidth - 1) / nStrideWidth;
+        int iMaxCompleteWidth = sizeOut.width - 1 - (rcPading.right + nStrideWidth - 1) / nStrideWidth;
         it.pIn = it.pIn - nOffsetIn;
         it.pInDeviation = it.pInDeviation - nOffsetIn;
         for(itVars0.index=0; itVars0.index<sizeIn.batch; itVars0.index++) {
@@ -534,13 +542,13 @@ public:
                     //itVars2.pBaisDeviation = it.pBaisDeviation;
 
                     //上下填充了都填充了控空制，不能参与运算
-                    if(itVars2.index < rcPading.top) {
+                    if(itVars2.index < iMinCompleteHeight) {
                         //
                         // 卷积核顶部裁剪，相当于将起始坐标下移，同时
                         //      1,  输入矩阵的起始坐标也需要下移
                         //      2,  权重的其实位置也许要同步下移到实际的其实位置
                         //
-                        rcConv.top = rcPading.top;
+                        rcConv.top = rcPading.top - itVars2.index * nStrideHeight;
                         rcConv.bottom = sizeConv.height;
                         nOffsetIn = rcConv.top * stepInConv.height;
                         nOffsetConv = rcConv.top * stepConv.height;
@@ -548,9 +556,9 @@ public:
                         it.pInDeviation += nOffsetIn;
                         it.pWeights += nOffsetConv;
                         it.pWeightDevivation += nOffsetConv;
-                    }else if(itVars2.index > iCompleteConvHeightIndex) {
+                    }else if(itVars2.index > iMaxCompleteHeight) {
                         rcConv.top = 0;
-                        rcConv.bottom = sizeConv.height - (itVars2.index - iCompleteConvHeightIndex);
+                        rcConv.bottom = sizeConv.height - (itVars2.index - iMaxCompleteHeight);
                     }else{
                         rcConv.top = 0;
                         rcConv.bottom = sizeConv.height;
@@ -581,13 +589,13 @@ public:
                         if(deviationZ > 1.0e-16 || deviationZ < -1.0e-16) 
                         {
                             //左右填充了都填充了空制，不能参与运算
-                            if(itVars3.index < rcPading.left) {
+                            if(itVars3.index < iMinCompleteWidth) {
                                 //
                                 // 卷积核左部裁剪，相当于将起始坐标右移，同时
                                 //      1，输入矩阵的起始坐标也需要右移
                                 //      2，权重矩阵其实坐标也需要右移到对应的开始位置
                                 //
-                                rcConv.left = rcPading.left;
+                                rcConv.left = rcPading.left - itVars3.index * nStrideWidth;
                                 rcConv.right = sizeConv.width;
                                 nOffsetIn = rcConv.left * stepInConv.width;
                                 nOffsetConv = rcConv.left * stepConv.width;
@@ -595,9 +603,9 @@ public:
                                 it.pInDeviation += nOffsetIn;
                                 it.pWeights += nOffsetConv;
                                 it.pWeightDevivation += nOffsetConv;
-                            }else if(itVars3.index > iCompleteConvWidthIndex) {
+                            }else if(itVars3.index > iMaxCompleteWidth) {
                                 rcConv.left = 0;
-                                rcConv.right = sizeConv.width - (itVars3.index - iCompleteConvWidthIndex);
+                                rcConv.right = sizeConv.width - (itVars3.index - iMaxCompleteWidth);
                             }else{
                                 rcConv.left = 0;
                                 rcConv.right = sizeConv.width;

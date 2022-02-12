@@ -5,8 +5,8 @@
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("CGvpModule");
-class CGvpModule : public CObject, public INnModule, public IArchivable{
+static SCtx sCtx("CGapModule");
+class CGapModule : public CObject, public INnModule, public IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnModule)
@@ -21,29 +21,29 @@ private://INnModule
     
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "GvpModule"; } 
+    const char* getClassName() { return "GapModule"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.GvpModule"; }
+    static const char* __getClassKey() { return "sw.nn.GapModule"; }
 };
 
-int CGvpModule::__initialize(const PData* pData) {
+int CGapModule::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-int CGvpModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+int CGapModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("Gvp单元输入参数必须为一个");
     }
 
-    spOutVar = spInVars[0].gvp();
+    spOutVar = spInVars[0].gap();
     return sCtx.success();
 }
 
-int CGvpModule::toArchive(const SArchive& ar) {
+int CGapModule::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CGvpModule, CGvpModule::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CGapModule, CGapModule::__getClassKey())
