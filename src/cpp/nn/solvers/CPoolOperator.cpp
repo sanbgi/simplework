@@ -83,7 +83,7 @@ public:
                     it.pIn += rcPool.top * nInputHstep;
                 }else if(iOutY > iMaxCompleteHeight) {
                     rcPool.top = 0;
-                    rcPool.bottom = nPoolHeight - (iOutY - iMaxCompleteHeight) * nStrideHeight - rcPading.bottom;
+                    rcPool.bottom = nPoolHeight + (nOutHeight - 1 - iOutY) * nStrideHeight - rcPading.bottom;
                 }else{
                     rcPool.top = 0;
                     rcPool.bottom = nPoolHeight;
@@ -106,7 +106,7 @@ public:
                         it.pIn += rcPool.left * nInputWstep;
                     }else if(iOutX > iMaxCompleteWidth) {
                         rcPool.left = 0;
-                        rcPool.right = nPoolWidth - (iOutX - iMaxCompleteWidth) * nStrideWidth - rcPading.right;
+                        rcPool.right = nPoolWidth + (nOutWidth - 1 - iOutX) * nStrideWidth - rcPading.right;
                     }else{
                         rcPool.left = 0;
                         rcPool.right = nPoolWidth;
@@ -224,7 +224,7 @@ public:
                     it.pInDeviation += rcPool.top * nInputHstep;
                 }else if(iOutY > iMaxCompleteHeight) {
                     rcPool.top = 0;
-                    rcPool.bottom = nPoolHeight - (iOutY - iMaxCompleteHeight) * nStrideHeight - rcPading.bottom;
+                    rcPool.bottom = nPoolHeight + (nOutHeight - 1 - iOutY) * nStrideHeight - rcPading.bottom;
                 }else{
                     rcPool.top = 0;
                     rcPool.bottom = nPoolHeight;
@@ -249,7 +249,7 @@ public:
                         it.pInDeviation += rcPool.left * nInputWstep;
                     }else if(iOutX > iMaxCompleteWidth) {
                         rcPool.left = 0;
-                        rcPool.right = nPoolWidth - (iOutX - iMaxCompleteWidth) * nStrideWidth - rcPading.right;
+                        rcPool.right = nPoolWidth + (nOutWidth - 1 - iOutX) * nStrideWidth - rcPading.right;
                     }else{
                         rcPool.left = 0;
                         rcPool.right = nPoolWidth;

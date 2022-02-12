@@ -356,7 +356,7 @@ public:
                         it.pWeights += rcConv.top * stepConv.height;
                     }else if(itVars2.index > iMaxCompleteHeight) {
                         rcConv.top = 0;
-                        rcConv.bottom = sizeConv.height - (itVars2.index - iMaxCompleteHeight) * nStrideHeight - rcPading.bottom;
+                        rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - itVars2.index) * nStrideHeight - rcPading.bottom;
                     }else{
                         rcConv.top = 0;
                         rcConv.bottom = sizeConv.height;
@@ -381,7 +381,7 @@ public:
                             it.pWeights += rcConv.left * stepConv.width;
                         }else if(itVars3.index > iMaxCompleteWidth) {
                             rcConv.left = 0;
-                            rcConv.right = sizeConv.width - (itVars3.index - iMaxCompleteWidth) * nStrideWidth - rcPading.right;
+                            rcConv.right = sizeConv.width + (sizeOut.width - 1 - itVars3.index) * nStrideWidth - rcPading.right;
                         }else{
                             rcConv.left = 0;
                             rcConv.right = sizeConv.width;
@@ -558,7 +558,7 @@ public:
                         it.pWeightDevivation += nOffsetConv;
                     }else if(itVars2.index > iMaxCompleteHeight) {
                         rcConv.top = 0;
-                        rcConv.bottom = sizeConv.height - (itVars2.index - iMaxCompleteHeight);
+                        rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - itVars2.index) * nStrideHeight - rcPading.bottom;
                     }else{
                         rcConv.top = 0;
                         rcConv.bottom = sizeConv.height;
@@ -605,7 +605,7 @@ public:
                                 it.pWeightDevivation += nOffsetConv;
                             }else if(itVars3.index > iMaxCompleteWidth) {
                                 rcConv.left = 0;
-                                rcConv.right = sizeConv.width - (itVars3.index - iMaxCompleteWidth);
+                                rcConv.right = sizeConv.width + (sizeOut.width - 1 - itVars3.index) * nStrideWidth - rcPading.right;
                             }else{
                                 rcConv.left = 0;
                                 rcConv.right = sizeConv.width;

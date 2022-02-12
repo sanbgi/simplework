@@ -312,11 +312,11 @@ SNnNetwork CNnNetwork::createResNetwork() {
                     while(n-->0) {
                         SNnVariable resX = x;
                         if(nXLayers != nLayers) {
-                            x = x.pool({2,2,2,2,"same"});
-                            x = x.linear({nLayers, true, "relu"});
-                            //x = x.conv({3,3,nLayers,1,2,2,"same","relu"});
+                            //x = x.pool({2,2,2,2,"same"});
+                            //x = x.linear({nLayers});
+                            x = x.conv({3,3,nLayers,1,2,2,"same","relu"});
                             nXLayers = nLayers;
-                            resX = resX.conv({3,3,nLayers,1,2,2,"same"});
+                            resX = x;//resX.conv({3,3,nLayers,1,2,2,"same"});
                         }else{
                             resX = resX.batchNormalize({1.0e-8});
                             resX = resX.relu();
