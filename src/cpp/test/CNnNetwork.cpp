@@ -30,7 +30,7 @@ void CNnNetwork::runLearn() {
     SNnNetwork nn = createResNetwork();
     //SNnNetwork nn = createShiftNetwork();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
-    int nLoops = 50;
+    int nLoops = 20;
     while(nLoops-->0)
     {
         SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
@@ -312,20 +312,19 @@ SNnNetwork CNnNetwork::createResNetwork() {
                     while(n-->0) {
                         SNnVariable resX = x;
                         if(nXLayers != nLayers) {
-                            //x = x.pool({2,2,2,2,"same"});
-                            //x = x.linear({nLayers});
-                            x = x.conv({3,3,nLayers,1,2,2,"same","relu"});
+                            x = x.pool({2,2,2,2,"same"});
+                            x = x.conv({3,3,nLayers,1,1,1,"same","relu"});
+                            //resX = resX.conv({3,3,nLayers,1,2,2,"same",nullptr});
                             nXLayers = nLayers;
-                            resX = x;//resX.conv({3,3,nLayers,1,2,2,"same"});
                         }else{
-                            resX = resX.batchNormalize({1.0e-8});
-                            resX = resX.relu();
-                            resX = resX.conv({3,3,nLayers,1,1,1,"same"});
+                            //resX = resX.batchNormalize({1.0e-8});
+                            //resX = resX.relu();
+                            //resX = resX.conv({3,3,nLayers,1,1,1,"same",nullptr});
                         }
-                        resX = resX.batchNormalize({1.0e-8});
-                        resX = resX.relu();
-                        resX = resX.conv({3,3,nLayers,1,1,1,"same"});
-                        x = x + resX;
+                        //resX = resX.batchNormalize({1.0e-8});
+                        //resX = resX.relu();
+                        //resX = resX.conv({3,3,nLayers,1,1,1,"same",nullptr});
+                        //x = x + resX;
                     }
                     return x;
                 }
@@ -376,12 +375,12 @@ SNnNetwork CNnNetwork::createLeNet(){
             SNnVariable x = spIn;
             x = x.conv({5,5,6,1,1,1,"same", nullptr});
             x = x.pool({2,2,2,2});
-            x = x.sigmod();
+            x = x.relu();
             x = x.conv({5,5,16,1,1,1,nullptr,nullptr});
             x = x.pool({2,2,2,2});
-            x = x.sigmod();
-            x = x.dense({120, "sigmod"});
-            x = x.dense({84, "sigmod"});
+            x = x.relu();
+            x = x.dense({120, "relu"});
+            x = x.dense({84, "relu"});
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();

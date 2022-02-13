@@ -380,6 +380,7 @@ public:
         }else{
             m_nOutHeight = (m_nInputHeight - m_nPoolHeight) / m_nStrideHeight + 1;
             m_nOutWidth = (m_nInputWidth - m_nPoolWidth) / m_nStrideWidth + 1;
+            m_padding.left = m_padding.right = m_padding.top = m_padding.bottom = 0;
         }
         m_nOutTensorSize = m_nOutHeight * m_nOutWidth * m_nInputLayer;
         m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;

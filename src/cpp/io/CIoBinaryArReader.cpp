@@ -14,9 +14,11 @@ int CIoBinaryArReader::arBlockArray(const char* szName, IArrayVisitee* pVisitee,
         m_stream.read((char*)&nEles, sizeof(int));
         if(nEles) {
             int nBuffer = nEles*pVisitee->getElementBytes();
-            char sBuffer[nBuffer];
+            CTaker<char*> sBuffer(new char[nBuffer], [](char* ptr){
+                delete[] ptr;
+            });
             m_stream.read(sBuffer, nBuffer);
-            pVisitee->setArray(nEles, (const void*)sBuffer);
+            pVisitee->setArray(nEles, (const void*)(char*)sBuffer);
         }
     }
     return sCtx.success();
