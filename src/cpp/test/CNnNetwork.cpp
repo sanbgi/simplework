@@ -216,10 +216,10 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;
             x = x.conv({5,5,32});
-            x = x.pool({2,2,2,2});
+            x = x.maxpool({2,2,2,2});
             x = x.batchNormalize(PNnBatchNormalize());
             x = x.conv({7,7,64});
-            x = x.pool({2,2,2,2});
+            x = x.maxpool({2,2,2,2});
             x = x.batchNormalize(PNnBatchNormalize());
             x = x.dense({576});
             x = x.dense({10, "softmax"});
@@ -282,21 +282,6 @@ SNnNetwork CNnNetwork::createNetwork() {
     return SNnNetwork();
 }
 
-SNnNetwork CNnNetwork::createShiftNetwork() {
-    std::vector<SNnNetwork> arrNets;
-    /*
-    arrNets.push_back(SNnNetwork::createShiftConv(5,5,8,8,"same"));
-    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createShiftConv(7,7,32,8));
-    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createDense(576));
-    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
-    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
-    
-    SNnNetwork::saveFile("D://snetwork.bin", spNet);
-    return SNnNetwork::loadFile("D://snetwork.bin");*/
-    return SNnNetwork();
-}
 
 SNnNetwork CNnNetwork::createResNetwork() {
     int pDimSizes[] = {28, 28};
@@ -304,6 +289,7 @@ SNnNetwork CNnNetwork::createResNetwork() {
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
 
+            /*()
             struct ResNet {
                 static SNnVariable resBlock2(SNnVariable x, int n, int nUpDimension=2){
                     SDimension spInDimension = x.dimension();
@@ -312,19 +298,21 @@ SNnNetwork CNnNetwork::createResNetwork() {
                     while(n-->0) {
                         SNnVariable resX = x;
                         if(nXLayers != nLayers) {
-                            x = x.pool({2,2,2,2,"same"});
-                            x = x.conv({3,3,nLayers,1,1,1,"same","relu"});
-                            //resX = resX.conv({3,3,nLayers,1,2,2,"same",nullptr});
+                            x = x.maxpool({2,2,2,2,"same"});
+                            x = x.conv({3,3,nLayers,1,1,1,"same",nullptr});
+                            x = x.batchNormalize({1.0e-8});
                             nXLayers = nLayers;
+
+                            resX = x.relu();//resX.conv({3,3,nLayers,1,2,2,"same",nullptr});
                         }else{
-                            //resX = resX.batchNormalize({1.0e-8});
-                            //resX = resX.relu();
-                            //resX = resX.conv({3,3,nLayers,1,1,1,"same",nullptr});
+                            resX = resX.conv({3,3,nLayers,1,1,1,"same",nullptr});
+                            resX = resX.batchNormalize({1.0e-8});
+                            resX = resX.relu();
                         }
-                        //resX = resX.batchNormalize({1.0e-8});
-                        //resX = resX.relu();
-                        //resX = resX.conv({3,3,nLayers,1,1,1,"same",nullptr});
-                        //x = x + resX;
+                        resX = resX.conv({3,3,nLayers,1,1,1,"same",nullptr});
+                        resX = resX.batchNormalize({1.0e-8});
+                        x = x + resX;
+                        x = x.relu();
                     }
                     return x;
                 }
@@ -335,7 +323,27 @@ SNnNetwork CNnNetwork::createResNetwork() {
             x = ResNet::resBlock2(x,1);
             x = ResNet::resBlock2(x,1);
             x = ResNet::resBlock2(x,1);
-            x = x.gap();
+            */
+
+            struct ResNet {
+                static SNnVariable resBlock(SNnVariable x, int nConvSize, int nLayers){
+
+                    SNnVariable r = x.conv({nConvSize,nConvSize,nLayers,1,1,1,"same",nullptr});
+                    r = r.batchNormalize({1.0e-8});
+                    r = r.relu();
+
+                    r = r.maxpool({2,2,2,2});
+                    x = x.avgpool({2,2,2,2});
+                    x = x.join(r);
+
+                    return x;
+                }
+            };
+            SNnVariable x = spIn;
+            x = ResNet::resBlock(x, 5, 32);
+            x = ResNet::resBlock(x, 3, 64);
+            x = ResNet::resBlock(x, 3, 128);
+            x = ResNet::resBlock(x, 3, 256);
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();
@@ -374,10 +382,10 @@ SNnNetwork CNnNetwork::createLeNet(){
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;
             x = x.conv({5,5,6,1,1,1,"same", nullptr});
-            x = x.pool({2,2,2,2});
+            x = x.maxpool({2,2,2,2});
             x = x.relu();
             x = x.conv({5,5,16,1,1,1,nullptr,nullptr});
-            x = x.pool({2,2,2,2});
+            x = x.maxpool({2,2,2,2});
             x = x.relu();
             x = x.dense({120, "relu"});
             x = x.dense({84, "relu"});

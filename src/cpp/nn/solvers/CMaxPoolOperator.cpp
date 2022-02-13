@@ -1,10 +1,10 @@
-#ifndef __SimpleWork_NN_Operators_CPoolOperator_h__
-#define __SimpleWork_NN_Operators_CPoolOperator_h__
+#ifndef __SimpleWork_NN_Operators_CMaxPoolOperator_h__
+#define __SimpleWork_NN_Operators_CMaxPoolOperator_h__
 
 #include "operator.h"
 
-static SCtx sCtx("PoolOperator");
-class CPoolOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+static SCtx sCtx("MaxPoolOperator");
+class CMaxPoolOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
         SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
@@ -12,10 +12,10 @@ class CPoolOperator : public CNnSolver, public INnAtomSolver, public IArchivable
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
-        CPoolOperator* pThis = (CPoolOperator*)pParameters;
+        CMaxPoolOperator* pThis = (CMaxPoolOperator*)pParameters;
             
-        int nPoolWidth = pThis->m_nPoolWidth;
-        int nPoolHeight = pThis->m_nPoolHeight;
+        int nMaxPoolWidth = pThis->m_nMaxPoolWidth;
+        int nMaxPoolHeight = pThis->m_nMaxPoolHeight;
         int nOutWidth = pThis->m_nOutWidth;
         int nOutHeight = pThis->m_nOutHeight;
         int nTensor = nBatchs;
@@ -49,7 +49,7 @@ public:
         //  则，卷积矩阵调整到有效的开始位置，而输入矩阵指针也同时指向有效的地址，与卷积矩阵开始位
         //  置一致。
         //
-        CRect2D rcPool, rcPading = pThis->m_padding;
+        CRect2D rcMaxPool, rcPading = pThis->m_padding;
         int nOffset = rcPading.left * nInputWstep + rcPading.top * nInputHstep;
         it.pIn = it.pIn - nOffset;
         int nStrideHeight = pThis->m_nStrideHeight;
@@ -78,15 +78,15 @@ public:
                     //      1,  输入矩阵的起始坐标也需要下移
                     //      2,  权重的其实位置也许要同步下移到实际的其实位置
                     //
-                    rcPool.top = rcPading.top - iOutY * nStrideHeight;
-                    rcPool.bottom = nPoolHeight;
-                    it.pIn += rcPool.top * nInputHstep;
+                    rcMaxPool.top = rcPading.top - iOutY * nStrideHeight;
+                    rcMaxPool.bottom = nMaxPoolHeight;
+                    it.pIn += rcMaxPool.top * nInputHstep;
                 }else if(iOutY > iMaxCompleteHeight) {
-                    rcPool.top = 0;
-                    rcPool.bottom = nPoolHeight + (nOutHeight - 1 - iOutY) * nStrideHeight - rcPading.bottom;
+                    rcMaxPool.top = 0;
+                    rcMaxPool.bottom = nMaxPoolHeight + (nOutHeight - 1 - iOutY) * nStrideHeight - rcPading.bottom;
                 }else{
-                    rcPool.top = 0;
-                    rcPool.bottom = nPoolHeight;
+                    rcMaxPool.top = 0;
+                    rcMaxPool.bottom = nMaxPoolHeight;
                 }
 
                 for( int iOutX=0; iOutX < nOutWidth; iOutX++) {
@@ -101,15 +101,15 @@ public:
                         //      1，输入矩阵的起始坐标也需要右移
                         //      2，权重矩阵其实坐标也需要右移到对应的开始位置
                         //
-                        rcPool.left = rcPading.left - iOutX * nStrideWidth;
-                        rcPool.right = nPoolWidth;
-                        it.pIn += rcPool.left * nInputWstep;
+                        rcMaxPool.left = rcPading.left - iOutX * nStrideWidth;
+                        rcMaxPool.right = nMaxPoolWidth;
+                        it.pIn += rcMaxPool.left * nInputWstep;
                     }else if(iOutX > iMaxCompleteWidth) {
-                        rcPool.left = 0;
-                        rcPool.right = nPoolWidth + (nOutWidth - 1 - iOutX) * nStrideWidth - rcPading.right;
+                        rcMaxPool.left = 0;
+                        rcMaxPool.right = nMaxPoolWidth + (nOutWidth - 1 - iOutX) * nStrideWidth - rcPading.right;
                     }else{
-                        rcPool.left = 0;
-                        rcPool.right = nPoolWidth;
+                        rcMaxPool.left = 0;
+                        rcMaxPool.right = nMaxPoolWidth;
                     }
 
                     for( int iLayer = 0; iLayer < nLayer; iLayer++) {
@@ -122,10 +122,10 @@ public:
                         //
                         //  从输入中找到最大的那个值
                         //  
-                        for( int iPoolY=rcPool.top; iPoolY<rcPool.bottom; iPoolY++) {
+                        for( int iMaxPoolY=rcMaxPool.top; iMaxPoolY<rcMaxPool.bottom; iMaxPoolY++) {
                             CItOutVariables varConvYBackup;
                             varConvYBackup.pIn = it.pIn;
-                            for( int iPoolX=rcPool.left; iPoolX<rcPool.right; iPoolX++) {
+                            for( int iMaxPoolX=rcMaxPool.left; iMaxPoolX<rcMaxPool.right; iMaxPoolX++) {
                                 if( (*it.pIn) > dMax) {
                                     dMax = (*it.pIn);
                                 }
@@ -152,14 +152,14 @@ public:
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CPoolOperator* pThis = (CPoolOperator*)pParameters;
+        CMaxPoolOperator* pThis = (CMaxPoolOperator*)pParameters;
             
         int nLayer = pThis->m_nInputLayer;
         int nInputWidth = pThis->m_nInputWidth;
         int nInputHeight = pThis->m_nInputHeight;
         int nInputLayer = pThis->m_nInputLayer;
-        int nPoolWidth = pThis->m_nPoolWidth;
-        int nPoolHeight = pThis->m_nPoolHeight;
+        int nMaxPoolWidth = pThis->m_nMaxPoolWidth;
+        int nMaxPoolHeight = pThis->m_nMaxPoolHeight;
         int nOutWidth = pThis->m_nOutWidth;
         int nOutHeight = pThis->m_nOutHeight;
 
@@ -186,7 +186,7 @@ public:
             (Q*)outVar.devia,
         };
 
-        CRect2D rcPool, rcPading = pThis->m_padding;
+        CRect2D rcMaxPool, rcPading = pThis->m_padding;
         int nOffset = rcPading.left * nInputWstep + rcPading.top * nInputHstep;
         it.pIn = it.pIn - nOffset;
         it.pInDeviation = it.pInDeviation - nOffset;
@@ -218,16 +218,16 @@ public:
                     //      1,  输入矩阵的起始坐标也需要下移
                     //      2,  权重的其实位置也许要同步下移到实际的其实位置
                     //
-                    rcPool.top = rcPading.top - iOutY * nStrideHeight;
-                    rcPool.bottom = nPoolHeight;
-                    it.pIn += rcPool.top * nInputHstep;
-                    it.pInDeviation += rcPool.top * nInputHstep;
+                    rcMaxPool.top = rcPading.top - iOutY * nStrideHeight;
+                    rcMaxPool.bottom = nMaxPoolHeight;
+                    it.pIn += rcMaxPool.top * nInputHstep;
+                    it.pInDeviation += rcMaxPool.top * nInputHstep;
                 }else if(iOutY > iMaxCompleteHeight) {
-                    rcPool.top = 0;
-                    rcPool.bottom = nPoolHeight + (nOutHeight - 1 - iOutY) * nStrideHeight - rcPading.bottom;
+                    rcMaxPool.top = 0;
+                    rcMaxPool.bottom = nMaxPoolHeight + (nOutHeight - 1 - iOutY) * nStrideHeight - rcPading.bottom;
                 }else{
-                    rcPool.top = 0;
-                    rcPool.bottom = nPoolHeight;
+                    rcMaxPool.top = 0;
+                    rcMaxPool.bottom = nMaxPoolHeight;
                 }
 
                 for( int iOutX=0; iOutX < nOutWidth; iOutX++) {
@@ -243,16 +243,16 @@ public:
                         //      1，输入矩阵的起始坐标也需要右移
                         //      2，权重矩阵其实坐标也需要右移到对应的开始位置
                         //
-                        rcPool.left = rcPading.left - iOutX * nStrideWidth;
-                        rcPool.right = nPoolWidth;
-                        it.pIn += rcPool.left * nInputWstep;
-                        it.pInDeviation += rcPool.left * nInputWstep;
+                        rcMaxPool.left = rcPading.left - iOutX * nStrideWidth;
+                        rcMaxPool.right = nMaxPoolWidth;
+                        it.pIn += rcMaxPool.left * nInputWstep;
+                        it.pInDeviation += rcMaxPool.left * nInputWstep;
                     }else if(iOutX > iMaxCompleteWidth) {
-                        rcPool.left = 0;
-                        rcPool.right = nPoolWidth + (nOutWidth - 1 - iOutX) * nStrideWidth - rcPading.right;
+                        rcMaxPool.left = 0;
+                        rcMaxPool.right = nMaxPoolWidth + (nOutWidth - 1 - iOutX) * nStrideWidth - rcPading.right;
                     }else{
-                        rcPool.left = 0;
-                        rcPool.right = nPoolWidth;
+                        rcMaxPool.left = 0;
+                        rcMaxPool.right = nMaxPoolWidth;
                     }
 
                     for( int iLayer = 0; iLayer < nLayer; iLayer++) {
@@ -267,11 +267,11 @@ public:
                         //
                         //  从输入中找到最大的那个点，作为反向传到的点
                         //  
-                        for( int iPoolY=rcPool.top; iPoolY<rcPool.bottom; iPoolY++) {
+                        for( int iMaxPoolY=rcMaxPool.top; iMaxPoolY<rcMaxPool.bottom; iMaxPoolY++) {
                             CItOutVariables varConvYBackup;
                             varConvYBackup.pIn = it.pIn;
                             varConvYBackup.pInDeviation = it.pInDeviation;
-                            for( int iPoolX=rcPool.left; iPoolX<rcPool.right; iPoolX++) {
+                            for( int iMaxPoolX=rcMaxPool.left; iMaxPoolX<rcMaxPool.right; iMaxPoolX++) {
                                 if( (*it.pIn) > dMax) {
                                     dMax = (*it.pIn);
                                     pExpectDelta = it.pInDeviation;
@@ -330,15 +330,15 @@ public:
             return sCtx.error("缺少初始化参数");
         }
 
-        const PNnPool* pPool = CData<PNnPool>(*pData);
-        if(pPool == nullptr) {
+        const PNnPool* pMaxPool = CData<PNnPool>(*pData);
+        if(pMaxPool == nullptr) {
             return sCtx.error("错误的初始化参数");
         }
 
-        m_nPoolWidth = pPool->nWidth;
-        m_nPoolHeight = pPool->nHeight;
-        m_nStrideWidth = pPool->nStrideWidth;
-        m_nStrideHeight = pPool->nStrideHeight;
+        m_nMaxPoolWidth = pMaxPool->nWidth;
+        m_nMaxPoolHeight = pMaxPool->nHeight;
+        m_nStrideWidth = pMaxPool->nStrideWidth;
+        m_nStrideHeight = pMaxPool->nStrideHeight;
 
         SDimension spDim1 = pInVars[0].dimension();
         if(spDim1.size() < 2) {
@@ -350,7 +350,7 @@ public:
         int nBatchs = 1;
         int nInputHeight = pDimSizes[0];
         int nInputWidth = pDimSizes[1];
-        if( nInputHeight < m_nPoolHeight || nInputWidth < m_nPoolWidth ) {
+        if( nInputHeight < m_nMaxPoolHeight || nInputWidth < m_nMaxPoolWidth ) {
             return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
         }
 
@@ -368,18 +368,18 @@ public:
             pOutDimSizes[i] = pDimSizes[i];
             m_nInputLayer *= pDimSizes[i];
         }
-        if( pPool != nullptr && pPool->szPadding != nullptr && string(pPool->szPadding) == "same" ) {
+        if( pMaxPool != nullptr && pMaxPool->szPadding != nullptr && string(pMaxPool->szPadding) == "same" ) {
             m_nOutHeight = (m_nInputHeight - 1) / m_nStrideHeight + 1;
             m_nOutWidth = (m_nInputWidth - 1) / m_nStrideWidth + 1;
-            int nPadW = (m_nOutWidth - 1) * m_nStrideWidth + pPool->nWidth - m_nInputWidth;
-            int nPadH = (m_nOutHeight - 1) * m_nStrideHeight + pPool->nHeight - m_nInputHeight;
+            int nPadW = (m_nOutWidth - 1) * m_nStrideWidth + pMaxPool->nWidth - m_nInputWidth;
+            int nPadH = (m_nOutHeight - 1) * m_nStrideHeight + pMaxPool->nHeight - m_nInputHeight;
             m_padding.left = nPadW / 2;
             m_padding.right = nPadW - m_padding.left;
             m_padding.top = nPadH / 2;
             m_padding.bottom = nPadH - m_padding.top;
         }else{
-            m_nOutHeight = (m_nInputHeight - m_nPoolHeight) / m_nStrideHeight + 1;
-            m_nOutWidth = (m_nInputWidth - m_nPoolWidth) / m_nStrideWidth + 1;
+            m_nOutHeight = (m_nInputHeight - m_nMaxPoolHeight) / m_nStrideHeight + 1;
+            m_nOutWidth = (m_nInputWidth - m_nMaxPoolWidth) / m_nStrideWidth + 1;
             m_padding.left = m_padding.right = m_padding.top = m_padding.bottom = 0;
         }
         m_nOutTensorSize = m_nOutHeight * m_nOutWidth * m_nInputLayer;
@@ -392,11 +392,11 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "PoolSolver"; } 
+    const char* getClassName() { return "MaxPoolSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
-        ar.arBlock("poolwidth", m_nPoolWidth);
-        ar.arBlock("poolheight", m_nPoolHeight);
+        ar.arBlock("MaxPoolwidth", m_nMaxPoolWidth);
+        ar.arBlock("MaxPoolheight", m_nMaxPoolHeight);
         ar.arBlock("stridewidth", m_nStrideWidth);
         ar.arBlock("strideheight", m_nStrideHeight);
         ar.arBlock("padding", m_padding);
@@ -411,11 +411,11 @@ private://IArchivable
     }
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.PoolSolver"; }
+    static const char* __getClassKey() { return "sw.nn.MaxPoolSolver"; }
 
 private:
-    int m_nPoolWidth;
-    int m_nPoolHeight;
+    int m_nMaxPoolWidth;
+    int m_nMaxPoolHeight;
     int m_nStrideWidth;
     int m_nStrideHeight;
 
@@ -433,7 +433,7 @@ private:
     int m_nOutTensorSize;
 };
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CPoolOperator, CPoolOperator::__getClassKey())
-static SNnSolverRegister s_Register("pool", CNnSolver::createSolver<CPoolOperator>);
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CMaxPoolOperator, CMaxPoolOperator::__getClassKey())
+static SNnSolverRegister s_Register("maxpool", CNnSolver::createSolver<CMaxPoolOperator>);
 
-#endif//__SimpleWork_NN_Operators_CPoolOperator_h__
+#endif//__SimpleWork_NN_Operators_CMaxPoolOperator_h__

@@ -5,6 +5,9 @@
 using namespace sw;
 using namespace std;
 
+//
+// 参考：https://zhuanlan.zhihu.com/p/31852747
+//
 static SCtx sCtx("CResNetModule");
 class CResNetModule : public CObject, public INnModule, public IArchivable{
 
@@ -44,18 +47,22 @@ SNnVariable CResNetModule::resBlock2(SNnVariable x, int n, int nUpDimension){
     while(n-->0) {
         SNnVariable resX = x;
         if(nXLayers != nLayers) {
-            resX = resX.conv({3,3,nLayers,1,2,2,"same"});
-            x = x.conv({1,1,nLayers,1,2,2,"same","relu"});
+            x = x.conv({1,1,nLayers,1,2,2,"same",nullptr});
+            x = x.batchNormalize({1.0e-8});
             nXLayers = nLayers;
-        }else{
+
+            resX = resX.conv({3,3,nLayers,1,2,2,"same"});
             resX = resX.batchNormalize({1.0e-8});
             resX = resX.relu();
+        }else{
             resX = resX.conv({3,3,nLayers,1,1,1,"same"});
+            resX = resX.batchNormalize({1.0e-8});
+            resX = resX.relu();
         }
         resX = resX.batchNormalize({1.0e-8});
-        resX = resX.relu();
         resX = resX.conv({3,3,nLayers,1,1,1,"same"});
         x = x + resX;
+        x = x.relu();
     }
     return x;
 }
@@ -67,18 +74,45 @@ SNnVariable CResNetModule::resBlock3(SNnVariable x, int n, int nUpDimension){
     while(n-->0) {
         SNnVariable resX = x;
         if(nXLayers != nLayers) {
-            resX = resX.conv({1,1,nLayers/4,1,2,2,"same"});
-            x = x.conv({1,1,nLayers,1,2,2,"same","relu"});
+            x = x.conv({1,1,nLayers,1,2,2,"same",nullptr});
+            x = x.batchNormalize({1.0e-8});
             nXLayers = nLayers;
-        }else{
+
+            resX = resX.conv({1,1,nLayers/4,1,2,2,"same"});
             resX = resX.batchNormalize({1.0e-8});
             resX = resX.relu();
+
+            /**
+             * 个人推荐，
+
+                //池化层缩减尺寸
+                x = x.pool({2,2,2,2});
+                x = x.linear({nLayers,false,nullptr});
+                x = x.batchNormalize({1.0e-8});
+                nXLayers = nLayers;
+
+                //如果有缩减层数需求，则通过线性变化缩减尺寸
+                resX = x;
+                if(nXLayers != nLayers/4) {
+                    resX = resX.linear({nLayers/4,false,nullptr});
+                    resX = resX.batchNormalize({1.0e-8});
+                    resX = resX.relu();
+                }
+             * 
+             */
+        }else{
             resX = resX.conv({1,1,nLayers/4,1,1,1,"same"});
+            resX = resX.batchNormalize({1.0e-8});
+            resX = resX.relu();
         }
+        resX = resX.conv({3,3,nLayers/4,1,1,1,"same",nullptr});
         resX = resX.batchNormalize({1.0e-8});
-        resX = resX.relu();
+        x = x.relu();
+
         resX = resX.conv({1,1,nLayers,1,1,1, "same"});
+        resX = resX.batchNormalize({1.0e-8});
         x = x + resX;
+        x = x.relu();
     }
     return x;
 }
@@ -90,38 +124,38 @@ int CResNetModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& 
     }
     SNnVariable x = spInVars[0];
     x = x.conv({7,7,64,1,2,2,"same","relu"});
-    x = x.pool({3,3,2,2,"same"});
+    x = x.maxpool({3,3,2,2,"same"});
     int nResNet = 50;
     switch(nResNet) {
     case 18:
         x = resBlock2(x,2,1);
-        x = resBlock2(x,2);
-        x = resBlock2(x,2);
-        x = resBlock2(x,2);
+        x = resBlock2(x,2,2);
+        x = resBlock2(x,2,2);
+        x = resBlock2(x,2,2);
         break;  
     case 34:
         x = resBlock2(x,3,1);
-        x = resBlock2(x,4);
-        x = resBlock2(x,6);
-        x = resBlock2(x,3);
+        x = resBlock2(x,4,2);
+        x = resBlock2(x,6,2);
+        x = resBlock2(x,3,2);
         break;  
     case 50:
         x = resBlock3(x,3,4);
-        x = resBlock3(x,4);
-        x = resBlock3(x,6);
-        x = resBlock3(x,3);
+        x = resBlock3(x,4,2);
+        x = resBlock3(x,6,2);
+        x = resBlock3(x,3,2);
         break;
     case 101:
         x = resBlock3(x,3,4);
-        x = resBlock3(x,4);
-        x = resBlock3(x,23);
-        x = resBlock3(x,3);
+        x = resBlock3(x,4,2);
+        x = resBlock3(x,23,2);
+        x = resBlock3(x,3,2);
         break;  
     case 152:
         x = resBlock3(x,3,4);
-        x = resBlock3(x,8);
-        x = resBlock3(x,36);
-        x = resBlock3(x,3);
+        x = resBlock3(x,8,2);
+        x = resBlock3(x,36,2);
+        x = resBlock3(x,3,2);
         break;  
     }
     x = x.gap();

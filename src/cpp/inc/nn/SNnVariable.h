@@ -90,11 +90,17 @@ public:
     SNnVariable sigmod() const { return solveOp("sigmod"); }
     SNnVariable softmax() const { return solveOp("softmax"); }
     SNnVariable gap() const { return solveOp("gap"); }
+    SNnVariable join(const SNnVariable& sp) const {
+        return solveOp("join", *this, sp);
+    }
     SNnVariable dense(const PNnDense& rDense) const {
         return solveOp("dense", *this, (const PData*)CData<PNnDense>(rDense));
     }
-    SNnVariable pool(const PNnPool& rPool) const {
-        return solveOp("pool", *this, (const PData*)CData<PNnPool>(rPool));
+    SNnVariable maxpool(const PNnPool& rPool) const {
+        return solveOp("maxpool", *this, (const PData*)CData<PNnPool>(rPool));
+    }
+    SNnVariable avgpool(const PNnPool& rPool) const {
+        return solveOp("avgpool", *this, (const PData*)CData<PNnPool>(rPool));
     }
     SNnVariable conv(const PNnConv& rConv) const {
         return solveOp("conv", *this, (const PData*)CData<PNnConv>(rConv));

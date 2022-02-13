@@ -62,7 +62,7 @@ int CPoolModule::eval(int nInVars, const SNnVariable pInVars[], SNnVariable& spO
     if(nInVars != 1) {
         return sCtx.error("池化单元输入参数必须为一个");
     }
-    spOutVar = pInVars[0].pool({ m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight, m_strPaddingMode.c_str() });
+    spOutVar = pInVars[0].maxpool({ m_nWidth, m_nHeight, m_nStrideWidth, m_nStrideHeight, m_strPaddingMode.c_str() });
     return sCtx.success();
 }
 

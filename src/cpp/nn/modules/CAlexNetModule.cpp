@@ -54,13 +54,13 @@ int CAlexNetModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable&
     }
 
     x = x.conv({11,11,96,1,4,4,nullptr,"relu"});
-    x = x.pool({3,3,2,2});
+    x = x.maxpool({3,3,2,2});
     x = x.conv({5,5,256,1,1,1,"same","relu"});
-    x = x.pool({3,3,2,2});
+    x = x.maxpool({3,3,2,2});
     x = x.conv({3,3,384,1,1,1,"same","relu"});
     x = x.conv({3,3,384,1,1,1,"same","relu"});
     x = x.conv({3,3,256,1,1,1,"same","relu"});
-    x = x.pool({3,3,2,2});
+    x = x.maxpool({3,3,2,2});
     x = x.dense({4096, "relu"});
     x = x.dense({4096, "relu"});
     x = x.dense({1000, "softmax"});
