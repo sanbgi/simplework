@@ -10,6 +10,7 @@
 #include "PVector.h"
 #include "STensor.h"
 #include "SDimension.h"
+#include "STensorEquation.h"
 #include "STensorSolver.h"
 #include "SMathFactory.h"
 #include "SMathSolver.h"

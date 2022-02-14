@@ -43,7 +43,7 @@ public:
                 m_idType = CBasicData<Q>::getStaticType();
             }
 
-            void initData(CTaker<void*>& spTaker, int nSize, void* pData) {
+            void initData(CTaker<void*>& spTaker, int nSize, const void* pData) {
                 spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
                 if(pData != nullptr) {
                     Q* pDest = (Q*)(void*)spTaker;
@@ -77,7 +77,7 @@ public:
                 m_idType = CData<Q>::getStaticType();
             }
 
-            void initData(CTaker<void*>& spTaker, int nSize, void* pData) {
+            void initData(CTaker<void*>& spTaker, int nSize, const void* pData) {
                 spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
                 if(pData != nullptr) {
                     Q* pDest = (Q*)(void*)spTaker;
@@ -119,12 +119,12 @@ public:
         return sCtx.success();
     }
 
-    virtual void initData(CTaker<void*>& spTaker, int nSize, void* pData) = 0;
+    virtual void initData(CTaker<void*>& spTaker, int nSize, const void* pData) = 0;
     virtual void* getDataPtr(CTaker<void*>& spTaker, int iPos) = 0;
     virtual void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) = 0;
 };
 
-int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, void* pData) {
+int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, const void* pData) {
     release();
     pTypeAssist->initData(m_spElementData, nSize, pData);
     m_pTypeAssist = pTypeAssist;
@@ -132,7 +132,7 @@ int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, void* pData) {
     return SError::ERRORTYPE_SUCCESS;
 }
 
-int CTensor::initTensor(CTypeAssist* pTypeAssist, const SDimension& spDimVector, int nElementSize, void* pElementData) {
+int CTensor::initTensor(CTypeAssist* pTypeAssist, const SDimension& spDimVector, int nElementSize, const void* pElementData) {
     if( spDimVector ) {
         if(nElementSize!= spDimVector->getElementSize()) {
             return SError::ERRORTYPE_FAILURE;
@@ -193,7 +193,7 @@ void CTensor::release() {
     m_nElementSize = 0;
 }
 
-int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, unsigned int idElementType, int nElementSize, void* pElementData) {
+int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, unsigned int idElementType, int nElementSize, const void* pElementData) {
     CTypeAssist* pTypeAssist = CTypeAssist::getTypeAssist(idElementType);
     if(pTypeAssist == nullptr) {
         return sCtx.error("不支持指定类型的张量");

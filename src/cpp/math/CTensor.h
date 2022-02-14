@@ -27,8 +27,8 @@ public://Factory
     static const char* __getClassKey() { return "sw.math.Tensor"; }
 
 public://ITensor
-    int initVector(CTypeAssist* pTypeAssist, int nSize, void* pData);
-    int initTensor(CTypeAssist* pTypeAssist, const SDimension& spDimVector, int nElementSize, void* pElementData = nullptr);
+    int initVector(CTypeAssist* pTypeAssist, int nSize, const void* pData);
+    int initTensor(CTypeAssist* pTypeAssist, const SDimension& spDimVector, int nElementSize, const void* pElementData = nullptr);
     SDimension& getDimVector();
 
 public://ITensor
@@ -45,7 +45,7 @@ public:
     void release();
 
 public:
-    static int createTensor(STensor& spTensor, const SDimension* pDimension, unsigned int idElementType, int nElementSize, void* pElementData);
+    static int createTensor(STensor& spTensor, const SDimension* pDimension, unsigned int idElementType, int nElementSize, const void* pElementData);
     static int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData);
 
 protected:

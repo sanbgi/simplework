@@ -90,6 +90,7 @@ public:
     SNnVariable sigmod() const { return solveOp("sigmod"); }
     SNnVariable softmax() const { return solveOp("softmax"); }
     SNnVariable gap() const { return solveOp("gap"); }
+    SNnVariable gmp() const { return solveOp("gmp"); }
     SNnVariable join(const SNnVariable& sp) const {
         return solveOp("join", *this, sp);
     }

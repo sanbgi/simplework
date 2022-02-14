@@ -1,10 +1,10 @@
-#ifndef __SimpleWork_NN_Operators_CGPoolOperator_h__
-#define __SimpleWork_NN_Operators_CGPoolOperator_h__
+#ifndef __SimpleWork_NN_Operators_CGMPOperator_h__
+#define __SimpleWork_NN_Operators_CGMPOperator_h__
 
 #include "operator.h"
 
-static SCtx sCtx("CGPoolOperator");
-class CGPoolOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+static SCtx sCtx("CGMPOperator");
+class CGMPOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
         SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
@@ -12,13 +12,13 @@ class CGPoolOperator : public CNnSolver, public INnAtomSolver, public IArchivabl
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
-        CGPoolOperator* pThis = (CGPoolOperator*)pParameters;
+        CGMPOperator* pThis = (CGMPOperator*)pParameters;
         int itPoolWidth;
         int nPoolWidth = pThis->m_nPoolWidth;
         int nOutBatchSize = outVar.size / nBatchs;
         int nInBatchSize = nPoolWidth * nOutBatchSize;
 
-        Q sumPlane, xPlane = 1.0/nPoolWidth;
+        Q maxPlane;
         Q* pItIn = (Q*)inVars[0].data;
         Q* pItPlaneIn;
         Q* pItOut = (Q*)outVar.data;
@@ -26,14 +26,15 @@ public:
         while(nBatchs-->0) {
             pItOutEnd = pItOut + nOutBatchSize;
             while(pItOut < pItOutEnd) {
-                sumPlane = 0;
-                pItPlaneIn = pItIn;
-                itPoolWidth = nPoolWidth;
+                maxPlane = *pItIn;
+                pItPlaneIn = pItIn+nOutBatchSize;
+                itPoolWidth = nPoolWidth-1;
                 while(itPoolWidth-->0) {
-                    sumPlane += *pItPlaneIn;
+                    if(*pItPlaneIn > maxPlane)
+                        maxPlane = *pItPlaneIn;
                     pItPlaneIn += nOutBatchSize;
                 }
-                *pItOut = sumPlane*xPlane;
+                *pItOut = maxPlane;
                 pItIn++,pItOut++;
             }
             pItIn += nInBatchSize - nOutBatchSize;
@@ -42,27 +43,40 @@ public:
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CGPoolOperator* pThis = (CGPoolOperator*)pParameters;
+        CGMPOperator* pThis = (CGMPOperator*)pParameters;
         int itPoolWidth;
         int nPoolWidth = pThis->m_nPoolWidth;
         int nOutBatchSize = outVar.size / nBatchs;
         int nInBatchSize = nPoolWidth * nOutBatchSize;
-        Q dDevia, xPlane = 1.0/nPoolWidth;
+        Q maxPlane;
+        Q* pInDevia;
+
+        Q* pItIn = (Q*)inVars[0].data;
+        Q* pItPlaneIn;
         Q* pItInDevia = (Q*)inVars[0].devia;
-        Q* pItPlaneDevia;
+        Q* pItPlaneInDevia;
         Q* pItOutDevia = (Q*)outVar.devia;
         Q* pItOutDeviaEnd;
         while(nBatchs-->0) {
             pItOutDeviaEnd = pItOutDevia + nOutBatchSize;
             while(pItOutDevia<pItOutDeviaEnd) {
-                itPoolWidth = nPoolWidth;
-                dDevia = *pItOutDevia * xPlane;
-                pItPlaneDevia = pItInDevia;
+                maxPlane = *pItIn;
+                pInDevia = pItInDevia;
+                pItPlaneIn = pItIn + nOutBatchSize;
+                pItPlaneInDevia = pItInDevia + nOutBatchSize;
+                itPoolWidth = nPoolWidth-1;
                 while(itPoolWidth-->0) {
-                    *pItPlaneDevia += dDevia;
-                    pItPlaneDevia += nOutBatchSize;
+                    if(*pItPlaneIn > maxPlane){
+                        maxPlane = *pItPlaneIn;
+                        pInDevia = pItPlaneInDevia;
+                    }
+
+                    pItPlaneIn += nOutBatchSize;
+                    pItPlaneInDevia += nOutBatchSize;
                 }
-                pItInDevia++, pItOutDevia++;
+
+                *pInDevia += *pItOutDevia;
+                pItIn++, pItInDevia++, pItOutDevia++;
             }
             pItInDevia += nInBatchSize - nOutBatchSize;
         }
@@ -122,7 +136,7 @@ private:
     int m_nPoolWidth;
 };
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CGPoolOperator, CGPoolOperator::__getClassKey())
-static SNnSolverRegister s_Register("gap", CNnSolver::createSolver<CGPoolOperator>);
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CGMPOperator, CGMPOperator::__getClassKey())
+static SNnSolverRegister s_Register("gmp", CNnSolver::createSolver<CGMPOperator>);
 
-#endif//__SimpleWork_NN_Operators_CGPoolOperator_h__
+#endif//__SimpleWork_NN_Operators_CGMPOperator_h__

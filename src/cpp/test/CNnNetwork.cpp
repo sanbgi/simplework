@@ -64,14 +64,22 @@ void CNnNetwork::runLearn() {
             STensor spOutDeviation = spOut - spClassify;
 
             //
-            // 学习更新神经网络
+            // 求均方根
             //
-            STensor spInDeviation = nn.devia(spOut, spOut - spClassify);
+            STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
+            float fRMS = *spRootMeanSquare.data<float>();
+            if( fRMS > 0.02 ) {
+                //
+                // 学习更新神经网络
+                //
+                STensor spInDeviation = nn.devia(spOut, spOut - spClassify);
 
-            //
-            // 更新网络
-            //
-            nn.update(spInDeviation);
+                //
+                // 更新网络
+                //
+                nn.update(spInDeviation);
+            }
+
 
             //
             // 打印一些结果信息
@@ -97,7 +105,7 @@ void CNnNetwork::runLearn() {
                 sumLoss = sumLoss * sumX + delta * (1-sumX);
                 static int t = 0;
                 if( t++ % 10 == 0) {
-                    std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\tsloss:"<< sumLoss 
+                    std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\trms:"<< fRMS 
                                 <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"
                                 << sumAcc << ",\tavgAcc:" << nHit / 10.0 / t  << "\n";
                 }
@@ -115,13 +123,7 @@ void CNnNetwork::runTest() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    SNnNetwork nn = createRnnNetwork();
-    //SNnNetwork nn = createLayerNetwork();
-    //SNnNetwork nn = createTestNetwork();
-    //SNnNetwork nn = createNetwork();
-    //SNnNetwork nn = createRotNetwork();
-    //SNnNetwork nn = createShiftNetwork();
-    //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
+    SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
 
     float sumAcc = 0;
     float sumLoss = 0;
@@ -326,24 +328,23 @@ SNnNetwork CNnNetwork::createResNetwork() {
             */
 
             struct ResNet {
-                static SNnVariable resBlock(SNnVariable x, int nConvSize, int nLayers){
-
-                    SNnVariable r = x.conv({nConvSize,nConvSize,nLayers,1,1,1,"same",nullptr});
+                static SNnVariable resBlock(SNnVariable x, int nConvSize, int nInLayers, int nOutLayers){
+                    SNnVariable r = x.conv({nConvSize,nConvSize,nOutLayers,1,1,1,"same",nullptr});
                     r = r.batchNormalize({1.0e-8});
                     r = r.relu();
-
-                    r = r.maxpool({2,2,2,2});
-                    x = x.avgpool({2,2,2,2});
-                    x = x.join(r);
-
+                    x = r;//r.join(x);
                     return x;
                 }
             };
             SNnVariable x = spIn;
-            x = ResNet::resBlock(x, 5, 32);
-            x = ResNet::resBlock(x, 3, 64);
-            x = ResNet::resBlock(x, 3, 128);
-            x = ResNet::resBlock(x, 3, 256);
+            x = ResNet::resBlock(x, 5, 0, 32);
+            x = x.maxpool({2,2,2,2});
+            x = ResNet::resBlock(x, 3, 32, 64);
+            x = x.maxpool({2,2,2,2});
+            x = ResNet::resBlock(x, 3, 32, 128);
+            x = x.maxpool({2,2,2,2});
+            x = ResNet::resBlock(x, 3, 32, 512);
+            x = x.gmp();
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();
