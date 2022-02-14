@@ -6,6 +6,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+//
+// 数据访问类
+//
 template<typename T> class CVisitor : IVisitor<T> {
 public:
     typedef int (*FVisitor)(T data);

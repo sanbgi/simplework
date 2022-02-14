@@ -77,14 +77,13 @@
 #include "IObject.h"
 #include "SObject.h"
 #include "SCoreFactory.h"
-#include "SData.h"
+
 #include "SCtx.h"
 #include "SPipe.h"
 #include "SError.h"
 #include "SString.h"
 #include "SModule.h"
 #include "SFactory.h"
-
 
 //
 //

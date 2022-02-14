@@ -6,6 +6,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+//
+// 工厂类
+//
 template<typename TObject> class CFactory : public IFactory {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER0
         SIMPLEWORK_INTERFACE_ENTRY(IFactory)

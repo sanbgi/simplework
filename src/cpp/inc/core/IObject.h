@@ -6,6 +6,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+//
+// 对象基础接口
+//
 struct IObject{
 public:
     const static inline char* getInterfaceKey() { return "sw.core.IObject"; }

@@ -7,6 +7,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+//
+// 运行上下文接口
+//
 SIMPLEWORK_INTERFACECLASS_ENTER0(Ctx)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ICtx", 211230)

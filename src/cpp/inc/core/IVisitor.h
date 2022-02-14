@@ -5,6 +5,9 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+//
+// 访问者模式接口
+//
 template<typename T> struct IVisitor {
     virtual int visit(T data) = 0;
 };

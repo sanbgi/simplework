@@ -4,7 +4,6 @@
 #include <typeinfo>
 #include "core.h"
 #include "PData.h"
-#include "SData.h"
 
 #define SIMPLEWORK_PDATAKEY(TValue, name) \
     typedef TValue __TValue; \
@@ -23,7 +22,7 @@ public:
     // 获取当前数据类型
     //
     static unsigned int getStaticType() {
-        static unsigned int s_idType = SData::getTypeIdentifier<TType>();
+        static unsigned int s_idType = SCoreFactory::getFactory()->getTypeIdentifier(TType::__getClassKey());
         return s_idType;
     }
 
@@ -116,7 +115,7 @@ public:
     typedef TValue __TValue;
 
     static unsigned int getStaticType() {
-        static unsigned int s_idType = SData::getTypeIdentifier<CBasicData>();
+        static unsigned int s_idType = SCoreFactory::getFactory()->getTypeIdentifier(__getClassKey());
         return s_idType;
     }
 
