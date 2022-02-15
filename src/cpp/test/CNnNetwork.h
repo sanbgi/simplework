@@ -20,6 +20,9 @@ public:
     static void runLearn();
     static void runTest();
     static void runTestNetwork();
+    static void prepareImageNet();
+    static void runImageNet();
+    static SNnNetwork createResNet();
 };
 
 #endif//__SimpleWork_NeuralWork_H__

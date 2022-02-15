@@ -42,15 +42,15 @@ public:
     }
     T untake() {
         T ret = m_hRes;
-        m_hRes = nullptr;
+        m_hRes = 0;
         m_fUnTake = nullptr;
         return ret;
     }
     void release() {
-        if(m_fUnTake && m_hRes != nullptr) {
+        if(m_fUnTake && m_hRes != 0) {
             (*m_fUnTake)(m_hRes);
             m_fUnTake = nullptr;
-            m_hRes = nullptr;
+            m_hRes = 0;
         }
     }
 

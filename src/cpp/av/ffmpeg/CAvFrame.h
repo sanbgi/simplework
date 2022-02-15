@@ -22,7 +22,6 @@ public:
     static int loadImage(const char* szFileName, SAvFrame& spFrame);
     static int saveImage(const char* szFileName, const SAvFrame& spFrame);
 
-
 public:
     CTaker<AVFrame*> m_spAvFrame;
     CTaker<uint8_t**> m_spPlanes;

@@ -62,6 +62,16 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
         }
         spOut = spOutTensor;
         return sCtx.success();
+    }else if(iInType == CBasicData<int>::getStaticType() ) {
+        int* pSrc = spIn->getDataPtr<int>();
+        float* pDesc = spOutTensor->getDataPtr<float>();
+        for(int i=0; i<nSize; i++) {
+            for( int j=0; j<nClassify; j++) {
+                pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0 : 0.0;
+            }
+        }
+        spOut = spOutTensor;
+        return sCtx.success();
     }
 
     return sCtx.error("不支持的归一化输入类型");

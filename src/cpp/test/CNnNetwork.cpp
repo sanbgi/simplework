@@ -9,8 +9,9 @@ using namespace sw;
 static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
-    runLearn();
+    //runLearn();
     //runTest();
+    runImageNet();
 }
 
 void CNnNetwork::runTestNetwork(){

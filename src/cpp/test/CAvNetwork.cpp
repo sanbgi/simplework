@@ -68,8 +68,8 @@ void CAvNetwork::run() {
 void CAvNetwork::runImage() {
 //ff_load_image
 
-    SAvFrame spImage = SAvFrame::loadImageFile("D://tmp/image.jpeg");
-    SAvFrame::saveImageFile("D://tmp/image_saved.jpeg", spImage);
+    SAvFrame spImage = SAvFrame::loadImageFile("D://tmp/testorig.jpeg");
+    SAvFrame::saveImageFile("D://tmp/image_saved.jpg", spImage);
     //SAvOut spWindow = SAvOut::openWindow("TestWindow", 720, 360);
 
     //spWindow->writeFrame(spImage);

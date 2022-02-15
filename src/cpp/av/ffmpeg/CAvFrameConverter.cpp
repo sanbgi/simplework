@@ -191,6 +191,8 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
     PAvFrame& targetFrame = spAvFrameOut->m_avFrame;
     targetFrame = *pSrc;
     targetFrame.sampleMeta = m_targetSample;
+    targetFrame.nHeight = m_targetSample.videoHeight;
+    targetFrame.nWidth = m_targetSample.videoWidth;
     targetFrame.nPlanes = nPlanes;
     targetFrame.ppPlanes = spAvFrameOut->m_spPlanes;
     targetFrame.pPlaneLineSizes = spAvFrameOut->m_pLinesizes;

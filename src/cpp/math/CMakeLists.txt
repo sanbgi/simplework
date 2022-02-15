@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(SimpleWork VERSION 0.1.0)
 
+set ( SIMPLEWORK_MATH_MODULE_NAME sw.math )
+file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" )
+file ( GLOB SRC_EQUATIONS_FILES "${CMAKE_CURRENT_SOURCE_DIR}/equations/*.cpp" )
+set( SRC_LIST )
+list ( APPEND SRC_LIST ${SRC_FILES} )
+list ( APPEND SRC_LIST ${SRC_EQUATIONS_FILES} )
+add_library(${SIMPLEWORK_MATH_MODULE_NAME} SHARED ${SRC_LIST})
+target_link_libraries(${SIMPLEWORK_MATH_MODULE_NAME} "sw.core")
+#set_target_properties(${SIMPLEWORK_MATH_MODULE_NAME} PROPERTIES PREFIX "")
+
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
