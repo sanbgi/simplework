@@ -63,8 +63,8 @@ int CGruSolver::solve(const PData* pData, int nInVars, const SNnVariable spInVar
     
     SNnVariable state = SNnVariable::loadState(spState);
     SNnVariable joinedx = SNnVariable::solveOp("join", state, spInVars[0] );
-    SNnVariable z = SNnVariable::product(joinedx, spWeightsZ).solveOp("sigmod");
-    SNnVariable r = SNnVariable::product(joinedx, spWeightsR).solveOp("sigmod");
+    SNnVariable z = SNnVariable::product(joinedx, spWeightsZ).solveOp("sigmoid");
+    SNnVariable r = SNnVariable::product(joinedx, spWeightsR).solveOp("sigmoid");
     SNnVariable hh = SNnVariable::solveOp("join", r * state, spInVars[0]);
     hh = SNnVariable::product(hh,spWeights).solveOp("tanh");
     spOutVar = hh - z * state + z * hh; 

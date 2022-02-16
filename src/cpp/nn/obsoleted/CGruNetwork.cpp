@@ -134,9 +134,9 @@ int CGruNetwork::prepareNetwork(const STensor& spBatchIn) {
         m_spBatchOut = m_spInternalBatchOut;
     }
 
-    m_pSigmodActivator = CActivator::getActivation(idType, "sigmod");
+    m_pSigmodActivator = CActivator::getActivation(idType, "sigmoid");
     if(m_pSigmodActivator == nullptr) {
-        return sCtx.error("不支持的激活函数sigmod ");
+        return sCtx.error("不支持的激活函数sigmoid ");
     }
 
     m_pTanhActivator = CActivator::getActivation(idType, "tanh");

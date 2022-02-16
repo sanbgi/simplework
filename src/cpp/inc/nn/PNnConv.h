@@ -45,7 +45,7 @@ struct PNnConv {
     //
     const char *szPadding;
     //
-    // 激活函数，"tanh" "sigmod" "relu"等等
+    // 激活函数，"tanh" "sigmoid" "relu"等等
     //
     const char *szActivator;
 

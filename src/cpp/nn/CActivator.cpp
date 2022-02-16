@@ -132,7 +132,7 @@ public:
     }
 
 
-    static CActivator* getSigmod() {
+    static CActivator* getSigmoid() {
         static class CActivatorImp : public CActivator {
             static Q activate(Q x) {
                 return 1/(1+exp(-x));
@@ -253,7 +253,7 @@ map<string, CActivator*> s_mapDoubleActivators = {
     { "none", CActivatorT<double>::getNoneActivator() },
     { "relu", CActivatorT<double>::getReLU() },
     { "softmax", CActivatorT<double>::getSoftmax() },
-    { "sigmod", CActivatorT<double>::getSigmod() },
+    { "sigmoid", CActivatorT<double>::getSigmoid() },
     { "tanh", CActivatorT<double>::getTanh() },
     { "elu", CActivatorT<double>::getELU() },
     { "leakyrelu", CActivatorT<double>::getLeakyReLU() },
@@ -263,7 +263,7 @@ map<string, CActivator*> s_mapFloatActivators = {
     { "none", CActivatorT<float>::getNoneActivator() },
     { "relu", CActivatorT<float>::getReLU() },
     { "softmax", CActivatorT<float>::getSoftmax() },
-    { "sigmod", CActivatorT<float>::getSigmod() },
+    { "sigmoid", CActivatorT<float>::getSigmoid() },
     { "tanh", CActivatorT<float>::getTanh() },
     { "elu", CActivatorT<float>::getELU() },
     { "leakyrelu", CActivatorT<float>::getLeakyReLU() },

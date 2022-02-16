@@ -87,7 +87,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariable, "sw.nn.NnVariable")
 public:
     SNnVariable relu() const { return solveOp("relu"); }
     SNnVariable tanh() const { return solveOp("tanh"); }
-    SNnVariable sigmod() const { return solveOp("sigmod"); }
+    SNnVariable sigmoid() const { return solveOp("sigmoid"); }
     SNnVariable softmax() const { return solveOp("softmax"); }
     SNnVariable gap() const { return solveOp("gap"); }
     SNnVariable gmp() const { return solveOp("gmp"); }

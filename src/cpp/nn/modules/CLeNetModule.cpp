@@ -62,22 +62,22 @@ int CLeNetModule::eval(int nInVars, const SNnVariable spInVars[], SNnVariable& s
     if(pDimSize[0] == 32 ) {
         x = x.conv({5,5,6,1,1,1,nullptr,nullptr});
         x = x.maxpool({2,2,2,2});
-        x = x.sigmod();
+        x = x.sigmoid();
         x = x.conv({5,5,16,1,1,1,nullptr,nullptr});
         x = x.maxpool({2,2,2,2});
-        x = x.sigmod();
-        x = x.dense({120, "sigmod"});
-        x = x.dense({84, "sigmod"});
+        x = x.sigmoid();
+        x = x.dense({120, "sigmoid"});
+        x = x.dense({84, "sigmoid"});
         x = x.dense({10, "softmax"});
     }else if(pDimSize[0] == 28) {
         x = x.conv({5,5,6,1,1,1,"same",nullptr});
         x = x.maxpool({2,2,2,2});
-        x = x.sigmod();
+        x = x.sigmoid();
         x = x.conv({5,5,16,1,1,1,nullptr,nullptr});
         x = x.maxpool({2,2,2,2});
-        x = x.sigmod();
-        x = x.dense({120, "sigmod"});
-        x = x.dense({84, "sigmod"});
+        x = x.sigmoid();
+        x = x.dense({120, "sigmoid"});
+        x = x.dense({84, "sigmoid"});
         x = x.dense({10, "softmax"});
     }else{
         return sCtx.error("LeNet模型输入图片尺寸需要为28*28或者32*32");

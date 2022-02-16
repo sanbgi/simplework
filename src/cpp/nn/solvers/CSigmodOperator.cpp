@@ -22,7 +22,7 @@ public:
     }
 
     int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(idType, "sigmod");
+        solveParameter.pParameter = CActivator::getActivation(idType, "sigmoid");
         if(idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -53,6 +53,6 @@ public://Factory
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CSigmodOperator, CSigmodOperator::__getClassKey())
-static SNnSolverRegister s_Register("sigmod", CNnSolver::createStaticSolver<CSigmodOperator>);
+static SNnSolverRegister s_Register("sigmoid", CNnSolver::createStaticSolver<CSigmodOperator>);
 
 #endif//__SimpleWork_NN_Operators_CSigmodOperator_h__
