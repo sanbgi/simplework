@@ -2,6 +2,7 @@
 #define __SimpleWork_SNeuralPipe_h__
 
 #include "nn.h"
+#include "SNnFactory.h"
 
 SIMPLEWORK_NN_NAMESPACE_ENTER
 
@@ -20,6 +21,18 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnPipe)
         virtual int push(const sw::STensor& spInTensor, sw::STensor& spOutTensor) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
+
+    static SNnPipe openIdxFileReader(const char* szFilename) {
+        SNnPipe pipe;
+        SNnFactory::getFactory()->openIdxFileReader(szFilename, pipe);
+        return pipe;
+    }
+
+    static STensor loadIdxFile(const char* szFilename) {
+        STensor data;
+        SNnFactory::getFactory()->readIdxFile(szFilename, data);
+        return data;
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnPipe)
 

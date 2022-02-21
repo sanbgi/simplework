@@ -34,8 +34,8 @@ void CNnNetwork::runLearn() {
     int nLoops = 20;
     while(nLoops-->0)
     {
-        SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
-        SNnPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
+        SNnPipe spImageReader = SNnPipe::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-images.gz");
+        SNnPipe spLabelReader = SNnPipe::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\train-labels.gz");
 
         float sumAcc = 0;
         float sumLoss = 0;
@@ -69,7 +69,9 @@ void CNnNetwork::runLearn() {
             //
             STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
             float fRMS = *spRootMeanSquare.data<float>();
-            if( fRMS > 0.02 ) {
+            //if( fRMS > 0.02 )
+            
+            {
                 //
                 // 学习更新神经网络
                 //
@@ -117,8 +119,8 @@ void CNnNetwork::runLearn() {
 }
 
 void CNnNetwork::runTest() {
-    SNnPipe spImageReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\t10k-images.gz");
-    SNnPipe spLabelReader = SNnNetwork::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\t10k-labels.gz");
+    SNnPipe spImageReader = SNnPipe::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\t10k-images.gz");
+    SNnPipe spLabelReader = SNnPipe::openIdxFileReader("D:\\Workspace\\simplework\\mnist\\t10k-labels.gz");
 
     //
     // 一次读取10个

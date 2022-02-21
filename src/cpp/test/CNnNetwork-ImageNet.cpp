@@ -157,7 +157,7 @@ SNnNetwork CNnNetwork::createResNet() {
             SNnVariable x = spIn;
             x = x.conv({7,7,64,1,2,2,"same","relu"});
             x = x.maxpool({3,3,2,2,"same"});
-            int nResNet = 18;
+            int nResNet = 50;
             switch(nResNet) {
             case 18:
                 x = ResNet::resBlock2(x,2,1);

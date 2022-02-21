@@ -52,7 +52,7 @@ struct PNnConv {
     //
     // 构造函数
     //
-    PNnConv(int nConvWidth, int nConvHeight, int nConvLayers, int nShiftConvs = 1, int nStrideWidth = 1, int nStrideHeight = 1, const char* szPadding = nullptr, const char* szActivator = "relu") {
+    PNnConv(int nConvWidth, int nConvHeight, int nConvLayers, int nShiftConvs = 1, int nStrideWidth = 1, int nStrideHeight = 1, const char* szPadding = nullptr, const char* szActivator = nullptr) {
         this->nWidth = nConvWidth;
         this->nHeight = nConvHeight;
         this->nLayers = nConvLayers;

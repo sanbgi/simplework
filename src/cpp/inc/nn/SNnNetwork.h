@@ -69,18 +69,6 @@ public:
         return SObject::createObject("sw.nn.CompositeNetwork", CData<PNnCompositeNetwork>(rData));
     }
 
-    static SNnPipe openIdxFileReader(const char* szFilename) {
-        SNnPipe pipe;
-        SNnFactory::getFactory()->openIdxFileReader(szFilename, pipe);
-        return pipe;
-    }
-
-    static STensor loadIdxFile(const char* szFilename) {
-        STensor data;
-        SNnFactory::getFactory()->readIdxFile(szFilename, data);
-        return data;
-    }
-
     static STensor normalizeTensor(const STensor& spIn) {
         STensor spOut;
         SNnFactory::getFactory()->normalizeTensor(spIn, spOut);

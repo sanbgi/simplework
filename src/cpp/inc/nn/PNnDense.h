@@ -24,7 +24,7 @@ struct PNnDense {
     //
     // 构造函数
     //
-    PNnDense(int nCells, const char* szActivator = "relu") {
+    PNnDense(int nCells, const char* szActivator = nullptr) {
         this->nCells = nCells;
         this->szActivator = szActivator;
     }
