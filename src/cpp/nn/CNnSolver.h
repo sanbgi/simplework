@@ -25,7 +25,7 @@ public:
     int createVariable(const SDimension& spDimension, SNnVariable& spOutVar);
     int solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     int solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    int addAtomSolver(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
+    int addAtomOperator(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 
 public:
     static map<string, FCreateSolver>& getFactories();

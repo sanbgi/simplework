@@ -137,7 +137,7 @@ public:
         m_nSize1 = nSize1;
         m_nSize2 = nSize2;
         createVariable(spDim1.upLowDimension(nSize1+nSize2), spVarOut);
-        return addAtomSolver(this, nInVars, pInVars, spVarOut);
+        return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

@@ -387,7 +387,7 @@ public:
         pOutDimSizes[0] = m_nOutHeight;
         pOutDimSizes[1] = m_nOutWidth;
         createVariable(SDimension(nDims, pOutDimSizes),spVarOut);
-        return addAtomSolver(this, nInVars, pInVars, spVarOut);
+        return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

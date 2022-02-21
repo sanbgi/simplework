@@ -233,7 +233,7 @@ public:
         }
 
         SNnVariable pConvVars[] = {spIn, spConv};
-        if( addAtomSolver(this, 2, pConvVars, spVarOut) != sCtx.success() ) {
+        if( addAtomOperator(this, 2, pConvVars, spVarOut) != sCtx.success() ) {
             return sCtx.error("添加卷积运算异常");
         }
         if(spBais) {

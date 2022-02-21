@@ -180,7 +180,7 @@ public:
         m_dEsp = pParameter->dEsp;
         m_nMinBatch = pParameter->nMinBatch;
         createVariable(spDim,spVarOut);
-        return addAtomSolver(this, nInVars, pInVars, spVarOut);
+        return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable

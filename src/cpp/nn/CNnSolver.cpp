@@ -28,8 +28,8 @@ int CNnSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const 
     return sCtx.error();
 }
 
-int CNnSolver::addAtomSolver(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar){
-    return CNnVariableSolver::addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
+int CNnSolver::addAtomOperator(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar){
+    return CNnVariableSolver::addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
 int CNnSolver::solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
@@ -39,7 +39,7 @@ int CNnSolver::solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnV
 
     SDimension spDimension = pInVars[0].dimension();
     CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
-    return addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
+    return addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
 int CNnSolver::solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
@@ -70,7 +70,7 @@ int CNnSolver::solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnV
         }
     }
     CNnOperatorVariable::createOperatorVariable(spInDimension1, spOutVar);
-    return addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
+    return addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
 int CNnSolver::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {

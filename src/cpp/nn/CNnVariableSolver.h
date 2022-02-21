@@ -48,7 +48,7 @@ public:
     
 public:
     static int solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx);
-    static int addAtomSolver(const SNnAtomOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
+    static int addAtomOperator(const SNnAtomOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

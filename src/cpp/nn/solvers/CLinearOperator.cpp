@@ -183,7 +183,7 @@ public:
         createVariable(spOutDim, spVarOut);
 
         SNnVariable pLinearVars[] = { spIn, spMat };
-        addAtomSolver(this, 2, pLinearVars, spVarOut);
+        addAtomOperator(this, 2, pLinearVars, spVarOut);
         if(spBais) {
             spVarOut = spVarOut + spBais;
         }
