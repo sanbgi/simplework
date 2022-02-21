@@ -28,11 +28,11 @@ int CNnSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const 
     return sCtx.error();
 }
 
-int CNnSolver::addAtomSolver(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar){
+int CNnSolver::addAtomSolver(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar){
     return CNnVariableSolver::addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
 }
 
-int CNnSolver::solveOneEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CNnSolver::solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     if(nInVars != 1) {
         return sCtx.error("参数个数不等于二");
     }
@@ -42,7 +42,7 @@ int CNnSolver::solveOneEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVar
     return addAtomSolver(pSolver, nInVars, pInVars, spOutVar);
 }
 
-int CNnSolver::solveTwoEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
+int CNnSolver::solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar){
     if(nInVars != 2) {
         return sCtx.error("参数个数不等于二");
     }

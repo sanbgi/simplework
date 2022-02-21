@@ -38,7 +38,7 @@ struct PSolveInstruct {
     //
     // 求解器
     //
-    INnAtomSolver* pAtomSolver;
+    INnAtomOperator* pAtomSolver;
 };
 
 struct PSolveLayer {
@@ -172,7 +172,7 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
 
     vector<PSolveInstruct>& arrSolvers = layerCtx.arrSolvers;
     vector<PNnSolver::PSolveParameter>::iterator itParameter = m_spSolver->arrParameters.begin();
-    vector<SNnAtomSolver>::iterator itOp = m_spSolver->arrOperators.begin();
+    vector<SNnAtomOperator>::iterator itOp = m_spSolver->arrOperators.begin();
     while(itParameter != m_spSolver->arrParameters.end()) {
         PNnSolver::PSolveParameter spOp = *itParameter;
         PSolveInstruct solveParameter;

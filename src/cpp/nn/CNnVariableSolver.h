@@ -2,7 +2,7 @@
 #define __SimpleWork_NN_CNnVariableSolver_H__
 
 #include "nn.h"
-#include "SNnAtomSolver.h"
+#include "SNnAtomOperator.h"
 #include <vector>
 
 using namespace sw;
@@ -31,7 +31,7 @@ struct PNnSolver {
     int iInVar;
     int iOutVar;
     vector<SNnVariable> arrVars;
-    vector<SNnAtomSolver> arrOperators;
+    vector<SNnAtomOperator> arrOperators;
     vector<PSolveParameter> arrParameters;
 };
 
@@ -48,7 +48,7 @@ public:
     
 public:
     static int solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx);
-    static int addAtomSolver(const SNnAtomSolver& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
+    static int addAtomSolver(const SNnAtomOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 };
 
 #endif//__SimpleWork_NN_CNnVariableSolver_H__

@@ -4,9 +4,9 @@
 #include "operator.h"
 
 static SCtx sCtx("CGMPOperator");
-class CGMPOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+class CGMPOperator : public CNnSolver, public INnAtomOperator, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
-        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomOperator)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:

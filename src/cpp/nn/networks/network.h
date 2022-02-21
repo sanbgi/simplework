@@ -5,7 +5,7 @@
 #include "../COptimizer.h"
 #include "../CNnVariable.h"
 #include "../CNnVariableSolver.h"
-#include "../SNnAtomSolver.h"
+#include "../SNnAtomOperator.h"
 #include "../CNnResizeTensor.h"
 
 #endif//__SimpleWork_NN_Networks_network_H__

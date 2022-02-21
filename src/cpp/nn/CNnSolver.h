@@ -2,7 +2,7 @@
 #define __SimpleWork_NN_COperator_H__
 
 #include "nn.h"
-#include "SNnAtomSolver.h"
+#include "SNnAtomOperator.h"
 #include <map>
 
 using namespace sw;
@@ -23,9 +23,9 @@ public:
 
 public:
     int createVariable(const SDimension& spDimension, SNnVariable& spOutVar);
-    int solveOneEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    int solveTwoEleWise(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
-    int addAtomSolver(INnAtomSolver* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
+    int solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    int solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    int addAtomSolver(INnAtomOperator* pSolver, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 
 public:
     static map<string, FCreateSolver>& getFactories();

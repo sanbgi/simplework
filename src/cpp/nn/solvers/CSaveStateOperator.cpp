@@ -7,9 +7,9 @@ static SCtx sCtx("CSaveStateOperator");
 //
 // 备份状态值到State中，并且在反向计算中，恢复偏导数
 //
-class CSaveStateOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+class CSaveStateOperator : public CNnSolver, public INnAtomOperator, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
-        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomOperator)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:

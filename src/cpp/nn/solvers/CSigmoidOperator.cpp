@@ -3,9 +3,9 @@
 
 #include "operator.h"
 static SCtx sCtx("SigmodOperator");
-class CSigmoidOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+class CSigmoidOperator : public CNnSolver, public INnAtomOperator, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
-        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomOperator)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:

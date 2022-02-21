@@ -3,9 +3,9 @@
 
 #include "operator.h"
 static SCtx sCtx("MinusOperator");
-class CMinusOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+class CMinusOperator : public CNnSolver, public INnAtomOperator, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
-        SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
+        SIMPLEWORK_INTERFACE_ENTRY(INnAtomOperator)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
