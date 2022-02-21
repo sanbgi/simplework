@@ -16,12 +16,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Archivable)
         // 获取版本号
         //
         virtual int getClassVer() = 0;
-
-        //
-        // 获取名字
-        //
-        virtual const char* getClassName() = 0;
-
+        
         //
         // 获取对象的类名，用于序列化时构建对象
         //

@@ -2,33 +2,40 @@
 #include "variable.h"
 
 static SCtx sCtx("CNnWeightVariable");
-class CNnWeightVariable : public CNnVariable, public IArchivable {
-    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnVariable)
+class CNnWeightVariable : public CObject, public INnVariable, public INnInternalVariable, public IArchivable {
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
-    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnVariable)
+        SIMPLEWORK_INTERFACE_ENTRY(INnVariable)
+        SIMPLEWORK_INTERFACE_ENTRY(INnInternalVariable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
     int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "Weight"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.Weight"; }
-    static int createWeightVariable(const SDimension& spDimension, SNnVariable& spOutVar);
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVWeight; }
-    CNnVariable* getVariablePtr() { return this; }
     void* getData(unsigned int idType);
+    int getDimension(SDimension& spDimension) {
+        spDimension = m_spDimension;
+        return sCtx.success();
+    }
+    int getSize() {
+        return m_spDimension.dataSize();
+    }
 
 private:
     template<typename Q> void initWeightT(int nWeights, void* pWeights);
 
 private:
+    SDimension m_spDimension;
     STensor m_spData;
     float m_dAvg;
 };
@@ -40,14 +47,6 @@ int CNnWeightVariable::__initialize(const PData* pData) {
     }
     m_spDimension = pWeight->spDim;
     m_dAvg = pWeight->dAvg;
-    return sCtx.success();
-}
-
-int CNnWeightVariable::createWeightVariable(const SDimension& spDimension, SNnVariable& spOutVar) { 
-    CPointer<CNnWeightVariable> spWeight;
-    CObject::createObject(spWeight);
-    spWeight->m_spDimension = spDimension;
-    spOutVar.setPtr(spWeight.getPtr());
     return sCtx.success();
 }
 

@@ -1,6 +1,5 @@
 
 #include "nn.h"
-#include "variables/CNnInputVariable.h"
 #include "CNnVariableSolver.h"
 #include "CNnSolver.h"
 
@@ -84,8 +83,8 @@ int CNnVariableSolver::solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx) {
     //
     // 创建输入变量
     //
-    SNnVariable spInput;
-    if( CNnInputVariable::createVariable(pNet->spInDimension, spInput) != sCtx.success()) {
+    SNnVariable spInput = SObject::createObject("sw.nn.Input", CData<SDimension>(pNet->spInDimension));
+    if( !spInput ){
         return sCtx.error("创建输入变量失败");
     }
 

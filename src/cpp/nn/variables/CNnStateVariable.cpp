@@ -2,35 +2,39 @@
 
 static SCtx sCtx("CNnStateVariable");
 
-class CNnStateVariable : public CNnVariable, public INnState, public IArchivable {
-    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnVariable)
+class CNnStateVariable : public CObject, public INnVariable, public INnState, public INnInternalVariable, public IArchivable {
+    SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
+        SIMPLEWORK_INTERFACE_ENTRY(INnVariable)
         SIMPLEWORK_INTERFACE_ENTRY(INnState)
-    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnVariable)
+        SIMPLEWORK_INTERFACE_ENTRY(INnInternalVariable)
+    SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
     int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "State"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
-
-public://INnState
-    int getDimension(SDimension& spDimension) {
-        return CNnVariable::getDimension(spDimension);
-    }
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.State"; }
     
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }
-    CNnVariable* getVariablePtr() { return this; }
     void* getData(unsigned int idType);
 
+    int getDimension(SDimension& spDimension) {
+        spDimension = m_spDimension;
+        return 0;
+    }
+    int getSize() {
+        return m_spDimension.dataSize();
+    }
+
 private:
+    SDimension m_spDimension;
     STensor m_spData;
 };
 
@@ -59,7 +63,6 @@ void* CNnStateVariable::getData(unsigned int idType) {
     }
     return m_spData->getDataPtr(idType);
 }
-
 
 int CNnStateVariable::toArchive(const SArchive& ar) {
     ar.arObject("dimension", m_spDimension);

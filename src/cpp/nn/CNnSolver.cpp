@@ -2,7 +2,6 @@
 #include "CUtils.h"
 #include "CActivator.h"
 #include "CNnVariableSolver.h"
-#include "variables/CNnOperatorVariable.h"
 #include <map>
 
 static SCtx sCtx("CNnSolver");
@@ -37,8 +36,7 @@ int CNnSolver::solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnV
         return sCtx.error("参数个数不等于二");
     }
 
-    SDimension spDimension = pInVars[0].dimension();
-    CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
+    spOutVar = SObject::createObject("sw.nn.Variable", CData<SDimension>(pInVars[0].dimension()));
     return addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
@@ -69,10 +67,11 @@ int CNnSolver::solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnV
             return sCtx.error("相加的两个元素维度不一致");
         }
     }
-    CNnOperatorVariable::createOperatorVariable(spInDimension1, spOutVar);
+    spOutVar = SObject::createObject("sw.nn.Variable", CData<SDimension>(spInDimension1));
     return addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
 int CNnSolver::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
-    return CNnOperatorVariable::createOperatorVariable(spDimension, spOutVar);
+    spOutVar = SObject::createObject("sw.nn.Variable", CData<SDimension>(spDimension));
+    return sCtx.success();
 }

@@ -3,7 +3,7 @@
 
 #include "../nn.h"
 #include "../COptimizer.h"
-#include "../CNnVariable.h"
+#include "../SNnInternalVariable.h"
 #include "../CNnVariableSolver.h"
 #include "../SNnAtomOperator.h"
 #include "../CNnResizeTensor.h"

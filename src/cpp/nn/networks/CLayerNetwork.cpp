@@ -13,7 +13,7 @@ static SCtx sCtx("CLayerNetwork");
 // 计算变量
 //
 struct PSolveVar {
-    CNnVariable* pVar;
+    //CNnVariable* pVar;
     ENnVariableType eVarType;//ENnVariableType
     int nVarSize;
 
@@ -162,10 +162,8 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
         }
         PSolveVar solveVar;
         solveVar.nVarSize = spToSolveVar->getSize();
-        solveVar.data = nullptr;
         solveVar.eVarType = spToSolveVar->getVariableType();
-        solveVar.pVar = spToSolveVar->getVariablePtr();
-        solveVar.data = solveVar.pVar->getData(idType);
+        solveVar.data = spToSolveVar->getData(idType);
         arrVars.push_back(solveVar);
         itVar++;
     }
