@@ -1,11 +1,13 @@
 #include "CNnStateVariable.h"
 
 static SCtx sCtx("CNnStateVariable");
-int CNnStateVariable::createState(const SDimension& spDimension, SNnState& spOutVar) { 
-    CPointer<CNnStateVariable> spState;
-    CObject::createObject(spState);
-    spState->m_spDimension = spDimension;
-    spOutVar.setPtr(spState.getPtr());
+
+int CNnStateVariable::__initialize(const PData* pData) {
+    const PNnState* pState = CData<PNnState>(pData);
+    if(pState == nullptr) {
+        return sCtx.error("缺少构造参数");
+    }
+    m_spDimension = pState->spDim;
     return sCtx.success();
 }
 

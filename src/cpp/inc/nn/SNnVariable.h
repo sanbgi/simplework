@@ -125,9 +125,6 @@ public:
         SNnVariableSolver::getSolver()->solveOp("product", nullptr, 2, in, o);
         return o;
     }
-    static int createState(const SDimension& spDim, SNnState& spVar) {
-        return SNnVariableSolver::getSolver()->createState(spDim, spVar);
-    }
     static int loadState(const SNnState spState, SNnVariable& spVar) {
         return SNnVariableSolver::getSolver()->loadState(spState, spVar);
     }

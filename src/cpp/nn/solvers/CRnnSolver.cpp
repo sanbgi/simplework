@@ -41,11 +41,7 @@ int CRnnSolver::solve(const PData* pData, int nInVars, const SNnVariable spInVar
         return sCtx.error("Rnn单元的输入必须大于等于1");
     }
 
-    SDimension spOutDim(1, &pRnn->nCells);
-    SNnState spState;
-    if( SNnVariable::createState(spOutDim, spState) != sCtx.success() ) {
-        return sCtx.error("偏置状态失败");
-    }
+    SNnState spState = SNnState::createState({SDimension(1, &pRnn->nCells)});
 
     int pDimSizes[2] = {pRnn->nCells, pRnn->nCells+nInputSize };
     SNnVariable spWeights = SNnVariable::createWeight({SDimension(2, pDimSizes), 1.0f/(pRnn->nCells+nInputSize)});

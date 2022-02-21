@@ -1,9 +1,6 @@
 
 #include "nn.h"
 #include "variables/CNnInputVariable.h"
-#include "variables/CNnWeightVariable.h"
-#include "variables/CNnStateVariable.h"
-#include "variables/CNnOperatorVariable.h"
 #include "CNnVariableSolver.h"
 #include "CNnSolver.h"
 
@@ -27,14 +24,6 @@ static struct PRunCtx {
         return iVar;
     }
 }*s_pRunCtx = nullptr;
-
-int CNnVariableSolver::createWeightVariable(const SDimension& spDimension, SNnVariable& spVar) {
-    return CNnWeightVariable::createWeightVariable(spDimension, spVar);
-}
-
-int CNnVariableSolver::createState(const SDimension& spDimension, SNnState& spVar){
-    return CNnStateVariable::createState(spDimension, spVar);
-}
 
 int CNnVariableSolver::loadState(const SNnState spState, SNnVariable& spVar) {
     SNnVariable spIn = spState;

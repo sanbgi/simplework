@@ -42,8 +42,6 @@ class CNnVariableSolver : public CObject, public INnVariableSolver{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar);
-    int createState(const SDimension& spDimension, SNnState& spVar);
     int solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
     int loadState(const SNnState spState, SNnVariable& spVar);
     int saveState(const SNnState spState, const SNnVariable& spVar);

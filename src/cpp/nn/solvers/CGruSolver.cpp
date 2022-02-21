@@ -38,10 +38,7 @@ int CGruSolver::solve(const PData* pData, int nInVars, const SNnVariable spInVar
         return sCtx.error("Rnn单元的输入必须大于等于1");
     }
 
-    SNnState spState;
-    if( SNnVariable::createState(SDimension(1, &pRnn->nCells), spState) != sCtx.success() ) {
-        return sCtx.error("偏置状态失败");
-    }
+    SNnState spState = SNnState::createState({SDimension(1, &pRnn->nCells)});
 
     int nJoinedSize = pRnn->nCells+nInputSize;
     int pDimSizes[2] = {pRnn->nCells, nJoinedSize };

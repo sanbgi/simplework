@@ -16,16 +16,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariableSolver, "sw.nn.NnVariableSolver")
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.INnVariableSolver", 211202)
 
         //
-        // 创建权重变量
-        //
-        virtual int createWeightVariable(const SDimension& spDimension, SNnVariable& spVar) = 0;
-
-        //
-        // 创建权重变量
-        //
-        virtual int createState(const SDimension& spDimension, SNnState& spVar) = 0;
-
-        //
         // 加载状态值
         //
         virtual int loadState(const SNnState spState, SNnVariable& spVar) = 0;

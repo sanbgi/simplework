@@ -2,7 +2,6 @@
 #define __SimpleWork_NnState_h__
 
 #include "nn.h"
-#include "SNnVariableSolver.h"
 
 SIMPLEWORK_NN_NAMESPACE_ENTER
 
@@ -30,8 +29,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnState, "sw.nn.NnState")
     }
 
 public:
-    static int createState(const SDimension& spDimension, SNnState& spVar) {
-        return SNnVariableSolver::getSolver()->createState(spDimension, spVar);
+    static SNnState createState(const PNnState& rState) {
+        return SObject::createObject("sw.nn.State", CData<PNnState>(rState));
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnState)

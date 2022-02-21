@@ -9,6 +9,9 @@ class CNnStateVariable : public CNnVariable, public INnState, public IArchivable
         SIMPLEWORK_INTERFACE_ENTRY(INnState)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnVariable)
 
+public://CObject
+    int __initialize(const PData* pData);
+
 private://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "State"; } 
@@ -22,7 +25,6 @@ public://INnState
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.State"; }
-    static int createState(const SDimension& spDimension, SNnState& spOutVar);
     
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }
