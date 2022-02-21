@@ -1,9 +1,9 @@
-#ifndef __SimpleWork_NN_Operators_CSigmodOperator_h__
-#define __SimpleWork_NN_Operators_CSigmodOperator_h__
+#ifndef __SimpleWork_NN_Operators_CSigmoidOperator_h__
+#define __SimpleWork_NN_Operators_CSigmoidOperator_h__
 
 #include "operator.h"
 static SCtx sCtx("SigmodOperator");
-class CSigmodOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
+class CSigmoidOperator : public CNnSolver, public INnAtomSolver, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CNnSolver)
         SIMPLEWORK_INTERFACE_ENTRY(INnAtomSolver)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
@@ -52,7 +52,7 @@ public://Factory
 
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CSigmodOperator, CSigmodOperator::__getClassKey())
-static SNnSolverRegister s_Register("sigmoid", CNnSolver::createStaticSolver<CSigmodOperator>);
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CSigmoidOperator, CSigmoidOperator::__getClassKey())
+static SNnSolverRegister s_Register("sigmoid", CNnSolver::createStaticSolver<CSigmoidOperator>);
 
-#endif//__SimpleWork_NN_Operators_CSigmodOperator_h__
+#endif//__SimpleWork_NN_Operators_CSigmoidOperator_h__
