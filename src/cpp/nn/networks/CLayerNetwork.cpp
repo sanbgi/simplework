@@ -8,39 +8,6 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CLayerNetwork");
-
-struct PSolveInfos {
-
-    unsigned int idType;
-    SDimension spInDimension;
-    SDimension spOutDimension;
-
-    // 计算变量
-    struct PSolveVar {
-        ENnVariableType type;//ENnVariableType
-        int size;
-        void* data; //存储状态及权重值的指针
-    };
-
-    // 计算指令
-    struct PSolveInstruct {
-        PSolveParameter solver;
-        PNnAtomOperatorArgs args;
-    };
-
-    //解算参数列表
-    vector<PSolveVar> arrVars;
-    //解算步骤列表
-    vector<PSolveInstruct> arrInstructs;
-
-    int nSumSize[EVMax];
-    int iOutVar;
-
-    int nInputTensorSize;
-    int nOutputTensorSize;
-    SOptimizer spOptimizer;
-};
-
 class CLayerNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
@@ -77,6 +44,39 @@ private:
 private:
     PNnSolveGraph m_sSolveGraph;
     string m_strOptimizer;
+
+private:
+    //从计算图中获取的求解信息
+    struct PSolveInfos {
+        unsigned int idType;
+        SDimension spInDimension;
+        SDimension spOutDimension;
+
+        // 计算变量
+        struct PSolveVar {
+            ENnVariableType type;//ENnVariableType
+            int size;
+            void* data; //存储状态及权重值的指针
+        };
+
+        // 计算指令
+        struct PSolveInstruct {
+            PSolveParameter solver;
+            PNnAtomOperatorArgs args;
+        };
+
+        //解算参数列表
+        vector<PSolveVar> arrVars;
+        //解算步骤列表
+        vector<PSolveInstruct> arrInstructs;
+
+        int nSumSize[EVMax];
+        int iOutVar;
+
+        int nInputTensorSize;
+        int nOutputTensorSize;
+        SOptimizer spOptimizer;
+    };
     CTaker<PSolveInfos*> m_spSolveInfos;
 
 public:
