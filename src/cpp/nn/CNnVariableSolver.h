@@ -33,6 +33,15 @@ struct PNnSolver {
     vector<SNnVariable> arrVars;
     vector<SNnAtomOperator> arrOperators;
     vector<PNnAtomOperatorArgs> arrOperatorArgs;
+
+    int toArchive(const SArchive& ar){
+        ar.arBlock("iinvar", iInVar);
+        ar.arBlock("ioutvar", iOutVar);
+        ar.arObjectArray("operators", arrOperators);
+        ar.arObjectArray("vars", arrVars);
+        ar.arBlockArray<PNnAtomOperatorArgs, vector<PNnAtomOperatorArgs>>("parameters", arrOperatorArgs);
+        return 0;
+    }
 };
 
 class CNnVariableSolver : public CObject, public INnVariableSolver{
