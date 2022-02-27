@@ -107,14 +107,13 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
         delete pCtx;
     });
     PSolveInfos& solveCtx = *taker;
+    for(int i=0; i<EVMax; i++) {
+        solveCtx.nSumSize[i] = 0;
+    }
 
     //
     // 更新计算变量数组
     //
-    solveCtx.nSumSize[EVInput] = 0;
-    solveCtx.nSumSize[EVWeight] = 0;
-    solveCtx.nSumSize[EVState] = 0;
-    solveCtx.nSumSize[EVOperator] = 0;
     vector<PSolveInfos::PSolveVar>& arrVars = solveCtx.arrVars;
     vector<SNnVariable>::iterator itVar = m_sSolveGraph.arrVars.begin();
     while(itVar != m_sSolveGraph.arrVars.end()) {
@@ -131,6 +130,9 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
         itVar++;
     }
 
+    //
+    // 更新计算步骤数组
+    //
     vector<PSolveInfos::PSolveInstruct>& arrInstructs = solveCtx.arrInstructs;
     vector<PNnAtomOperatorArgs>::iterator itParameter = m_sSolveGraph.arrOperatorArgs.begin();
     vector<SNnAtomOperator>::iterator itOp = m_sSolveGraph.arrOperators.begin();
@@ -142,11 +144,16 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
         arrInstructs.push_back(solveParameter);
         itParameter++, itOp++;
     }
-    SDimension spInDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iInVar].dimension();
-    SDimension spOutDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iOutVar].dimension();
+
+    //
+    // 创建优化器
+    //
     if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, solveCtx.spOptimizer) != sCtx.success()) {
         return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
     }
+
+    SDimension spInDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iInVar].dimension();
+    SDimension spOutDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iOutVar].dimension();
     solveCtx.iOutVar = m_sSolveGraph.iOutVar;
     solveCtx.idType = idType;
     solveCtx.nInputTensorSize = spInDimension.dataSize();
@@ -244,8 +251,7 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     }
 
     SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
-    PVector* pOutVar = solveVars + solveCtx.iOutVar;
-    int iOffset = ((Q*)pOutVar->data)-pOpSolvedBuffer;
+    int iOffset = ((Q*)solveVars[solveCtx.iOutVar].data)-pOpSolvedBuffer;
     return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
 }
 
