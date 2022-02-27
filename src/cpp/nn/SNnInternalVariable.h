@@ -11,6 +11,7 @@ enum ENnVariableType {
     EVState,
     EVWeight,
     EVOperator,
+    EVMax
 };
 
 //

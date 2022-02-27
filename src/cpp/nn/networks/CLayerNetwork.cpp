@@ -10,6 +10,11 @@ using namespace std;
 static SCtx sCtx("CLayerNetwork");
 
 struct PSolveInfos {
+
+    unsigned int idType;
+    SDimension spInDimension;
+    SDimension spOutDimension;
+
     // 计算变量
     struct PSolveVar {
         ENnVariableType type;//ENnVariableType
@@ -26,17 +31,13 @@ struct PSolveInfos {
     //解算参数列表
     vector<PSolveVar> arrVars;
     //解算步骤列表
-    vector<PSolveInstruct> arrSolvers;
+    vector<PSolveInstruct> arrInstructs;
 
-    int nStateSize;
-    int nWeightSize;
-    int nOpSize;
+    int nSumSize[EVMax];
     int iOutVar;
 
-    SDimension spOutDimension;
     int nInputTensorSize;
     int nOutputTensorSize;
-    unsigned int idType;
     SOptimizer spOptimizer;
 };
 
@@ -74,8 +75,7 @@ private:
     int updateT(const STensor& spBatchInDeviation);
 
 private:
-    PNnSolver m_sSolver;
-    SDimension m_spInDimension;
+    PNnSolveGraph m_sSolveGraph;
     string m_strOptimizer;
     CTaker<PSolveInfos*> m_spSolveInfos;
 
@@ -88,10 +88,9 @@ int CLayerNetwork::__initialize(const PData* pData){
     if(pNet == nullptr) {
         return sCtx.error("缺少构造参数");
     }
-    if( CNnVariableSolver::solveNetwork(pNet, &m_sSolver) != sCtx.success()) {
+    if( CNnVariableSolver::solveNetwork(pNet, &m_sSolveGraph) != sCtx.success()) {
         return sCtx.error("解算网络单元错误");
     }
-    m_spInDimension = pNet->spInDimension;
     return sCtx.success();
 }
 
@@ -112,12 +111,13 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
     //
     // 更新计算变量数组
     //
-    int nStateSize = 0;
-    int nWeightSize = 0;
-    int nOpSize = 0;
+    solveCtx.nSumSize[EVInput] = 0;
+    solveCtx.nSumSize[EVWeight] = 0;
+    solveCtx.nSumSize[EVState] = 0;
+    solveCtx.nSumSize[EVOperator] = 0;
     vector<PSolveInfos::PSolveVar>& arrVars = solveCtx.arrVars;
-    vector<SNnVariable>::iterator itVar = m_sSolver.arrVars.begin();
-    while(itVar != m_sSolver.arrVars.end()) {
+    vector<SNnVariable>::iterator itVar = m_sSolveGraph.arrVars.begin();
+    while(itVar != m_sSolveGraph.arrVars.end()) {
         SNnInternalVariable spToSolveVar = *itVar;
         if(!spToSolveVar) {
             return sCtx.error("不认识的变量类型");
@@ -126,48 +126,33 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
         solveVar.size = spToSolveVar->getSize();
         solveVar.type = spToSolveVar->getVariableType();
         solveVar.data = spToSolveVar->getData(idType);
-        switch(solveVar.type) {
-        case ENnVariableType::EVState:
-            nStateSize += solveVar.size;
-            break;
-
-        case ENnVariableType::EVWeight:
-            nWeightSize += solveVar.size;
-            break;
-
-        case ENnVariableType::EVOperator:
-            nOpSize += solveVar.size;
-            break;
-        }
+        solveCtx.nSumSize[solveVar.type] += solveVar.size;
         arrVars.push_back(solveVar);
         itVar++;
     }
 
-    vector<PSolveInfos::PSolveInstruct>& arrSolvers = solveCtx.arrSolvers;
-    vector<PNnAtomOperatorArgs>::iterator itParameter = m_sSolver.arrOperatorArgs.begin();
-    vector<SNnAtomOperator>::iterator itOp = m_sSolver.arrOperators.begin();
-    while(itParameter != m_sSolver.arrOperatorArgs.end()) {
+    vector<PSolveInfos::PSolveInstruct>& arrInstructs = solveCtx.arrInstructs;
+    vector<PNnAtomOperatorArgs>::iterator itParameter = m_sSolveGraph.arrOperatorArgs.begin();
+    vector<SNnAtomOperator>::iterator itOp = m_sSolveGraph.arrOperators.begin();
+    while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
         PNnAtomOperatorArgs spOp = *itParameter;
         PSolveInfos::PSolveInstruct solveParameter;
         solveParameter.args = spOp;
         (*itOp)->prepareSolver(idType, solveParameter.solver);
-        arrSolvers.push_back(solveParameter);
+        arrInstructs.push_back(solveParameter);
         itParameter++, itOp++;
     }
-    SDimension spOutDimension = m_sSolver.arrVars[m_sSolver.iOutVar].dimension();
-
+    SDimension spInDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iInVar].dimension();
+    SDimension spOutDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iOutVar].dimension();
     if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, solveCtx.spOptimizer) != sCtx.success()) {
         return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
     }
-    solveCtx.nOpSize = nOpSize;
-    solveCtx.nStateSize = nStateSize;
-    solveCtx.nWeightSize = nWeightSize;
-    solveCtx.iOutVar = m_sSolver.iOutVar;
+    solveCtx.iOutVar = m_sSolveGraph.iOutVar;
     solveCtx.idType = idType;
-    solveCtx.nInputTensorSize = m_spInDimension.dataSize();
+    solveCtx.nInputTensorSize = spInDimension.dataSize();
     solveCtx.nOutputTensorSize = spOutDimension.dataSize();
+    solveCtx.spInDimension = spInDimension;
     solveCtx.spOutDimension = spOutDimension;
-
     m_spSolveInfos.take(taker);
     return sCtx.success();
 }
@@ -203,7 +188,7 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     // 准备计算缓冲区
     //
     STensor spOpSolveBuffer;
-    if( STensor::createVector<Q>(spOpSolveBuffer, solveCtx.nOpSize * nBatchs) != sCtx.success()) {
+    if( STensor::createVector<Q>(spOpSolveBuffer, solveCtx.nSumSize[EVOperator] * nBatchs) != sCtx.success()) {
         return sCtx.error("创建计算缓冲区失败");
     }
 
@@ -245,8 +230,8 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     // 遍历计算序列并执行
     //
     PVector evalIn[4], evalOut;
-    vector<PSolveInfos::PSolveInstruct>::iterator itSolver = solveCtx.arrSolvers.begin();
-    while(itSolver != solveCtx.arrSolvers.end() ) {
+    vector<PSolveInfos::PSolveInstruct>::iterator itSolver = solveCtx.arrInstructs.begin();
+    while(itSolver != solveCtx.arrInstructs.end() ) {
         //准备输入输出计算参数
         PSolveInfos::PSolveInstruct instruct = *itSolver;
         itSolver++;
@@ -312,18 +297,18 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     //
     // 准备计算缓冲区
     //
-    int nDeviaBuffer = solveCtx.nOpSize * nBatchs + solveCtx.nStateSize;
+    int nDeviaBuffer = solveCtx.nSumSize[EVOperator] * nBatchs + solveCtx.nSumSize[EVState];
     CTaker<Q*> spDeviaBuffer(new Q[nDeviaBuffer], [](Q* ptr){
         delete[] ptr;
     });
     Q* pOpDeviaBuffer = spDeviaBuffer;
-    Q* pStateDeviaBuffer = pOpDeviaBuffer + solveCtx.nOpSize * nBatchs;
+    Q* pStateDeviaBuffer = pOpDeviaBuffer + solveCtx.nSumSize[EVOperator] * nBatchs;
     memset(spDeviaBuffer, 0, sizeof(Q)*nDeviaBuffer);
 
     //
     // 准备权重缓冲区
     //
-    int nWeights = solveCtx.nWeightSize;
+    int nWeights = solveCtx.nSumSize[EVWeight];
     Q* pWeightDeviaBuffer = (Q*)solveCtx.spOptimizer->getDeviationPtr(nWeights);
     memset(pWeightDeviaBuffer, 0, sizeof(Q)*nWeights);
 
@@ -386,8 +371,8 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     // 遍历计算序列并执行
     //
     PDeviaVector evalIn[4], evalOut;
-    vector<PSolveInfos::PSolveInstruct>::reverse_iterator itSolver = solveCtx.arrSolvers.rbegin();
-    while(itSolver != solveCtx.arrSolvers.rend() ) {
+    vector<PSolveInfos::PSolveInstruct>::reverse_iterator itSolver = solveCtx.arrInstructs.rbegin();
+    while(itSolver != solveCtx.arrInstructs.rend() ) {
 
         //准备输入输出计算参数
         PSolveInfos::PSolveInstruct instruct = *itSolver;
@@ -436,7 +421,7 @@ int CLayerNetwork::updateT(const STensor& spBatchInDeviation) {
     STensor spWeightDevia = sResizeTensor.spExtra;
 
     PSolveInfos& solveCtx = *m_spSolveInfos;
-    int nWeights = solveCtx.nWeightSize;
+    int nWeights = solveCtx.nSumSize[EVWeight];
     if(spWeightDevia.size() != nWeights) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
@@ -469,8 +454,7 @@ int CLayerNetwork::updateT(const STensor& spBatchInDeviation) {
 }
 
 int CLayerNetwork::toArchive(const SArchive& ar) {
-    m_sSolver.toArchive(ar);
-    ar.arObject("inputDimension", m_spInDimension);
+    m_sSolveGraph.toArchive(ar);
     ar.visitString("optimizer", m_strOptimizer);
     return sCtx.success();
 }

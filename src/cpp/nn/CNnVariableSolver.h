@@ -27,7 +27,7 @@ struct PNnAtomOperatorArgs {
 //
 // 求解定义
 //
-struct PNnSolver {
+struct PNnSolveGraph {
     int iInVar;
     int iOutVar;
     vector<SNnVariable> arrVars;
@@ -56,7 +56,7 @@ public:
     int saveState(const SNnState spState, const SNnVariable& spVar);
     
 public:
-    static int solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx);
+    static int solveNetwork(const PNnNetwork* pNet, PNnSolveGraph* pCtx);
     static int addAtomOperator(const SNnAtomOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar);
 };
 

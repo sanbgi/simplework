@@ -8,7 +8,7 @@
 static SCtx sCtx("CNnVariableSolver");
 
 static struct PRunCtx {
-    PNnSolver* pSolveCtx;
+    PNnSolveGraph* pSolveCtx;
     map<INnVariable*, int> mapSolvedVars;
     int registerVar(const SNnVariable& spVar) {
         int iVar = -1;
@@ -41,7 +41,7 @@ int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars
 
 int CNnVariableSolver::addAtomOperator(const SNnAtomOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
     if(s_pRunCtx) {
-        PNnSolver* pCtx = s_pRunCtx->pSolveCtx;
+        PNnSolveGraph* pCtx = s_pRunCtx->pSolveCtx;
         PNnAtomOperatorArgs solveParameter;
         solveParameter.nInVars = nInVars;
         for( int i=0; i<nInVars; i++) {
@@ -65,7 +65,7 @@ int CNnVariableSolver::addAtomOperator(const SNnAtomOperator& spOp, int nInVars,
 //
 // 求解单元函数，虽然做了避免重入处理，但仍然不可以多线程操作
 //
-int CNnVariableSolver::solveNetwork(const PNnNetwork* pNet, PNnSolver* pCtx) {
+int CNnVariableSolver::solveNetwork(const PNnNetwork* pNet, PNnSolveGraph* pCtx) {
     if(s_pRunCtx != nullptr) {
         return sCtx.error("求解单元函数，不允许重入");
     }
