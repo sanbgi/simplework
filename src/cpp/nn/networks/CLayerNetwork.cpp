@@ -19,7 +19,6 @@ public://CObject
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "LayerNetwork"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
@@ -47,7 +46,7 @@ private:
 
 private:
     //从计算图中获取的求解信息
-    struct PSolveInfos {
+    struct PSolveGraphInfos {
         unsigned int idType;
         SDimension spInDimension;
         SDimension spOutDimension;
@@ -77,7 +76,7 @@ private:
         int nOutputTensorSize;
         SOptimizer spOptimizer;
     };
-    CTaker<PSolveInfos*> m_spSolveInfos;
+    CTaker<PSolveGraphInfos*> m_spSolveGraphInfos;
 
 public:
     int initNetwork(unsigned int idType);
@@ -95,18 +94,18 @@ int CLayerNetwork::__initialize(const PData* pData){
 }
 
 int CLayerNetwork::initNetwork(unsigned int idType) {
-    if(m_spSolveInfos) {
-        if(idType == m_spSolveInfos->idType) {
+    if(m_spSolveGraphInfos) {
+        if(idType == m_spSolveGraphInfos->idType) {
             return sCtx.success();
         }else{
             return sCtx.error("数据类型与初始化时不一致，暂不支持");
         }
     }
 
-    CTaker<PSolveInfos*> taker(new PSolveInfos, [](PSolveInfos* pCtx){
+    CTaker<PSolveGraphInfos*> taker(new PSolveGraphInfos, [](PSolveGraphInfos* pCtx){
         delete pCtx;
     });
-    PSolveInfos& solveCtx = *taker;
+    PSolveGraphInfos& solveCtx = *taker;
     for(int i=0; i<EVMax; i++) {
         solveCtx.nSumSize[i] = 0;
     }
@@ -114,14 +113,14 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
     //
     // 更新计算变量数组
     //
-    vector<PSolveInfos::PSolveVar>& arrVars = solveCtx.arrVars;
+    vector<PSolveGraphInfos::PSolveVar>& arrVars = solveCtx.arrVars;
     vector<SNnVariable>::iterator itVar = m_sSolveGraph.arrVars.begin();
     while(itVar != m_sSolveGraph.arrVars.end()) {
         SNnInternalVariable spToSolveVar = *itVar;
         if(!spToSolveVar) {
             return sCtx.error("不认识的变量类型");
         }
-        PSolveInfos::PSolveVar solveVar;
+        PSolveGraphInfos::PSolveVar solveVar;
         solveVar.size = spToSolveVar->getSize();
         solveVar.type = spToSolveVar->getVariableType();
         solveVar.data = spToSolveVar->getData(idType);
@@ -133,12 +132,12 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
     //
     // 更新计算步骤数组
     //
-    vector<PSolveInfos::PSolveInstruct>& arrInstructs = solveCtx.arrInstructs;
+    vector<PSolveGraphInfos::PSolveInstruct>& arrInstructs = solveCtx.arrInstructs;
     vector<PNnAtomOperatorArgs>::iterator itParameter = m_sSolveGraph.arrOperatorArgs.begin();
     vector<SNnAtomOperator>::iterator itOp = m_sSolveGraph.arrOperators.begin();
     while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
         PNnAtomOperatorArgs spOp = *itParameter;
-        PSolveInfos::PSolveInstruct solveParameter;
+        PSolveGraphInfos::PSolveInstruct solveParameter;
         solveParameter.args = spOp;
         (*itOp)->prepareSolver(idType, solveParameter.solver);
         arrInstructs.push_back(solveParameter);
@@ -160,7 +159,7 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
     solveCtx.nOutputTensorSize = spOutDimension.dataSize();
     solveCtx.spInDimension = spInDimension;
     solveCtx.spOutDimension = spOutDimension;
-    m_spSolveInfos.take(taker);
+    m_spSolveGraphInfos.take(taker);
     return sCtx.success();
 }
 
@@ -182,7 +181,7 @@ int CLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 
 template<typename Q>
 int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
-    PSolveInfos& solveCtx = *m_spSolveInfos;
+    PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
 
     SDimension spInDimension = spBatchIn.dimension();
     int nBatchs = *spInDimension.data();
@@ -237,7 +236,7 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     PVector evalIn[4], evalOut;
     for(auto itSolver=solveCtx.arrInstructs.begin(); itSolver != solveCtx.arrInstructs.end(); itSolver++ ) {
         //准备输入输出计算参数
-        PSolveInfos::PSolveInstruct instruct = *itSolver;
+        PSolveGraphInfos::PSolveInstruct instruct = *itSolver;
 
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
@@ -277,7 +276,7 @@ int CLayerNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDev
 template<typename Q>
 int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
 
-    PSolveInfos& solveCtx = *m_spSolveInfos;
+    PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
 
     SDimension spBatchOutDimension = spBatchOut.dimension();
     int nBatchs = *spBatchOutDimension.data();
@@ -372,7 +371,7 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     for(auto itSolver=solveCtx.arrInstructs.rbegin(); itSolver != solveCtx.arrInstructs.rend(); itSolver++ ) {
 
         //准备输入输出计算参数
-        PSolveInfos::PSolveInstruct instruct = *itSolver;
+        PSolveGraphInfos::PSolveInstruct instruct = *itSolver;
 
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
@@ -416,14 +415,14 @@ int CLayerNetwork::updateT(const STensor& spBatchInDeviation) {
     spResizeDevia->getResizeData(sResizeTensor);
     STensor spWeightDevia = sResizeTensor.spExtra;
 
-    PSolveInfos& solveCtx = *m_spSolveInfos;
+    PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
     int nWeights = solveCtx.nSumSize[EVWeight];
     if(spWeightDevia.size() != nWeights) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
     Q* pItWeightDevia = spWeightDevia.data<Q>();
-    vector<PSolveInfos::PSolveVar>::iterator itVar = solveCtx.arrVars.begin();
+    vector<PSolveGraphInfos::PSolveVar>::iterator itVar = solveCtx.arrVars.begin();
     while(itVar != solveCtx.arrVars.end() ) {
         switch(itVar->type) {
         case ENnVariableType::EVWeight:
