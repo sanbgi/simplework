@@ -9,30 +9,30 @@ using namespace sw;
 using namespace std;
 
 //
+// 每一步求解参数信息定义
+//
+struct PNnAtomOperatorArgs {
+    //
+    // 输入变量数以及对应的下标
+    //
+    int nInVars;
+    int pInVars[4];
+
+    //
+    // 输出变量下标
+    //
+    int iOutVar;
+};
+
+//
 // 求解定义
 //
 struct PNnSolver {
-
-    //
-    // 每一步求解参数信息定义
-    //
-    struct PSolveParameter {
-        //
-        // 输入变量数以及对应的下标
-        //
-        int nInVars;
-        int pInVars[4];
-
-        //
-        // 输出变量下标
-        //
-        int iOutVar;
-    };
     int iInVar;
     int iOutVar;
     vector<SNnVariable> arrVars;
     vector<SNnAtomOperator> arrOperators;
-    vector<PSolveParameter> arrParameters;
+    vector<PNnAtomOperatorArgs> arrOperatorArgs;
 };
 
 class CNnVariableSolver : public CObject, public INnVariableSolver{

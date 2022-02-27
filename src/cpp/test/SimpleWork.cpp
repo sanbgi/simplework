@@ -36,8 +36,19 @@ void testIdx() {
     }
 }
 
-int main(int argc, char *argv[]){
+//#define CL_HPP_MINIMUM_OPENCL_VERSION 100
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION 200
+#include "cl/cl2.hpp"
 
+int main(int argc, char *argv[]){
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+    cl::Platform plat;
+    for (auto &p : platforms) {
+        std::string platver = p.getInfo<CL_PLATFORM_VERSION>();
+        std::cout << "pltver:" << platver << ", ";
+    }
     //FAA a = { 10 };
     //FBB b = { 20 };
     //fun(CData<FAA>(a));
@@ -55,15 +66,5 @@ int main(int argc, char *argv[]){
     CNnNetwork::run();
     //CAvNetwork::runImage();
 
-    /*
-    int i=10;
-    CData s(i);
-    CData * pData = new CData(i);
-    fun(s);
-    fun(CData(i));
-    fun(CData(20));
-    const int* pPtr = s.getPtr<int>();
-    //fun(CData(10));
-    */
     return 0;
 }

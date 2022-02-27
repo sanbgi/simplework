@@ -42,7 +42,7 @@ int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars
 int CNnVariableSolver::addAtomOperator(const SNnAtomOperator& spOp, int nInVars, const SNnVariable pInVars[], const SNnVariable& spOutVar) {
     if(s_pRunCtx) {
         PNnSolver* pCtx = s_pRunCtx->pSolveCtx;
-        PNnSolver::PSolveParameter solveParameter;
+        PNnAtomOperatorArgs solveParameter;
         solveParameter.nInVars = nInVars;
         for( int i=0; i<nInVars; i++) {
             solveParameter.pInVars[i] = s_pRunCtx->registerVar(pInVars[i]);
@@ -56,7 +56,7 @@ int CNnVariableSolver::addAtomOperator(const SNnAtomOperator& spOp, int nInVars,
         }else{
             solveParameter.iOutVar = -1;
         }
-        pCtx->arrParameters.push_back(solveParameter);
+        pCtx->arrOperatorArgs.push_back(solveParameter);
         pCtx->arrOperators.push_back(spOp);
     }
     return sCtx.success();

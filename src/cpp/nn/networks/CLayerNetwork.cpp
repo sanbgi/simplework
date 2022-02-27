@@ -9,39 +9,37 @@ using namespace std;
 
 static SCtx sCtx("CLayerNetwork");
 
-//
-// 计算变量
-//
-struct PSolveVar {
-    //CNnVariable* pVar;
-    ENnVariableType eVarType;//ENnVariableType
-    int nVarSize;
-
-    int size;
-    void* data; //存储状态及权重值的指针
-    void* devia;//存储偏倒数的指针
-};
-
-struct PSolveInstruct {
+struct PSolveContext {
     //
-    // 输入参数及输出参数
+    // 计算变量
     //
-    int nInVar;
-    PSolveVar *ppInVars[4];
-    PSolveVar *pOutVar;
+    struct PSolveVar {
+        ENnVariableType type;//ENnVariableType
+        int size;
+        void* data; //存储状态及权重值的指针
+    };
 
     //
-    // 求解参数
+    // 计算指令
     //
-    PSolveParameter solver;
+    struct PSolveInstruct {
+        //
+        // 求解器信息
+        //
+        PSolveParameter solver;
 
-    //
-    // 求解器
-    //
-    INnAtomOperator* pAtomSolver;
-};
+        //
+        // 计算参数
+        //
+        PNnAtomOperatorArgs args;
+    };
 
-struct PSolveLayer {
+    //解算参数列表
+    vector<PSolveVar> arrVars;
+    //解算步骤列表
+    vector<PSolveInstruct> arrSolvers;
+
+    //解算参数数据
     int nVars;
     PSolveVar* pVars;
 
@@ -51,17 +49,7 @@ struct PSolveLayer {
     int nStateSize;
     int nWeightSize;
     int nOpSize;
-    int iInVar;
-    int iOutVar;
-};
-
-struct PSolveContext {
-    //解算参数列表
-    vector<PSolveVar> arrVars;
-    //解算步骤列表
-    vector<PSolveInstruct> arrSolvers;
-    //解算参数数据
-    PSolveLayer solveLayer;
+    int iOutVar;;
 };
 
 class CLayerNetwork : public CObject, public INnNetwork, public IArchivable{
@@ -148,80 +136,63 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
     m_spContext.take(new PSolveContext, [](PSolveContext* pCtx){
         delete pCtx;
     });
-    PSolveContext& layerCtx = *m_spContext;
+    PSolveContext& solveCtx = *m_spContext;
 
     //
     // 更新计算变量数组
     //
-    vector<PSolveVar>& arrVars = layerCtx.arrVars;
+    int nStateSize = 0;
+    int nWeightSize = 0;
+    int nOpSize = 0;
+    vector<PSolveContext::PSolveVar>& arrVars = solveCtx.arrVars;
     vector<SNnVariable>::iterator itVar = m_spSolver->arrVars.begin();
     while(itVar != m_spSolver->arrVars.end()) {
         SNnInternalVariable spToSolveVar = *itVar;
         if(!spToSolveVar) {
             return sCtx.error("不认识的变量类型");
         }
-        PSolveVar solveVar;
-        solveVar.nVarSize = spToSolveVar->getSize();
-        solveVar.eVarType = spToSolveVar->getVariableType();
+        PSolveContext::PSolveVar solveVar;
+        solveVar.size = spToSolveVar->getSize();
+        solveVar.type = spToSolveVar->getVariableType();
         solveVar.data = spToSolveVar->getData(idType);
+        switch(solveVar.type) {
+        case ENnVariableType::EVState:
+            nStateSize += solveVar.size;
+            break;
+
+        case ENnVariableType::EVWeight:
+            nWeightSize += solveVar.size;
+            break;
+
+        case ENnVariableType::EVOperator:
+            nOpSize += solveVar.size;
+            break;
+        }
         arrVars.push_back(solveVar);
         itVar++;
     }
 
-    vector<PSolveInstruct>& arrSolvers = layerCtx.arrSolvers;
-    vector<PNnSolver::PSolveParameter>::iterator itParameter = m_spSolver->arrParameters.begin();
+    vector<PSolveContext::PSolveInstruct>& arrSolvers = solveCtx.arrSolvers;
+    vector<PNnAtomOperatorArgs>::iterator itParameter = m_spSolver->arrOperatorArgs.begin();
     vector<SNnAtomOperator>::iterator itOp = m_spSolver->arrOperators.begin();
-    while(itParameter != m_spSolver->arrParameters.end()) {
-        PNnSolver::PSolveParameter spOp = *itParameter;
-        PSolveInstruct solveParameter;
-        solveParameter.nInVar = spOp.nInVars;
-        if(spOp.iOutVar>=0)
-            solveParameter.pOutVar = arrVars.data() + spOp.iOutVar;
-        else
-            solveParameter.pOutVar = nullptr;
-        for(int i=0; i<spOp.nInVars; i++) {
-            solveParameter.ppInVars[i] = arrVars.data() + spOp.pInVars[i];
-        }
-        solveParameter.pAtomSolver = (*itOp).getPtr();
-        solveParameter.pAtomSolver->prepareSolver(idType, solveParameter.solver);
+    while(itParameter != m_spSolver->arrOperatorArgs.end()) {
+        PNnAtomOperatorArgs spOp = *itParameter;
+        PSolveContext::PSolveInstruct solveParameter;
+        solveParameter.args = spOp;
+        (*itOp)->prepareSolver(idType, solveParameter.solver);
         arrSolvers.push_back(solveParameter);
         itParameter++, itOp++;
     }
-
-    //
-    // 计算网络变量大小，用于后续快速生成计算缓冲区
-    //
-    int nStateSize = 0;
-    int nWeightSize = 0;
-    int nOpSize = 0;
-    vector<PSolveVar>::iterator it = arrVars.begin(); 
-    for(;it != arrVars.end(); it++) {
-        switch(it->eVarType) {
-        case ENnVariableType::EVState:
-            nStateSize += it->nVarSize;
-            break;
-
-        case ENnVariableType::EVWeight:
-            nWeightSize += it->nVarSize;
-            break;
-
-        case ENnVariableType::EVOperator:
-            nOpSize += it->nVarSize;
-            break;
-        }
-    }
     spDimension = m_spSolver->arrVars[m_spSolver->iOutVar].dimension();
 
-    layerCtx.solveLayer.nOpSize = nOpSize;
-    layerCtx.solveLayer.nStateSize = nStateSize;
-    layerCtx.solveLayer.nWeightSize = nWeightSize;
-    layerCtx.solveLayer.iInVar = m_spSolver->iInVar;
-    layerCtx.solveLayer.iOutVar = m_spSolver->iOutVar;
-    layerCtx.solveLayer.nVars = layerCtx.arrVars.size();
-    layerCtx.solveLayer.pVars = layerCtx.arrVars.data();
-    layerCtx.solveLayer.nSolvers = layerCtx.arrSolvers.size();
-    layerCtx.solveLayer.pSolvers = layerCtx.arrSolvers.data();
-
+    solveCtx.nOpSize = nOpSize;
+    solveCtx.nStateSize = nStateSize;
+    solveCtx.nWeightSize = nWeightSize;
+    solveCtx.iOutVar = m_spSolver->iOutVar;
+    solveCtx.nVars = solveCtx.arrVars.size();
+    solveCtx.pVars = solveCtx.arrVars.data();
+    solveCtx.nSolvers = solveCtx.arrSolvers.size();
+    solveCtx.pSolvers = solveCtx.arrSolvers.data();
     if( COptimizer::getOptimizer(m_strOptimizer.c_str(), idType, m_spOptimizer) != sCtx.success()) {
         return sCtx.error((std::string("创建梯度下降优化器失败 ")).c_str());
     }
@@ -260,13 +231,13 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         return sCtx.error("输入张量尺寸和网络需要的尺寸不匹配");
     }
 
-    PSolveLayer& solveLayer = m_spContext->solveLayer;
+    PSolveContext& solveCtx = *m_spContext;
 
     //
     // 准备计算缓冲区
     //
     STensor spOpSolveBuffer;
-    if( STensor::createVector<Q>(spOpSolveBuffer, solveLayer.nOpSize * nBatchs) != sCtx.success()) {
+    if( STensor::createVector<Q>(spOpSolveBuffer, solveCtx.nOpSize * nBatchs) != sCtx.success()) {
         return sCtx.error("创建计算缓冲区失败");
     }
 
@@ -275,61 +246,58 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //  1，输入变量的数据指针指向输入数据
     //  2，运算变量指针指向缓冲区
     //
-    PSolveVar *pVar, *pItVar, *pItVarEnd;
-    pItVar = solveLayer.pVars;
-    pItVarEnd = solveLayer.pVars+solveLayer.nVars;
     Q* pOpSolvedBuffer = spOpSolveBuffer.data<Q>();
-    Q* pItOpBuffer = pOpSolvedBuffer;
-    while(pItVar<pItVarEnd) {
-        pVar = pItVar++;
-        switch(pVar->eVarType) {
-        case ENnVariableType::EVOperator:
-            pVar->size = pVar->nVarSize * nBatchs;
-            pVar->data = pItOpBuffer;
-            pItOpBuffer += pVar->size;
-            break;
+    PVector solveVars[solveCtx.nVars];
+    {
+        PSolveContext::PSolveVar *pVar = solveCtx.pVars;
+        Q* pItOpBuffer = pOpSolvedBuffer;
+        for( int i=0; i<solveCtx.nVars; i++, pVar++ ) {
+            switch(pVar->type) {
+            case ENnVariableType::EVOperator:
+                solveVars[i].size = pVar->size * nBatchs;
+                solveVars[i].data = pItOpBuffer;
+                pItOpBuffer += solveVars[i].size;
+                break;
 
-        case ENnVariableType::EVState:
-        case ENnVariableType::EVWeight:
-            pVar->size = pVar->nVarSize;
-            break;
+            case ENnVariableType::EVState:
+            case ENnVariableType::EVWeight:
+                solveVars[i].size = pVar->size;
+                solveVars[i].data = pVar->data;
+                break;
 
-        case ENnVariableType::EVInput:
-            pVar->size = pVar->nVarSize * nBatchs;
-            pVar->data = spBatchIn.data<Q>();
-            break;
+            case ENnVariableType::EVInput:
+                solveVars[i].size = pVar->size * nBatchs;
+                solveVars[i].data = spBatchIn.data<Q>();
+                break;
+            }
         }
     }
 
     //
     // 遍历计算序列并执行
     //
-    PSolveInstruct *pSolver, *pItSolver, *pItSolverEnd;
+    PSolveContext::PSolveInstruct *pSolver, *pItSolver, *pItSolverEnd;
     PVector evalIn[4], evalOut;
-    pItSolver = solveLayer.pSolvers;
-    pItSolverEnd = pItSolver + solveLayer.nSolvers;
+    pItSolver = solveCtx.pSolvers;
+    pItSolverEnd = pItSolver + solveCtx.nSolvers;
     while(pItSolver < pItSolverEnd) {
         pSolver = pItSolver++;
 
         //准备输入输出计算参数
-        PSolveInstruct instruct = *pSolver;
-        for(int j=0; j<instruct.nInVar; j++) {
-            pVar = instruct.ppInVars[j];
-            evalIn[j].size = pVar->size;
-            evalIn[j].data = pVar->data;
+        PSolveContext::PSolveInstruct instruct = *pSolver;
+        for(int j=0; j<instruct.args.nInVars; j++) {
+            evalIn[j] = solveVars[instruct.args.pInVars[j]];
         }
-
-        if(instruct.pOutVar!=nullptr) {
-            evalOut.size = instruct.pOutVar->size;
-            evalOut.data = instruct.pOutVar->data;
+        if(instruct.args.iOutVar>=0) {
+            evalOut = solveVars[instruct.args.iOutVar];
         }
 
         //实际计算函数调用
-        (*instruct.solver.pEvalFun)(instruct.solver.pParameter, nBatchs, instruct.nInVar, evalIn, evalOut);
+        (*instruct.solver.pEvalFun)(instruct.solver.pParameter, nBatchs, instruct.args.nInVars, evalIn, evalOut);
     }
 
     SDimension spOutDim = m_spOutDimension.upHighDimension(nBatchs);
-    PSolveVar* pOutVar = solveLayer.pVars + solveLayer.iOutVar;
+    PVector* pOutVar = solveVars + solveCtx.iOutVar;
     int iOffset = ((Q*)pOutVar->data)-pOpSolvedBuffer;
     return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
 }
@@ -371,23 +339,23 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     spResizeOut->getResizeData(sResizeTensor);
     spBatchIn = sResizeTensor.spExtra;
 
-    PSolveLayer& solveLayer = m_spContext->solveLayer;
+    PSolveContext& solveCtx = *m_spContext;
 
     //
     // 准备计算缓冲区
     //
-    int nDeviaBuffer = solveLayer.nOpSize * nBatchs + solveLayer.nStateSize;
+    int nDeviaBuffer = solveCtx.nOpSize * nBatchs + solveCtx.nStateSize;
     CTaker<Q*> spDeviaBuffer(new Q[nDeviaBuffer], [](Q* ptr){
         delete[] ptr;
     });
     Q* pOpDeviaBuffer = spDeviaBuffer;
-    Q* pStateDeviaBuffer = pOpDeviaBuffer + solveLayer.nOpSize * nBatchs;
+    Q* pStateDeviaBuffer = pOpDeviaBuffer + solveCtx.nOpSize * nBatchs;
     memset(spDeviaBuffer, 0, sizeof(Q)*nDeviaBuffer);
 
     //
     // 准备权重缓冲区
     //
-    int nWeights = solveLayer.nWeightSize;
+    int nWeights = solveCtx.nWeightSize;
     Q* pWeightDeviaBuffer = (Q*)m_spOptimizer->getDeviationPtr(nWeights);
     memset(pWeightDeviaBuffer, 0, sizeof(Q)*nWeights);
 
@@ -397,84 +365,70 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     }
     memset(spBatchInDeviation.data<Q>(), 0, sizeof(Q)*nBatchInSize);
 
-    PSolveVar *pItVar, *pItVarEnd;
-    PSolveInstruct *pSolver, *pItSolver, *pItSolverEnd;
- 
-    //
-    // 设置所有的权重、运算、状态的偏导指针，注意：
-    //
-    Q* pItOpDevia = pOpDeviaBuffer;
-    Q* pItStateDevia = pStateDeviaBuffer;
-    Q* pItWeightDevia = pWeightDeviaBuffer;
-    Q* pOpVarBuf = sResizeTensor.spSrc.data<Q>();
-    pItVar = solveLayer.pVars;
-    pItVarEnd = pItVar + solveLayer.nVars;
-    while(pItVar < pItVarEnd) {
-        switch(pItVar->eVarType) {
-        case ENnVariableType::EVWeight:
-            pItVar->size = pItVar->nVarSize;
-            pItVar->devia = pItWeightDevia;
-            pItWeightDevia += pItVar->size;
-            break;
+    PDeviaVector solveVars[solveCtx.nVars];
+    {
+        Q* pItOpDevia = pOpDeviaBuffer;
+        Q* pItStateDevia = pStateDeviaBuffer;
+        Q* pItWeightDevia = pWeightDeviaBuffer;
+        Q* pItOpVar = sResizeTensor.spSrc.data<Q>();
+        PSolveContext::PSolveVar* pItVar = solveCtx.pVars;
+        for( int i=0; i<solveCtx.nVars; i++, pItVar++ ) {
+            switch(pItVar->type) {
+            case ENnVariableType::EVWeight:
+                solveVars[i].size = pItVar->size;
+                solveVars[i].data = pItVar->data;
+                solveVars[i].devia = pItWeightDevia;
+                pItWeightDevia += solveVars[i].size;
+                break;
 
-        case ENnVariableType::EVState:
-            pItVar->size = pItVar->nVarSize;
-            pItVar->devia = pItStateDevia;
-            pItStateDevia += pItVar->size;
-            break;
+            case ENnVariableType::EVState:
+                solveVars[i].size = pItVar->size;
+                solveVars[i].data = pItVar->data;
+                solveVars[i].devia = pItStateDevia;
+                pItStateDevia += solveVars[i].size;
+                break;
 
-        case ENnVariableType::EVOperator:
-            pItVar->size = pItVar->nVarSize*nBatchs;
-            pItVar->devia = pItOpDevia;
-            pItOpDevia += pItVar->size;
-            pItVar->data = pOpVarBuf;
-            pOpVarBuf += pItVar->size;
-            break;
+            case ENnVariableType::EVOperator:
+                solveVars[i].size = pItVar->size*nBatchs;
+                solveVars[i].data = pItOpVar;
+                solveVars[i].devia = pItOpDevia;
+                pItOpDevia += solveVars[i].size;
+                pItOpVar += solveVars[i].size;
+                break;
 
-        case ENnVariableType::EVInput:
-            pItVar->size = pItVar->nVarSize*nBatchs;
-            pItVar->devia = spBatchInDeviation.data<Q>();
-            pItVar->data = spBatchIn.data<Q>();
-            break;
+            case ENnVariableType::EVInput:
+                solveVars[i].size = pItVar->size*nBatchs;
+                solveVars[i].data = spBatchIn.data<Q>();
+                solveVars[i].devia = spBatchInDeviation.data<Q>();
+                break;
+            }
         }
-        pItVar++;
     }
 
     //
     // 拷贝输出偏差
     //
-    PSolveVar* pOutVar = solveLayer.pVars + solveLayer.iOutVar;
+    PDeviaVector* pOutVar = solveVars + solveCtx.iOutVar;
     pOutVar->devia = spBatchOutDeviation.data<Q>();
-
 
     //
     // 遍历计算序列并执行
     //
     PDeviaVector evalIn[4], evalOut;
-    PSolveVar* pVar;
-    pItSolver = solveLayer.pSolvers + solveLayer.nSolvers - 1;
-    pItSolverEnd = solveLayer.pSolvers;
-    while(pItSolver>=pItSolverEnd) {
-        pSolver = pItSolver--;
+    PSolveContext::PSolveInstruct* pSolver = solveCtx.pSolvers + solveCtx.nSolvers;
+    while(--pSolver>=solveCtx.pSolvers) {
 
         //准备输入输出计算参数
-        int nInVars = pSolver->nInVar;
-        for(int j=0; j<nInVars; j++) {
-            pVar = pSolver->ppInVars[j];
-            evalIn[j].size = pVar->size;
-            evalIn[j].data = pVar->data;
-            evalIn[j].devia = pVar->devia;
+        PSolveContext::PSolveInstruct instruct = *pSolver;
+        for(int j=0; j<instruct.args.nInVars; j++) {
+            evalIn[j] = solveVars[instruct.args.pInVars[j]];
         }
-
-        if(pSolver->pOutVar!=nullptr){
-            pVar = pSolver->pOutVar;
-            evalOut.size = pVar->size;
-            evalOut.data = pVar->data;
-            evalOut.devia = pVar->devia;
+        if(instruct.args.iOutVar>=0) {
+            evalOut = solveVars[instruct.args.iOutVar];
         }
 
         //实际计算函数调用
-        (*pSolver->solver.pDeviaFun)(pSolver->solver.pParameter, nBatchs, nInVars, evalIn, evalOut);
+        (*instruct.solver.pDeviaFun)(instruct.solver.pParameter, nBatchs, instruct.args.nInVars, evalIn, evalOut);
     }
 
     m_spOptimizer->updateDeviation(nBatchs);
@@ -508,17 +462,17 @@ int CLayerNetwork::updateT(const STensor& spBatchInDeviation) {
     spResizeDevia->getResizeData(sResizeTensor);
     STensor spWeightDevia = sResizeTensor.spExtra;
 
-    PSolveLayer& solveLayer = m_spContext->solveLayer;
-    int nWeights = solveLayer.nWeightSize;
+    PSolveContext& solveCtx = *m_spContext;
+    int nWeights = solveCtx.nWeightSize;
     if(spWeightDevia.size() != nWeights) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
     Q* pItWeightDevia = spWeightDevia.data<Q>();
-    PSolveVar* pItVar = solveLayer.pVars;
-    PSolveVar* pItVarEnd = pItVar+solveLayer.nVars;
+    PSolveContext::PSolveVar* pItVar = solveCtx.pVars;
+    PSolveContext::PSolveVar* pItVarEnd = pItVar+solveCtx.nVars;
     while(pItVar < pItVarEnd) {
-        switch(pItVar->eVarType) {
+        switch(pItVar->type) {
         case ENnVariableType::EVWeight:
             {
                 Q* pItDevia = pItWeightDevia;
@@ -548,7 +502,7 @@ int CLayerNetwork::toArchive(const SArchive& ar) {
     ar.arBlock("ioutvar", spSolver.iOutVar);
     ar.arObjectArray("operators", spSolver.arrOperators);
     ar.arObjectArray("vars", spSolver.arrVars);
-    ar.arBlockArray<PNnSolver::PSolveParameter, vector<PNnSolver::PSolveParameter>>("parameters", spSolver.arrParameters);
+    ar.arBlockArray<PNnAtomOperatorArgs, vector<PNnAtomOperatorArgs>>("parameters", spSolver.arrOperatorArgs);
     ar.arObject("inputDimension", m_spInDimension);
     ar.visitString("optimizer", m_strOptimizer);
     return sCtx.success();
