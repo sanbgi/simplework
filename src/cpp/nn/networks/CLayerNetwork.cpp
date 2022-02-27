@@ -201,28 +201,26 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     PVector solveVars[solveCtx.arrVars.size()];
     {
         Q* pItOpBuffer = pOpSolvedBuffer;
-        vector<PSolveInfos::PSolveVar>::iterator pVar = solveCtx.arrVars.begin();
-        PVector* pVec = solveVars;
-        while(pVar != solveCtx.arrVars.end() ) {
-            switch(pVar->type) {
+        PVector* pItVec = solveVars;
+        for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
+            switch(pItVar->type) {
             case ENnVariableType::EVOperator:
-                pVec->size = pVar->size * nBatchs;
-                pVec->data = pItOpBuffer;
-                pItOpBuffer += pVec->size;
+                pItVec->size = pItVar->size * nBatchs;
+                pItVec->data = pItOpBuffer;
+                pItOpBuffer += pItVec->size;
                 break;
 
             case ENnVariableType::EVState:
             case ENnVariableType::EVWeight:
-                pVec->size = pVar->size;
-                pVec->data = pVar->data;
+                pItVec->size = pItVar->size;
+                pItVec->data = pItVar->data;
                 break;
 
             case ENnVariableType::EVInput:
-                pVec->size = pVar->size * nBatchs;
-                pVec->data = spBatchIn.data<Q>();
+                pItVec->size = pItVar->size * nBatchs;
+                pItVec->data = spBatchIn.data<Q>();
                 break;
             }
-            pVar++, pVec++;
         }
     }
 
@@ -230,11 +228,9 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     // 遍历计算序列并执行
     //
     PVector evalIn[4], evalOut;
-    vector<PSolveInfos::PSolveInstruct>::iterator itSolver = solveCtx.arrInstructs.begin();
-    while(itSolver != solveCtx.arrInstructs.end() ) {
+    for(auto itSolver=solveCtx.arrInstructs.begin(); itSolver != solveCtx.arrInstructs.end(); itSolver++ ) {
         //准备输入输出计算参数
         PSolveInfos::PSolveInstruct instruct = *itSolver;
-        itSolver++;
 
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
@@ -293,7 +289,6 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     spResizeOut->getResizeData(sResizeTensor);
     spBatchIn = sResizeTensor.spExtra;
 
-
     //
     // 准备计算缓冲区
     //
@@ -324,40 +319,37 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
         Q* pItStateDevia = pStateDeviaBuffer;
         Q* pItWeightDevia = pWeightDeviaBuffer;
         Q* pItOpVar = sResizeTensor.spSrc.data<Q>();
-        vector<PSolveInfos::PSolveVar>::iterator pItVar = solveCtx.arrVars.begin();
-        PDeviaVector* pVec = solveVars;
-        while(pItVar != solveCtx.arrVars.end() ) {
+        PDeviaVector* pItVec = solveVars;
+        for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVWeight:
-                pVec->size = pItVar->size;
-                pVec->data = pItVar->data;
-                pVec->devia = pItWeightDevia;
-                pItWeightDevia += pVec->size;
+                pItVec->size = pItVar->size;
+                pItVec->data = pItVar->data;
+                pItVec->devia = pItWeightDevia;
+                pItWeightDevia += pItVec->size;
                 break;
 
             case ENnVariableType::EVState:
-                pVec->size = pItVar->size;
-                pVec->data = pItVar->data;
-                pVec->devia = pItStateDevia;
-                pItStateDevia += pVec->size;
+                pItVec->size = pItVar->size;
+                pItVec->data = pItVar->data;
+                pItVec->devia = pItStateDevia;
+                pItStateDevia += pItVec->size;
                 break;
 
             case ENnVariableType::EVOperator:
-                pVec->size = pItVar->size*nBatchs;
-                pVec->data = pItOpVar;
-                pVec->devia = pItOpDevia;
-                pItOpDevia += pVec->size;
-                pItOpVar += pVec->size;
+                pItVec->size = pItVar->size*nBatchs;
+                pItVec->data = pItOpVar;
+                pItVec->devia = pItOpDevia;
+                pItOpDevia += pItVec->size;
+                pItOpVar += pItVec->size;
                 break;
 
             case ENnVariableType::EVInput:
-                pVec->size = pItVar->size*nBatchs;
-                pVec->data = spBatchIn.data<Q>();
-                pVec->devia = spBatchInDeviation.data<Q>();
+                pItVec->size = pItVar->size*nBatchs;
+                pItVec->data = spBatchIn.data<Q>();
+                pItVec->devia = spBatchInDeviation.data<Q>();
                 break;
             }
-
-            pItVar++, pVec++;
         }
     }
 
@@ -371,12 +363,10 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     // 遍历计算序列并执行
     //
     PDeviaVector evalIn[4], evalOut;
-    vector<PSolveInfos::PSolveInstruct>::reverse_iterator itSolver = solveCtx.arrInstructs.rbegin();
-    while(itSolver != solveCtx.arrInstructs.rend() ) {
+    for(auto itSolver=solveCtx.arrInstructs.rbegin(); itSolver != solveCtx.arrInstructs.rend(); itSolver++ ) {
 
         //准备输入输出计算参数
         PSolveInfos::PSolveInstruct instruct = *itSolver;
-        itSolver++;
 
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
