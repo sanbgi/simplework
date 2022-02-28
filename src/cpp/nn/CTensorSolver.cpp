@@ -14,7 +14,7 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
         unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
         float* pDesc = spOutTensor->getDataPtr<float>();
         for(int i=0; i<nSize; i++) {
-            pDesc[i] = pSrc[i] / 255.0;
+            pDesc[i] = pSrc[i] / (float)255.0;
         }
         spOut = spOutTensor;
         return sCtx.success();
@@ -29,15 +29,7 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     // 计算新张量尺寸
     //
     SDimension spDimension = spIn.dimension();
-    int nDims = spDimension.size();
-    const int* pDimSizes = spDimension.data();
-    int pNewDimSizes[nDims+1];
-    for(int i=0; i<nDims; i++) {
-        pNewDimSizes[i] = pDimSizes[i];
-    }
-    pNewDimSizes[nDims] = nClassify;
-    SDimension spNewDimVector;
-    SDimension::createDimension(spNewDimVector, nDims+1, pNewDimSizes);
+    SDimension spNewDimVector = spDimension.upLowDimension(nClassify);
 
     //
     // 创建新的张量

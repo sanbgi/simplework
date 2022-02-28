@@ -202,10 +202,10 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     //  2，运算变量指针指向缓冲区
     //
     Q* pOpSolvedBuffer = spOpSolveBuffer.data<Q>();
-    PVector solveVars[solveCtx.arrVars.size()];
+    vector<PVector> solveVars(solveCtx.arrVars.size());
     {
         Q* pItOpBuffer = pOpSolvedBuffer;
-        PVector* pItVec = solveVars;
+        PVector* pItVec = solveVars.data();
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVOperator:
@@ -314,13 +314,13 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     }
     memset(spBatchInDeviation.data<Q>(), 0, sizeof(Q)*nBatchInSize);
 
-    PDeviaVector solveVars[solveCtx.arrVars.size()];
+    vector<PDeviaVector> solveVars(solveCtx.arrVars.size());
     {
         Q* pItOpDevia = pOpDeviaBuffer;
         Q* pItStateDevia = pStateDeviaBuffer;
         Q* pItWeightDevia = pWeightDeviaBuffer;
         Q* pItOpVar = sResizeTensor.spSrc.data<Q>();
-        PDeviaVector* pItVec = solveVars;
+        PDeviaVector* pItVec = solveVars.data();
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVWeight:
@@ -357,7 +357,7 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     //
     // 拷贝输出偏差
     //
-    PDeviaVector* pOutVar = solveVars + solveCtx.iOutVar;
+    PDeviaVector* pOutVar = solveVars.data() + solveCtx.iOutVar;
     pOutVar->devia = spBatchOutDeviation.data<Q>();
 
     //

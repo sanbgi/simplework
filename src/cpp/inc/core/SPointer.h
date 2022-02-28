@@ -105,7 +105,7 @@ private:
         }
     }
     template<typename Q> int assignPtr(Q* pPtr = nullptr) {
-        if( m_ptr != (TInterface*)pPtr ) {
+        if( (void*)m_ptr != (void*)pPtr ) {
             releasePtr();
             initPtr(pPtr);
         }

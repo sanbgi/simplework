@@ -84,7 +84,7 @@ private:
             { 
                 m_spModule = (*fun)();
             }
-            return SModule::wrapPtr(this);
+            return SModule::wrapPtr((IModule*)this);
         }
 
         return SObject();

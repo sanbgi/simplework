@@ -60,7 +60,7 @@ public:
     template<typename TObject> static SObject createObject(const PData* pData=nullptr) {
         CPointer<TObject> spObject;
         __CObjectImp<TObject>::__createObject(spObject, pData);
-        return spObject;
+        return spObject.getObject();
     }
 
 private:

@@ -4,6 +4,7 @@
 #include "nn.h"
 #include "SNnAtomOperator.h"
 #include <map>
+#include <string>
 
 using namespace sw;
 using namespace std;

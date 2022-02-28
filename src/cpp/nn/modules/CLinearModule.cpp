@@ -37,7 +37,7 @@ public://Factory
 private:
     //基础参数
     int m_nCells;
-    int m_bBais;
+    bool m_bBais;
     double m_dDropoutRate;
     string m_strActivator;
 

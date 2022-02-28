@@ -212,11 +212,11 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
     }
 
     int nDims = headerArray[3];
-    int pDimSize[nDims];
-    if( !idxFile.read((char*)pDimSize, sizeof(int)*nDims) ) {
+    vector<int> pDimSize(nDims);
+    if( !idxFile.read((char*)pDimSize.data(), sizeof(int)*nDims) ) {
         return sCtx.error(string(string("IDX文件数据数据不完整，读取维度信息失败，文件名: ") + szFileName).c_str());
     }
-    highEndianToCPU(nDims, sizeof(int), (unsigned char*)pDimSize);
+    highEndianToCPU(nDims, sizeof(int), (unsigned char*)pDimSize.data());
 
     int nData = 1;
     for(int i=0; i<nDims; i++) {
@@ -224,7 +224,7 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
     }
 
     SDimension spDimension;
-    if( SDimension::createDimension(spDimension, nDims, pDimSize) != sCtx.success() ) {
+    if( SDimension::createDimension(spDimension, nDims, pDimSize.data()) != sCtx.success() ) {
         return sCtx.error("创建张量的维度向量失败");
     }
     STensor spTensor;

@@ -43,7 +43,7 @@ __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::SModule& __getSimpleWork(int nComp
 
 __SimpleWork_Core_Namespace_Enter__
 
-class PData;
+struct PData;
 class SObject;
 class SFactory;
 

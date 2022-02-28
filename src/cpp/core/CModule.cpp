@@ -87,7 +87,7 @@ private:
             //
             // 初始化模块后，再查找一次工厂，看是否注册，并返回已经注册的值
             //
-            SModule coreapi = SModule::wrapPtr(this);
+            SModule coreapi = SModule::wrapPtr((IModule*)this);
             spModule->initModule(strModuleKey.c_str(), coreapi);
             it = m_mapFactories.find(szClassKey);
             if(it != m_mapFactories.end() ) {

@@ -66,7 +66,7 @@ private:
                 m_spModule = (*fun)(IModule::getInterfaceVer());
             }
             m_sModule.take(sModule);
-            return SModule::wrapPtr(this);
+            return SModule::wrapPtr((IModule*)this);
         }
 
         return SModule();

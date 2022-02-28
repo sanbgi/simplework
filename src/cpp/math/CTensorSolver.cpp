@@ -1,8 +1,8 @@
 #include "../inc/math/math.h"
 #include <map>
+#include <vector>
 #include "CTensor.h"
 
-using namespace sw;
 using namespace sw;
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
@@ -54,14 +54,14 @@ public:
         int nPrevDims = spIn.size();
         const int* pPrevDimSizes = spIn.data();
 
-        int pNewDimSizes[nPrevDims+nDims];
+        std::vector<int> pNewDimSizes(nPrevDims+nDims);
         for(int i=0; i<nPrevDims; i++) {
             pNewDimSizes[nDims+i] = pPrevDimSizes[i];
         }
         for(int i=0; i<nDims; i++) {
             pNewDimSizes[i] = pDimSizes[i];
         }
-        spOut = SDimension(nPrevDims+nDims,pNewDimSizes);
+        spOut = SDimension(nPrevDims+nDims,pNewDimSizes.data());
         return sCtx.success();
     }
 
@@ -85,14 +85,14 @@ public:
         int nPrevDims = spIn.size();
         const int* pPrevDimSizes = spIn.data();
 
-        int pNewDimSizes[nPrevDims+nDims];
+        std::vector<int> pNewDimSizes(nPrevDims+nDims);
         for(int i=0; i<nPrevDims; i++) {
             pNewDimSizes[i] = pPrevDimSizes[i];
         }
         for(int i=0; i<nDims; i++) {
             pNewDimSizes[nPrevDims+i] = pDimSizes[i];
         }
-        spOut = SDimension(nPrevDims+nDims,pNewDimSizes);
+        spOut = SDimension(nPrevDims+nDims,pNewDimSizes.data());
         return sCtx.success();
     }
 

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(SimpleWork VERSION 0.1.0)
 
-
 set ( SIMPLEWORK_CORE_MODULE_NAME sw.core )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" )
 set( SRC_LIST )

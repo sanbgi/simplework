@@ -89,9 +89,9 @@ int CIoBinaryArReader::loadString(string& str) {
 
     //如果字符串为空，则无需序列化内容了
     if(nChar>1) {
-        char szStr[nChar];
-        m_stream.read(szStr, nChar);
-        str = szStr;
+        vector<char> szStr(nChar);
+        m_stream.read(szStr.data(), nChar);
+        str = szStr.data();
     }
     return sCtx.success();
 }

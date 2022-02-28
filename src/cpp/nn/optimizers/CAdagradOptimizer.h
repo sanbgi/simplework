@@ -31,8 +31,8 @@ private:
     }
 
     int updateDeviation(int nBatchSize){
-        const Q esp = 1e-8;
-        const Q learnRate = 0.001;
+        const Q esp = 1e-8f;
+        const Q learnRate = 0.001f;
         Q* pDeviation = m_pDeviation;
         Q* pVelocity = m_pVelocity;
         int nDeviation = m_nDeviations;

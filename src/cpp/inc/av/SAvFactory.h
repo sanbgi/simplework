@@ -2,6 +2,7 @@
 #define __SimpleWork_AV_AvFactory_h__
 
 #include "av.h"
+#include "PAvSample.h"
 
 SIMPLEWORK_AV_NAMESPACE_ENTER
 
@@ -65,7 +66,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(AvFactory, "sw.av.AvFactory")
         //          PAvFrame：需要播放的音频帧
         //      输出管道：无
         //
-        virtual openSpeaker(const char* szDeviceName, const PAvSample& sampleMeta, SAvOut& spAvOut) = 0;
+        virtual int openSpeaker(const char* szDeviceName, const PAvSample& sampleMeta, SAvOut& spAvOut) = 0;
         //
         //  创建视频文件写入管道
         //      输入管道：

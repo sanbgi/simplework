@@ -337,7 +337,7 @@ public:
         m_nInputHeight = pDimSizes[0];
         m_nInputWidth = pDimSizes[1];
         m_nInputLayer = 1;
-        int pOutDimSizes[nDims];
+        vector<int> pOutDimSizes(nDims);
         for( int i=2; i<nDims; i++) {
             pOutDimSizes[i] = pDimSizes[i];
             m_nInputLayer *= pDimSizes[i];
@@ -360,7 +360,7 @@ public:
         m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;
         pOutDimSizes[0] = m_nOutHeight;
         pOutDimSizes[1] = m_nOutWidth;
-        createVariable(SDimension(nDims, pOutDimSizes),spVarOut);
+        createVariable(SDimension(nDims, pOutDimSizes.data()),spVarOut);
         return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 

@@ -1,6 +1,9 @@
 #ifndef __SimpleWork_NN_Operators_CMinusOperator_h__
 #define __SimpleWork_NN_Operators_CMinusOperator_h__
 
+#define CL_HPP_TARGET_OPENCL_VERSION 200
+#include "cl/cl2.hpp"
+
 #include "operator.h"
 static SCtx sCtx("MinusOperator");
 class CMinusOperator : public CNnSolver, public INnAtomOperator, public IArchivable{

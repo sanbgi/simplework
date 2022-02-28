@@ -1,6 +1,7 @@
 #include "CActivator.h"
 #include "math.h"
 #include <map>
+#include <vector>
 #include <string>
 
 using namespace std;
@@ -213,7 +214,7 @@ public:
                 //
                 // 求各项和
                 //
-                Q pExp[nData];
+                vector<Q> pExp(nData);
                 Q dSum = 0;
                 for(int i=0; i<nData; i++) {
                     pExp[i] = exp(((Q*)pZArray)[i]-dMax);

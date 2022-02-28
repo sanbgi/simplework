@@ -3,6 +3,9 @@
 #include "CActivator.h"
 #include "CNnVariableSolver.h"
 #include <map>
+#include <string>
+
+using namespace std;
 
 static SCtx sCtx("CNnSolver");
 map<string, FCreateSolver>& CNnSolver::getFactories() {

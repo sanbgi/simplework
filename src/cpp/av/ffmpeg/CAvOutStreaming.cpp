@@ -221,7 +221,7 @@ int CAvOutStreaming::initAudio(AVFormatContext* pFormatContext, const PAvStreami
             }
         }
         pCodecContext->channels = av_get_channel_layout_nb_channels(pCodecContext->channel_layout);
-        pAvStream->time_base = (AVRational){ 1, pSrc->timeRate };
+        pAvStream->time_base = { 1, pSrc->timeRate };
         pAvStream->duration = pSrc->timeDuration;
 
         pCodecContext->sample_fmt = CAvSampleType::toSampleFormat(sampleMeta.sampleFormat);

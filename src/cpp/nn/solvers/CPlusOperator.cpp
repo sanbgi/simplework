@@ -1,6 +1,7 @@
 #ifndef __SimpleWork_NN_Operators_CPlusOperator_h__
 #define __SimpleWork_NN_Operators_CPlusOperator_h__
 
+
 #include "operator.h"
 
 static SCtx sCtx("PlusOperator");
@@ -10,6 +11,7 @@ class CPlusOperator : public CNnSolver, public INnAtomOperator, public IArchivab
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
+
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
@@ -50,6 +52,27 @@ public:
             }
         }
     }
+
+    template<typename Q>
+    static void evalT_OpenCL(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
+        VERIFY(nInVars==2)
+        Q* pIn1 = (Q*)inVars[0].data;
+        Q* pIn2 = (Q*)inVars[1].data;
+        Q* pO = (Q*)outVar.data;
+        Q* pIn1End = pIn1+inVars[0].size;
+        Q* pIn2End = pIn2+inVars[1].size;
+        while(outVar.size-->0) {
+            *pO = *pIn1 + *pIn2;
+            pO++, pIn1++, pIn2++;
+            if(pIn1 == pIn1End) {
+                pIn1 = (Q*)inVars[0].data;
+            }
+            if(pIn2 == pIn2End) {
+                pIn2 = (Q*)inVars[1].data;
+            }
+        }
+    }
+
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
