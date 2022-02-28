@@ -49,7 +49,7 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
         float* pDesc = spOutTensor->getDataPtr<float>();
         for(int i=0; i<nSize; i++) {
             for( int j=0; j<nClassify; j++) {
-                pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0 : 0.0;
+                pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0f : 0.0f;
             }
         }
         spOut = spOutTensor;
@@ -59,7 +59,7 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
         float* pDesc = spOutTensor->getDataPtr<float>();
         for(int i=0; i<nSize; i++) {
             for( int j=0; j<nClassify; j++) {
-                pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0 : 0.0;
+                pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0f : 0.0f;
             }
         }
         spOut = spOutTensor;

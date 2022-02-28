@@ -76,7 +76,7 @@ void CIoBinaryArWriter::leaveElement(SArchivable& spEle) {
 
 void CIoBinaryArWriter::saveString(string str) {
     //+1的目的时把末尾的0也一并序列化
-    int nChar = str.length()+1;
+    int nChar = (int)str.length()+1;
     const char* pChar = str.c_str();
     m_stream.write((const char*)&nChar, sizeof(int));
     //如果字符串为空，则无需序列化内容了

@@ -110,7 +110,7 @@ public:
         class CArrayVisitee : IArrayVisitee {
         public:
             unsigned int getElementType() { return sw::CBasicData<Q>::getStaticType(); }
-            int size() { return m_pEles->size(); }
+            int size() { return (int)m_pEles->size(); }
             const void* data() { return m_pEles->data(); }
             int getElementBytes() { return sizeof(Q); }
             void setArray(int nEle, const void* pEle) {
@@ -175,7 +175,7 @@ public:
         class CStringVisitee : IArrayVisitee {
         public:
             unsigned int getElementType() { return sw::CBasicData<char*>::getStaticType(); }
-            int size() { return m_pStr->length()+1; }
+            int size() { return (int)m_pStr->length()+1; }
             const void* data() { return m_pStr->c_str(); }
             int getElementBytes() { return sizeof(char); }
             void setArray(int nEle, const void* pEle) {
@@ -226,7 +226,7 @@ public:
         class CEleArrayVisitee : IObjectArrayVisitee {
         public:
             unsigned int getElementType() { return sw::CBasicData<char*>::getStaticType(); }
-            int size() { return m_pArray->size(); }
+            int size() { return (int)m_pArray->size(); }
             int getEleAt(int iIndex, SArchivable& spEle){
                 spEle = (*m_pArray)[iIndex];
                 return 0;

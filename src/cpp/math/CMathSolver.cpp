@@ -16,7 +16,7 @@ public:
     void set(PVector vec, int value){
         Q* pTarget = (Q*)vec.data;
         while(vec.size-->0) {
-            *pTarget = value;
+            *pTarget = (Q)value;
             pTarget++;
         }
     }

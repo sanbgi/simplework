@@ -54,7 +54,7 @@ struct PAvFrame {
     // 时间戳，对应视频流的时钟频率，比如：时钟频率是1000，时间戳是10，则表示10/1000秒
     //
     int timeRate;
-    long timeStamp;
+    long long timeStamp;
 
     //
     //

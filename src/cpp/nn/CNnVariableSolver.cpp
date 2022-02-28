@@ -14,7 +14,7 @@ static struct PRunCtx {
         int iVar = -1;
         map<INnVariable*, int>::iterator it = mapSolvedVars.find(spVar.getPtr());
         if(it == mapSolvedVars.end()) {
-            iVar = pSolveCtx->arrVars.size();
+            iVar = (int)pSolveCtx->arrVars.size();
             mapSolvedVars[spVar.getPtr()] = iVar;
             pSolveCtx->arrVars.push_back(spVar);
         }else{

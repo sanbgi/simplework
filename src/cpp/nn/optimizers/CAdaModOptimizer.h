@@ -36,11 +36,11 @@ private:
 
     int updateDeviation(int nBatchSize){
 
-        const Q esp = 1e-8;
-        const Q learnRate = 0.001;
-        const Q beta1 = 0.9;
-        const Q beta2 = 0.999;
-        const Q beta3 = 0.99;
+        const Q esp = 1e-8f;
+        const Q learnRate = 0.001f;
+        const Q beta1 = 0.9f;
+        const Q beta2 = 0.999f;
+        const Q beta3 = 0.99f;
 
         //
         // 更新一阶、二阶动量校正参数
@@ -62,7 +62,7 @@ private:
             (*pVelocity) = beta2 * (*pVelocity) + (1-beta2) * (*pDeviation) * (*pDeviation);
             momentum = (*pMomentum) / ( 1 - beta1Bais);
             velocity = (*pVelocity) / ( 1 - beta2Bais);
-            s = learnRate / (sqrt(velocity) + esp);
+            s = learnRate / ((Q)sqrt(velocity) + esp);
             (*pS) = beta3 * (*pS) + (1-beta3) * s;
             s = min(s, (*pS));
             (*pDeviation) = s * momentum;

@@ -76,7 +76,7 @@ int CCompositeNetwork::devia(const STensor& spBatchOut, const STensor& spOutDevi
     spBatchIn = spOut;
 
     STensor spNetDevias;
-    if( STensor::createVector(spNetDevias, arrDevias.size(), arrDevias.data()) != sCtx.success() ) {
+    if( STensor::createVector(spNetDevias, (int)arrDevias.size(), arrDevias.data()) != sCtx.success() ) {
         return sCtx.error("创建保存偏差的对象张量失败");
     }
     return CNnResizeTensor::createResizeTensor({spOutDev, spOutDev.dimension(), 0, spNetDevias}, spInDeviation);

@@ -246,7 +246,7 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     }
 
     SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
-    int iOffset = ((Q*)solveVars[solveCtx.iOutVar].data)-pOpSolvedBuffer;
+    int iOffset = (int)(((Q*)solveVars[solveCtx.iOutVar].data)-pOpSolvedBuffer);
     return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
 }
 

@@ -59,7 +59,7 @@ public://ITensorEquation
         }
 
         Q* pO = (Q*)outVar.data;
-        *pO = sqrt(sum / nSize);
+        *pO = (Q)sqrt(sum / nSize);
     }
 };
 

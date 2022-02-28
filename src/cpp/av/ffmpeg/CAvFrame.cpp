@@ -6,8 +6,6 @@
 
 #include <string>
 #include <algorithm>
-#include "jconfig.h"
-#include "jpeglib.h"
 
 using namespace std;
 
@@ -98,26 +96,6 @@ int CAvFrame::setAVFrameToPAvFrame() {
 
 const PAvFrame* CAvFrame::getFramePtr() {
     return &m_avFrame;
-}
-
-static bool isJpegFile(const char* szFile) {
-    if(szFile == nullptr) {
-        return false;
-    }
-
-    string strFile = szFile;
-    size_t it = strFile.find_last_of(".");
-    if(it == string::npos) {
-        return false;
-    }
-
-    string strExt = strFile.substr(it+1);
-    transform(strExt.begin(),strExt.end(),strExt.begin(),::tolower);
-    if( strExt.compare("jpg") == 0 ||
-        strExt.compare("jpeg") == 0 ) {
-        return true;
-    }
-    return false;
 }
 
 //
@@ -222,6 +200,31 @@ end:
     return ret;
 }
 
+#if 0
+
+static bool isJpegFile(const char* szFile) {
+    if(szFile == nullptr) {
+        return false;
+    }
+
+    string strFile = szFile;
+    size_t it = strFile.find_last_of(".");
+    if(it == string::npos) {
+        return false;
+    }
+
+    string strExt = strFile.substr(it+1);
+    transform(strExt.begin(),strExt.end(),strExt.begin(),::tolower);
+    if( strExt.compare("jpg") == 0 ||
+        strExt.compare("jpeg") == 0 ) {
+        return true;
+    }
+    return false;
+}
+
+
+#include "jconfig.h"
+#include "jpeglib.h"
 #include <setjmp.h>
 
 // 这些和错误处理有关，不用管
@@ -398,48 +401,6 @@ static int read_JPEG_file(const char *filename, CAvFrame* pAvFrame)
   return 1;
 }
 
-int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
-    CPointer<CAvFrame> sp;
-    CObject::createObject(sp);
-    if( isJpegFile(szFileName) ) {
-        if( read_JPEG_file(szFileName, sp) ) {
-            spFrame.setPtr(sp.getPtr());
-            return sCtx.success();
-        }
-        return sCtx.error();
-    }
-
-    sp->m_spAvFrame.take(av_frame_alloc(), [](AVFrame* pFrame){
-        av_frame_free(&pFrame);
-    });
-    AVFrame* pAvFrame = sp->m_spAvFrame;
-    AVPixelFormat pixForamt;
-    if( ff_load_image(
-                pAvFrame->data, pAvFrame->linesize, 
-                &pAvFrame->width, &pAvFrame->height, 
-                (AVPixelFormat*)&pAvFrame->format, szFileName, nullptr) < 0 ) {
-        return sCtx.error("读取图片文件失败");
-    }
-    
-    PAvFrame* pFrame = &sp->m_avFrame;
-    pFrame->nHeight = pAvFrame->height;
-    pFrame->nWidth = pAvFrame->width;
-    pFrame->streamingId = 0;
-    pFrame->timeRate = 0;
-    pFrame->timeStamp = 0;
-    pFrame->sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-    pFrame->sampleMeta.sampleFormat = CAvSampleType::convert(pixForamt);
-    pFrame->sampleMeta.videoHeight = pAvFrame->height;
-    pFrame->sampleMeta.videoWidth = pAvFrame->width;
-    pFrame->pPlaneLineSizes = pAvFrame->linesize;
-    pFrame->ppPlanes = pAvFrame->data;
-    pFrame->nPlanes = 0;
-    for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
-        pFrame->nPlanes = i+1;
-    }
-    spFrame.setPtr(sp.getPtr());
-    return sCtx.success();
-}
 
 static int write_JPEG_file(const char *filename, int quality, unsigned char* image_buffer, int image_width, int image_height)
 {
@@ -549,7 +510,6 @@ static int write_JPEG_file(const char *filename, int quality, unsigned char* ima
     return 1;
 }
 
-
 static int writeJpegFile(const char* szName, const SAvFrame& spFrame) {
 
     const PAvFrame* pFrame = spFrame->getFramePtr(); 
@@ -576,11 +536,57 @@ static int writeJpegFile(const char* szName, const SAvFrame& spFrame) {
     }
     return sCtx.error("保存图片失败");
 }
+#endif
+
+
+int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
+    CPointer<CAvFrame> sp;
+    CObject::createObject(sp);
+    /*
+    if( isJpegFile(szFileName) ) {
+        if( read_JPEG_file(szFileName, sp) ) {
+            spFrame.setPtr(sp.getPtr());
+            return sCtx.success();
+        }
+        return sCtx.error();
+    }*/
+
+    sp->m_spAvFrame.take(av_frame_alloc(), [](AVFrame* pFrame){
+        av_frame_free(&pFrame);
+    });
+    AVFrame* pAvFrame = sp->m_spAvFrame;
+    if( ff_load_image(
+                pAvFrame->data, pAvFrame->linesize, 
+                &pAvFrame->width, &pAvFrame->height, 
+                (AVPixelFormat*)&pAvFrame->format, szFileName, nullptr) < 0 ) {
+        return sCtx.error("读取图片文件失败");
+    }
+    
+    PAvFrame* pFrame = &sp->m_avFrame;
+    pFrame->nHeight = pAvFrame->height;
+    pFrame->nWidth = pAvFrame->width;
+    pFrame->streamingId = 0;
+    pFrame->timeRate = 0;
+    pFrame->timeStamp = 0;
+    pFrame->sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
+    pFrame->sampleMeta.sampleFormat = CAvSampleType::convert((AVPixelFormat)pAvFrame->format);
+    pFrame->sampleMeta.videoHeight = pAvFrame->height;
+    pFrame->sampleMeta.videoWidth = pAvFrame->width;
+    pFrame->pPlaneLineSizes = pAvFrame->linesize;
+    pFrame->ppPlanes = pAvFrame->data;
+    pFrame->nPlanes = 0;
+    for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
+        pFrame->nPlanes = i+1;
+    }
+    spFrame.setPtr(sp.getPtr());
+    return sCtx.success();
+}
 
 int CAvFrame::saveImage(const char* szFileName, const SAvFrame& spFrame) {
+    /*
     if(isJpegFile(szFileName)) {
         return writeJpegFile(szFileName, spFrame);
-    }
+    }*/
 
     const PAvFrame* pFrame = spFrame ? spFrame->getFramePtr() : nullptr;
     if(pFrame == nullptr) {
@@ -600,7 +606,6 @@ int CAvFrame::saveImage(const char* szFileName, const SAvFrame& spFrame) {
         avformat_free_context(pCtx);
     });
 
-    
     // 创建流
     PAvStreaming avStreaming;
     avStreaming.streamingId = 0;

@@ -10,7 +10,7 @@ FFMPEG_NAMESPACE_ENTER
 static SCtx sCtx("CAvIn");
 
 int CAvIn::getStreamingSize() {
-    return m_arrStreamings.size();
+    return (int)m_arrStreamings.size();
 }
 const PAvStreaming* CAvIn::getStreamingAt(int iPos) {
     if(iPos < 0 || iPos >= m_arrStreamings.size() ) {
@@ -51,7 +51,7 @@ int CAvIn::initVideoFile(const char* szFileName) {
     }
 
     // 初始化所有流参数
-    for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
+    for(unsigned int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         CPointer<CAvInStreaming> spStreaming;
         CObject::createObject(spStreaming);
         if( spStreaming->init(m_spOpenedCtx->streams[i], i) != sCtx.success() ) {
@@ -114,7 +114,7 @@ int CAvIn::initCapture(AVInputFormat* pInputForamt, const char* szName) {
     }
 
     // 初始化所有流参数
-    for(int i=0; i<m_spOpenedCtx->nb_streams; i++) {
+    for(unsigned int i=0; i<m_spOpenedCtx->nb_streams; i++) {
         CPointer<CAvInStreaming> spStreaming;
         CObject::createObject(spStreaming);
         if( spStreaming->init(m_spOpenedCtx->streams[i], i) != sCtx.success() ) {

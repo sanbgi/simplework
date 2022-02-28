@@ -17,7 +17,7 @@ public:
         CBatchNormalizeOperator* pThis = (CBatchNormalizeOperator*)pParameters;
         int nLayers = pThis->m_nLayers;
         int nTensors = outVar.size / nLayers;
-        Q esp = pThis->m_dEsp;
+        Q esp = (Q)pThis->m_dEsp;
         Q* pIn = (Q*)inVars[0].data;
         Q* pAvg = (Q*)pThis->m_pAvg;
         Q* pVariance = (Q*)pThis->m_pVariance;
@@ -70,7 +70,7 @@ public:
         pItVariance = pVariance;
         nItLayer = nLayers;
         while(nItLayer-->0) {
-            x = 1.0 / sqrt(*pItVariance + esp);
+            x = 1.0 / (Q)sqrt(*pItVariance + esp);
             pItIn = pIn;
             pItOut = pOut;
             while(pItIn < pItInEnd) {
@@ -87,7 +87,7 @@ public:
         VERIFY(nInVars==1)
         CBatchNormalizeOperator* pThis = (CBatchNormalizeOperator*)pParameters;
         int nLayers = pThis->m_nLayers;
-        Q esp = pThis->m_dEsp;
+        Q esp = (Q)pThis->m_dEsp;
         Q* pInDevia = (Q*)inVars[0].devia;
         Q* pVariance = (Q*)pThis->m_pVariance;
         Q* pOutDevia = (Q*)outVar.devia;
@@ -100,7 +100,7 @@ public:
         pItVariance = pVariance;
         nItLayer = nLayers;
         while(nItLayer-->0) {
-            x = 1.0 / sqrt(*pItVariance + esp);
+            x = 1.0 / (Q)sqrt(*pItVariance + esp);
             pItInDevia = pInDevia;
             pItOutDevia = pOutDevia;
             while(pItInDevia < pItInDeviaEnd) {

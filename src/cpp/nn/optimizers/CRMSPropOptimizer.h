@@ -32,16 +32,16 @@ private:
     }
 
     int updateDeviation(int nBatchSize){
-        const Q esp = 1e-6;
-        const Q learnRate = 0.001;
-        const Q decayRate = 0.99;
+        const Q esp = 1e-6f;
+        const Q learnRate = 0.001f;
+        const Q decayRate = 0.99f;
         Q* pDeviation = m_pDeviation;
         Q* pVelocity = m_pVelocity;
         int nDeviation = m_nDeviations;
         for( int i=0; i<nDeviation; i++) {
             (*pDeviation) = (*pDeviation) / nBatchSize;
             (*pVelocity) = decayRate * (*pVelocity) + (1-decayRate) * (*pDeviation) * (*pDeviation);
-            (*pDeviation) = learnRate * (*pDeviation) / (sqrt((*pVelocity)) + esp);
+            (*pDeviation) = learnRate * (*pDeviation) / ((Q)sqrt((*pVelocity)) + esp);
             pVelocity++, pDeviation++;
         }
         return sCtx.success();

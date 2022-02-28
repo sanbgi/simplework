@@ -75,7 +75,7 @@ public:
     }
 
     static CActivator* getLeakyReLU() {
-        static Q s_leaky_a = 0.01;
+        static Q s_leaky_a = (Q)0.01;
         static class CActivatorImp : public CActivator {
             static Q activate(Q x) {
                 return x>=0?x:(s_leaky_a*x);
@@ -96,7 +96,7 @@ public:
                 for(int i=0; i<nData; i++) {
                     dLoss += ((Q*)pYDeltaArray)[i] * ((Q*)pYDeltaArray)[i];
                 }
-                return dLoss/2.0;
+                return dLoss/(Q)2.0;
             }
         }s_activator;
         return &s_activator;
@@ -104,10 +104,10 @@ public:
 
 
     static CActivator* getELU() {
-        static Q s_leaky_a = 0.01;
+        static Q s_leaky_a = (Q)0.01;
         static class CActivatorImp : public CActivator {
             static Q activate(Q x) {
-                return x>=0?x:(s_leaky_a*(exp(x)-1));
+                return x>=0?x:(s_leaky_a*(Q)(exp(x)-1));
             }
             void activate( int nData, void* pZArray, void* pYArray) {
                 for(int i=0; i<nData; i++) {
@@ -126,7 +126,7 @@ public:
                 for(int i=0; i<nData; i++) {
                     dLoss += ((Q*)pYDeltaArray)[i] * ((Q*)pYDeltaArray)[i];
                 }
-                return dLoss/2.0;
+                return dLoss/(Q)2.0;
             }
         }s_activator;
         return &s_activator;
@@ -136,7 +136,7 @@ public:
     static CActivator* getSigmoid() {
         static class CActivatorImp : public CActivator {
             static Q activate(Q x) {
-                return 1/(1+exp(-x));
+                return 1/(1+(Q)exp(-x));
             }
             static Q deactivate(Q y) {
                 return y*(1-y);
@@ -157,7 +157,7 @@ public:
                 for(int i=0; i<nData; i++) {
                     dLoss += ((Q*)pYDeltaArray)[i] * ((Q*)pYDeltaArray)[i];
                 }
-                return dLoss/2.0;
+                return dLoss/(Q)2.0;
             }
         }s_activator;
         return &s_activator;
@@ -167,7 +167,7 @@ public:
     static CActivator* getTanh() {
         static class CActivatorImp : public CActivator {
             static Q activate(Q x) {
-                Q v = exp(-2*x);
+                Q v = (Q)exp(-2*x);
                 return (1-v)/(1+v);
             }
             void activate( int nData, void* pZArray, void* pYArray) {
@@ -186,7 +186,7 @@ public:
                 for(int i=0; i<nData; i++) {
                     dLoss += ((Q*)pYDeltaArray)[i] * ((Q*)pYDeltaArray)[i];
                 }
-                return dLoss/2.0;
+                return dLoss/(Q)2.0;
             }
         }s_activator;
         return &s_activator;
@@ -217,7 +217,7 @@ public:
                 vector<Q> pExp(nData);
                 Q dSum = 0;
                 for(int i=0; i<nData; i++) {
-                    pExp[i] = exp(((Q*)pZArray)[i]-dMax);
+                    pExp[i] = (Q)exp(((Q*)pZArray)[i]-dMax);
                     dSum += pExp[i];
                 }
 

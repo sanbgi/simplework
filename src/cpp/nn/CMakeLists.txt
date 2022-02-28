@@ -18,5 +18,5 @@ add_library(${SIMPLEWORK_NN_MODULE_NAME} SHARED ${SRC_LIST})
 
 find_package(OpenCL REQUIRED)
 target_link_libraries(${SIMPLEWORK_NN_MODULE_NAME} "sw.core" OpenCL::OpenCL)
-#set_target_properties(${SIMPLEWORK_NN_MODULE_NAME} PROPERTIES PREFIX "")
+set_target_properties(${SIMPLEWORK_NN_MODULE_NAME} PROPERTIES PREFIX "")
 

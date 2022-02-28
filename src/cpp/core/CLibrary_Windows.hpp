@@ -55,7 +55,7 @@ private:
         m_sModule.release();
         m_spModule.release();
 
-        string strLibrary = "lib" + strModuleKey + ".dll";
+        string strLibrary = strModuleKey + ".dll";
         CTaker<HMODULE> sModule(LoadLibrary(strLibrary.c_str()), [](HMODULE hModule){FreeLibrary(hModule);});
         if (sModule)
         {

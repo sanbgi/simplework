@@ -39,7 +39,7 @@ private:
         for( int i=0; i<nDeviation; i++) {
             (*pDeviation) = (*pDeviation) / nBatchSize;
             (*pVelocity) = (*pVelocity) + (*pDeviation) * (*pDeviation);
-            (*pDeviation) = learnRate * (*pDeviation) / (sqrt((*pVelocity)) + esp);
+            (*pDeviation) = learnRate * (*pDeviation) / ((Q)sqrt((*pVelocity)) + esp);
             pVelocity++, pDeviation++;
         }
         return sCtx.success();

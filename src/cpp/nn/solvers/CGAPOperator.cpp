@@ -18,7 +18,7 @@ public:
         int nOutBatchSize = outVar.size / nBatchs;
         int nInBatchSize = nPoolWidth * nOutBatchSize;
 
-        Q sumPlane, xPlane = 1.0/nPoolWidth;
+        Q sumPlane, xPlane = (Q)1.0/nPoolWidth;
         Q* pItIn = (Q*)inVars[0].data;
         Q* pItPlaneIn;
         Q* pItOut = (Q*)outVar.data;
@@ -47,7 +47,7 @@ public:
         int nPoolWidth = pThis->m_nPoolWidth;
         int nOutBatchSize = outVar.size / nBatchs;
         int nInBatchSize = nPoolWidth * nOutBatchSize;
-        Q dDevia, xPlane = 1.0/nPoolWidth;
+        Q dDevia, xPlane = (Q)1.0/nPoolWidth;
         Q* pItInDevia = (Q*)inVars[0].devia;
         Q* pItPlaneDevia;
         Q* pItOutDevia = (Q*)outVar.devia;

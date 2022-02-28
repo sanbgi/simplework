@@ -35,10 +35,10 @@ private:
 
     int updateDeviation(int nBatchSize){
 
-        const Q esp = 1e-8;
-        const Q learnRate = 0.001;
-        const Q beta1 = 0.9;
-        const Q beta2 = 0.999;
+        const Q esp = 1e-8f;
+        const Q learnRate = 0.001f;
+        const Q beta1 = 0.9f;
+        const Q beta2 = 0.999f;
 
         //
         // 更新一阶、二阶动量校正参数
@@ -60,7 +60,7 @@ private:
             momentum = (*pMomentum) / ( 1 - beta1Bais);
             velocity = (*pVelocity) / ( 1 - beta2Bais);
             //Adam : (*pDeviation) = learnRate / (sqrt(velocity) + esp) * momentum;
-            (*pDeviation) = learnRate / (sqrt(velocity) + esp) * ( beta1 * momentum + (1-beta1) * (*pDeviation) / (1-beta1Bais));
+            (*pDeviation) = learnRate / ((Q)sqrt(velocity) + esp) * ( beta1 * momentum + (1-beta1) * (*pDeviation) / (1-beta1Bais));
             pMomentum++, pVelocity++, pDeviation++;
         }
         return sCtx.success();

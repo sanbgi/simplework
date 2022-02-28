@@ -25,14 +25,14 @@ find_package(FFMPEG REQUIRED)
 target_link_libraries(${SIMPLEWORK_AV_MODULE_NAME}  ${FFMPEG_LIBRARIES})
 target_include_directories(${SIMPLEWORK_AV_MODULE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 
-find_package(JPEG REQUIRED)
-target_link_libraries(${SIMPLEWORK_AV_MODULE_NAME} ${JPEG_LIBRARIES})
-target_include_directories(${SIMPLEWORK_AV_MODULE_NAME} PRIVATE ${JPEG_INCLUDE_DIR})
+#find_package(JPEG REQUIRED)
+#target_link_libraries(${SIMPLEWORK_AV_MODULE_NAME} ${JPEG_LIBRARIES})
+#target_include_directories(${SIMPLEWORK_AV_MODULE_NAME} PRIVATE ${JPEG_INCLUDE_DIR})
 
 #target_link_libraries(${SIMPLEWORK_AV_MODULE_NAME} "jpeg")
 #target_include_directories(${SIMPLEWORK_AV_MODULE_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/thirdpart/jpeg "thirdpart/jpeg")
 
-#set_target_properties(${SIMPLEWORK_AV_MODULE_NAME} PROPERTIES PREFIX "")
+set_target_properties(${SIMPLEWORK_AV_MODULE_NAME} PROPERTIES PREFIX "")
 message(STATUS "JPEG_INCLUDE_DIR: ${JPEG_INCLUDE_DIR}")
 message(STATUS "JPEG_LIBRARIES: ${JPEG_LIBRARIES}")
 message(STATUS "FFMPEG_INCLUDE_DIRS: ${FFMPEG_INCLUDE_DIRS}")

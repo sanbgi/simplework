@@ -76,9 +76,9 @@ void* CNnWeightVariable::getData(unsigned int idType) {
 }
 
 template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWeights) {
-    Q xWeight = 0.1;
+    Q xWeight = (Q)0.1;
     for(int i=0; i<nWeights; i++) {
-        ((Q*)pWeights)[i] = m_dAvg + -xWeight + CUtils::rand() * xWeight * 2;
+        ((Q*)pWeights)[i] = (Q)m_dAvg + -xWeight + CUtils::rand() * xWeight * 2;
     }
 }
 
