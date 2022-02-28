@@ -55,13 +55,13 @@ public:
         }
     }
 
-    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
-        if(idType == CBasicData<float>::getStaticType() ) {
+    int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
             solveParameter.pParameter = this;
             return sCtx.success();
-        }else if(idType == CBasicData<double>::getStaticType() ) {
+        }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
             solveParameter.pParameter = this;

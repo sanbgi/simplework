@@ -10,7 +10,23 @@ using namespace sw;
 //
 typedef void (*FBatchEval)(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar);
 typedef void (*FBatchDevia)(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar);
-struct PSolveParameter {
+
+//
+// 求解上下文
+//
+struct PSolveCtx {
+    unsigned int idType;
+    enum Sdk{
+        CPU,
+        OpenCL,
+        CUDA
+    }eSdk;
+};
+
+// 
+// 求解函数
+//
+struct PSolveFunc {
     FBatchEval pEvalFun;
     FBatchDevia pDeviaFun;
     void* pParameter;
@@ -26,7 +42,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnAtomOperator)
         //
         // 准备计算参数
         //
-        virtual int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) = 0;
+        virtual int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

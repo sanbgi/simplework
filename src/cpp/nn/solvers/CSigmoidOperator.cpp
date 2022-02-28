@@ -21,13 +21,13 @@ public:
         pThis->deactivate(outVar.size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
-    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(idType, "sigmoid");
-        if(idType == CBasicData<float>::getStaticType() ) {
+    int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.pParameter = CActivator::getActivation(solveCtx.idType, "sigmoid");
+        if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
             return sCtx.success();
-        }else if(idType == CBasicData<double>::getStaticType() ) {
+        }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
             return sCtx.success();

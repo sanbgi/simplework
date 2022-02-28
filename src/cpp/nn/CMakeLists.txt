@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-find_package(OpenCL REQUIRED)
-
 set ( SIMPLEWORK_NN_MODULE_NAME sw.nn )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" )
 file ( GLOB SRC_OPERATOR_FILES "${CMAKE_CURRENT_SOURCE_DIR}/solvers/*.cpp" )
@@ -17,6 +15,8 @@ list ( APPEND SRC_LIST ${SRC_OPTIMIZER_FILES} )
 list ( APPEND SRC_LIST ${SRC_MODULE_FILES} )
 list ( APPEND SRC_LIST ${SRC_NETWORK_FILES} )
 add_library(${SIMPLEWORK_NN_MODULE_NAME} SHARED ${SRC_LIST})
+
+find_package(OpenCL REQUIRED)
 target_link_libraries(${SIMPLEWORK_NN_MODULE_NAME} "sw.core" OpenCL::OpenCL)
 #set_target_properties(${SIMPLEWORK_NN_MODULE_NAME} PROPERTIES PREFIX "")
 

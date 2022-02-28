@@ -60,7 +60,7 @@ private:
 
         // 计算指令
         struct PSolveInstruct {
-            PSolveParameter solver;
+            PSolveFunc solver;
             PNnAtomOperatorArgs args;
         };
 
@@ -114,9 +114,8 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
     // 更新计算变量数组
     //
     vector<PSolveGraphInfos::PSolveVar>& arrVars = solveCtx.arrVars;
-    vector<SNnVariable>::iterator itVar = m_sSolveGraph.arrVars.begin();
-    while(itVar != m_sSolveGraph.arrVars.end()) {
-        SNnInternalVariable spToSolveVar = *itVar;
+    for(auto itVar : m_sSolveGraph.arrVars) {
+        SNnInternalVariable spToSolveVar = itVar;
         if(!spToSolveVar) {
             return sCtx.error("不认识的变量类型");
         }
@@ -126,20 +125,19 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
         solveVar.data = spToSolveVar->getData(idType);
         solveCtx.nSumSize[solveVar.type] += solveVar.size;
         arrVars.push_back(solveVar);
-        itVar++;
     }
 
     //
     // 更新计算步骤数组
     //
     vector<PSolveGraphInfos::PSolveInstruct>& arrInstructs = solveCtx.arrInstructs;
-    vector<PNnAtomOperatorArgs>::iterator itParameter = m_sSolveGraph.arrOperatorArgs.begin();
-    vector<SNnAtomOperator>::iterator itOp = m_sSolveGraph.arrOperators.begin();
+    auto itParameter = m_sSolveGraph.arrOperatorArgs.begin();
+    auto itOp = m_sSolveGraph.arrOperators.begin();
     while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
         PNnAtomOperatorArgs spOp = *itParameter;
         PSolveGraphInfos::PSolveInstruct solveParameter;
         solveParameter.args = spOp;
-        (*itOp)->prepareSolver(idType, solveParameter.solver);
+        (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveParameter.solver);
         arrInstructs.push_back(solveParameter);
         itParameter++, itOp++;
     }
@@ -234,10 +232,8 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     // 遍历计算序列并执行
     //
     PVector evalIn[4], evalOut;
-    for(auto itSolver=solveCtx.arrInstructs.begin(); itSolver != solveCtx.arrInstructs.end(); itSolver++ ) {
+    for(auto instruct : solveCtx.arrInstructs ) {
         //准备输入输出计算参数
-        PSolveGraphInfos::PSolveInstruct instruct = *itSolver;
-
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
         }

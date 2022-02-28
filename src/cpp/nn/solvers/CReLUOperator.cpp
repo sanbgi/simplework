@@ -23,13 +23,13 @@ public:
         ((CActivator*)pParameters)->deactivate(outVar.size, inVars[0].data, outVar.devia, inVars[0].devia);
     }
 
-    int prepareSolver(unsigned int idType, PSolveParameter& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(idType, "relu");
-        if(idType == CBasicData<float>::getStaticType() ) {
+    int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.pParameter = CActivator::getActivation(solveCtx.idType, "relu");
+        if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
             return sCtx.success();
-        }else if(idType == CBasicData<double>::getStaticType() ) {
+        }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
             return sCtx.success();
