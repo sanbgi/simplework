@@ -18,7 +18,7 @@ private://INnSolver
     
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "RnnSolver"; } 
+    const char* getName() { return "RnnSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 

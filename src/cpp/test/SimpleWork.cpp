@@ -159,6 +159,10 @@ int testOpenCL()
     return 0;
 }
 
+auto getInt(){
+    return 1;
+}
+
 int main(int argc, char *argv[]){
     //testOpenCL();
     //cl::Buffer bf();
@@ -177,8 +181,8 @@ int main(int argc, char *argv[]){
     //testNN();
     //testIdx();
     //CNnNetwork::runFile();
-    //CNnNetwork::run();
-    CAvNetwork::runImage();
+    CNnNetwork::run();
+    //CAvNetwork::runImage();
 
     return 0;
 }

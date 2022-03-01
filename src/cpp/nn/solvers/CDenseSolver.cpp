@@ -24,7 +24,7 @@ class CDenseSolver : public CObject, public INnSolver, public IArchivable{
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "DenseSolver"; } 
+    const char* getName() { return "DenseSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         return sCtx.success();

@@ -116,7 +116,7 @@ public:
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameter = this;
+            solveParameter.pParameterData = this;
             if(!(m_spAvgTensor)) {
                 if( STensor::createVector<float>(m_spAvgTensor, m_nLayers) != sCtx.success() ||
                     STensor::createVector<float>(m_spVarianceTensor, m_nLayers) != sCtx.success() ) {
@@ -134,7 +134,7 @@ public:
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameter = this;
+            solveParameter.pParameterData = this;
             if(!(m_spAvgTensor)) {
                 if( STensor::createVector<double>(m_spAvgTensor, m_nLayers) != sCtx.success() ||
                     STensor::createVector<double>(m_spVarianceTensor, m_nLayers) != sCtx.success() ) {
@@ -185,7 +185,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "BatchNormalizeSolver"; } 
+    const char* getName() { return "BatchNormalizeSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arBlock("nlayer", m_nLayers);

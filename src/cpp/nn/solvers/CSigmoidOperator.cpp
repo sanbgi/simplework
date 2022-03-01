@@ -22,7 +22,7 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(solveCtx.idType, "sigmoid");
+        solveParameter.pParameterData = CActivator::getActivation(solveCtx.idType, "sigmoid");
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -41,7 +41,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "SigmodSolver"; } 
+    const char* getName() { return "SigmodSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         return sCtx.success();

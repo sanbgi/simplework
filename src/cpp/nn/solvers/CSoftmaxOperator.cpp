@@ -38,7 +38,7 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(solveCtx.idType, "softmax");
+        solveParameter.pParameterData = CActivator::getActivation(solveCtx.idType, "softmax");
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -57,7 +57,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "SoftmaxSolver"; } 
+    const char* getName() { return "SoftmaxSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         return sCtx.success();

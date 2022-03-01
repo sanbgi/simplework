@@ -29,7 +29,10 @@ struct PSolveCtx {
 struct PSolveFunc {
     FBatchEval pEvalFun;
     FBatchDevia pDeviaFun;
-    void* pParameter;
+    int nParamterSize;
+    void* pParameterData;
+    SDimension spGlobalRange;
+    SDimension spLocalRange;
 };
 
 //
@@ -38,6 +41,11 @@ struct PSolveFunc {
 SIMPLEWORK_INTERFACECLASS_ENTER0(NnAtomOperator)
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnAtomOperator", 211202)
+
+        //
+        // 名字
+        //
+        virtual const char* getName() = 0;
 
         //
         // 准备计算参数

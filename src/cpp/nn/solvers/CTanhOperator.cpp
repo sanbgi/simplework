@@ -23,7 +23,7 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
-        solveParameter.pParameter = CActivator::getActivation(solveCtx.idType, "tanh");
+        solveParameter.pParameterData = CActivator::getActivation(solveCtx.idType, "tanh");
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -42,7 +42,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "TanhSolver"; } 
+    const char* getName() { return "TanhSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         return sCtx.success();

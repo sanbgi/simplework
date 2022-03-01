@@ -232,7 +232,7 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     // 遍历计算序列并执行
     //
     PVector evalIn[4], evalOut;
-    for(auto instruct : solveCtx.arrInstructs ) {
+    for(auto& instruct : solveCtx.arrInstructs ) {
         //准备输入输出计算参数
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
@@ -242,7 +242,7 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         }
 
         //实际计算函数调用
-        (*instruct.solver.pEvalFun)(instruct.solver.pParameter, nBatchs, instruct.args.nInVars, evalIn, evalOut);
+        (*instruct.solver.pEvalFun)(instruct.solver.pParameterData, nBatchs, instruct.args.nInVars, evalIn, evalOut);
     }
 
     SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
@@ -364,10 +364,10 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
     // 遍历计算序列并执行
     //
     PDeviaVector evalIn[4], evalOut;
-    for(auto itSolver=solveCtx.arrInstructs.rbegin(); itSolver != solveCtx.arrInstructs.rend(); itSolver++ ) {
+    for(auto itSolver=solveCtx.arrInstructs.rbegin(); itSolver != solveCtx.arrInstructs.rend(); itSolver++) {
 
         //准备输入输出计算参数
-        PSolveGraphInfos::PSolveInstruct instruct = *itSolver;
+        PSolveGraphInfos::PSolveInstruct& instruct = *itSolver;
 
         for(int j=0; j<instruct.args.nInVars; j++) {
             evalIn[j] = solveVars[instruct.args.pInVars[j]];
@@ -377,7 +377,7 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
         }
 
         //实际计算函数调用
-        (*instruct.solver.pDeviaFun)(instruct.solver.pParameter, nBatchs, instruct.args.nInVars, evalIn, evalOut);
+        (*instruct.solver.pDeviaFun)(instruct.solver.pParameterData, nBatchs, instruct.args.nInVars, evalIn, evalOut);
     }
 
     solveCtx.spOptimizer->updateDeviation(nBatchs);

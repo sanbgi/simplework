@@ -15,7 +15,7 @@ private://INnUnit
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "GruSolver"; } 
+    const char* getName() { return "GruSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 

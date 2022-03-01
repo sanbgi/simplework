@@ -103,12 +103,12 @@ public:
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameter = this;
+            solveParameter.pParameterData = this;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameter = this;
+            solveParameter.pParameterData = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
@@ -195,7 +195,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getClassName() { return "LinearSolver"; } 
+    const char* getName() { return "LinearSolver"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arBlock("nin", nIn);
