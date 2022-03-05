@@ -31,8 +31,12 @@ struct PSolveFunc {
     FBatchDevia pDeviaFun;
     int nParamterSize;
     void* pParameterData;
-    SDimension spGlobalRange;
-    SDimension spLocalRange;
+    enum {
+        PBatchAndOut,
+        PBatch,
+        POut,
+        PNo
+    }eClRange;
 };
 
 //

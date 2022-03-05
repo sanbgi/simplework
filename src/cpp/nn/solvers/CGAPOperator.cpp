@@ -69,15 +69,16 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.nParamterSize = 0;
+        solveParameter.pParameterData = this;
+        solveParameter.eClRange = PSolveFunc::POut;
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
@@ -108,7 +109,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "GPoolSolver"; } 
+    const char* getName() { return "gap"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arBlock("poolwidth", m_nPoolWidth);

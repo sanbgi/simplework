@@ -69,9 +69,10 @@ private:
         //解算步骤列表
         vector<PSolveInstruct> arrInstructs;
 
-        int nSumSize[EVMax];
+        int iInVar;
         int iOutVar;
-
+        int nSumSize[EVMax];
+    
         int nInputTensorSize;
         int nOutputTensorSize;
         SOptimizer spOptimizer;
@@ -151,6 +152,7 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
 
     SDimension spInDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iInVar].dimension();
     SDimension spOutDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iOutVar].dimension();
+    solveCtx.iInVar = m_sSolveGraph.iInVar;
     solveCtx.iOutVar = m_sSolveGraph.iOutVar;
     solveCtx.idType = idType;
     solveCtx.nInputTensorSize = spInDimension.dataSize();

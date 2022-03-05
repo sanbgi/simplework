@@ -73,16 +73,18 @@ public:
         }
     }
 
-
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.eClRange = PSolveFunc::POut;
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
+            solveParameter.nParamterSize = 0;
             solveParameter.pParameterData = this;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
+            solveParameter.nParamterSize = 0;
             solveParameter.pParameterData = this;
             return sCtx.success();
         }
@@ -95,7 +97,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "PlusSolver"; } 
+    const char* getName() { return "plus"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         return sCtx.success();

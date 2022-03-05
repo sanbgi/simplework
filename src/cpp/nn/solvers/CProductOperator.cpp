@@ -12,7 +12,7 @@ public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==2)
-        CProductOperator* pThis = (CProductOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
         int nIn = pThis->nIn;
         int nMat = pThis->nMat;
         int nOut = pThis->nOut;
@@ -52,7 +52,7 @@ public:
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==2)
-        CProductOperator* pThis = (CProductOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
         int nIn = pThis->nIn;
         int nMat = pThis->nMat;
         int nOut = pThis->nOut;
@@ -102,15 +102,16 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.nParamterSize = sizeof(PSolveData);
+        solveParameter.pParameterData = &m_sData;
+        solveParameter.eClRange = PSolveFunc::POut;
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
@@ -128,21 +129,19 @@ public:
         if(nInElementSize != pDimSize2[1]) {
             return sCtx.error("向量和矩阵点乘的尺寸不匹配");
         }
-        nIn = spDim1.dataSize();
-        nMat = spDim2.dataSize();
-        nOut = nMat / nIn;
+        m_sData.nIn = spDim1.dataSize();
+        m_sData.nMat = spDim2.dataSize();
+        m_sData.nOut = m_sData.nMat / m_sData.nIn;
         createVariable(SDimension(1,pDimSize2), spVarOut);
         return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "ProductSolver"; } 
+    const char* getName() { return "product"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
-        ar.arBlock("nin", nIn);
-        ar.arBlock("nmat", nMat);
-        ar.arBlock("nout", nOut);
+        ar.arBlock("data", m_sData);
         return sCtx.success();
     }
 
@@ -150,9 +149,11 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.ProductSolver"; }
 
 private:
-    int nIn;
-    int nMat;
-    int nOut;
+    struct PSolveData{
+        int nIn;
+        int nMat;
+        int nOut;
+    }m_sData;
 };
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CProductOperator, CProductOperator::__getClassKey())

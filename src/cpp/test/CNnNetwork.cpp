@@ -24,11 +24,11 @@ void CNnNetwork::runLearn() {
     STensor spPipeIn = STensor::createValue(10);
     //SNnNetwork nn = createLayerNetwork();
     //SNnNetwork nn = createRnnNetwork();
-    //SNnNetwork nn = createNetwork();
+    SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();
     //SNnNetwork nn = createLeNet();
-    SNnNetwork nn = createResNetwork();
+    //SNnNetwork nn = createResNetwork();
     //SNnNetwork nn = createShiftNetwork();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
     int nLoops = 20;
@@ -272,19 +272,25 @@ SNnNetwork CNnNetwork::createRnnNetwork() {
 }
 
 SNnNetwork CNnNetwork::createNetwork() {
-    /*
-    std::vector<SNnNetwork> arrNets;
-    arrNets.push_back(SNnNetwork::createConv(5,5,32));
-    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createConv(7,7,64));
-    arrNets.push_back(SNnNetwork::createPool(2,2,2,2));
-    arrNets.push_back(SNnNetwork::createDense(576));
-    arrNets.push_back(SNnNetwork::createDense(10, 0, "softmax"));
-    SNnNetwork spNet = SNnNetwork::createSequence(arrNets.size(), arrNets.data());
+    int pDimSizes[] = {28, 28};
+    SNnNetwork spNetwork = SNnNetwork::createOpenCLNetwork({
+        SDimension::createDimension(2,pDimSizes),
+        [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
+            SNnVariable x = spIn;
+            x = x.conv({5,5,32});
+            x = x.maxpool({2,2,2,2});
+            x = x.conv({7,7,64});
+            x = x.maxpool({2,2,2,2});
+            //x = x.dense({576});
+            x = x.gap();
+            x = x.dense({10, "softmax"});
+            spOut = x;
+            return sCtx.success();
+        }
+    });
     
-    SNnNetwork::saveFile("D://snetwork.bin", spNet);
-    return SNnNetwork::loadFile("D://snetwork.bin");*/
-    return SNnNetwork();
+    SNnNetwork::saveFile("D://snetwork.bin", spNetwork);
+    return SNnNetwork::loadFile("D://snetwork.bin");
 }
 
 

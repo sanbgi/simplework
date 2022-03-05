@@ -75,11 +75,10 @@ int testOpenCL()
         }
     )CLC"};
     std::string kernel2{R"CLC(
-        typedef struct { global int *bar; } Foo;
-        kernel void vectorAdd(global const int *inputA,
-                                global int *output)
+        kernel void vectorAdd(global int *inputA, global int *inputB, global int *output)
         {
-            output[get_global_id(0)] = 1;
+            output[get_global_id(0)] = inputA[get_global_id(0)] + inputB[get_global_id(0)];
+            inputB[get_global_id(0)] += 5;
         }
     )CLC"};
 
@@ -98,7 +97,7 @@ int testOpenCL()
             std::cerr << pair.second << std::endl << std::endl;
         }
 
-        return 1;
+        return 1; 
     }
 
     // Get and run kernel that initializes the program-scope global
@@ -112,7 +111,7 @@ int testOpenCL()
     //////////////////
     // SVM allocations
     cl::SVMAllocator<int, cl::SVMTraitCoarse<>> svmAlloc;
-    std::vector<int, cl::SVMAllocator<int, cl::SVMTraitCoarse<>>> inputA(numElements, 1, svmAlloc);
+    std::vector<int, cl::SVMAllocator<int, cl::SVMTraitCoarse<>>> inputA(numElements, 3, svmAlloc);
     cl::coarse_svm_vector<int> inputB(numElements, 2, svmAlloc);
 
     //
@@ -130,25 +129,30 @@ int testOpenCL()
     auto vectorAddKernel =
         cl::KernelFunctor<
             int*,
+            cl::coarse_svm_vector<int>&,
             cl::Buffer
             >(vectorAddProgram, "vectorAdd");
 
     // Hand control of coarse allocations to runtime
     //cl::unmapSVM(output);
+    cl::unmapSVM(inputA);
+    cl::unmapSVM(inputB);
 
     cl_int error;
     vectorAddKernel(
-        cl::EnqueueArgs(
-            cl::NDRange(numElements/2),
-            cl::NDRange(numElements/2)),
+        cl::EnqueueArgs(cl::NDRange(numElements)),
         inputA.data(),
+        inputB,
         outputBuffer,
         error
         );
 
     cl::copy(outputBuffer, begin(output), end(output));
+    
     // Grab the SVM output vector using a map
-    //cl::mapSVM(output);
+    cl::mapSVM(inputA);
+    cl::mapSVM(inputB);
+
 
     std::cout << "Output:\n";
     for (int i = 1; i < numElements; ++i) {

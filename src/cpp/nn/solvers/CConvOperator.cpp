@@ -64,15 +64,16 @@ class CConvOperator : public CNnSolver, public INnAtomOperator, public IArchivab
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CNnSolver)
 public:
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.nParamterSize = sizeof(PSolveData);
+        solveParameter.pParameterData = &m_sData;
+        solveParameter.eClRange = PSolveFunc::POut;
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
@@ -155,21 +156,21 @@ public:
         //    return sCtx.error("偏置量需要与卷积核数相等");
         //}
 
-        m_nStrideHeight = pConv->nStrideHeight;
-        m_nStrideWidth = pConv->nStrideWidth;
-        m_nLayers = pDimSize2[0];
-        m_nInputLayers = pDimSize2[4];
-        m_sizeConv = {
+        m_sData.m_nStrideHeight = pConv->nStrideHeight;
+        m_sData.m_nStrideWidth = pConv->nStrideWidth;
+        m_sData.m_nLayers = pDimSize2[0];
+        m_sData.m_nInputLayers = pDimSize2[4];
+        m_sData.m_sizeConv = {
             pDimSize2[1],
             pDimSize2[2],
             pDimSize2[3],
-            m_nInputLayers,
+            m_sData.m_nInputLayers,
         };
-        m_sizeIn = {
+        m_sData.m_sizeIn = {
             1,
             pDimSize1[0],
             pDimSize1[1],
-            m_nInputLayers
+            m_sData.m_nInputLayers
         };
 
         //
@@ -178,56 +179,56 @@ public:
         //      valid(默认) -- 步长为1时，只输出完整卷积结果尺寸，所以，输出尺寸会缩小（卷积核宽度-1)
         //
         if( pConv != nullptr && pConv->szPadding != nullptr && string(pConv->szPadding) == "same" ) {
-            m_sizeOut = {
+            m_sData.m_sizeOut = {
                 nBatchs,
-                (m_sizeIn.height - 1) / m_nStrideHeight + 1,
-                (m_sizeIn.width - 1) / m_nStrideWidth + 1,
-                m_nLayers
+                (m_sData.m_sizeIn.height - 1) / m_sData.m_nStrideHeight + 1,
+                (m_sData.m_sizeIn.width - 1) / m_sData.m_nStrideWidth + 1,
+                m_sData.m_nLayers
             };
-            int nPadW = (m_sizeOut.width - 1) * m_nStrideWidth + m_sizeConv.width - m_sizeIn.width;
-            int nPadH = (m_sizeOut.height - 1) * m_nStrideHeight + m_sizeConv.height - m_sizeIn.height;
-            m_padding.left = nPadW / 2;
-            m_padding.right = nPadW - m_padding.left;
-            m_padding.top = nPadH / 2;
-            m_padding.bottom = nPadH - m_padding.top;
+            int nPadW = (m_sData.m_sizeOut.width - 1) * m_sData.m_nStrideWidth + m_sData.m_sizeConv.width - m_sData.m_sizeIn.width;
+            int nPadH = (m_sData.m_sizeOut.height - 1) * m_sData.m_nStrideHeight + m_sData.m_sizeConv.height - m_sData.m_sizeIn.height;
+            m_sData.m_padding.left = nPadW / 2;
+            m_sData.m_padding.right = nPadW - m_sData.m_padding.left;
+            m_sData.m_padding.top = nPadH / 2;
+            m_sData.m_padding.bottom = nPadH - m_sData.m_padding.top;
         }else{
             //
             //  默认为不填充
             //
-            m_sizeOut = {
+            m_sData.m_sizeOut = {
                 nBatchs,
-                (m_sizeIn.height - m_sizeConv.height) / m_nStrideHeight + 1,
-                (m_sizeIn.width - m_sizeConv.width) / m_nStrideWidth + 1,
-                m_nLayers
+                (m_sData.m_sizeIn.height - m_sData.m_sizeConv.height) / m_sData.m_nStrideHeight + 1,
+                (m_sData.m_sizeIn.width - m_sData.m_sizeConv.width) / m_sData.m_nStrideWidth + 1,
+                m_sData.m_nLayers
             };
-            m_padding = { 0, 0, 0, 0 };
+            m_sData.m_padding = { 0, 0, 0, 0 };
         }
 
-        m_stepInConv = {
-            m_sizeIn.height * m_sizeIn.width * nInputLayers,
-            m_sizeIn.width * nInputLayers,
+        m_sData.m_stepInConv = {
+            m_sData.m_sizeIn.height * m_sData.m_sizeIn.width * nInputLayers,
+            m_sData.m_sizeIn.width * nInputLayers,
             nInputLayers
         };
 
-        m_stepInMove = {  
-            m_stepInConv.batch,
-            m_stepInConv.height * m_nStrideHeight,
-            m_stepInConv.width * m_nStrideWidth
+        m_sData.m_stepInMove = {  
+            m_sData.m_stepInConv.batch,
+            m_sData.m_stepInConv.height * m_sData.m_nStrideHeight,
+            m_sData.m_stepInConv.width * m_sData.m_nStrideWidth
         };
 
-        m_stepOut = {
-            m_sizeOut.height * m_sizeOut.width * m_nLayers,
-            m_sizeOut.width * m_nLayers,
-            m_nLayers
+        m_sData.m_stepOut = {
+            m_sData.m_sizeOut.height * m_sData.m_sizeOut.width * m_sData.m_nLayers,
+            m_sData.m_sizeOut.width * m_sData.m_nLayers,
+            m_sData.m_nLayers
         };
 
-        m_stepConv = {
-            m_sizeConv.height * m_sizeConv.width * nInputLayers,
-            m_sizeConv.width * nInputLayers,
+        m_sData.m_stepConv = {
+            m_sData.m_sizeConv.height * m_sData.m_sizeConv.width * nInputLayers,
+            m_sData.m_sizeConv.width * nInputLayers,
             nInputLayers
         };
 
-        int pOutDimSizes[3] = { m_sizeOut.height, m_sizeOut.width, m_sizeOut.layers };
+        int pOutDimSizes[3] = { m_sData.m_sizeOut.height, m_sData.m_sizeOut.width, m_sData.m_sizeOut.layers };
         if( createVariable(SDimension(3, pOutDimSizes), spVarOut) != sCtx.success() ) {
             return sCtx.error("创建卷积运算结果异常");
         }
@@ -247,7 +248,7 @@ public:
 
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
-        CConvOperator* pThis = (CConvOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
         
         //
         // 关于尺寸说明
@@ -448,7 +449,7 @@ public:
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CConvOperator* pThis = (CConvOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
 
         //
         // 关于尺寸说明，注意参考evalT里面的说明
@@ -703,21 +704,10 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "ConvSolver"; } 
+    const char* getName() { return "conv"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
-        ar.arBlock("stridewidth", m_nStrideWidth);
-        ar.arBlock("strideheight", m_nStrideHeight);
-        ar.arBlock("nlayers", m_nLayers);
-        ar.arBlock("ninputlayers", m_nInputLayers);
-        ar.arBlock("sizein", m_sizeIn);
-        ar.arBlock("sizeconv", m_sizeConv);
-        ar.arBlock("sizeout", m_sizeOut);
-        ar.arBlock("padding", m_padding);
-        ar.arBlock("stepinmove", m_stepInMove);
-        ar.arBlock("stepinconv", m_stepInConv);
-        ar.arBlock("stepout", m_stepOut);
-        ar.arBlock("stepconv", m_stepConv);
+        ar.arBlock("data", m_sData);
         return sCtx.success();
     }
 
@@ -725,26 +715,28 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.ConvSolver"; }
 
 private:
-    int m_nStrideWidth;
-    int m_nStrideHeight;
+    struct PSolveData{
+        int m_nStrideWidth;
+        int m_nStrideHeight;
 
-    //网络参数
-    int m_nLayers;
-    int m_nInputLayers;
+        //网络参数
+        int m_nLayers;
+        int m_nInputLayers;
 
-    //输入、输出、卷积尺寸
-    CBatchSize3D m_sizeIn;
-    CBatchSize3D m_sizeConv;
-    CBatchSize3D m_sizeOut;
+        //输入、输出、卷积尺寸
+        CBatchSize3D m_sizeIn;
+        CBatchSize3D m_sizeConv;
+        CBatchSize3D m_sizeOut;
 
-    //填充尺寸
-    CRect2D m_padding;
+        //填充尺寸
+        CRect2D m_padding;
 
-    //输入、输出、卷积步长
-    CBatchSize2D m_stepInMove;
-    CBatchSize2D m_stepInConv;
-    CBatchSize2D m_stepOut;
-    CBatchSize2D m_stepConv;
+        //输入、输出、卷积步长
+        CBatchSize2D m_stepInMove;
+        CBatchSize2D m_stepInConv;
+        CBatchSize2D m_stepOut;
+        CBatchSize2D m_stepConv;
+    }m_sData;
 };
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CConvOperator, CConvOperator::__getClassKey())

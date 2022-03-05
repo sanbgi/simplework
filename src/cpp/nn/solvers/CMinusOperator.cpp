@@ -1,9 +1,6 @@
 #ifndef __SimpleWork_NN_Operators_CMinusOperator_h__
 #define __SimpleWork_NN_Operators_CMinusOperator_h__
 
-#define CL_HPP_TARGET_OPENCL_VERSION 200
-#include "cl/cl2.hpp"
-
 #include "operator.h"
 static SCtx sCtx("MinusOperator");
 class CMinusOperator : public CNnSolver, public INnAtomOperator, public IArchivable{
@@ -54,6 +51,7 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.eClRange = PSolveFunc::POut;
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
@@ -74,7 +72,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "MinusSolver"; } 
+    const char* getName() { return "minus"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         return sCtx.success();

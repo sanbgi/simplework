@@ -20,3 +20,5 @@ find_package(OpenCL REQUIRED)
 target_link_libraries(${SIMPLEWORK_NN_MODULE_NAME} "sw.core" OpenCL::OpenCL)
 set_target_properties(${SIMPLEWORK_NN_MODULE_NAME} PROPERTIES PREFIX "")
 
+file( GLOB allOpenCLFiles solvers/opencl/*.cl)
+file( COPY ${allOpenCLFiles} DESTINATION ${PROJECT_BINARY_DIR}/bin/opencl )

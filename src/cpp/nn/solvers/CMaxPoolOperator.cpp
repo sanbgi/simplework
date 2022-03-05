@@ -12,7 +12,7 @@ class CMaxPoolOperator : public CNnSolver, public INnAtomOperator, public IArchi
 public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
-        CMaxPoolOperator* pThis = (CMaxPoolOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
             
         int nMaxPoolWidth = pThis->m_nMaxPoolWidth;
         int nMaxPoolHeight = pThis->m_nMaxPoolHeight;
@@ -152,7 +152,7 @@ public:
 
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
-        CMaxPoolOperator* pThis = (CMaxPoolOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
             
         int nLayer = pThis->m_nInputLayer;
         int nInputWidth = pThis->m_nInputWidth;
@@ -308,15 +308,16 @@ public:
     }
 
     int prepareSolver(const PSolveCtx solveCtx, PSolveFunc& solveParameter) {
+        solveParameter.nParamterSize = sizeof(PSolveData);
+        solveParameter.pParameterData = &m_sData;
+        solveParameter.eClRange = PSolveFunc::POut;
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameterData = this;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
@@ -335,10 +336,10 @@ public:
             return sCtx.error("错误的初始化参数");
         }
 
-        m_nMaxPoolWidth = pMaxPool->nWidth;
-        m_nMaxPoolHeight = pMaxPool->nHeight;
-        m_nStrideWidth = pMaxPool->nStrideWidth;
-        m_nStrideHeight = pMaxPool->nStrideHeight;
+        m_sData.m_nMaxPoolWidth = pMaxPool->nWidth;
+        m_sData.m_nMaxPoolHeight = pMaxPool->nHeight;
+        m_sData.m_nStrideWidth = pMaxPool->nStrideWidth;
+        m_sData.m_nStrideHeight = pMaxPool->nStrideHeight;
 
         SDimension spDim1 = pInVars[0].dimension();
         if(spDim1.size() < 2) {
@@ -350,7 +351,7 @@ public:
         int nBatchs = 1;
         int nInputHeight = pDimSizes[0];
         int nInputWidth = pDimSizes[1];
-        if( nInputHeight < m_nMaxPoolHeight || nInputWidth < m_nMaxPoolWidth ) {
+        if( nInputHeight < m_sData.m_nMaxPoolHeight || nInputWidth < m_sData.m_nMaxPoolWidth ) {
             return sCtx.error("输入张量尺寸需要大于等于卷积核尺寸");
         }
 
@@ -360,53 +361,42 @@ public:
         }
 
         int nInputCells = nInputWidth * nInputHeight * nLayers;
-        m_nInputHeight = pDimSizes[0];
-        m_nInputWidth = pDimSizes[1];
-        m_nInputLayer = 1;
+        m_sData.m_nInputHeight = pDimSizes[0];
+        m_sData.m_nInputWidth = pDimSizes[1];
+        m_sData.m_nInputLayer = 1;
         vector<int> pOutDimSizes(nDims);
         for( int i=2; i<nDims; i++) {
             pOutDimSizes[i] = pDimSizes[i];
-            m_nInputLayer *= pDimSizes[i];
+            m_sData.m_nInputLayer *= pDimSizes[i];
         }
         if( pMaxPool != nullptr && pMaxPool->szPadding != nullptr && string(pMaxPool->szPadding) == "same" ) {
-            m_nOutHeight = (m_nInputHeight - 1) / m_nStrideHeight + 1;
-            m_nOutWidth = (m_nInputWidth - 1) / m_nStrideWidth + 1;
-            int nPadW = (m_nOutWidth - 1) * m_nStrideWidth + pMaxPool->nWidth - m_nInputWidth;
-            int nPadH = (m_nOutHeight - 1) * m_nStrideHeight + pMaxPool->nHeight - m_nInputHeight;
-            m_padding.left = nPadW / 2;
-            m_padding.right = nPadW - m_padding.left;
-            m_padding.top = nPadH / 2;
-            m_padding.bottom = nPadH - m_padding.top;
+            m_sData.m_nOutHeight = (m_sData.m_nInputHeight - 1) / m_sData.m_nStrideHeight + 1;
+            m_sData.m_nOutWidth = (m_sData.m_nInputWidth - 1) / m_sData.m_nStrideWidth + 1;
+            int nPadW = (m_sData.m_nOutWidth - 1) * m_sData.m_nStrideWidth + pMaxPool->nWidth - m_sData.m_nInputWidth;
+            int nPadH = (m_sData.m_nOutHeight - 1) * m_sData.m_nStrideHeight + pMaxPool->nHeight - m_sData.m_nInputHeight;
+            m_sData.m_padding.left = nPadW / 2;
+            m_sData.m_padding.right = nPadW - m_sData.m_padding.left;
+            m_sData.m_padding.top = nPadH / 2;
+            m_sData.m_padding.bottom = nPadH - m_sData.m_padding.top;
         }else{
-            m_nOutHeight = (m_nInputHeight - m_nMaxPoolHeight) / m_nStrideHeight + 1;
-            m_nOutWidth = (m_nInputWidth - m_nMaxPoolWidth) / m_nStrideWidth + 1;
-            m_padding.left = m_padding.right = m_padding.top = m_padding.bottom = 0;
+            m_sData.m_nOutHeight = (m_sData.m_nInputHeight - m_sData.m_nMaxPoolHeight) / m_sData.m_nStrideHeight + 1;
+            m_sData.m_nOutWidth = (m_sData.m_nInputWidth - m_sData.m_nMaxPoolWidth) / m_sData.m_nStrideWidth + 1;
+            m_sData.m_padding.left = m_sData.m_padding.right = m_sData.m_padding.top = m_sData.m_padding.bottom = 0;
         }
-        m_nOutTensorSize = m_nOutHeight * m_nOutWidth * m_nInputLayer;
-        m_nInputTensorSize = m_nInputHeight * m_nInputWidth * m_nInputLayer;
-        pOutDimSizes[0] = m_nOutHeight;
-        pOutDimSizes[1] = m_nOutWidth;
+        m_sData.m_nOutTensorSize = m_sData.m_nOutHeight * m_sData.m_nOutWidth * m_sData.m_nInputLayer;
+        m_sData.m_nInputTensorSize = m_sData.m_nInputHeight * m_sData.m_nInputWidth * m_sData.m_nInputLayer;
+        pOutDimSizes[0] = m_sData.m_nOutHeight;
+        pOutDimSizes[1] = m_sData.m_nOutWidth;
         createVariable(SDimension(nDims, pOutDimSizes.data()),spVarOut);
         return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "MaxPoolSolver"; } 
+    const char* getName() { return "maxpool"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
-        ar.arBlock("MaxPoolwidth", m_nMaxPoolWidth);
-        ar.arBlock("MaxPoolheight", m_nMaxPoolHeight);
-        ar.arBlock("stridewidth", m_nStrideWidth);
-        ar.arBlock("strideheight", m_nStrideHeight);
-        ar.arBlock("padding", m_padding);
-        ar.arBlock("inputwidth", m_nInputWidth);
-        ar.arBlock("inputheight", m_nInputHeight);
-        ar.arBlock("inputlayer", m_nInputLayer);
-        ar.arBlock("inputtensorsize", m_nInputTensorSize);
-        ar.arBlock("outputwidth", m_nOutWidth);
-        ar.arBlock("outputheight", m_nOutHeight);
-        ar.arBlock("outputtnesorsize", m_nOutTensorSize);
+        ar.arBlock("data", m_sData);
         return sCtx.success();
     }
 
@@ -414,23 +404,24 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.MaxPoolSolver"; }
 
 private:
-    int m_nMaxPoolWidth;
-    int m_nMaxPoolHeight;
-    int m_nStrideWidth;
-    int m_nStrideHeight;
+    struct PSolveData{
+        int m_nMaxPoolWidth;
+        int m_nMaxPoolHeight;
+        int m_nStrideWidth;
+        int m_nStrideHeight;
 
-    //填充尺寸
-    CRect2D m_padding;
+        //填充尺寸
+        CRect2D m_padding;
 
+        int m_nInputWidth;
+        int m_nInputHeight;
+        int m_nInputLayer;
+        int m_nInputTensorSize;
 
-    int m_nInputWidth;
-    int m_nInputHeight;
-    int m_nInputLayer;
-    int m_nInputTensorSize;
-
-    int m_nOutWidth;
-    int m_nOutHeight;
-    int m_nOutTensorSize;
+        int m_nOutWidth;
+        int m_nOutHeight;
+        int m_nOutTensorSize;
+    }m_sData;
 };
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CMaxPoolOperator, CMaxPoolOperator::__getClassKey())

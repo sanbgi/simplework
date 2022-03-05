@@ -47,6 +47,9 @@ public:
     static SNnNetwork createNetwork(const PNnNetwork& rNet) {
         return SObject::createObject("sw.nn.LayerNetwork", CData<PNnNetwork>(rNet));
     }
+    static SNnNetwork createOpenCLNetwork(const PNnNetwork& rNet) {
+        return SObject::createObject("sw.nn.OpenCLNetwork", CData<PNnNetwork>(rNet));
+    }
     static SNnNetwork createNetwork(const SDimension spInDimension, const SNnModule& spModule) {
         class CNnNetworkSolver : public INnNetworkSolver {
             int solve(const SNnVariable& spIn, SNnVariable& spOut) {
