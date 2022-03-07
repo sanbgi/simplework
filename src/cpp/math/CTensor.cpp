@@ -11,9 +11,9 @@ static SCtx sCtx("CTensor");
 
 class CTypeAssist {
 public:
-    PID m_idType;
-    static CTypeAssist* getTypeAssist(PID idType) {
-        static map<PID, CTypeAssist*> s_assistMap = {
+    PDATATYPE m_idType;
+    static CTypeAssist* getTypeAssist(PDATATYPE idType) {
+        static map<PDATATYPE, CTypeAssist*> s_assistMap = {
             { CBasicData<bool>::getStaticType(), getBasicTypeAssist<bool>() },
             { CBasicData<char>::getStaticType(), getBasicTypeAssist<char>() },
             { CBasicData<unsigned char>::getStaticType(), getBasicTypeAssist<unsigned char>() },
@@ -25,7 +25,7 @@ public:
             { CBasicData<double>::getStaticType(), getBasicTypeAssist<double>() },
             { CData<SObject>::getStaticType(), getObjectTypeAssist<SObject>() },
         };
-        map<PID, CTypeAssist*>::iterator it = s_assistMap.find(idType);
+        map<PDATATYPE, CTypeAssist*>::iterator it = s_assistMap.find(idType);
         if( it == s_assistMap.end() ) {
             return nullptr;
         }
@@ -110,7 +110,7 @@ public:
 
     static int archiveAssist(CTypeAssist** ppAssist, const SArchive& ar) {
         if(ar->isReading()) {
-            PID idType;
+            PDATATYPE idType;
             ar.arBlock("idType", idType);
             *ppAssist = getTypeAssist(idType);
         }else{
@@ -166,7 +166,7 @@ int CTensor::getDimension(SDimension& spDim) {
     return sCtx.success();
 }
 
-PID CTensor::getDataType() {
+PDATATYPE CTensor::getDataType() {
     return m_pTypeAssist->m_idType;
 }
 
@@ -174,7 +174,7 @@ int CTensor::getDataSize() {
     return m_nElementSize;
 }
 
-void* CTensor::getDataPtr(PID idElementType, int iPos) {
+void* CTensor::getDataPtr(PDATATYPE idElementType, int iPos) {
     if( idElementType == getDataType() ){
         return m_pTypeAssist->getDataPtr(m_spElementData, iPos);
     }
@@ -193,7 +193,7 @@ void CTensor::release() {
     m_nElementSize = 0;
 }
 
-int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, PID idElementType, int nElementSize, const void* pElementData) {
+int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, PDATATYPE idElementType, int nElementSize, const void* pElementData) {
     CTypeAssist* pTypeAssist = CTypeAssist::getTypeAssist(idElementType);
     if(pTypeAssist == nullptr) {
         return sCtx.error("不支持指定类型的张量");

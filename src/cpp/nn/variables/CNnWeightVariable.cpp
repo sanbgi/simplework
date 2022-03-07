@@ -22,7 +22,7 @@ public://Factory
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVWeight; }
-    void* getData(PID idType);
+    void* getData(PDATATYPE idType);
     int getDimension(SDimension& spDimension) {
         spDimension = m_spDimension;
         return sCtx.success();
@@ -50,7 +50,7 @@ int CNnWeightVariable::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-void* CNnWeightVariable::getData(PID idType) {
+void* CNnWeightVariable::getData(PDATATYPE idType) {
     if(!m_spData) {
         int nDims = m_spDimension.size();
         const int* pDimSize = m_spDimension.data();

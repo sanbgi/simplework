@@ -46,11 +46,11 @@ public://ITensorEquation
         return sCtx.success();
     }
 
-    static int eval(PID idType, void* pParameter, int nInVar, const PVector inVars[], PVector outVar) {
-        static map<PID, FEval> sMap = {
+    static int eval(PDATATYPE idType, void* pParameter, int nInVar, const PVector inVars[], PVector outVar) {
+        static map<PDATATYPE, FEval> sMap = {
             BASIC_EVAL_ENTRIES
         };
-        map<PID, FEval>::iterator it = sMap.find(idType);
+        map<PDATATYPE, FEval>::iterator it = sMap.find(idType);
         if(it != sMap.end()) {
             (*it->second)(pParameter, nInVar, inVars, outVar);
             return sCtx.success();

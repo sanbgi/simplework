@@ -24,7 +24,7 @@ public://CObject
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVOperator; }
-    void* getData(PID idType) {
+    void* getData(PDATATYPE idType) {
         return nullptr;
     }
     int getDimension(SDimension& spDimension) {

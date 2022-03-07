@@ -47,7 +47,7 @@ int CNnResizeTensor::getDimension(SDimension& spDim) {
     return sCtx.success();
 }
 
-PID CNnResizeTensor::getDataType(){
+PDATATYPE CNnResizeTensor::getDataType(){
     return m_src.spSrc.type();
 }
 
@@ -55,7 +55,7 @@ int CNnResizeTensor::getDataSize() {
     return m_src.spResizeDimension.dataSize();
 }
 
-void* CNnResizeTensor::getDataPtr(PID eElementType, int iPos) {
+void* CNnResizeTensor::getDataPtr(PDATATYPE eElementType, int iPos) {
     return m_src.spSrc->getDataPtr(eElementType, iPos+m_src.iResizeOffset);
 }
 

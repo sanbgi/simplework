@@ -35,9 +35,9 @@ public://ITensor
     int getVer();
     int updateVer();
     int getDimension(SDimension& spDim);
-    PID getDataType();
+    PDATATYPE getDataType();
     int getDataSize();
-    void* getDataPtr(PID idElementType, int iPos=0);
+    void* getDataPtr(PDATATYPE idElementType, int iPos=0);
 
 public:
     CTensor();
@@ -45,7 +45,7 @@ public:
     void release();
 
 public:
-    static int createTensor(STensor& spTensor, const SDimension* pDimension, PID idElementType, int nElementSize, const void* pElementData);
+    static int createTensor(STensor& spTensor, const SDimension* pDimension, PDATATYPE idElementType, int nElementSize, const void* pElementData);
     static int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData);
 
 protected:

@@ -1,7 +1,7 @@
 #include "CIoBinaryArReader.h"
 
 SCtx CIoBinaryArReader::sCtx("CIoBinaryArReader");
-int CIoBinaryArReader::arBlock(const char* szName, PID idType, int nByte, void* pByte, int nMinVer, int nMaxVer){
+int CIoBinaryArReader::arBlock(const char* szName, PDATATYPE idType, int nByte, void* pByte, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         m_stream.read((char*)pByte, nByte);
     }

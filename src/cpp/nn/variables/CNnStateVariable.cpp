@@ -23,7 +23,7 @@ public://Factory
     
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }
-    void* getData(PID idType);
+    void* getData(PDATATYPE idType);
 
     int getDimension(SDimension& spDimension) {
         spDimension = m_spDimension;
@@ -47,7 +47,7 @@ int CNnStateVariable::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-void* CNnStateVariable::getData(PID idType) {
+void* CNnStateVariable::getData(PDATATYPE idType) {
     if(!m_spData) {
         int nDims = m_spDimension.size();
         const int* pDimSize = m_spDimension.data();

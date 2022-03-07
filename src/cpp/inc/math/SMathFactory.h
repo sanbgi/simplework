@@ -16,11 +16,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathFactory, "sw.math.MathFactory")
         //
         // 构造全新的张量
         //
-        virtual int createVector(STensor& spTensor, PID eElementType, int nElementSize, const void* pElementData = nullptr) = 0;
-        virtual int createTensor(STensor& spTensor, const SDimension& spDimVector, PID eElementType, int nElementSize, const void* pElementData = nullptr ) = 0;
+        virtual int createVector(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const void* pElementData = nullptr) = 0;
+        virtual int createTensor(STensor& spTensor, const SDimension& spDimVector, PDATATYPE eElementType, int nElementSize, const void* pElementData = nullptr ) = 0;
         virtual int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) = 0;
 
-        virtual int createSolver(PID idType, SMathSolver& spSolver) = 0;
+        virtual int createSolver(PDATATYPE idType, SMathSolver& spSolver) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

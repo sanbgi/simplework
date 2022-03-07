@@ -30,7 +30,7 @@ public:
     virtual void deactivate( int nData, void* pYArray, void* pYDeltaArray, void* pDzArray) = 0;
 
 public:
-    static CActivator* getActivation(PID idType, const char* szActivator = nullptr);
+    static CActivator* getActivation(PDATATYPE idType, const char* szActivator = nullptr);
 };
 
 #endif//__SimpleWork_NN_CActivation_H__

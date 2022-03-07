@@ -9,7 +9,7 @@ SIMPLEWORK_IO_NAMESPACE_ENTER
 class SArchivable;
 
 struct IArrayVisitee {
-    virtual PID getElementType() = 0;
+    virtual PDATATYPE getElementType() = 0;
     virtual int size() = 0;
     virtual const void* data() = 0;
     virtual int getElementBytes() = 0;
@@ -35,7 +35,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Archive)
         //
         // 数据
         //
-        virtual int arBlock(const char* szName, PID idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999) = 0;
+        virtual int arBlock(const char* szName, PDATATYPE idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999) = 0;
 
         //
         // 数据数组
@@ -77,7 +77,7 @@ public:
     template<typename Q> int arBlockArray(const char* szName, int nEle, Q* pEle, int nMinVer=0, int nMaxVer=999999999 ) const {
         class CArrayVisitee : IArrayVisitee {
         public:
-            PID getElementType() { return sw::CBasicData<Q>::getStaticType(); }
+            PDATATYPE getElementType() { return sw::CBasicData<Q>::getStaticType(); }
             int size() { return m_nEle; }
             const void* data() { return m_pEle; }
             int getElementBytes() { return sizeof(Q); }
@@ -109,7 +109,7 @@ public:
     template<typename Q, typename Arr> int arBlockArray(const char* szName, Arr& arrEles, int nMinVer=0, int nMaxVer=999999999 ) const {
         class CArrayVisitee : IArrayVisitee {
         public:
-            PID getElementType() { return sw::CBasicData<Q>::getStaticType(); }
+            PDATATYPE getElementType() { return sw::CBasicData<Q>::getStaticType(); }
             int size() { return (int)m_pEles->size(); }
             const void* data() { return m_pEles->data(); }
             int getElementBytes() { return sizeof(Q); }
@@ -142,7 +142,7 @@ public:
         
         class CTakerVisitee : public IArrayVisitee {
         public:
-            PID getElementType() { return sw::CBasicData<Q>::getStaticType(); }
+            PDATATYPE getElementType() { return sw::CBasicData<Q>::getStaticType(); }
             int size() { return m_nEle; }
             const void* data() { return (Q*)m_spTaker; }
             int getElementBytes() { return sizeof(Q); }
@@ -174,7 +174,7 @@ public:
     template<typename Q> int visitString(const char* szName, Q& str, int nMinVer=0, int nMaxVer = 999999999) const {
         class CStringVisitee : IArrayVisitee {
         public:
-            PID getElementType() { return sw::CBasicData<char*>::getStaticType(); }
+            PDATATYPE getElementType() { return sw::CBasicData<char*>::getStaticType(); }
             int size() { return (int)m_pStr->length()+1; }
             const void* data() { return m_pStr->c_str(); }
             int getElementBytes() { return sizeof(char); }
@@ -225,7 +225,7 @@ public:
         
         class CEleArrayVisitee : IObjectArrayVisitee {
         public:
-            PID getElementType() { return sw::CBasicData<char*>::getStaticType(); }
+            PDATATYPE getElementType() { return sw::CBasicData<char*>::getStaticType(); }
             int size() { return (int)m_pArray->size(); }
             int getEleAt(int iIndex, SArchivable& spEle){
                 spEle = (*m_pArray)[iIndex];

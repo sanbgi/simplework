@@ -3,7 +3,7 @@
 
 #include "core.h"
 
-typedef unsigned int PID;
+typedef unsigned int PDATATYPE;
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -30,7 +30,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(CoreFactory, "sw.core.CoreFactory")
         //
         //  获取指定名字数据类型对应的数据类型ID
         //
-        virtual PID getTypeIdentifier(const char* szDataTypeKey) = 0;
+        virtual PDATATYPE getTypeIdentifier(const char* szDataTypeKey) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -16,11 +16,11 @@ class CMathFactory : public CObject, IMathFactory {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int createVector(STensor& spTensor, PID eElementType, int nElementSize, const void* pElementData = nullptr) {
+    int createVector(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const void* pElementData = nullptr) {
         return CTensor::createTensor(spTensor, nullptr, eElementType, nElementSize, pElementData);
     }
     
-    int createTensor(STensor& spTensor, const SDimension& spDimVector, PID eElementType, int nElementSize, const void* pElementData = nullptr ){
+    int createTensor(STensor& spTensor, const SDimension& spDimVector, PDATATYPE eElementType, int nElementSize, const void* pElementData = nullptr ){
         return CTensor::createTensor(spTensor, &spDimVector, eElementType, nElementSize, pElementData);
     }
 
@@ -28,7 +28,7 @@ public:
         return CTensor::createDimension(spDimension, nElementSize, pElementData);
     }
 
-    int createSolver(PID idType, SMathSolver& spSolver) {
+    int createSolver(PDATATYPE idType, SMathSolver& spSolver) {
         return CMathSolver::createSolver(idType, spSolver);
     }
 };

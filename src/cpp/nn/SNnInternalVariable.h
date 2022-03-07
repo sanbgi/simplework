@@ -22,7 +22,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnInternalVariable)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.nn.INnInternalVariable", 211202)
 
         virtual int getSize() = 0;
-        virtual void* getData(PID idType) = 0;
+        virtual void* getData(PDATATYPE idType) = 0;
         virtual ENnVariableType getVariableType() = 0;
         virtual int getDimension(SDimension& spDimension) = 0;
 

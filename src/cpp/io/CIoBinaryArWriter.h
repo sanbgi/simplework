@@ -18,7 +18,7 @@ class CIoBinaryArWriter : public CObject, public IArchive {
 
 private://IArchive
     bool isReading() { return false; }
-    int arBlock(const char* szName, PID idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999);
+    int arBlock(const char* szName, PDATATYPE idType, int nByte, void* pByte, int nMinVer=0, int nMaxVer=99999999);
     int arBlockArray(const char* szName, IArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=99999999);
     int arObject(const char* szName, SArchivable& spVisitee, int nMinVer=0, int nMaxVer=999999999);
     int arObjectArray(const char* szName, IObjectArrayVisitee* pVisitee, int nMinVer=0, int nMaxVer=999999999);
