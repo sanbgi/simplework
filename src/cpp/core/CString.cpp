@@ -4,6 +4,7 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+/*
 static SCtx sCtx = CCtx::createCtx("CString"); 
 
 const char* CString::getCharPtr() {
@@ -17,5 +18,6 @@ int CString::createString(const char* sz, SString& spString) {
     spPointer->m_str = sz;
     return spString ? SError::ERRORTYPE_SUCCESS : SError::ERRORTYPE_FAILURE;
 }
+*/
 
 __SimpleWork_Core_Namespace_Leave__

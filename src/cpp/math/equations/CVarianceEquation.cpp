@@ -13,7 +13,7 @@ public://Factory
     static const char* __getClassKey() { return "sw.math.VarianceEquation"; }
 
 public://ITensorEquation
-    int eval(const PData* pData, int nInVars, const STensor pInVars[], STensor& outVar) {
+    int eval(const PArg* pData, int nInVars, const STensor pInVars[], STensor& outVar) {
         if(nInVars != 1) {
             return sCtx.error("加法需要两个元素");
         }

@@ -30,7 +30,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnState, "sw.nn.NnState")
 
 public:
     static SNnState createState(const PNnState& rState) {
-        return SObject::createObject("sw.nn.State", CData<PNnState>(rState));
+        return SObject::createObject("sw.nn.State", CArg<PNnState>(rState));
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnState)

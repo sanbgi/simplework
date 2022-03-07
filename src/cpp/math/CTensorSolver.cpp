@@ -38,11 +38,17 @@ public:
         void* pT1 = t1->getDataPtr(idType1);
         void* pT2 = t2->getDataPtr(idType1);
         void* pOut = spRet->getDataPtr(idType1);
-        SMathSolver spSolver;
-        if( SMathSolver::getSolver(idType1, spSolver) ) {
-            return sCtx.error("数学计算器不支持的数据类型");
+        if(idType1 == CBasicData<float>::getStaticType()) {
+            for(int i=0; i<nSize; i++) {
+                ((float*)pOut)[i] = ((float*)pT1)[i] - ((float*)pT2)[i];
+            }
+        }else if(idType1 == CBasicData<double>::getStaticType()){
+            for(int i=0; i<nSize; i++) {
+                ((double*)pOut)[i] = ((double*)pT1)[i] - ((double*)pT2)[i];
+            }
+        }else{
+            return sCtx.error("不支持的数据类型");
         }
-        spSolver->minus(nSize, pT1, pT2, pOut);
         spOut = spRet;
         return sCtx.success();
     }

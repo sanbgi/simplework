@@ -36,7 +36,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         return solveOneEleWise(this, nInVars, pInVars, spVarOut);
     }
 

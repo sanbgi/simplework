@@ -11,7 +11,7 @@ class CGruSolver : public CObject, public INnSolver, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnUnit
-    int solve(const PData* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
+    int solve(const PArg* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -23,8 +23,8 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.GruSolver"; }
 };
 
-int CGruSolver::solve(const PData* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
-    const PNnRnn* pRnn = CData<PNnRnn>(pData);
+int CGruSolver::solve(const PArg* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+    const PNnRnn* pRnn = CArg<PNnRnn>(pData);
     if(pRnn == nullptr) {
         return sCtx.error("缺少参数");
     }

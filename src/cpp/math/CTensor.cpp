@@ -23,7 +23,7 @@ public:
             { CBasicData<unsigned int>::getStaticType(), getBasicTypeAssist<unsigned int>() },
             { CBasicData<float>::getStaticType(), getBasicTypeAssist<float>() },
             { CBasicData<double>::getStaticType(), getBasicTypeAssist<double>() },
-            { CData<SObject>::getStaticType(), getObjectTypeAssist<SObject>() },
+            { CArg<SObject>::getStaticType(), getObjectTypeAssist<SObject>() },
         };
         map<PDATATYPE, CTypeAssist*>::iterator it = s_assistMap.find(idType);
         if( it == s_assistMap.end() ) {
@@ -74,7 +74,7 @@ public:
         static class CTypeAssistT : public CTypeAssist {
         public:
             CTypeAssistT() {
-                m_idType = CData<Q>::getStaticType();
+                m_idType = CArg<Q>::getStaticType();
             }
 
             void initData(CTaker<void*>& spTaker, int nSize, const void* pData) {

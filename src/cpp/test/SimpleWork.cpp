@@ -199,8 +199,8 @@ int main(int argc, char *argv[]){
     //cl::copy();
     //FAA a = { 10 };
     //FBB b = { 20 };
-    //fun(CData<FAA>(a));
-    //fun(CData<FBB>(b));
+    //fun(CArg<FAA>(a));
+    //fun(CArg<FBB>(b));
     //unsigned int la = SData::getBasicTypeIdentifier<int>();
     //unsigned long lb = SData::getTypeIdentifier("aaaaaaaaaaaaaaaafadfasdf");
     //unsigned long lc = SData::getTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");

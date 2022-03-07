@@ -170,8 +170,8 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        const PNnBatchNormalize* pParameter = CData<PNnBatchNormalize>(pData);
+    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+        const PNnBatchNormalize* pParameter = CArg<PNnBatchNormalize>(pData);
         if( pParameter == nullptr ) {
             return sCtx.error("缺少构造参数");
         }

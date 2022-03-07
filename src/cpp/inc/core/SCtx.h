@@ -3,7 +3,7 @@
 
 #include "core.h"
 #include "SError.h"
-#include "SCoreFactory.h"
+#include "SCore.h"
 
 __SimpleWork_Core_Namespace_Enter__
 
@@ -51,7 +51,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Ctx)
 private:
     IFace* getCtx() {
         if( !(*this) ) {
-            SCoreFactory::getFactory()->createCtx(m_szModule, *this);
+            SCore::getFactory()->createCtx(m_szModule, *this);
         }
         return getPtr();
     }

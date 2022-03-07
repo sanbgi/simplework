@@ -3,7 +3,7 @@
 
 
 #include "core.h"
-#include "PData.h"
+#include "PArg.h"
 #include "IVisitor.h"
 
 __SimpleWork_Core_Namespace_Enter__
@@ -20,7 +20,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Pipe)
         //
         // 推入数据，并且通过pReceiver获得返回结果
         //
-        virtual int pushData(const PData& rData, IVisitor<const PData&,int>* pReceiver) = 0; 
+        virtual int pushData(const PArg& rData, IVisitor<const PArg&,int>* pReceiver) = 0; 
 
     SIMPLEWORK_INTERFACE_LEAVE
     

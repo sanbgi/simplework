@@ -15,6 +15,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathSolver, "sw.math.MathSolver")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IMathSolver", 211202)
 
+        /*
         //
         // 单元运算
         //
@@ -43,12 +44,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathSolver, "sw.math.MathSolver")
         // 两个向量连接
         //
         virtual int join(PVector vecIn1, PVector vecIn2, PVector vecOut) = 0;
+        */
   
     SIMPLEWORK_INTERFACE_LEAVE
-
-    static int getSolver(PDATATYPE idType, SMathSolver& spSolver) {
-        return SMathFactory::getFactory()->createSolver(idType, spSolver);
-    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(MathSolver)
 

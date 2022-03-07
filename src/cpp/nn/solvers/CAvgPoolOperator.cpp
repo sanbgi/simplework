@@ -296,7 +296,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 1) {
             return sCtx.error("卷积操作需要1个输入数据");
         }
@@ -304,7 +304,7 @@ public:
             return sCtx.error("缺少初始化参数");
         }
 
-        const PNnPool* pAvgPool = CData<PNnPool>(*pData);
+        const PNnPool* pAvgPool = CArg<PNnPool>(*pData);
         if(pAvgPool == nullptr) {
             return sCtx.error("错误的初始化参数");
         }

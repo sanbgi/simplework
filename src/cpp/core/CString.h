@@ -8,6 +8,7 @@
 
 __SimpleWork_Core_Namespace_Enter__
 
+/*
 class CString : public CObject, public IString{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
@@ -23,6 +24,7 @@ public:
 private:
     std::string m_str;
 };
+*/
 
 __SimpleWork_Core_Namespace_Leave__
 

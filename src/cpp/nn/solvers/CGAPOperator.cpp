@@ -84,7 +84,7 @@ public:
         return sCtx.error("类型错误");
     }
 
-    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 1) {
             return sCtx.error("全局池化操作需要一个输入数据");
         }

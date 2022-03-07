@@ -28,7 +28,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnVariableSolver, "sw.nn.NnVariableSolver")
         //
         // 运算求解
         //
-        virtual int solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVar) = 0;
+        virtual int solveOp(const char* szOp, const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

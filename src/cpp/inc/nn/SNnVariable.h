@@ -95,28 +95,28 @@ public:
         return solveOp("join", *this, sp);
     }
     SNnVariable dense(const PNnDense& rDense) const {
-        return solveOp("dense", *this, (const PData*)CData<PNnDense>(rDense));
+        return solveOp("dense", *this, (const PArg*)CArg<PNnDense>(rDense));
     }
     SNnVariable maxpool(const PNnPool& rPool) const {
-        return solveOp("maxpool", *this, (const PData*)CData<PNnPool>(rPool));
+        return solveOp("maxpool", *this, (const PArg*)CArg<PNnPool>(rPool));
     }
     SNnVariable avgpool(const PNnPool& rPool) const {
-        return solveOp("avgpool", *this, (const PData*)CData<PNnPool>(rPool));
+        return solveOp("avgpool", *this, (const PArg*)CArg<PNnPool>(rPool));
     }
     SNnVariable conv(const PNnConv& rConv) const {
-        return solveOp("conv", *this, (const PData*)CData<PNnConv>(rConv));
+        return solveOp("conv", *this, (const PArg*)CArg<PNnConv>(rConv));
     }
     SNnVariable linear(const PNnLinear& rData) const {
-        return solveOp("linear", *this, (const PData*)CData<PNnLinear>(rData));
+        return solveOp("linear", *this, (const PArg*)CArg<PNnLinear>(rData));
     }
     SNnVariable batchNormalize(const PNnBatchNormalize& rNormalize) const {
-        return solveOp("batchnormalize", *this, (const PData*)CData<PNnBatchNormalize>(rNormalize));
+        return solveOp("batchnormalize", *this, (const PArg*)CArg<PNnBatchNormalize>(rNormalize));
     }
     SNnVariable rnn(const PNnRnn& rData) const {
-        return solveOp("rnn", *this, (const PData*)CData<PNnRnn>(rData));
+        return solveOp("rnn", *this, (const PArg*)CArg<PNnRnn>(rData));
     }
     SNnVariable gru(const PNnRnn& rData) const {
-        return solveOp("gru", *this, (const PData*)CData<PNnRnn>(rData));
+        return solveOp("gru", *this, (const PArg*)CArg<PNnRnn>(rData));
     }
 
 public:
@@ -137,9 +137,9 @@ public:
         return SNnVariableSolver::getSolver()->saveState(spState, spVar);
     }
     static SNnVariable createWeight(const PNnWeight& rWeight) {
-        return SObject::createObject("sw.nn.Weight", CData<PNnWeight>(rWeight));
+        return SObject::createObject("sw.nn.Weight", CArg<PNnWeight>(rWeight));
     }
-    static SNnVariable solveOp(const char* szOp, const SNnVariable& a, const PData* pData = nullptr) {
+    static SNnVariable solveOp(const char* szOp, const SNnVariable& a, const PArg* pData = nullptr) {
         SNnVariable o;
         SNnVariableSolver::getSolver()->solveOp(szOp, pData, 1, &a, o);
         return o;
@@ -150,7 +150,7 @@ public:
         SNnVariableSolver::getSolver()->solveOp(szOp, nullptr, 2, pInVars, o);
         return o;
     }
-    static int solveOp(const char* szOperator, const PData* pData,  int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+    static int solveOp(const char* szOperator, const PArg* pData,  int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
         return SNnVariableSolver::getSolver()->solveOp(szOperator, pData, nInVars, pInVars, spOutVar);
     }
 

@@ -2,7 +2,6 @@
 #define __SimpleWork_Parallel_ParallelMemory_h__
 
 #include "parallel.h"
-#include "PParallelMemory.h"
 
 SIMPLEWORK_PARALLEL_NAMESPACE_ENTER
 
@@ -16,12 +15,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(ParallelMemory, "sw.parallel.ParallelMemory")
         //
         // 获取内存值
         //
-        virtual int getMemory(IVisitor<PParallelMemory> cb) = 0;
+        //virtual int getMemory(IVisitor<PParallelMemory> cb) = 0;
 
         //
         // 修改内存值
         //
-        virtual int setMemory(PParallelMemory block, int offset=0) = 0;
+        //virtual int setMemory(PParallelMemory block, int offset=0) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
  

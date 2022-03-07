@@ -76,12 +76,12 @@
 //
 #include "IObject.h"
 #include "SObject.h"
-#include "SCoreFactory.h"
+#include "SCore.h"
 
 #include "SCtx.h"
 #include "SPipe.h"
 #include "SError.h"
-#include "SString.h"
+#include "SOperator.h"
 #include "SModule.h"
 #include "SFactory.h"
 
@@ -107,7 +107,7 @@
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        int __initialize(const PData* pData) { return 0; }\
+        int __initialize(const PArg* pData) { return 0; }\
         int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*,int>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return SError::ERRORTYPE_FAILURE; \
@@ -134,7 +134,7 @@
         return TSuperClass::__swGetInterfacePtr(szInterfaceKey, nInterfaceVer, visitor); \
     };
 
-#include "CData.h"
+#include "CArg.h"
 #include "CTaker.h"
 #include "CRefer.h"
 #include "CPointer.h"

@@ -35,7 +35,7 @@ int CNnVariableSolver::saveState(const SNnState spState, const SNnVariable& spVa
     return solveOp("saveState", nullptr, 2, pIn, o);
 }
 
-int CNnVariableSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CNnVariableSolver::solveOp(const char* szOp, const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     return CNnSolver::solveOp(szOp, pData, nInVars, pInVars, spOutVar);
 }
 
@@ -83,7 +83,7 @@ int CNnVariableSolver::solveNetwork(const PNnNetwork* pNet, PNnSolveGraph* pCtx)
     //
     // 创建输入变量
     //
-    SNnVariable spInput = SObject::createObject("sw.nn.Input", CData<SDimension>(pNet->spInDimension));
+    SNnVariable spInput = SObject::createObject("sw.nn.Input", CArg<SDimension>(pNet->spInDimension));
     if( !spInput ){
         return sCtx.error("创建输入变量失败");
     }

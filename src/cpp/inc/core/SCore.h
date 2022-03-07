@@ -1,5 +1,5 @@
-#ifndef __SimpleWork_Core_SCoreFactory_h__
-#define __SimpleWork_Core_SCoreFactory_h__
+#ifndef __SimpleWork_Core_SCore_h__
+#define __SimpleWork_Core_SCore_h__
 
 #include "core.h"
 
@@ -13,9 +13,9 @@ class SCtx;
 //
 // 字符串
 //
-SIMPLEWORK_INTERFACECLASS_ENTER(CoreFactory, "sw.core.CoreFactory")
+SIMPLEWORK_INTERFACECLASS_ENTER(Core, "sw.core.Core")
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ICoreFactory", 011230)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.core.ICore", 011230)
     
         //
         //  创建日志记录器
@@ -25,7 +25,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(CoreFactory, "sw.core.CoreFactory")
         //
         //  创建字符串
         //
-        virtual int createString(const char* sz, SString& spString) = 0;
+        //virtual int createString(const char* sz, SString& spString) = 0;
 
         //
         //  获取指定名字数据类型对应的数据类型ID
@@ -35,13 +35,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(CoreFactory, "sw.core.CoreFactory")
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
-    static SCoreFactory& getFactory() {
-        static SCoreFactory g_factory = SObject::createObject<SCoreFactory>();
+    static SCore& getFactory() {
+        static SCore g_factory = SObject::createObject<SCore>();
         return g_factory;
     }
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(CoreFactory)
+SIMPLEWORK_INTERFACECLASS_LEAVE(Core)
 
 __SimpleWork_Core_Namespace_Leave__
 
-#endif//__SimpleWork_Core_SCoreFactory_h__
+#endif//__SimpleWork_Core_SCore_h__

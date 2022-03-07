@@ -17,12 +17,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(ParallelDevice, "sw.parallel.ParallelDevice")
         //
         // 创建内存
         //
-        virtual int createMemory(PParallelMemory data, SParallelMemory& spMemory) = 0;
+        //virtual int createMemory(PParallelMemory data, SParallelMemory& spMemory) = 0;
 
         //
         // 创建运算
         //
-        virtual int createOperator(const char* szOperator, SParallelOperator& spOperator) = 0;
+        //virtual int createOperator(const char* szOperator, SParallelOperator& spOperator) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
  

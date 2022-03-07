@@ -61,7 +61,7 @@ public:
         return sCtx.error("类型错误");
     }
     
-    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         if(nInVars != 2) {
             return sCtx.error("存储状态参数必须为两个，一个为状态变量，一个为计算变量");
         }

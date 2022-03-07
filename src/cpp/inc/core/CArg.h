@@ -3,18 +3,18 @@
 
 #include <typeinfo>
 #include "core.h"
-#include "PData.h"
+#include "PArg.h"
+
+__SimpleWork_Core_Namespace_Enter__
 
 #define SIMPLEWORK_PDATAKEY(TValue, name) \
     typedef TValue __TValue; \
     static const char* __getClassKey() { return name; }
 
-__SimpleWork_Core_Namespace_Enter__
-
 //
 // 纯数据参数类，用于传递结构类型的函数参数，作为带类型的参数垫片
 //
-template<typename TType> class CData : public PData {
+template<typename TType> class CArg : public PArg {
 public:
     typedef typename TType::__TValue TValue;
 
@@ -22,21 +22,21 @@ public:
     // 获取当前数据类型
     //
     static PDATATYPE getStaticType() {
-        static PDATATYPE s_idType = SCoreFactory::getFactory()->getTypeIdentifier(TType::__getClassKey());
+        static PDATATYPE s_idType = SCore::getFactory()->getTypeIdentifier(TType::__getClassKey());
         return s_idType;
     }
 
 public:
-    CData(const TValue& rData){
+    CArg(const TValue& rData){
         init(&rData);
     }
-    CData(const TValue* pData){
+    CArg(const TValue* pData){
         init(pData);
     }
-    CData(const PData& rData){
+    CArg(const PArg& rData){
         init(rData);
     }
-    CData(const PData* pData){
+    CArg(const PArg* pData){
         if(pData == nullptr) {
             m_pInternalPointer = this;
             m_idInternalType = 0;
@@ -50,8 +50,8 @@ public:
     //
     // 判断当前数据是否是当前类型数据
     //
-    //  当CData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
-    //  当CData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
+    //  当CArg实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
+    //  当CArg为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
     //
     bool isThisType() const {
         return getStaticType() == m_idInternalType;
@@ -69,7 +69,7 @@ public:
         return (const TValue*)m_pInternalData;
     }
 
-    operator const PData*() {
+    operator const PArg*() {
         return this;
     }
 
@@ -85,17 +85,17 @@ public:
 private:
     void init(const TValue* pData) {
         //
-        // PData两个指针一个指向自己，用于：
-        //      1, 判断当前指针是否是有效的CData指针;
+        // PArg两个指针一个指向自己，用于：
+        //      1, 判断当前指针是否是有效的CArg指针;
         //      2，读取当前数据的类型;
         //
         m_pInternalPointer = this;
         m_idInternalType = getStaticType();
         m_pInternalData = (void*)pData;
     }
-    void init(const PData& rData) {
+    void init(const PArg& rData) {
         if(rData.m_pInternalPointer == (void*)&rData ) {
-            const CData* pSrc = (const CData*)&rData;
+            const CArg* pSrc = (const CArg*)&rData;
             m_idInternalType = pSrc->m_idInternalType;
             m_pInternalData = (getStaticType() == m_idInternalType) ? pSrc->m_pInternalData : nullptr;
         }else{
@@ -106,7 +106,7 @@ private:
     }
 };
 
-template<typename TValue> class CBasicData : public PData{
+template<typename TValue> class CBasicData : public PArg{
 public:
     static const char* __getClassKey() {
         static const char* s_key = getBasicTypeKey();
@@ -115,7 +115,7 @@ public:
     typedef TValue __TValue;
 
     static PDATATYPE getStaticType() {
-        static PDATATYPE s_idType = SCoreFactory::getFactory()->getTypeIdentifier(__getClassKey());
+        static PDATATYPE s_idType = SCore::getFactory()->getTypeIdentifier(__getClassKey());
         return s_idType;
     }
 
@@ -152,10 +152,10 @@ public:
     CBasicData(const TValue* pData){
         init(pData);
     }
-    CBasicData(const PData& rData){
+    CBasicData(const PArg& rData){
         init(rData);
     }
-    CBasicData(const PData* pData){
+    CBasicData(const PArg* pData){
         if(pData == nullptr) {
             m_pInternalPointer = this;
             m_idInternalType = 0;
@@ -169,8 +169,8 @@ public:
     //
     // 判断当前数据是否是当前类型数据
     //
-    //  当CData实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
-    //  当CData为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
+    //  当CArg实例为自己创建的时候：这个时候肯定是有效的，无论数据是否为空，空数据也是有效数据
+    //  当CArg为接收的函数参数时：函数判断参数是否时当前类型的参数，这个判断与数据是否为空无关
     //
     bool isThisType() const {
         return getStaticType() == m_idInternalType;
@@ -200,15 +200,15 @@ public:
 private:
     void init(const TValue* pData) {
         //
-        // PData两个指针一个指向自己，用于：
-        //      1, 判断当前指针是否是有效的CData指针;
+        // PArg两个指针一个指向自己，用于：
+        //      1, 判断当前指针是否是有效的CArg指针;
         //      2，读取当前数据的类型;
         //
         m_pInternalPointer = this;
         m_idInternalType = getStaticType();
         m_pInternalData = (void*)pData;
     }
-    void init(const PData& rData) {
+    void init(const PArg& rData) {
         if(rData.m_pInternalPointer == (void*)&rData ) {
             const CBasicData* pSrc = (const CBasicData*)&rData;
             m_idInternalType = pSrc->m_idInternalType;

@@ -136,8 +136,8 @@ public:
         return sCtx.success();
     }
 
-    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
-        const PNnLinear* pLinear = CData<PNnLinear>(pData);
+    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+        const PNnLinear* pLinear = CArg<PNnLinear>(pData);
         if(pLinear == nullptr) {
             return sCtx.error("缺少配置参数");
         }

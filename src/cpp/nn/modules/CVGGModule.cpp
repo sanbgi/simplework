@@ -17,7 +17,7 @@ class CVGGModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PData* pData);
+    int __initialize(const PArg* pData);
 
 private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
@@ -36,7 +36,7 @@ public:
     }
 };
 
-int CVGGModule::__initialize(const PData* pData) {
+int CVGGModule::__initialize(const PArg* pData) {
     return sCtx.success();
 }
 

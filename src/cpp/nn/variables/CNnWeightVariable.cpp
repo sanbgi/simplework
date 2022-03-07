@@ -10,7 +10,7 @@ class CNnWeightVariable : public CObject, public INnVariable, public INnInternal
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PData* pData);
+    int __initialize(const PArg* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -40,8 +40,8 @@ private:
     float m_dAvg;
 };
 
-int CNnWeightVariable::__initialize(const PData* pData) {
-    const PNnWeight* pWeight = CData<PNnWeight>(pData);
+int CNnWeightVariable::__initialize(const PArg* pData) {
+    const PNnWeight* pWeight = CArg<PNnWeight>(pData);
     if(pWeight == nullptr) {
         return sCtx.error("缺少构造参数");
     }

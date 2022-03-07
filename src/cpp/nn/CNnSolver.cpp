@@ -18,7 +18,7 @@ int CNnSolver::regisetOperator(const char* szOperator, FCreateSolver funCreator)
     return sCtx.success();
 }
 
-int CNnSolver::solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
+int CNnSolver::solveOp(const char* szOp, const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) {
     map<string, FCreateSolver>::iterator it = getFactories().find(szOp);
     if(it != getFactories().end()) {
         SNnSolver spSolver;
@@ -39,7 +39,7 @@ int CNnSolver::solveOneEleWise(INnAtomOperator* pSolver, int nInVars, const SNnV
         return sCtx.error("参数个数不等于二");
     }
 
-    spOutVar = SObject::createObject("sw.nn.Variable", CData<SDimension>(pInVars[0].dimension()));
+    spOutVar = SObject::createObject("sw.nn.Variable", CArg<SDimension>(pInVars[0].dimension()));
     return addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
@@ -70,11 +70,11 @@ int CNnSolver::solveTwoEleWise(INnAtomOperator* pSolver, int nInVars, const SNnV
             return sCtx.error("相加的两个元素维度不一致");
         }
     }
-    spOutVar = SObject::createObject("sw.nn.Variable", CData<SDimension>(spInDimension1));
+    spOutVar = SObject::createObject("sw.nn.Variable", CArg<SDimension>(spInDimension1));
     return addAtomOperator(pSolver, nInVars, pInVars, spOutVar);
 }
 
 int CNnSolver::createVariable(const SDimension& spDimension, SNnVariable& spOutVar) {
-    spOutVar = SObject::createObject("sw.nn.Variable", CData<SDimension>(spDimension));
+    spOutVar = SObject::createObject("sw.nn.Variable", CArg<SDimension>(spDimension));
     return sCtx.success();
 }
