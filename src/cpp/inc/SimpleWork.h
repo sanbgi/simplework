@@ -6,5 +6,6 @@
 #include "io/io.h"
 #include "av/av.h"
 #include "nn/nn.h"
+#include "parallel/parallel.h"
 
 #endif//__SimpleWork_h__

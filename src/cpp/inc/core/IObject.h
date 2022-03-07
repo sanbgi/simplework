@@ -17,7 +17,7 @@ public:
 private:
     virtual int __swAddRef() = 0;
     virtual int __swDecRef() = 0;
-    virtual int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, IVisitor<void*>& funSaver) = 0;
+    virtual int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, IVisitor<void*,int>& funSaver) = 0;
     template<typename T> friend class SPointer;
 };
 

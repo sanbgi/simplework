@@ -647,7 +647,6 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         }
     }
     event.wait();
-    event.setCallback
 
     //
     // 拷贝权重核输入偏导数

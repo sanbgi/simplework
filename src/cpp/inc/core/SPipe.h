@@ -20,7 +20,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Pipe)
         //
         // 推入数据，并且通过pReceiver获得返回结果
         //
-        virtual int pushData(const PData& rData, IVisitor<const PData&>* pReceiver) = 0; 
+        virtual int pushData(const PData& rData, IVisitor<const PData&,int>* pReceiver) = 0; 
 
     SIMPLEWORK_INTERFACE_LEAVE
     

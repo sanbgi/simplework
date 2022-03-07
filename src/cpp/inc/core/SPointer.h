@@ -89,7 +89,7 @@ private:
             if(pDest) {
                 initPtr(pDest);
             }else{
-                struct CPtrVisitor : public IVisitor<void*> {
+                struct CPtrVisitor : public IVisitor<void*,int> {
                     CPtrVisitor(SPointer* pAutoPtr) : _pPtr(pAutoPtr){}
                     int visit(void* pPtr) { return _pPtr->assignPtr((TInterface*)pPtr); }
                     SPointer* _pPtr;

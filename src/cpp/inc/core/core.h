@@ -108,14 +108,14 @@
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
         int __initialize(const PData* pData) { return 0; }\
-        int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
+        int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*,int>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return SError::ERRORTYPE_FAILURE; \
     };
 
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER(TSuperClass) \
     protected: \
-        int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*>& visitor) { 
+        int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*,int>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY(TInterfaceClass) \
         if( strcmp(szInterfaceKey, TInterfaceClass::getInterfaceKey()) == 0 ) { \
             if( nInterfaceVer <= TInterfaceClass::getInterfaceVer() ) \
