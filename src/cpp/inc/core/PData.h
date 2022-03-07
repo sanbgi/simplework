@@ -16,10 +16,10 @@ struct PData {
 protected:
     void* m_pInternalPointer;
     void* m_pInternalData;
-    unsigned int m_idInternalType;
+    PID m_idInternalType;
 
 public:
-    unsigned int getType() const {
+    PID getType() const {
         if(m_pInternalPointer == (void*)this ) {
             return m_idInternalType;
         }

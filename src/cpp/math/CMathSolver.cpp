@@ -145,7 +145,7 @@ public:
 };
 
 
-int CMathSolver::createSolver(unsigned int idType, SMathSolver& spSolver) {
+int CMathSolver::createSolver(PID idType, SMathSolver& spSolver) {
     if(idType == CBasicData<double>::getStaticType() ) {
         return CMathSolverT<double>::getSolver(spSolver);
     }else

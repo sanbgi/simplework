@@ -34,7 +34,7 @@ map<string, FCreateOptimizer> s_mapFloatOptimizerFs = {
     { "rmsprop", CRMSPropOptimizer<float>::createOptimizer },
 };
 
-int COptimizer::getOptimizer(const char* szOptimizer, unsigned int idType, SOptimizer& spOptimizer) {
+int COptimizer::getOptimizer(const char* szOptimizer, PID idType, SOptimizer& spOptimizer) {
     if(szOptimizer != nullptr && *szOptimizer != 0) {
         map<string, FCreateOptimizer>* pMap;
         if(idType == CBasicData<double>::getStaticType()) {

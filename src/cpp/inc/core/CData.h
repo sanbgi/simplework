@@ -21,8 +21,8 @@ public:
     //
     // 获取当前数据类型
     //
-    static unsigned int getStaticType() {
-        static unsigned int s_idType = SCoreFactory::getFactory()->getTypeIdentifier(TType::__getClassKey());
+    static PID getStaticType() {
+        static PID s_idType = SCoreFactory::getFactory()->getTypeIdentifier(TType::__getClassKey());
         return s_idType;
     }
 
@@ -114,8 +114,8 @@ public:
     }
     typedef TValue __TValue;
 
-    static unsigned int getStaticType() {
-        static unsigned int s_idType = SCoreFactory::getFactory()->getTypeIdentifier(__getClassKey());
+    static PID getStaticType() {
+        static PID s_idType = SCoreFactory::getFactory()->getTypeIdentifier(__getClassKey());
         return s_idType;
     }
 
@@ -129,7 +129,7 @@ private:
             return "sw.core.UChar";
         } else if(typeid(TValue) == typeid(int)) {
             return "sw.core.Int";
-        } else if(typeid(TValue) == typeid(unsigned int)) {
+        } else if(typeid(TValue) == typeid(PID)) {
             return "sw.core.UInt";
         } else if(typeid(TValue) == typeid(short)) {
             return "sw.core.Short";

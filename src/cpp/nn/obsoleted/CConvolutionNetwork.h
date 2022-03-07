@@ -70,7 +70,7 @@ private:
 
     //网络参数
     int m_nInputLayers;
-    unsigned int m_idDataType;
+    PID m_idDataType;
     CTaker<char*> m_spWeights;
     CTaker<char*> m_spBais;
 

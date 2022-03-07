@@ -74,7 +74,7 @@ int CIdxFileReader::createReader(const char* szFileName, SNnPipe& spPipe) {
     }
 
     int nEleByte = 0;
-    unsigned int idType = 0;
+    PID idType = 0;
     switch(headerArray[2]) {
         case 0x08:  // unsigned byte
             idType = CBasicData<unsigned char>::getStaticType();
@@ -175,7 +175,7 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
     }
 
     int nEleByte = 0;
-    unsigned int idType = 0;
+    PID idType = 0;
     switch(headerArray[2]) {
         case 0x08:  // unsigned byte
             idType = CBasicData<unsigned char>::getStaticType();

@@ -89,7 +89,7 @@ int CConvolutionNetwork::prepareNetwork(const STensor& spBatchIn) {
     // 两次输入张量尺寸相同，则细节维度尺寸就按照上次维度尺寸进行
     //
     int nInputSize = spBatchIn.size();
-    unsigned int idType = spBatchIn.type();
+    PID idType = spBatchIn.type();
     if( nInputSize == m_nInputSize && m_idDataType == idType) {
         return sCtx.success();
     }

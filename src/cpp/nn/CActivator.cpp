@@ -270,7 +270,7 @@ map<string, CActivator*> s_mapFloatActivators = {
     { "leakyrelu", CActivatorT<float>::getLeakyReLU() },
 };
 
-CActivator* CActivator::getActivation(unsigned int idType, const char* szActivator) {
+CActivator* CActivator::getActivation(PID idType, const char* szActivator) {
     if( szActivator != nullptr && *szActivator > 0) {
         map<string, CActivator*>* pMap = nullptr;
         if(idType == CBasicData<double>::getStaticType()) {

@@ -47,7 +47,7 @@ private:
 private:
     //从计算图中获取的求解信息
     struct PSolveGraphInfos {
-        unsigned int idType;
+        PID idType;
         SDimension spInDimension;
         SDimension spOutDimension;
 
@@ -80,7 +80,7 @@ private:
     CTaker<PSolveGraphInfos*> m_spSolveGraphInfos;
 
 public:
-    int initNetwork(unsigned int idType);
+    int initNetwork(PID idType);
 };
 
 int CLayerNetwork::__initialize(const PData* pData){
@@ -94,7 +94,7 @@ int CLayerNetwork::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CLayerNetwork::initNetwork(unsigned int idType) {
+int CLayerNetwork::initNetwork(PID idType) {
     if(m_spSolveGraphInfos) {
         if(idType == m_spSolveGraphInfos->idType) {
             return sCtx.success();
@@ -164,7 +164,7 @@ int CLayerNetwork::initNetwork(unsigned int idType) {
 }
 
 int CLayerNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
-    unsigned int idType = spBatchIn.type();
+    PID idType = spBatchIn.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
     }

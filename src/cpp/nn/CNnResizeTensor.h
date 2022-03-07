@@ -18,9 +18,9 @@ public://CObject
 
 public://ITensor
     int getDimension(SDimension& spDim);
-    unsigned int getDataType();
+    PID getDataType();
     int getDataSize();
-    void* getDataPtr(unsigned int eElementType, int iPos=0);
+    void* getDataPtr(PID eElementType, int iPos=0);
 
 private://IArchivable
     int getClassVer() { return 220209; }

@@ -6,11 +6,9 @@
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
-class STensor;
-
-/**
- * 张量类定义
- */
+//
+// 维度定义
+//
 SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IDimension", 211202)
@@ -86,6 +84,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
     static SDimension createDimension(int nDims, const int* pDimSizes) {
         SDimension spDim;
         SMathFactory::getFactory()->createDimension(spDim, nDims, pDimSizes);
+        return spDim;
+    }
+
+    template<typename Q> static SDimension createDimension(Q v) {
+        SDimension spDim;
+        SMathFactory::getFactory()->createDimension(spDim, v.size(), v.data());
         return spDim;
     }
 

@@ -3,7 +3,7 @@
 using std::string;
 
 SCtx CIoBinaryArWriter::sCtx("CIoBinaryArWriter");
-int CIoBinaryArWriter::arBlock(const char* szName, unsigned int idType, int nByte, void* pByte, int nMinVer, int nMaxVer){
+int CIoBinaryArWriter::arBlock(const char* szName, PID idType, int nByte, void* pByte, int nMinVer, int nMaxVer){
     if(m_nEleVer >= nMinVer && m_nEleVer <= nMaxVer ) {
         m_stream.write((const char*)pByte, nByte);
     }

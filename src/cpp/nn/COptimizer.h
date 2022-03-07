@@ -26,7 +26,7 @@ SIMPLEWORK_INTERFACECLASS_LEAVE(Optimizer)
 
 class COptimizer {
 public:
-    static int getOptimizer(const char* szOptimizer, unsigned int idType, SOptimizer& spOptimizer); 
+    static int getOptimizer(const char* szOptimizer, PID idType, SOptimizer& spOptimizer); 
 };
 
 #endif//__SimpleWork_NN_COptmizer_H__

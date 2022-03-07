@@ -29,7 +29,7 @@ public://INnVariable
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVInput; }
-    void* getData(unsigned int) {
+    void* getData(PID) {
         return nullptr;
     }
 

@@ -46,7 +46,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathSolver, "sw.math.MathSolver")
   
     SIMPLEWORK_INTERFACE_LEAVE
 
-    static int getSolver(unsigned int idType, SMathSolver& spSolver) {
+    static int getSolver(PID idType, SMathSolver& spSolver) {
         return SMathFactory::getFactory()->createSolver(idType, spSolver);
     }
 

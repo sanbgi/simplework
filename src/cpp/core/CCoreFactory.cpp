@@ -20,7 +20,7 @@ public:
         return CCtx::createCtx(szModule, spCtx);
     }
 
-    unsigned int getTypeIdentifier(const char* szDataTypeKey) {
+    PID getTypeIdentifier(const char* szDataTypeKey) {
         if(szDataTypeKey == nullptr) {
             return 0;
         }

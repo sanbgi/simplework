@@ -15,7 +15,7 @@ typedef void (*FBatchDevia)(void* pParameters, int nBatchs, int nInVars, PDeviaV
 // 求解上下文
 //
 struct PSolveCtx {
-    unsigned int idType;
+    PID idType;
     enum Sdk{
         CPU,
         OpenCL,

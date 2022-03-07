@@ -23,7 +23,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取元素类型
         //
-        virtual unsigned int getDataType() = 0;
+        virtual PID getDataType() = 0;
 
         //
         // 获取元素数量
@@ -33,7 +33,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 获取元素数据指针
         //
-        virtual void* getDataPtr(unsigned int eElementType, int iPos=0) = 0;
+        virtual void* getDataPtr(PID eElementType, int iPos=0) = 0;
 
         //
         // 获取元素数据指针
@@ -61,7 +61,7 @@ public:
     //
     // 构造一维张量
     //
-    static int createVector(STensor& spTensor, unsigned int idElementType, int nElementSize, const void* pElementData=nullptr) {
+    static int createVector(STensor& spTensor, PID idElementType, int nElementSize, const void* pElementData=nullptr) {
         return SMathFactory::getFactory()->createVector(spTensor, idElementType, nElementSize, pElementData);
     }
     template<typename Q> static STensor createVector(int nElementSize, Q* pElementData=nullptr) {
@@ -75,7 +75,7 @@ public:
     //
     // 构造多维张量
     //
-    static int createTensor(STensor& spTensor, const SDimension& spDimVector, unsigned int iElementType, int nElementSize, const void* pElementData=nullptr) {
+    static int createTensor(STensor& spTensor, const SDimension& spDimVector, PID iElementType, int nElementSize, const void* pElementData=nullptr) {
         return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, iElementType, nElementSize, (void*)pElementData);
     }
     template<typename Q> static int createTensor(STensor& spTensor, const SDimension& spDimVector, int nElementSize, const Q* pElementData=nullptr) {
@@ -98,7 +98,7 @@ public:
         return spDim;
     }
 
-    unsigned int type() const {
+    PID type() const {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getDataType() : 0;
     }

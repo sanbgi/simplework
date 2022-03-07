@@ -7,9 +7,10 @@
 #define SIMPLEWORK_PARALLEL_NAMESPACE_ENTER namespace sw {
 #define SIMPLEWORK_PARALLEL_NAMESPACE_LEAVE }
 
-#include "PMemory.h"
-#include "SDevice.h"
-#include "SMemory.h"
-#include "SEvent.h"
+#include "PParallelMemory.h"
+#include "SParallelDevice.h"
+#include "SParallelMemory.h"
+#include "SParallelEvent.h"
+#include "SParallelOperator.h"
 
 #endif//__SimpleWork_Parallel_h__

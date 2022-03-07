@@ -169,6 +169,10 @@ int getInt(const std::vector<int>& aa){
     return 1;
 }
 
+int getInt2(const int aa[]){
+    return 1;
+}
+
 #include <functional>
 
 int main(int argc, char *argv[]){
@@ -188,6 +192,7 @@ int main(int argc, char *argv[]){
     p->visit(nullptr);
 
     getInt({1,2,3});
+    
     //SDimension(3,{0,1,2});
     //testOpenCL();
     //cl::Buffer bf();

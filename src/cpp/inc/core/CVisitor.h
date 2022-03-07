@@ -9,7 +9,7 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 数据访问类
 //
-template<typename T, typename R=int, typename CB=R(*)(T data)> class CVisitor : IVisitor<T,R> {
+template<typename T, typename R=void, typename CB=R(*)(T data)> class CVisitor : IVisitor<T,R> {
 public:
     R visit(T data) {
         return m_visitor(data);

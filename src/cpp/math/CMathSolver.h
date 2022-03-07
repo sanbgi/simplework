@@ -5,7 +5,7 @@
 
 class CMathSolver{
 public:
-    static int createSolver(unsigned int idType, SMathSolver& spSolver);
+    static int createSolver(PID idType, SMathSolver& spSolver);
 
 };
 

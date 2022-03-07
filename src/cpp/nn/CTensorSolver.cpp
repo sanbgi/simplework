@@ -9,7 +9,7 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
         return sCtx.error("创建标准化张量失败");
     }
 
-    unsigned int iInType = spIn->getDataType();
+    PID iInType = spIn->getDataType();
     if(iInType == CBasicData<unsigned char>::getStaticType() ) {
         unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
         float* pDesc = spOutTensor->getDataPtr<float>();
@@ -43,7 +43,7 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     //
     //  计算分类化向量值
     //
-    unsigned int iInType = spIn->getDataType();
+    PID iInType = spIn->getDataType();
     if(iInType == CBasicData<unsigned char>::getStaticType() ) {
         unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
         float* pDesc = spOutTensor->getDataPtr<float>();

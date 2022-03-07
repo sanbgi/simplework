@@ -28,7 +28,7 @@ private:
     int m_nDims;
     int m_nEleSize;
     int m_nEleByte;
-    unsigned int m_iEleType;
+    PID m_iEleType;
     CTaker<int*> m_spDims;
     SDimension m_spDimension;
     int m_nTensor;

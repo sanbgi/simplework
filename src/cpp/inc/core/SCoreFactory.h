@@ -3,6 +3,8 @@
 
 #include "core.h"
 
+typedef unsigned int PID;
+
 __SimpleWork_Core_Namespace_Enter__
 
 class SString;
@@ -28,7 +30,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(CoreFactory, "sw.core.CoreFactory")
         //
         //  获取指定名字数据类型对应的数据类型ID
         //
-        virtual unsigned int getTypeIdentifier(const char* szDataTypeKey) = 0;
+        virtual PID getTypeIdentifier(const char* szDataTypeKey) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

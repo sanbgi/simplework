@@ -16,7 +16,7 @@ struct PTensor {
     //      SData::getBasicTypeIdentifier<int>      int类型张量
     //      SData::getBasicTypeIdentifier<float>    float类型张量
     //
-    unsigned int idType;
+    PID idType;
 
     //
     //  张量的维度数量
