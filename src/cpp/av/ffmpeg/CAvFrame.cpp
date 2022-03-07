@@ -555,6 +555,7 @@ int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
     #endif//ENABLE_JPEG_LIBRARY
 
     sp->m_spAvFrame.take(av_frame_alloc(), [](AVFrame* pFrame){
+        av_freep(&pFrame->data[0]);
         av_frame_free(&pFrame);
     });
     AVFrame* pAvFrame = sp->m_spAvFrame;
