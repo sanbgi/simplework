@@ -206,7 +206,8 @@ void CNnNetwork::runImageNet() {
     //return;
 
     SAvNetwork spFilter;
-    SNnNetwork nn = createResNet();
+    //SNnNetwork nn = createResNet();
+    SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
     SAvOut spWindow = SAvOut::openWindow("TestWindow", 224, 224);
     {
         PAvSample frameSample;
