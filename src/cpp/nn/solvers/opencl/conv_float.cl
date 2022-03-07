@@ -33,6 +33,7 @@ typedef struct {
 
     //填充尺寸
     CRect2D padding;
+    CRect2D completeOut;
 
     //输入、输出、卷积步长
     CBatchSize2D stepInMove;
@@ -59,8 +60,7 @@ kernel void conv_eval(
     int gid = get_global_id(0);
     int iBatch = gid / stepOut.batch;
     //int iBatch = get_global_id(0);
-    //int iOut = get_global_id(1);
-    //int gid = iBatch * get_global_size(1) + iOut;
+    //int gid = iBatch * get_global_size(1) + get_global_id(1);
 
     pIn = pIn + stepInConv.batch * iBatch;
     
@@ -78,42 +78,29 @@ kernel void conv_eval(
     int nOffsetWeight = iLayer * stepConv.batch * sizeConv.batch;
     pWeights += nOffsetWeight;
 
-    //
-    //  输出矩阵能够完整卷积的最大下标，再往下，则需要剪裁了
-    //
-    int nStrideHeight = pThis->nStrideHeight;
-    int iMinCompleteHeight = (rcPading.top + nStrideHeight - 1) / nStrideHeight;
-    int iMaxCompleteHeight = sizeOut.height - 1 - (rcPading.bottom + nStrideHeight - 1) / nStrideHeight;
-    //
-    //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
-    //
-    int nStrideWidth = pThis->nStrideWidth;
-    int iMinCompleteWidth = (rcPading.left + nStrideWidth - 1) / nStrideWidth;
-    int iMaxCompleteWidth = sizeOut.width - 1 - (rcPading.right + nStrideWidth - 1) / nStrideWidth;
-
     //上面填充了都填充了空值，不能参与运算
-    if(iHeight < iMinCompleteHeight) {
-        rcConv.top = rcPading.top - iHeight * nStrideHeight;
+    if(iHeight < pThis->completeOut.top) {
+        rcConv.top = rcPading.top - iHeight * pThis->nStrideHeight;
         rcConv.bottom = sizeConv.height;
         pIn += rcConv.top * stepInConv.height;
         pWeights += rcConv.top * stepConv.height;
-    }else if(iHeight > iMaxCompleteHeight) {
+    }else if(iHeight > pThis->completeOut.bottom) {
         rcConv.top = 0;
-        rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - iHeight) * nStrideHeight - rcPading.bottom;
+        rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - iHeight) * pThis->nStrideHeight - rcPading.bottom;
     }else{
         rcConv.top = 0;
         rcConv.bottom = sizeConv.height;
     }
 
     //左边填充了都填充了空值，不能参与运算
-    if(iWidth < iMinCompleteWidth) {
-        rcConv.left = rcPading.left - iWidth * nStrideWidth;
+    if(iWidth < pThis->completeOut.left) {
+        rcConv.left = rcPading.left - iWidth * pThis->nStrideWidth;
         rcConv.right = sizeConv.width;
         pIn += rcConv.left * stepInConv.width;
         pWeights += rcConv.left * stepConv.width;
-    }else if(iWidth > iMaxCompleteWidth) {
+    }else if(iWidth > pThis->completeOut.right) {
         rcConv.left = 0;
-        rcConv.right = sizeConv.width + (sizeOut.width - 1 - iWidth) * nStrideWidth - rcPading.right;
+        rcConv.right = sizeConv.width + (sizeOut.width - 1 - iWidth) * pThis->nStrideWidth - rcPading.right;
     }else{
         rcConv.left = 0;
         rcConv.right = sizeConv.width;
@@ -170,8 +157,7 @@ kernel void conv_devia(
     int gid = get_global_id(0);
     int iBatch = gid / stepOut.batch;
     //int iBatch = get_global_id(0);
-    //int iOut = get_global_id(1);
-    //int gid = iBatch * get_global_size(1) + iOut;
+    //int gid = iBatch * get_global_size(1) + get_global_id(1);
 
     pIn = pIn + stepInConv.batch * iBatch;
     pInDevia = pInDevia + stepInConv.batch * iBatch;
@@ -191,46 +177,29 @@ kernel void conv_devia(
     pWeights += nOffsetWeight;
     pWeightsDevia += nOffsetWeight;
 
-    //
-    //  输出矩阵能够完整卷积的最大下标，再往下，则需要剪裁了
-    //
-    int nStrideHeight = pThis->nStrideHeight;
-    int iMinCompleteHeight = (rcPading.top + nStrideHeight - 1) / nStrideHeight;
-    int iMaxCompleteHeight = sizeOut.height - 1 - (rcPading.bottom + nStrideHeight - 1) / nStrideHeight;
-    //
-    //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
-    //
-    int nStrideWidth = pThis->nStrideWidth;
-    int iMinCompleteWidth = (rcPading.left + nStrideWidth - 1) / nStrideWidth;
-    int iMaxCompleteWidth = sizeOut.width - 1 - (rcPading.right + nStrideWidth - 1) / nStrideWidth;
-
     //上面填充了都填充了空值，不能参与运算
-    if(iHeight < iMinCompleteHeight) {
-        rcConv.top = rcPading.top - iHeight * nStrideHeight;
+    if(iHeight < pThis->completeOut.top) {
+        rcConv.top = rcPading.top - iHeight * pThis->nStrideHeight;
         rcConv.bottom = sizeConv.height;
         pIn += rcConv.top * stepInConv.height;
-        pInDevia += rcConv.top * stepInConv.height;
         pWeights += rcConv.top * stepConv.height;
-        pWeightsDevia += rcConv.top * stepConv.height;
-    }else if(iHeight > iMaxCompleteHeight) {
+    }else if(iHeight > pThis->completeOut.bottom) {
         rcConv.top = 0;
-        rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - iHeight) * nStrideHeight - rcPading.bottom;
+        rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - iHeight) * pThis->nStrideHeight - rcPading.bottom;
     }else{
         rcConv.top = 0;
         rcConv.bottom = sizeConv.height;
     }
 
     //左边填充了都填充了空值，不能参与运算
-    if(iWidth < iMinCompleteWidth) {
-        rcConv.left = rcPading.left - iWidth * nStrideWidth;
+    if(iWidth < pThis->completeOut.left) {
+        rcConv.left = rcPading.left - iWidth * pThis->nStrideWidth;
         rcConv.right = sizeConv.width;
         pIn += rcConv.left * stepInConv.width;
-        pInDevia += rcConv.left * stepInConv.width;
         pWeights += rcConv.left * stepConv.width;
-        pWeightsDevia += rcConv.left * stepConv.width;
-    }else if(iWidth > iMaxCompleteWidth) {
+    }else if(iWidth > pThis->completeOut.right) {
         rcConv.left = 0;
-        rcConv.right = sizeConv.width + (sizeOut.width - 1 - iWidth) * nStrideWidth - rcPading.right;
+        rcConv.right = sizeConv.width + (sizeOut.width - 1 - iWidth) * pThis->nStrideWidth - rcPading.right;
     }else{
         rcConv.left = 0;
         rcConv.right = sizeConv.width;

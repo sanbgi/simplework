@@ -9,9 +9,9 @@ using namespace sw;
 static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
-    runLearn();
+    //runLearn();
     //runTest();
-    //runImageNet();
+    runImageNet();
 }
 
 void CNnNetwork::runTestNetwork(){
@@ -22,9 +22,9 @@ void CNnNetwork::runLearn() {
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
-    //SNnNetwork nn = createLayerNetwork();
+    SNnNetwork nn = createLayerNetwork();
     //SNnNetwork nn = createRnnNetwork();
-    SNnNetwork nn = createNetwork();
+    //SNnNetwork nn = createNetwork();
     //SNnNetwork nn = createGlobalPollNetwork();
     //SNnNetwork nn = createUnitNetwork();
     //SNnNetwork nn = createLeNet();
@@ -216,7 +216,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
     int pDimSizes[] = {28, 28};
-    SNnNetwork spNetwork = SNnNetwork::createNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createOpenCLNetwork({
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;
@@ -277,12 +277,11 @@ SNnNetwork CNnNetwork::createNetwork() {
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;
-            x = x.conv({5,5,32});
+            x = x.conv({5,5,32,nullptr,"relu"});
             x = x.maxpool({2,2,2,2});
-            x = x.conv({7,7,64});
+            x = x.conv({7,7,64,nullptr,"relu"});
             x = x.maxpool({2,2,2,2});
-            //x = x.dense({576});
-            x = x.gap();
+            x = x.dense({576, "relu"});
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();
@@ -295,6 +294,8 @@ SNnNetwork CNnNetwork::createNetwork() {
 
 
 SNnNetwork CNnNetwork::createResNetwork() {
+
+
     int pDimSizes[] = {28, 28};
     SNnNetwork spNetwork = SNnNetwork::createNetwork({
         SDimension::createDimension(2,pDimSizes),

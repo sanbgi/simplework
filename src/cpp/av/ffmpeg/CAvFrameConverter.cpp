@@ -104,6 +104,21 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
     // 没有转化器时，创建转化器
     //
     if(!m_spSwsContext) {
+        switch (sourceFormat) {
+        case AV_PIX_FMT_YUVJ420P :
+            sourceFormat = AV_PIX_FMT_YUV420P;
+            break;
+        case AV_PIX_FMT_YUVJ422P  :
+            sourceFormat = AV_PIX_FMT_YUV422P;
+            break;
+        case AV_PIX_FMT_YUVJ444P   :
+            sourceFormat = AV_PIX_FMT_YUV444P;
+            break;
+        case AV_PIX_FMT_YUVJ440P :
+            sourceFormat = AV_PIX_FMT_YUV440P;
+            break;
+        }
+
         //
         // 创建转化器
         //

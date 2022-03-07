@@ -8,8 +8,9 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 访问者模式接口
 //
-template<typename T> struct IVisitor {
-    virtual int visit(T data) = 0;
+template<typename T, typename R=int> struct IVisitor {
+
+    virtual R visit(T data) = 0;
 };
 
 __SimpleWork_Core_Namespace_Leave__

@@ -417,6 +417,10 @@ int COpenCLNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 globalRange = cl::NDRange(nBatchs);
                 break;
 
+            case PSolveFunc::PCustomer:
+                globalRange = cl::NDRange(instruct.solver.nCustomerRange);
+                break;
+
             case PSolveFunc::POut:
                 globalRange = cl::NDRange(pVec->size);
                 break;
@@ -608,20 +612,32 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         pVec = &solveVars[instruct.args.iOutVar];
         instruct.devia.setArg(instruct.args.nInVars*3+2, pVec->size);
         instruct.devia.setArg(instruct.args.nInVars*3+3, pVec->devia);
-        int nRange = 1;
+        cl::NDRange globalRange;
         switch(instruct.solver.eClRange) {
+            case PSolveFunc::PBatchAndOut:
+                globalRange = cl::NDRange(nBatchs, pVec->size/nBatchs);
+                break;
+
             case PSolveFunc::PBatch:
-                nRange = nBatchs;
+                globalRange = cl::NDRange(nBatchs);
+                break;
+
+            case PSolveFunc::PCustomer:
+                globalRange = cl::NDRange(instruct.solver.nCustomerRange);
                 break;
 
             case PSolveFunc::POut:
-                nRange = pVec->size;
+                globalRange = cl::NDRange(pVec->size);
+                break;
+
+            default:
+                globalRange = cl::NDRange(1);
                 break;
         }
         cl_int ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
             instruct.devia,
             cl::NullRange,
-            cl::NDRange(nRange),
+            globalRange,
             cl::NullRange,
             nullptr,
             &event

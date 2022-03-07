@@ -74,7 +74,7 @@ void CNnNetwork::prepareImageNet() {
 
 SNnNetwork CNnNetwork::createResNet() {
     int pDimSizes[] = {224, 224, 3};
-    SNnNetwork spNetwork = SNnNetwork::createNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createOpenCLNetwork({
         SDimension::createDimension(3,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             struct ResNet {
@@ -367,7 +367,7 @@ void CNnNetwork::runImageNet() {
                 sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
                 sumLoss = sumLoss * sumX + delta * (1-sumX);
                 static int t = 0;
-                if( t++ % 10 == 0){}
+                if( t++ % 10 == 0)
                 {
                     std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\trms:"<< fRMS 
                                 <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"

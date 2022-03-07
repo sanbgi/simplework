@@ -14,13 +14,13 @@ public:
     template<typename Q>
     static void evalT(void* pParameters, int nBatchs, int nInVars, PVector inVars[], PVector outVar) {
         VERIFY(nInVars==1)
-        CBatchNormalizeOperator* pThis = (CBatchNormalizeOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
         int nLayers = pThis->m_nLayers;
         int nTensors = outVar.size / nLayers;
         Q esp = (Q)pThis->m_dEsp;
         Q* pIn = (Q*)inVars[0].data;
         Q* pAvg = (Q*)pThis->m_pAvg;
-        Q* pVariance = (Q*)pThis->m_pVariance;
+        Q* pVariance = pAvg + pThis->m_nLayers;
         Q* pOut = (Q*)outVar.data;
         Q* pItInEnd = pIn + outVar.size;
         Q* pItIn, *pItAvg, *pItVariance, *pItOut;
@@ -85,11 +85,12 @@ public:
     template<typename Q>
     static void deviaT(void* pParameters, int nBatchs, int nInVars, PDeviaVector inVars[], PDeviaVector outVar) {
         VERIFY(nInVars==1)
-        CBatchNormalizeOperator* pThis = (CBatchNormalizeOperator*)pParameters;
+        PSolveData* pThis = (PSolveData*)pParameters;
         int nLayers = pThis->m_nLayers;
         Q esp = (Q)pThis->m_dEsp;
         Q* pInDevia = (Q*)inVars[0].devia;
-        Q* pVariance = (Q*)pThis->m_pVariance;
+        Q* pAvg = (Q*)pThis->m_pAvg;
+        Q* pVariance = pAvg + pThis->m_nLayers;
         Q* pOutDevia = (Q*)outVar.devia;
         Q* pItInDeviaEnd = pInDevia + outVar.size;
         Q* pItInDevia, *pItVariance, *pItOutDevia;
@@ -116,38 +117,54 @@ public:
         if(solveCtx.idType == CBasicData<float>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<float>;
             solveParameter.pDeviaFun = deviaT<float>;
-            solveParameter.pParameterData = this;
-            if(!(m_spAvgTensor)) {
-                if( STensor::createVector<float>(m_spAvgTensor, m_nLayers) != sCtx.success() ||
-                    STensor::createVector<float>(m_spVarianceTensor, m_nLayers) != sCtx.success() ) {
+            PSolveData* pSolveData = (PSolveData*)m_spBuffer.data<char>();
+            int nBuffer = sizeof(PSolveData) + 2 * pSolveData->m_nLayers * sizeof(float);
+            if( nBuffer != m_spBuffer.size() ) {
+                STensor spBuffer;
+                if( STensor::createVector<char>(spBuffer, nBuffer) != sCtx.success() ) {
                     return sCtx.error("创建张量失败");
                 }
-                m_pAvg = (m_spAvgTensor).data<float>();
-                m_pVariance = (m_spVarianceTensor).data<float>();
-                memset(m_pAvg, 0, sizeof(float)*m_nLayers);
-                memset(m_pVariance, 1, sizeof(float)*m_nLayers);
-            }else{
-                m_pAvg = (m_spAvgTensor).data<float>();
-                m_pVariance = (m_spVarianceTensor).data<float>();
+
+                PSolveData* pBuffer = (PSolveData*)spBuffer.data<char>();
+                (*pBuffer) = *pSolveData;
+                pSolveData = pBuffer;
+                m_spBuffer = spBuffer;
+                
+                float* pAvg = (float*)pBuffer->m_pAvg;
+                float* pVariance = pAvg + pBuffer->m_nLayers;
+                memset(pAvg, 0, sizeof(float)*pSolveData->m_nLayers);
+                memset(pVariance, 1, sizeof(float)*pSolveData->m_nLayers);
             }
+            solveParameter.nParamterSize = sizeof(PSolveData);
+            solveParameter.pParameterData = pSolveData;
+            solveParameter.eClRange = PSolveFunc::PCustomer;
+            solveParameter.nCustomerRange = pSolveData->m_nLayers;
             return sCtx.success();
         }else if(solveCtx.idType == CBasicData<double>::getStaticType() ) {
             solveParameter.pEvalFun = evalT<double>;
             solveParameter.pDeviaFun = deviaT<double>;
-            solveParameter.pParameterData = this;
-            if(!(m_spAvgTensor)) {
-                if( STensor::createVector<double>(m_spAvgTensor, m_nLayers) != sCtx.success() ||
-                    STensor::createVector<double>(m_spVarianceTensor, m_nLayers) != sCtx.success() ) {
+            PSolveData* pSolveData = (PSolveData*)m_spBuffer.data<char>();
+            int nBuffer = sizeof(PSolveData) + 2 * pSolveData->m_nLayers * sizeof(double);
+            if( nBuffer != m_spBuffer.size() ) {
+                STensor spBuffer;
+                if( STensor::createVector<char>(spBuffer, nBuffer) != sCtx.success() ) {
                     return sCtx.error("创建张量失败");
                 }
-                m_pAvg = (m_spAvgTensor).data<double>();
-                m_pVariance = (m_spVarianceTensor).data<double>();
-                memset(m_pAvg, 0, sizeof(double)*m_nLayers);
-                memset(m_pVariance, 1, sizeof(double)*m_nLayers);
-            }else{
-                m_pAvg = (m_spAvgTensor).data<double>();
-                m_pVariance = (m_spVarianceTensor).data<double>();
+
+                PSolveData* pBuffer = (PSolveData*)spBuffer.data<char>();
+                (*pBuffer) = *pSolveData;
+                pSolveData = pBuffer;
+                m_spBuffer = spBuffer;
+                
+                double* pAvg = (double*)pBuffer->m_pAvg;
+                double* pVariance = pAvg + pBuffer->m_nLayers;
+                memset(pAvg, 0, sizeof(double)*pSolveData->m_nLayers);
+                memset(pVariance, 1, sizeof(double)*pSolveData->m_nLayers);
             }
+            solveParameter.nParamterSize = sizeof(PSolveData);
+            solveParameter.pParameterData = pSolveData;
+            solveParameter.eClRange = PSolveFunc::PCustomer;
+            solveParameter.nCustomerRange = pSolveData->m_nLayers;
             return sCtx.success();
         }
         return sCtx.error("类型错误");
@@ -176,22 +193,24 @@ public:
             nLayers *= pDimSizes[i];
         }
 
-        m_nLayers = nLayers;
-        m_dEsp = pParameter->dEsp;
-        m_nMinBatch = pParameter->nMinBatch;
+        if( STensor::createVector<char>(m_spBuffer, sizeof(PSolveData)) != sCtx.success() ) {
+            return sCtx.error("创建缓冲错误");
+        }
+
+        PSolveData* pSolveData = (PSolveData*)m_spBuffer.data<char>();
+        pSolveData->m_nLayers = nLayers;
+        pSolveData->m_dEsp = pParameter->dEsp;
+        pSolveData->m_nMinBatch = pParameter->nMinBatch;
         createVariable(spDim,spVarOut);
         return addAtomOperator(this, nInVars, pInVars, spVarOut);
     }
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "BatchNormalizeSolver"; } 
+    const char* getName() { return "batchnormalize"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
-        ar.arBlock("nlayer", m_nLayers);
-        ar.arBlock("esp", m_dEsp);
-        ar.arObject("avg", m_spAvgTensor);
-        ar.arObject("variance", m_spVarianceTensor);
+        ar.arObject("buffer", m_spBuffer);
         return sCtx.success();
     }
 
@@ -199,13 +218,13 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.BatchNormalizeSolver"; }
 
 private:
-    int m_nLayers;
-    double m_dEsp;
-    void* m_pAvg;
-    void* m_pVariance;
-    int m_nMinBatch;
-    STensor m_spAvgTensor;
-    STensor m_spVarianceTensor;
+    STensor m_spBuffer;
+    struct PSolveData{
+        int m_nLayers;
+        double m_dEsp;
+        int m_nMinBatch;
+        char m_pAvg[0];
+    };
 };
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CBatchNormalizeOperator, CBatchNormalizeOperator::__getClassKey())

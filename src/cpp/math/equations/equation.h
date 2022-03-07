@@ -8,7 +8,6 @@
 using namespace sw;
 using namespace std;
 
-
 typedef void (*FEval)(void* pParameter, int nInVar, const PVector inVars[], PVector outVar);
 typedef void (*FDevia)(void* pParameter, int nInVar, const PDeviaVector inVars[], PDeviaVector outVar);
 

@@ -9,73 +9,23 @@ __SimpleWork_Core_Namespace_Enter__
 //
 // 数据访问类
 //
-template<typename T> class CVisitor : IVisitor<T> {
+template<typename T, typename R=int, typename CB=R(*)(T data)> class CVisitor : IVisitor<T,R> {
 public:
-    typedef int (*FVisitor)(T data);
-
-public:
-    int visit(T data) {
-        return (*m_visitor)(data);
+    R visit(T data) {
+        return m_visitor(data);
     }
 
 public:
-    CVisitor(FVisitor visitor) {
+    CVisitor(CB visitor) {
         m_visitor = visitor;
     }
 
-    operator IVisitor<T>*() {
+    operator IVisitor<T,R>*() {
         return this;
     }
 
 private:
-    FVisitor m_visitor;
-};
-
-
-template<typename P, typename T> class CPVisitor : public IVisitor<T> {
-public:
-    typedef int (*FVisitor)(P p, T data);
-
-public:
-    int visit(T data) { 
-        return (*m_visitor)(m_parameter, data);
-    }
-
-    CPVisitor(P parameter, FVisitor visitor) {
-        m_parameter = parameter;
-        m_visitor = visitor;
-    }
-    operator IVisitor<T>*() {
-        return this;
-    }
-
-private:
-    P m_parameter;
-    FVisitor m_visitor;
-};
-
-template<typename P, typename Q, typename T> class CPQVisitor : IVisitor<T> {
-public:
-    typedef int (*FVisitor)(P p, Q q, T data);
-
-public:
-    int visit(T data) { 
-        return (*m_visitor)(m_p, m_q, data);
-    }
-
-    CPQVisitor(P p, Q q, FVisitor visitor) {
-        m_p = p;
-        m_q = q;
-        m_visitor = visitor;
-    }
-    operator IVisitor<T>*() {
-        return this;
-    }
-
-private:
-    P m_p;
-    Q m_q;
-    FVisitor m_visitor;
+    CB m_visitor;
 };
 
 __SimpleWork_Core_Namespace_Leave__

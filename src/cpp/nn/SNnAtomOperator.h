@@ -29,12 +29,14 @@ struct PSolveCtx {
 struct PSolveFunc {
     FBatchEval pEvalFun;
     FBatchDevia pDeviaFun;
+    int nCustomerRange;
     int nParamterSize;
     void* pParameterData;
     enum {
         PBatchAndOut,
         PBatch,
         POut,
+        PCustomer,
         PNo
     }eClRange;
 };

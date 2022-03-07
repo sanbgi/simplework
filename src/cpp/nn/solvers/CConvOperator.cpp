@@ -227,6 +227,12 @@ public:
             m_sData.m_sizeConv.width * nInputLayers,
             nInputLayers
         };
+        m_sData.m_completeOut = {
+            (m_sData.m_padding.left + m_sData.m_nStrideWidth - 1) / m_sData.m_nStrideWidth,
+            m_sData.m_sizeOut.width - 1 - (m_sData.m_padding.right + m_sData.m_nStrideWidth - 1) / m_sData.m_nStrideWidth,
+            (m_sData.m_padding.top + m_sData.m_nStrideHeight - 1) / m_sData.m_nStrideHeight,
+            m_sData.m_sizeOut.height - 1 - (m_sData.m_padding.bottom + m_sData.m_nStrideHeight - 1) /m_sData.m_nStrideHeight
+        };
 
         int pOutDimSizes[3] = { m_sData.m_sizeOut.height, m_sData.m_sizeOut.width, m_sData.m_sizeOut.layers };
         if( createVariable(SDimension(3, pOutDimSizes), spVarOut) != sCtx.success() ) {
@@ -311,20 +317,21 @@ public:
         //      在高度方向，策略核宽度一致
         //
         CRect2D rcConv, rcPading = pThis->m_padding;
+        CRect2D rcCompleteOut = pThis->m_completeOut;
         int nOffset = rcPading.left * stepInConv.width + rcPading.top * stepInConv.height;
         it.pIn = it.pIn - nOffset;
         //
         //  输出矩阵能够完整卷积的最大下标，再往下，则需要剪裁了
         //
         int nStrideHeight = pThis->m_nStrideHeight;
-        int iMinCompleteHeight = (rcPading.top + nStrideHeight - 1) / nStrideHeight;
-        int iMaxCompleteHeight = sizeOut.height - 1 - (rcPading.bottom + nStrideHeight - 1) / nStrideHeight;
+        //int iMinCompleteHeight = (rcPading.top + nStrideHeight - 1) / nStrideHeight;
+        //int iMaxCompleteHeight = sizeOut.height - 1 - (rcPading.bottom + nStrideHeight - 1) / nStrideHeight;
         //
         //  输出矩阵能够完整卷积的最大下标，再往右，则需要剪裁了
         //
         int nStrideWidth = pThis->m_nStrideWidth;
-        int iMinCompleteWidth = (rcPading.left + nStrideWidth - 1) / nStrideWidth;
-        int iMaxCompleteWidth = sizeOut.width - 1 - (rcPading.right + nStrideWidth - 1) / nStrideWidth;
+        //int iMinCompleteWidth = (rcPading.left + nStrideWidth - 1) / nStrideWidth;
+        //int iMaxCompleteWidth = sizeOut.width - 1 - (rcPading.right + nStrideWidth - 1) / nStrideWidth;
 
         for(itVars0.index=0; itVars0.index < sizeIn.batch; itVars0.index++) {
             itVars0.pIn = it.pIn;
@@ -345,7 +352,7 @@ public:
                     //itVars2.pBais = it.pBais;
 
                     //上面填充了都填充了空值，不能参与运算
-                    if(itVars2.index < iMinCompleteHeight) {
+                    if(itVars2.index < rcCompleteOut.left) {
                         //
                         // 卷积核顶部裁剪，相当于将起始坐标下移，同时
                         //      1,  输入矩阵的起始坐标也需要下移
@@ -355,7 +362,7 @@ public:
                         rcConv.bottom = sizeConv.height;
                         it.pIn += rcConv.top * stepInConv.height;
                         it.pWeights += rcConv.top * stepConv.height;
-                    }else if(itVars2.index > iMaxCompleteHeight) {
+                    }else if(itVars2.index > rcCompleteOut.right) {
                         rcConv.top = 0;
                         rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - itVars2.index) * nStrideHeight - rcPading.bottom;
                     }else{
@@ -370,7 +377,7 @@ public:
                         //itVars3.pBais = it.pBais;
 
                         //左边填充了都填充了空值，不能参与运算
-                        if(itVars3.index < iMinCompleteWidth) {
+                        if(itVars3.index < rcCompleteOut.top) {
                             //
                             // 卷积核左部裁剪，相当于将起始坐标右移，同时
                             //      1，输入矩阵的起始坐标也需要右移
@@ -380,7 +387,7 @@ public:
                             rcConv.right = sizeConv.width;
                             it.pIn += rcConv.left * stepInConv.width;
                             it.pWeights += rcConv.left * stepConv.width;
-                        }else if(itVars3.index > iMaxCompleteWidth) {
+                        }else if(itVars3.index > rcCompleteOut.bottom) {
                             rcConv.left = 0;
                             rcConv.right = sizeConv.width + (sizeOut.width - 1 - itVars3.index) * nStrideWidth - rcPading.right;
                         }else{
@@ -730,6 +737,7 @@ private:
 
         //填充尺寸
         CRect2D m_padding;
+        CRect2D m_completeOut;
 
         //输入、输出、卷积步长
         CBatchSize2D m_stepInMove;

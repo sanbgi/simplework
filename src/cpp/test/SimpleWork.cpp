@@ -163,11 +163,32 @@ int testOpenCL()
     return 0;
 }
 
-auto getInt(){
+int getInt(const std::vector<int>& aa){
+    int n = aa.end()-aa.begin();
+    aa.data();
     return 1;
 }
 
+#include <functional>
+
 int main(int argc, char *argv[]){
+
+    int i=0;
+    IVisitor<void*,void>* p = CVisitor<void*, void>([](void*){
+        int j = 0;
+        j = 10;
+        j++;
+    });
+    p->visit(nullptr);
+
+    p = CVisitor<void*, void, std::function<void(void*)>>([&](void*){
+        i=10;
+        i++;
+    });
+    p->visit(nullptr);
+
+    getInt({1,2,3});
+    //SDimension(3,{0,1,2});
     //testOpenCL();
     //cl::Buffer bf();
     //cl::copy();

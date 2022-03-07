@@ -200,7 +200,8 @@ end:
     return ret;
 }
 
-#if 0
+//#define ENABLE_JPEG_LIBRARY
+#ifdef ENABLE_JPEG_LIBRARY 
 
 static bool isJpegFile(const char* szFile) {
     if(szFile == nullptr) {
@@ -542,14 +543,16 @@ static int writeJpegFile(const char* szName, const SAvFrame& spFrame) {
 int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
     CPointer<CAvFrame> sp;
     CObject::createObject(sp);
-    /*
+
+    #ifdef ENABLE_JPEG_LIBRARY
     if( isJpegFile(szFileName) ) {
         if( read_JPEG_file(szFileName, sp) ) {
             spFrame.setPtr(sp.getPtr());
             return sCtx.success();
         }
         return sCtx.error();
-    }*/
+    }
+    #endif//ENABLE_JPEG_LIBRARY
 
     sp->m_spAvFrame.take(av_frame_alloc(), [](AVFrame* pFrame){
         av_frame_free(&pFrame);
@@ -583,10 +586,11 @@ int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
 }
 
 int CAvFrame::saveImage(const char* szFileName, const SAvFrame& spFrame) {
-    /*
+    #ifdef ENABLE_JPEG_LIBRARY
     if(isJpegFile(szFileName)) {
         return writeJpegFile(szFileName, spFrame);
-    }*/
+    }
+    #endif//#ifdef ENABLE_JPEG_LIBRARY
 
     const PAvFrame* pFrame = spFrame ? spFrame->getFramePtr() : nullptr;
     if(pFrame == nullptr) {
