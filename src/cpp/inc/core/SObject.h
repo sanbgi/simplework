@@ -18,19 +18,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Object, "sw.core.Object")
 public:
     typedef IObject IFace;
 
-    template<typename TObject> static inline SObject createObject(const PArg* pData = nullptr) {
+    template<typename TObject> static inline SObject createObject(const PData* pData = nullptr) {
         SObject spObject;
         createObject(TObject::__getClassKey(), pData, spObject);
         return spObject;
     }
 
-    static SObject createObject(const char* szClassKey, const PArg* pData = nullptr) {
+    static SObject createObject(const char* szClassKey, const PData* pData = nullptr) {
         SObject spObject;
         createObject(szClassKey, pData, spObject);
         return spObject;
     }
 
-    static int createObject(const char* szClassKey, const PArg* pData, SObject& rObject) {
+    static int createObject(const char* szClassKey, const PData* pData, SObject& rObject) {
         return SModule::getSimpleWork()->createObject(szClassKey, pData, rObject);
     }
 

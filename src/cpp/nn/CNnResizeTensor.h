@@ -14,7 +14,7 @@ class CNnResizeTensor : public CObject, public ITensor, public IArchivable, publ
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 public://ITensor
     int getDimension(SDimension& spDim);

@@ -20,7 +20,7 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.Variable"; }
 
 public://CObject
-   int __initialize(const PArg* pData);
+   int __initialize(const PData* pData);
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVOperator; }
@@ -39,8 +39,8 @@ protected:
     SDimension m_spDimension;
 };
 
-int CNnOperatorVariable::__initialize(const PArg* pData) {
-    const SDimension* pDimension = CArg<SDimension>(pData);
+int CNnOperatorVariable::__initialize(const PData* pData) {
+    const SDimension* pDimension = CData<SDimension>(pData);
     if(pDimension == nullptr) {
         return sCtx.error("缺少构造参数");
     }

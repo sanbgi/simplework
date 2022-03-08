@@ -18,7 +18,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnSolver)
         //
         // 求解
         //
-        virtual int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) = 0;
+        virtual int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

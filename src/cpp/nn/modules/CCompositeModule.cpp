@@ -12,7 +12,7 @@ class CCompositeModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -30,8 +30,8 @@ private:
     vector<SNnModule> m_arrModules;
 };
 
-int CCompositeModule::__initialize(const PArg* pData) {
-    const SNnModule::PNnCompositeModule* pModule = CArg<SNnModule::PNnCompositeModule>(pData);
+int CCompositeModule::__initialize(const PData* pData) {
+    const SNnModule::PNnCompositeModule* pModule = CData<SNnModule::PNnCompositeModule>(pData);
     if(pModule == nullptr) {
         return sCtx.error("缺少构造参数");
     }

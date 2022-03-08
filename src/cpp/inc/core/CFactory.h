@@ -15,7 +15,7 @@ template<typename TObject> class CFactory : public IFactory {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
 public://IFactory
-    int createObject(SObject& rObject, const PArg* pData=nullptr) const {
+    int createObject(SObject& rObject, const PData* pData=nullptr) const {
         CPointer<TObject> spObject;
         CObject::createObject<TObject>(spObject, pData);
         rObject = spObject.getObject();
@@ -29,7 +29,7 @@ template<typename TObject> class CSingletonFactory : public IFactory {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE0
 
 public://IFactory
-    int createObject(SObject& rObject, const PArg* pData=nullptr) const {
+    int createObject(SObject& rObject, const PData* pData=nullptr) const {
         static CPointer<TObject> g_spObject;
         static int r = CObject::createObject<TObject>(g_spObject, pData);
         rObject = g_spObject.getObject();

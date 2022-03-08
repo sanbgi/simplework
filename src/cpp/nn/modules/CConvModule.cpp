@@ -13,7 +13,7 @@ class CConvModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -44,8 +44,8 @@ public:
     }
 };
 
-int CConvModule::__initialize(const PArg* pData) {
-    const PNnConv* pConv = CArg<PNnConv>(pData);
+int CConvModule::__initialize(const PData* pData) {
+    const PNnConv* pConv = CData<PNnConv>(pData);
     if(pConv == nullptr) {
         return sCtx.error("缺少构造参数");
     }

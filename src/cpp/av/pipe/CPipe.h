@@ -14,7 +14,7 @@ class CPipe : public CObject, IPipe {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int pushData(const PArg& rData, IVisitor<const PArg&,int>* pReceiver);
+    int pushData(const PData& rData, IVisitor<const PData&,int>* pReceiver);
 
 public:
     static int createPipe(EPipeMode eMode, int nPipe, SPipe pPipes[], SPipe& spPipe);

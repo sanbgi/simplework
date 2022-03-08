@@ -14,7 +14,7 @@ class CGapModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
@@ -29,7 +29,7 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.GapModule"; }
 };
 
-int CGapModule::__initialize(const PArg* pData) {
+int CGapModule::__initialize(const PData* pData) {
     return sCtx.success();
 }
 

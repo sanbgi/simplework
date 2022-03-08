@@ -20,7 +20,7 @@ public:
     //
     // 创建求解计算器 
     //
-    static int solveOp(const char* szOp, const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
+    static int solveOp(const char* szOp, const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spOutVar);
 
 public:
     int createVariable(const SDimension& spDimension, SNnVariable& spOutVar);

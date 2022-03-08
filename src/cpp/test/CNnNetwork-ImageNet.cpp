@@ -74,7 +74,7 @@ void CNnNetwork::prepareImageNet() {
 
 SNnNetwork CNnNetwork::createResNet() {
     int pDimSizes[] = {224, 224, 3};
-    SNnNetwork spNetwork = SNnNetwork::createOpenCLNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createNetwork({
         SDimension::createDimension(3,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             struct ResNet {
@@ -206,8 +206,8 @@ void CNnNetwork::runImageNet() {
     //return;
 
     SAvNetwork spFilter;
-    //SNnNetwork nn = createResNet();
-    SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
+    SNnNetwork nn = createResNet();
+    //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
     SAvOut spWindow = SAvOut::openWindow("TestWindow", 224, 224);
     {
         PAvSample frameSample;
@@ -231,7 +231,7 @@ void CNnNetwork::runImageNet() {
         {878, 9},
     };
     string rootFolder = s_rootFolder;
-    int nEpch = 10;
+    int nEpch = 40;
     while(nEpch-->0) {
         ifstream instream( (rootFolder+"/images.txt").c_str());
         ofstream outstream((rootFolder+"/errors.txt").c_str());

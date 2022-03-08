@@ -81,9 +81,11 @@
 #include "SCtx.h"
 #include "SPipe.h"
 #include "SError.h"
-#include "SOperator.h"
 #include "SModule.h"
 #include "SFactory.h"
+
+#include "PMemory.h"
+#include "PRuntimeKey.h"
 
 //
 //
@@ -107,7 +109,7 @@
 #include <cstring>
 #define SIMPLEWORK_INTERFACE_ENTRY_ENTER0 \
     protected: \
-        int __initialize(const PArg* pData) { return 0; }\
+        int __initialize(const PData* pData) { return 0; }\
         int __swGetInterfacePtr(const char* szInterfaceKey, int nInterfaceVer, SIMPLEWORK_CORE_NAMESPACE::IVisitor<void*,int>& visitor) { 
 #define SIMPLEWORK_INTERFACE_ENTRY_LEAVE0 \
         return SError::ERRORTYPE_FAILURE; \
@@ -134,7 +136,7 @@
         return TSuperClass::__swGetInterfacePtr(szInterfaceKey, nInterfaceVer, visitor); \
     };
 
-#include "CArg.h"
+#include "CData.h"
 #include "CTaker.h"
 #include "CRefer.h"
 #include "CPointer.h"
@@ -159,7 +161,6 @@
 #define SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(className, classKey) \
     typedef SIMPLEWORK_CORE_NAMESPACE::CSingletonFactory<className> __Factory##className; \
     SIMPLEWORK_FACTORY_REGISTER(__Factory##className, classKey)
-
 
 #ifdef SIMPLEWORK_WITHOUTAPI
     #include "CModule.h"

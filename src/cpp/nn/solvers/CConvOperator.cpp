@@ -98,9 +98,9 @@ public:
         return sCtx.success();
     }
 
-    int solve(const PArg* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
+    int solve(const PData* pData, int nInVars, const SNnVariable pInVars[], SNnVariable& spVarOut) {
         //if(nInVars != 3) {
-        const PNnConv* pConv = CArg<PNnConv>(*pData);
+        const PNnConv* pConv = CData<PNnConv>(*pData);
         if(pConv == nullptr) {
             return sCtx.error("错误的初始化参数");
         }

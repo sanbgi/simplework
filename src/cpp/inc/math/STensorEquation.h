@@ -13,7 +13,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorEquation, "sw.math.TensorEquation")
         //
         // 求值
         //
-        virtual int eval(const PArg* pData, int nInVars, const STensor pInVars[], STensor& outVar) = 0;
+        virtual int eval(const PData* pData, int nInVars, const STensor pInVars[], STensor& outVar) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -16,7 +16,7 @@ class CBatchNormalizeModule : public CObject, public INnModule, public IArchivab
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -42,8 +42,8 @@ public:
     }
 };
 
-int CBatchNormalizeModule::__initialize(const PArg* pData){
-    const PNnBatchNormalize* pBatchNormalize = CArg<PNnBatchNormalize>(pData);
+int CBatchNormalizeModule::__initialize(const PData* pData){
+    const PNnBatchNormalize* pBatchNormalize = CData<PNnBatchNormalize>(pData);
     if(pBatchNormalize == nullptr) {
         return sCtx.error("缺少构造参数");
     }

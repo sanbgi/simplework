@@ -10,7 +10,7 @@ class CCompositeNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://INnNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
@@ -30,8 +30,8 @@ public:
     std::vector<SNnNetwork> m_arrNetworks;
 };
 
-int CCompositeNetwork::__initialize(const PArg* pData){
-    const SNnNetwork::PNnCompositeNetwork* pNet = CArg<SNnNetwork::PNnCompositeNetwork>(pData);
+int CCompositeNetwork::__initialize(const PData* pData){
+    const SNnNetwork::PNnCompositeNetwork* pNet = CData<SNnNetwork::PNnCompositeNetwork>(pData);
     if(pNet == nullptr) {
         return sCtx.error("缺少构造参数");
     }

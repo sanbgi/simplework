@@ -14,7 +14,7 @@ class CRnnSolver : public CObject, public INnSolver, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://INnSolver
-    int solve(const PArg* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
+    int solve(const PData* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
     
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -26,8 +26,8 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.RnnSolver"; }
 };
 
-int CRnnSolver::solve(const PArg* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
-    const PNnRnn* pRnn = CArg<PNnRnn>(pData);
+int CRnnSolver::solve(const PData* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+    const PNnRnn* pRnn = CData<PNnRnn>(pData);
     if(pRnn == nullptr) {
         return sCtx.error("缺少参数");
     }

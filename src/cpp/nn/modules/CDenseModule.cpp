@@ -23,7 +23,7 @@ class CDenseModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -36,7 +36,7 @@ private://INnModule
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.DenseModule"; }
-    static int createModule(const PArg& rData, SNnModule& spModule);
+    static int createModule(const PData& rData, SNnModule& spModule);
 
 private:
     //基础参数
@@ -50,8 +50,8 @@ public:
     }
 };
 
-int CDenseModule::__initialize(const PArg* pData){
-    const PNnDense* pDense = CArg<PNnDense>(pData);
+int CDenseModule::__initialize(const PData* pData){
+    const PNnDense* pDense = CData<PNnDense>(pData);
     if(pDense == nullptr) {
         return sCtx.error("缺少构造参数");
     }
@@ -62,8 +62,8 @@ int CDenseModule::__initialize(const PArg* pData){
     return sCtx.success();
 }
 
-int CDenseModule::createModule(const PArg& rData, SNnModule& spModule) {
-    const PNnDense* pDense = CArg<PNnDense>(rData);
+int CDenseModule::createModule(const PData& rData, SNnModule& spModule) {
+    const PNnDense* pDense = CData<PNnDense>(rData);
     if(pDense == nullptr) {
         return sCtx.error("缺少构造参数");
     }

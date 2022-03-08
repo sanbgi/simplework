@@ -12,7 +12,7 @@ class CGruModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
@@ -35,8 +35,8 @@ public:
     }
 };
 
-int CGruModule::__initialize(const PArg* pData) {
-    const PNnRnn* pRnn = CArg<PNnRnn>(pData);
+int CGruModule::__initialize(const PData* pData) {
+    const PNnRnn* pRnn = CData<PNnRnn>(pData);
     if(pRnn == nullptr) {
         return sCtx.error("缺少构造参数");
     }

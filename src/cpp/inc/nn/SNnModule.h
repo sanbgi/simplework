@@ -22,22 +22,22 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnModule)
     SIMPLEWORK_INTERFACE_LEAVE
 
     static SNnModule createDenseModule(const PNnDense& rData){
-        return SObject::createObject("sw.nn.DenseModule", CArg<PNnDense>(rData));
+        return SObject::createObject("sw.nn.DenseModule", CData<PNnDense>(rData));
     }
     static SNnModule createConvModule(const PNnConv& rData) {
-        return SObject::createObject("sw.nn.ConvModule", CArg<PNnConv>(rData));
+        return SObject::createObject("sw.nn.ConvModule", CData<PNnConv>(rData));
     }
     static SNnModule createPoolModule(const PNnPool& rData){
-        return SObject::createObject("sw.nn.PoolModule", CArg<PNnPool>(rData));
+        return SObject::createObject("sw.nn.PoolModule", CData<PNnPool>(rData));
     }
     static SNnModule createRNnModule(const PNnRnn& rData) {
-        return SObject::createObject("sw.nn.RnnModule", CArg<PNnRnn>(rData));
+        return SObject::createObject("sw.nn.RnnModule", CData<PNnRnn>(rData));
     }
     static SNnModule createGruModule(const PNnRnn& rData) {
-        return SObject::createObject("sw.nn.GruModule", CArg<PNnRnn>(rData));
+        return SObject::createObject("sw.nn.GruModule", CData<PNnRnn>(rData));
     }
     static SNnModule createBatchNormalizeModule(const PNnBatchNormalize& rData) {
-        return SObject::createObject("sw.nn.BatchNormalizeModule", CArg<PNnBatchNormalize>(rData));
+        return SObject::createObject("sw.nn.BatchNormalizeModule", CData<PNnBatchNormalize>(rData));
     }
     static SNnModule createGvpModule() {
         return SObject::createObject("sw.nn.GvpModule", nullptr);
@@ -50,7 +50,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnModule)
         SNnModule* pModules;
     };
     static SModule createCompositeModule(const PNnCompositeModule& rData) {
-        return SObject::createObject("sw.nn.CompositeModule", CArg<PNnCompositeModule>(rData));
+        return SObject::createObject("sw.nn.CompositeModule", CData<PNnCompositeModule>(rData));
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(NnModule)

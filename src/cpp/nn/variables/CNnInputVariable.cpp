@@ -16,7 +16,7 @@ public://Factory
     static const char* __getClassKey() { return "sw.nn.Input"; }
 
 public://CObject
-   int __initialize(const PArg* pData);
+   int __initialize(const PData* pData);
 
 public://INnVariable
     int getDimension(SDimension& spDimension) {
@@ -43,8 +43,8 @@ int CNnInputVariable::toArchive(const SArchive& ar) {
     return sCtx.success();
 }
 
-int CNnInputVariable::__initialize(const PArg* pData) {
-    const SDimension* pDimension = CArg<SDimension>(pData);
+int CNnInputVariable::__initialize(const PData* pData) {
+    const SDimension* pDimension = CData<SDimension>(pData);
     if(pDimension == nullptr) {
         return sCtx.error("缺少构造参数");
     }

@@ -40,7 +40,7 @@ public:
         { return m_spModule ? m_spModule->initModule(szModuleKey, pCaller) : SError::ERRORTYPE_SUCCESS; }
     int registerFactory(const char* szClassKey, const SFactory& pFactory) 
         { return SError::ERRORTYPE_FAILURE; }
-    int createObject(const char* szClassKey, const PArg* pData, SObject& rObject) 
+    int createObject(const char* szClassKey, const PData* pData, SObject& rObject) 
         { return SError::ERRORTYPE_FAILURE; }
     static SModule loadModule(string strModuleKey) {
         SLibrary spLibrary = CObject::createObject<CLibrary>();

@@ -31,8 +31,8 @@ private://IArchivable
     }
 
 private://INnUnit
-    int solve(const PArg* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
-        const PNnDense* pDense = CArg<PNnDense>(pData);
+    int solve(const PData* pData, int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar) {
+        const PNnDense* pDense = CData<PNnDense>(pData);
         if(pDense == nullptr) {
             return sCtx.error("缺少参数");
         }

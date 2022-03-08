@@ -199,12 +199,12 @@ int main(int argc, char *argv[]){
     //cl::copy();
     //FAA a = { 10 };
     //FBB b = { 20 };
-    //fun(CArg<FAA>(a));
-    //fun(CArg<FBB>(b));
+    //fun(CData<FAA>(a));
+    //fun(CData<FBB>(b));
     //unsigned int la = SData::getBasicTypeIdentifier<int>();
-    //unsigned long lb = SData::getTypeIdentifier("aaaaaaaaaaaaaaaafadfasdf");
-    //unsigned long lc = SData::getTypeIdentifier("ffffffffffffffffasdfasdfasdfasdfa");
-    //unsigned long ld = SData::getTypeIdentifier("ffffffffffffffffffasdfasdfadsfadsfasdf");
+    //unsigned long lb = SData::getDataType("aaaaaaaaaaaaaaaafadfasdf");
+    //unsigned long lc = SData::getDataType("ffffffffffffffffasdfasdfasdfasdfa");
+    //unsigned long ld = SData::getDataType("ffffffffffffffffffasdfasdfadsfadsfasdf");
     //testWriteFile();
     //testPipe();
     //testTensor();

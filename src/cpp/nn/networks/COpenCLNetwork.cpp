@@ -19,7 +19,7 @@ class COpenCLNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -175,8 +175,8 @@ private:
     }
 };
 
-int COpenCLNetwork::__initialize(const PArg* pData){
-    const PNnNetwork* pNet = CArg<PNnNetwork>(pData);
+int COpenCLNetwork::__initialize(const PData* pData){
+    const PNnNetwork* pNet = CData<PNnNetwork>(pData);
     if(pNet == nullptr) {
         return sCtx.error("缺少构造参数");
     }

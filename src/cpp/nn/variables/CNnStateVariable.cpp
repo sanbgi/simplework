@@ -11,7 +11,7 @@ class CNnStateVariable : public CObject, public INnVariable, public INnState, pu
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -38,8 +38,8 @@ private:
     STensor m_spData;
 };
 
-int CNnStateVariable::__initialize(const PArg* pData) {
-    const PNnState* pState = CArg<PNnState>(pData);
+int CNnStateVariable::__initialize(const PData* pData) {
+    const PNnState* pState = CData<PNnState>(pData);
     if(pState == nullptr) {
         return sCtx.error("缺少构造参数");
     }

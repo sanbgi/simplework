@@ -3,14 +3,14 @@
 
 static SCtx sCtx("CPipe");
 
-int CPipe::pushData(const PArg& rData, IVisitor<const PArg&,int>* pReceiver) {
+int CPipe::pushData(const PData& rData, IVisitor<const PData&,int>* pReceiver) {
     switch (m_eMode)
     {
         case PipeMode_Sequence:
         {
-            class CInteralReceiver : public IVisitor<const PArg&,int> {
+            class CInteralReceiver : public IVisitor<const PData&,int> {
             public:
-                int visit(const PArg& rData) {
+                int visit(const PData& rData) {
                     if(iPipe == pArr->size()) {
                         if( pFinalReceiver ) {
                             return pFinalReceiver->visit(rData);
@@ -26,7 +26,7 @@ int CPipe::pushData(const PArg& rData, IVisitor<const PArg&,int>* pReceiver) {
                 }
                 int iPipe;
                 std::vector<SPipe>* pArr;
-                IVisitor<const PArg&,int>* pFinalReceiver;
+                IVisitor<const PData&,int>* pFinalReceiver;
             }receiver;
             receiver.pArr = &m_arrPipes;
             receiver.iPipe = 0;

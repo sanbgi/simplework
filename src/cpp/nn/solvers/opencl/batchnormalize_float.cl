@@ -54,6 +54,7 @@ kernel void batchnormalize_devia(
     int iLayer = get_global_id(0);
     int nLayer = pThis->m_nLayers;
     int nItems = nIn / nLayer;
+    pIn = pIn + iLayer;
     pInDevia = pInDevia + iLayer;
     pOutDevia = pOutDevia + iLayer;
     float sum = 0.0f;

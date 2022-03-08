@@ -43,7 +43,7 @@ __SimpleWork_API__ SIMPLEWORK_CORE_NAMESPACE::SModule& __getSimpleWork(int nComp
 
 __SimpleWork_Core_Namespace_Enter__
 
-struct PArg;
+struct PData;
 class SObject;
 class SFactory;
 
@@ -73,7 +73,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Module)
         // 根据类名和接口名，创建对象
         // @szClassKey 类名，类似: "sw.Vector", "sw.Video", "sw.Camera"
         //
-        virtual int createObject(const char* szClassKey, const PArg* pData, SObject& rObject) = 0;
+        virtual int createObject(const char* szClassKey, const PData* pData, SObject& rObject) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

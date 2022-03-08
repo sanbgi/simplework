@@ -17,7 +17,7 @@ class CLeNetModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://INnModule
     int eval(int nInVars, const SNnVariable spInVars[], SNnVariable& spOutVar);
@@ -36,7 +36,7 @@ public:
     }
 };
 
-int CLeNetModule::__initialize(const PArg* pData) {
+int CLeNetModule::__initialize(const PData* pData) {
     return sCtx.success();
 }
 

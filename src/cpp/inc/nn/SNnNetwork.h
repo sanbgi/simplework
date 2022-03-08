@@ -45,10 +45,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(NnNetwork)
 
 public:
     static SNnNetwork createNetwork(const PNnNetwork& rNet) {
-        return SObject::createObject("sw.nn.LayerNetwork", CArg<PNnNetwork>(rNet));
+        return SObject::createObject("sw.nn.LayerNetwork", CData<PNnNetwork>(rNet));
     }
     static SNnNetwork createOpenCLNetwork(const PNnNetwork& rNet) {
-        return SObject::createObject("sw.nn.OpenCLNetwork", CArg<PNnNetwork>(rNet));
+        return SObject::createObject("sw.nn.OpenCLNetwork", CData<PNnNetwork>(rNet));
     }
     static SNnNetwork createNetwork(const SDimension spInDimension, const SNnModule& spModule) {
         class CNnNetworkSolver : public INnNetworkSolver {
@@ -69,7 +69,7 @@ public:
         SNnNetwork* pNetworks;
     };
     static SNnNetwork createCompositeNetwork(const PNnCompositeNetwork& rData) {
-        return SObject::createObject("sw.nn.CompositeNetwork", CArg<PNnCompositeNetwork>(rData));
+        return SObject::createObject("sw.nn.CompositeNetwork", CData<PNnCompositeNetwork>(rData));
     }
 
     static STensor normalizeTensor(const STensor& spIn) {

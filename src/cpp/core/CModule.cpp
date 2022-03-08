@@ -26,7 +26,7 @@ private:
         return sCtx.success();
     }
 
-    int createObject(const char* szClassKey, const PArg* pData, SObject& spObject) {
+    int createObject(const char* szClassKey, const PData* pData, SObject& spObject) {
         const SFactory& spFactory = getRegisteredFactory(szClassKey);
         if( !spFactory ) {
             return sCtx.error();

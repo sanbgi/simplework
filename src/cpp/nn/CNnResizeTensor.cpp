@@ -6,8 +6,8 @@ using namespace std;
 
 static SCtx sCtx("CNnResizeTensor");
 
-int CNnResizeTensor::__initialize(const PArg* pData){
-    const PNnResizeTensor* pInitializer = CArg<PNnResizeTensor>(pData);
+int CNnResizeTensor::__initialize(const PData* pData){
+    const PNnResizeTensor* pInitializer = CData<PNnResizeTensor>(pData);
     if(pInitializer == nullptr) {
         return sCtx.error("缺少初始化参数");
     }

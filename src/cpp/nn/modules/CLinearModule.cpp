@@ -19,7 +19,7 @@ class CLinearModule : public CObject, public INnModule, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
-    int __initialize(const PArg* pData);
+    int __initialize(const PData* pData);
 
 private://IArchivable
     int getClassVer() { return 220112; }
@@ -32,7 +32,7 @@ private://INnModule
 
 public://Factory
     static const char* __getClassKey() { return "sw.nn.LinearModule"; }
-    static int createModule(const PArg& rData, SNnModule& spModule);
+    static int createModule(const PData& rData, SNnModule& spModule);
 
 private:
     //基础参数
@@ -47,8 +47,8 @@ public:
     }
 };
 
-int CLinearModule::__initialize(const PArg* pData){
-    const PNnLinear* pLinear = CArg<PNnLinear>(pData);
+int CLinearModule::__initialize(const PData* pData){
+    const PNnLinear* pLinear = CData<PNnLinear>(pData);
     if(pLinear == nullptr) {
         return sCtx.error("缺少构造参数");
     }
