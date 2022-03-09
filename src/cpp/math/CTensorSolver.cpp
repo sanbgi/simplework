@@ -35,9 +35,9 @@ public:
             return sCtx.error("创建结果张量失败");
         }
 
-        void* pT1 = t1->getDataPtr(idType1);
-        void* pT2 = t2->getDataPtr(idType1);
-        void* pOut = spRet->getDataPtr(idType1);
+        void* pT1 = t1.data();
+        void* pT2 = t2.data();
+        void* pOut = spRet.data();
         if(idType1 == CBasicData<float>::getStaticType()) {
             for(int i=0; i<nSize; i++) {
                 ((float*)pOut)[i] = ((float*)pT1)[i] - ((float*)pT2)[i];

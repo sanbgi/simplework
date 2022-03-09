@@ -5,10 +5,11 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CMovableMemory");
-class CMovableMemory : public CObject, public IMovableMemory{
+class CMovableMemory : public CObject, IMovableMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IMovableMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 protected://CObject
@@ -19,6 +20,19 @@ protected://CObject
         }
         return SDevice::defaultDevice()->createMemory(*pMemory, m_spMemory);
     }
+
+protected://IArchivable
+    int getClassVer() { return 220308; }
+    const char* getClassKey() { return SMovableMemory::__getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        if(!ar->isReading()) {
+            if( toDevice(SDevice::cpuDevice()) != sCtx.success() ) {
+                return sCtx.error("内存无法保存到CPU");
+            }
+        }
+        return ar.arObject("data", m_spMemory);
+    }
+
 
 private://IMovableMemory
     int toDevice(const SDevice& spDevice, PMemory* pDeviceMemory=nullptr){
@@ -43,4 +57,4 @@ private:
     SDeviceMemory m_spMemory;
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CMovableMemory, SMovableMemory::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CMovableMemory, SMovableMemory::__getClassKey())

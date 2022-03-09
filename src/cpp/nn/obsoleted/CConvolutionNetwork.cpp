@@ -327,8 +327,8 @@ template<typename Q> int CConvolutionNetwork::evalT(const STensor& spBatchIn, ST
         Q* pBais;
         int index;
     }itVars, itVars0, itVars2, itVars3, itVars1, itVars4, itVars5, itVars6, it = {
-        spBatchIn->getDataPtr<Q>(),
-        m_spBatchOut->getDataPtr<Q>(),
+        (Q*)spBatchIn.data(),
+        (Q*)m_spBatchOut.data(),
         (Q*)(void*)m_spWeights,
         (Q*)(void*)m_spBais,
     };
@@ -583,10 +583,10 @@ template<typename Q> int CConvolutionNetwork::learnT(const STensor& spBatchOut, 
         Q* pZDeviatioin;
         int index;
     }it = {
-        spBatchIn->getDataPtr<Q>(),
-        spInDeviation->getDataPtr<Q>(),
-        spBatchOut->getDataPtr<Q>(),
-        spOutDeviation->getDataPtr<Q>(),
+        (Q*)spBatchIn.data(),
+        (Q*)spInDeviation.data(),
+        (Q*)spBatchOut.data(),
+        (Q*)spOutDeviation.data(),
         (Q*)(void*)m_spWeights,
         pWeightDerivationArray,
         pBaisDeviationArray

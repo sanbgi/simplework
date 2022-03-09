@@ -349,9 +349,9 @@ void CNnNetwork::runImageNet() {
             // 打印一些结果信息
             //
             {
-                int nOutDeviation = spOutDeviation->getDataSize();
-                float* pOutDeviation = spOutDeviation->getDataPtr<float>();
-                float* pOutTarget = spClassify->getDataPtr<float>();
+                int nOutDeviation = spOutDeviation.size();
+                float* pOutDeviation = (float*)spOutDeviation.data();
+                float* pOutTarget = (float*)spClassify.data();
                 int nAcc = 0;
                 float xAcc = 0;
                 float delta = 0;

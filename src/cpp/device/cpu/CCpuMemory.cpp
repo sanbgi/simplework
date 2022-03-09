@@ -5,10 +5,11 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CCpuMemory");
-class CCpuMemory : public CObject, public IDeviceMemory{
+class CCpuMemory : public CObject, IDeviceMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 protected://CObject
@@ -18,15 +19,22 @@ protected://CObject
             return sCtx.error("创建内存参数无效");
         }
 
-        m_sMemory = *pMemory;
-        m_sMemory.pByteArray = new unsigned char[m_sMemory.size];
-        m_spTaker.take(m_sMemory.pByteArray, [](unsigned char* pBuffer){
+        m_nSize = pMemory->size;
+        m_spTaker.take(new unsigned char[m_nSize], [](unsigned char* pBuffer){
             delete[] pBuffer;
         });
         if(pMemory->pByteArray != nullptr) {
-            memcpy(m_sMemory.pByteArray, pMemory->pByteArray, pMemory->size);
+            memcpy( (unsigned char*)m_spTaker, pMemory->pByteArray, pMemory->size);
         }
         return sCtx.success();
+    }
+
+protected://IArchivable
+    int getClassVer() { return 220308; }
+    const char* getClassKey() { return CCpuMemory::__getClassKey(); }
+    int toArchive(const SArchive& ar) {
+        ar.arBlock("size", m_nSize);
+        return ar.visitTaker("data", m_nSize, m_spTaker);
     }
 
 private://IDeviceMemory
@@ -38,7 +46,8 @@ private://IDeviceMemory
         if(!m_spTaker) {
             return sCtx.error();
         }
-        devcieMemory = m_sMemory;
+        devcieMemory.size = m_nSize;
+        devcieMemory.data = m_spTaker;
         return sCtx.success();
     }
 
@@ -46,10 +55,10 @@ private://IDeviceMemory
         if(!m_spTaker) {
             return sCtx.error();
         }
-        if(cpuDeviceMemory.size + iOffset > m_sMemory.size) {
+        if(cpuDeviceMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        memcpy(m_sMemory.pByteArray + iOffset, cpuDeviceMemory.pByteArray, cpuDeviceMemory.size);
+        memcpy((unsigned char*)m_spTaker + iOffset, cpuDeviceMemory.pByteArray, cpuDeviceMemory.size);
         return sCtx.success();
     }
 
@@ -57,10 +66,10 @@ private://IDeviceMemory
         if(!m_spTaker) {
             return sCtx.error();
         }
-        if(cpuDeviceMemory.size + iOffset > m_sMemory.size) {
+        if(cpuDeviceMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        memcpy(cpuDeviceMemory.pByteArray, m_sMemory.pByteArray + iOffset , cpuDeviceMemory.size);
+        memcpy(cpuDeviceMemory.pByteArray, (unsigned char*)m_spTaker + iOffset , cpuDeviceMemory.size);
         return sCtx.success();
     }
 
@@ -68,7 +77,7 @@ public://Factory
     static const char* __getClassKey() { return "sw.device.CpuMemory"; }
 
 private:
-    PMemory m_sMemory;
+    int m_nSize;
     CTaker<unsigned char*> m_spTaker;
 };
 

@@ -61,7 +61,7 @@ void* CNnStateVariable::getData(PDATATYPE idType) {
             return nullptr;
         }
     }
-    return m_spData->getDataPtr(idType);
+    return m_spData.data();
 }
 
 int CNnStateVariable::toArchive(const SArchive& ar) {

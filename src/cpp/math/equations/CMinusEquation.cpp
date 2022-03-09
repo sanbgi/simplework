@@ -36,10 +36,10 @@ public://ITensorEquation
         }
 
         PVector inVars[] = {
-            {nSizeIn, sp1.data() },
-            {nSizeIn, sp2.data() }
+            {0, nSizeIn, sp1.data() },
+            {0, nSizeIn, sp2.data() }
         };
-        if( eval(sp1.type(), nullptr, 2, inVars, {nSizeIn, spOut.data()} ) != sCtx.success() ) {
+        if( eval(sp1.type(), nullptr, 2, inVars, {0, nSizeIn, spOut.data()} ) != sCtx.success() ) {
             return sCtx.error("数据类型不支持");
         }
         outVar = spOut;

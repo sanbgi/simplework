@@ -64,7 +64,7 @@ void* CNnWeightVariable::getData(PDATATYPE idType) {
             return nullptr;
         }
 
-        void* pData = m_spData->getDataPtr(idType);
+        void* pData = m_spData.data();
         if(idType == CBasicData<float>::getStaticType()) {
             initWeightT<float>(nData, pData);
         }else
@@ -72,7 +72,7 @@ void* CNnWeightVariable::getData(PDATATYPE idType) {
             initWeightT<double>(nData, pData);
         }
     }
-    return m_spData->getDataPtr(idType);
+    return m_spData.data();
 }
 
 template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWeights) {

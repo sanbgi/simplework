@@ -9,9 +9,9 @@ using namespace sw;
 static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
-    //runLearn();
+    runLearn();
     //runTest();
-    runImageNet();
+    //runImageNet();
 }
 
 void CNnNetwork::runTestNetwork(){
@@ -88,9 +88,9 @@ void CNnNetwork::runLearn() {
             // 打印一些结果信息
             //
             {
-                int nOutDeviation = spOutDeviation->getDataSize();
-                float* pOutDeviation = spOutDeviation->getDataPtr<float>();
-                float* pOutTarget = spClassify->getDataPtr<float>();
+                int nOutDeviation = spOutDeviation.size();
+                float* pOutDeviation = (float*)spOutDeviation.data();
+                float* pOutTarget = (float*)spClassify.data<float>();
                 int nAcc = 0;
                 float xAcc = 0;
                 float delta = 0;
@@ -166,9 +166,9 @@ void CNnNetwork::runTest() {
         //
         {
             nData += 10;    
-            int nOutDeviation = spOutDeviation->getDataSize();
-            float* pOutDeviation = spOutDeviation->getDataPtr<float>();
-            float* pOutTarget = spClassify->getDataPtr<float>();
+            int nOutDeviation = spOutDeviation.size();
+            float* pOutDeviation = spOutDeviation.data<float>();
+            float* pOutTarget = spClassify.data<float>();
             int nAcc = 0;
             float xAcc = 0;
             float delta = 0;

@@ -2,7 +2,6 @@
 #define __SimpleWork_Tensor_h__
 
 #include "SMathFactory.h"
-#include "STensorSolver.h"
 #include "SDimension.h"
 #include "STensorEquation.h"
 
@@ -34,20 +33,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         // 获取元素数据指针
         //
         virtual void* getDataPtr(PDATATYPE eElementType, int iPos=0) = 0;
-
-        //
-        // 获取元素数据指针
-        //
-        template<typename Q> inline Q* getDataPtr(int iPos=0) {
-            return (Q*)getDataPtr(CBasicData<Q>::getStaticType(), iPos);
-        }
-
-        //
-        // 获取元素值，不安全
-        //
-        template<typename Q> inline Q& getDataAt(int iPos) {
-            return *getDataPtr<Q>(iPos);
-        }
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -89,6 +74,16 @@ public:
         return pFace != nullptr ? pFace->getDataSize() : 0;
     }
 
+    void* data(int iPos=0) const {
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->getDataPtr(pFace->getDataType(), iPos) : nullptr;
+    }
+
+    template<typename Q> Q* data(int iPos = 0) const{
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? (Q*)pFace->getDataPtr(pFace->getDataType(), iPos) : (Q*)nullptr;
+    }
+
     SDimension dimension() const {
         SDimension spDim;
         IFace* pFace = getPtr();
@@ -101,16 +96,6 @@ public:
     PDATATYPE type() const {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getDataType() : 0;
-    }
-
-    void* data(int iPos=0) const {
-        IFace* pFace = getPtr();
-        return pFace != nullptr ? pFace->getDataPtr(pFace->getDataType(), iPos) : nullptr;
-    }
-
-    template<typename Q> Q* data(int iPos = 0) const{
-        IFace* pFace = getPtr();
-        return pFace != nullptr ? pFace->getDataPtr<Q>(iPos) : nullptr;
     }
 
 public:

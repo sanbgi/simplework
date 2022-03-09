@@ -9,7 +9,7 @@ int CDimension::getSize() {
 }
 
 const int* CDimension::getData() {
-    return (const int*)getDataPtr(CBasicData<int>::getStaticType());
+    return (const int*)m_spData;
 }
 
 int CDimension::getElementSize() {
@@ -24,10 +24,25 @@ int CDimension::getElementSize() {
     return nElementSize;
 }
 
-int CDimension::getVector(STensor& spDimVector) {
-    spDimVector.setPtr((ITensor*)this);
+int CDimension::toArchive(const SArchive& ar) {
+    ar.arBlock("size", m_nElementSize);
+    ar.visitTaker("data", m_nElementSize, m_spData);
     return sCtx.success();
 }
+
+int CDimension::createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {
+        CPointer<CDimension> spTensor;
+        CObject::createObject(spTensor);
+        spTensor->m_nElementSize = nDims;
+        spTensor->m_spData.take(new int[nDims], [](int* pPtr){
+            delete[] pPtr;
+        });
+        if(pDimSizes) {
+            memcpy(spTensor->m_spData, pDimSizes, nDims*sizeof(int));
+        }
+        spDim.setPtr(spTensor.getPtr());
+        return sCtx.success();
+    }
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CDimension, CDimension::__getClassKey())
 

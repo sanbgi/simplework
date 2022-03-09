@@ -11,8 +11,8 @@ int CTensorSolver::normalize(const STensor& spIn, STensor& spOut) {
 
     PDATATYPE iInType = spIn->getDataType();
     if(iInType == CBasicData<unsigned char>::getStaticType() ) {
-        unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
-        float* pDesc = spOutTensor->getDataPtr<float>();
+        unsigned char* pSrc = (unsigned char*)spIn.data();
+        float* pDesc = (float*)spOutTensor.data();
         for(int i=0; i<nSize; i++) {
             pDesc[i] = pSrc[i] / (float)255.0;
         }
@@ -45,8 +45,8 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
     //
     PDATATYPE iInType = spIn->getDataType();
     if(iInType == CBasicData<unsigned char>::getStaticType() ) {
-        unsigned char* pSrc = spIn->getDataPtr<unsigned char>();
-        float* pDesc = spOutTensor->getDataPtr<float>();
+        unsigned char* pSrc = (unsigned char*)spIn.data();
+        float* pDesc = (float*)spOutTensor.data();
         for(int i=0; i<nSize; i++) {
             for( int j=0; j<nClassify; j++) {
                 pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0f : 0.0f;
@@ -55,8 +55,8 @@ int CTensorSolver::classify(int nClassify, const STensor& spIn, STensor& spOut) 
         spOut = spOutTensor;
         return sCtx.success();
     }else if(iInType == CBasicData<int>::getStaticType() ) {
-        int* pSrc = spIn->getDataPtr<int>();
-        float* pDesc = spOutTensor->getDataPtr<float>();
+        int* pSrc = (int*)spIn.data();
+        float* pDesc = (float*)spOutTensor.data();
         for(int i=0; i<nSize; i++) {
             for( int j=0; j<nClassify; j++) {
                 pDesc[i*nClassify+j] = (pSrc[i] == j) ? 1.0f : 0.0f;

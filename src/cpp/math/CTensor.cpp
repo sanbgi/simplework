@@ -23,7 +23,7 @@ public:
             { CBasicData<unsigned int>::getStaticType(), getBasicTypeAssist<unsigned int>() },
             { CBasicData<float>::getStaticType(), getBasicTypeAssist<float>() },
             { CBasicData<double>::getStaticType(), getBasicTypeAssist<double>() },
-            { CData<SObject>::getStaticType(), getObjectTypeAssist<SObject>() },
+            //{ CData<SObject>::getStaticType(), getObjectTypeAssist<SObject>() },
         };
         map<PDATATYPE, CTypeAssist*>::iterator it = s_assistMap.find(idType);
         if( it == s_assistMap.end() ) {
@@ -55,6 +55,7 @@ public:
                 }
             }
 
+
             void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) {
                 if(ar->isReading()) {
                     spTaker.take(new Q[nSize], CTypeAssist::FreeMemory<Q>);
@@ -62,9 +63,12 @@ public:
                 ar.arBlockArray("data", nSize, (Q*)(void*)spTaker);
             }
 
-            void* getDataPtr(CTaker<void*>& spTaker, int iPos) {
-                Q* pQ = (Q*)(void*)spTaker;
-                return pQ+iPos;
+            void* getDataPtr(void* pPtr, int iPos) {
+                return (Q*)pPtr+iPos;
+            }
+
+            int size() { 
+                return sizeof(Q);
             }
         }s_assist;
         return &s_assist;
@@ -100,9 +104,12 @@ public:
                 }
             }
 
-            void* getDataPtr(CTaker<void*>& spTaker, int iPos) {
-                Q* pQ = (Q*)(void*)spTaker;
-                return pQ+iPos;
+            void* getDataPtr(void* pPtr, int iPos) {
+                return (Q*)pPtr+iPos;
+            }
+
+            int size() { 
+                return sizeof(Q);
             }
         }s_assist;
         return &s_assist;
@@ -120,13 +127,14 @@ public:
     }
 
     virtual void initData(CTaker<void*>& spTaker, int nSize, const void* pData) = 0;
-    virtual void* getDataPtr(CTaker<void*>& spTaker, int iPos) = 0;
+    virtual void* getDataPtr(void* pPtr, int iPos) = 0;
     virtual void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) = 0;
+    virtual int size() = 0;
 };
 
 int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, const void* pData) {
-    release();
-    pTypeAssist->initData(m_spElementData, nSize, pData);
+    //pTypeAssist->initData(m_spElementData, nSize, pData);
+    m_spMemory = SMovableMemory::createMemory({nSize*pTypeAssist->size(), (void*)pData});
     m_pTypeAssist = pTypeAssist;
     m_nElementSize = nSize;
     return SError::ERRORTYPE_SUCCESS;
@@ -176,20 +184,18 @@ int CTensor::getDataSize() {
 
 void* CTensor::getDataPtr(PDATATYPE idElementType, int iPos) {
     if( idElementType == getDataType() ){
-        return m_pTypeAssist->getDataPtr(m_spElementData, iPos);
+        PMemory sMemory;
+        if( m_spMemory->toDevice(SDevice::cpuDevice(), &sMemory) != sCtx.success() ) {
+            return nullptr;
+        }
+        return m_pTypeAssist->getDataPtr(sMemory.data, iPos);
+        //return m_pTypeAssist->getDataPtr(m_spElementData, iPos);
     }
     return nullptr;
 }
 
 CTensor::CTensor() {
     m_nVer = 0;
-    m_nElementSize = 0;
-}
-CTensor::~CTensor() {
-    release();
-}
-void CTensor::release() {
-    m_spElementData.release();
     m_nElementSize = 0;
 }
 
@@ -214,21 +220,12 @@ int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, PDATA
     return sCtx.success();
 }
 
-int CTensor::createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {
-    CPointer<CDimension> spTensor;
-    CObject::createObject(spTensor);
-    if( spTensor->initVector(CTypeAssist::getBasicTypeAssist<int>(), nDims, (void*)pDimSizes) != sCtx.success()) {
-        return sCtx.error("创建维度失败");
-    }
-    spDim.setPtr(spTensor.getPtr());
-    return sCtx.success();
-}
-
 int CTensor::toArchive(const SArchive& ar) {
     CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
     ar.arBlock("ver", m_nVer);
     ar.arBlock("size", m_nElementSize);
-    m_pTypeAssist->archiveData(ar, m_spElementData, m_nElementSize);
+    //m_pTypeAssist->archiveData(ar, m_spElementData, m_nElementSize);
+    ar.arObject("data", m_spMemory);
     ar.arObject("dimension", m_spDimVector);
     return sCtx.success();
 }

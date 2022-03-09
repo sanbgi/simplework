@@ -1,6 +1,7 @@
 #include "../inc/math/math.h"
 #include <map>
 #include "CTensor.h"
+#include "CDimension.h"
 #include "CMathSolver.h"
 
 using namespace sw;
@@ -25,7 +26,7 @@ public:
     }
 
     int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) {
-        return CTensor::createDimension(spDimension, nElementSize, pElementData);
+        return CDimension::createDimension(spDimension, nElementSize, pElementData);
     }
 
     int createSolver(PDATATYPE idType, SMathSolver& spSolver) {

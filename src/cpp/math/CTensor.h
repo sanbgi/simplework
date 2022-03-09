@@ -41,18 +41,16 @@ public://ITensor
 
 public:
     CTensor();
-    ~CTensor();
-    void release();
 
 public:
     static int createTensor(STensor& spTensor, const SDimension* pDimension, PDATATYPE idElementType, int nElementSize, const void* pElementData);
-    static int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData);
 
 protected:
     CTypeAssist* m_pTypeAssist;
     int m_nVer;
     int m_nElementSize;
-    CTaker<void*> m_spElementData;
+    //CTaker<void*> m_spElementData;
+    SMovableMemory m_spMemory;
     SDimension m_spDimVector;
 };
 

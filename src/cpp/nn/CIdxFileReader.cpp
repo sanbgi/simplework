@@ -19,7 +19,7 @@ int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
         return sCtx.error("IDX文件读取的输入张量需要是一个整数，代表要读取多少张量");
     }
 
-    int nRead = spIn->getDataAt<int>(0);
+    int nRead = spIn.data<int>()[0];
     if( m_spDimension ) {
         if( *m_spDimension.data() != nRead ) {
             m_spDimension.release();
@@ -40,7 +40,7 @@ int CIdxFileReader::push(const STensor& spIn, STensor& spOut) {
 
     int nData = m_nEleSize*nRead;
     int nSize = m_nEleByte*nData;
-    unsigned char* pData = (unsigned char*)spOut->getDataPtr(m_iEleType);
+    unsigned char* pData = (unsigned char*)spOut.data();
     if( !m_file.read((char*)pData, nSize) ){
         return sCtx.error(string("IDX文件数据数据不完整，读取失败").c_str());
     }
