@@ -23,9 +23,14 @@ struct PRuntimeKey{
     //
     //
     //
-    PRuntimeKey(const char* szKey) {
-        runtimeId = SCore::getFactory()->getRuntimeId(szKey);
-        runtimeKey = szKey;
+    PRuntimeKey(const char* szKey=nullptr) {
+        if(szKey != nullptr) {
+            runtimeId = SCore::getFactory()->getRuntimeId(szKey);
+            runtimeKey = szKey;
+        }else{
+            runtimeId = 0;
+            runtimeKey = nullptr;
+        }
     }
 };
 

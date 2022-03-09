@@ -10,11 +10,10 @@
 
 #include "PVector.h"
 #include "STensor.h"
-#include "SDimension.h"
-#include "STensorEquation.h"
 #include "STensorSolver.h"
-#include "SMathFactory.h"
-#include "SMathSolver.h"
+#include "SDimension.h"
+#include "SDimensionSolver.h"
 
+#include "SMathFactory.h"
 
 #endif//__SimpleWork_Math_h__

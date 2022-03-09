@@ -5,6 +5,17 @@
 
 typedef unsigned int PID;
 typedef unsigned int PDATATYPE;
+#define PDATATYPE_UNKNOWN   0
+#define PDATATYPE_BOOL      1
+#define PDATATYPE_CHAR      2
+#define PDATATYPE_UCHAR     3
+#define PDATATYPE_SHORT     4
+#define PDATATYPE_INT       5
+#define PDATATYPE_UINT      6
+#define PDATATYPE_LONG      7
+#define PDATATYPE_FLOAT     8
+#define PDATATYPE_DOUBLE    9
+#define PDATATYPE_PCHAR     10
 
 __SimpleWork_Core_Namespace_Enter__
 

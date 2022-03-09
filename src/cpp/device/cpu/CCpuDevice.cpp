@@ -14,12 +14,12 @@ class CCpuDevice : public CObject, public IDevice{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://IDevice
-    int createMemory(const PMemory& cpuMemory, SDeviceMemory& spDeviceMemory){
+    int createMemory(const PMemory& cpuMemory, SMemory& spDeviceMemory){
         spDeviceMemory = SObject::createObject("sw.device.CpuMemory", CData<PMemory>(cpuMemory));
         return spDeviceMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
     }
 
-    int createMemory(const SDeviceMemory& spSrcMemory, SDeviceMemory& spDeviceMemory){
+    int createMemory(const SMemory& spSrcMemory, SMemory& spDeviceMemory){
         SDevice spDevice = spSrcMemory.device();
         if(spDevice.getPtr() == this) {
             spDeviceMemory = spSrcMemory;
@@ -30,15 +30,15 @@ private://IDevice
             return sCtx.error("创建内存所对应的原始内存无效");
         }
 
-        SDeviceMemory spMemory;
+        SMemory spMemory;
         if(createMemory({sMemory.size, nullptr}, spMemory) != sCtx.success()) {
             return sCtx.error();
         }
         spMemory->getMemory(sMemory);
-        return spSrcMemory->getDeviceMemory(sMemory);
+        return spSrcMemory->getMemory(sMemory);
     }
 
-    int runOperator(const PRuntimeKey& opKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
+    int runKernel(const PRuntimeKey& opKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
         IKernalOperator* pOp = getOperator(opKey);
         if(pOp == nullptr) {
             return sCtx.error((std::string("创建运算对象失败, 名称:") + opKey.runtimeKey).c_str());
@@ -95,13 +95,14 @@ private://IDevice
 
 private:
     static IKernalOperator* getOperator(const PRuntimeKey& opKey) {
-        std::map<PID,SKernalOperator> sMapOps;
+        static std::map<PID,SKernalOperator> sMapOps;
         auto it = sMapOps.find(opKey.runtimeId);
         if( it != sMapOps.end() ) {
             return it->second.getPtr();
         }
 
-        SKernalOperator spOp = SObject::createObject(opKey.runtimeKey);
+        string classKey = string(opKey.runtimeKey) + "Kernel";
+        SKernalOperator spOp = SObject::createObject(classKey.c_str());
         if(spOp) {
             sMapOps[opKey.runtimeId] = spOp;
         }

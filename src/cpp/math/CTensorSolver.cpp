@@ -1,140 +1,166 @@
-#include "../inc/math/math.h"
+#include "./math.h"
 #include <map>
 #include <vector>
 #include "CTensor.h"
-
-using namespace sw;
+#include "CRuntimeKey.hpp"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 static SCtx sCtx("CTensorSolver");
-
-//
-// 张量基类，主要用于申明不带模板参数的初始化函数
-//
 class CTensorSolver : public CObject, ITensorSolver {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(ITensorSolver)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int minus( const STensor& t1, const STensor& t2, STensor& spOut) {
-        int nSize = t1->getDataSize();
-        if( nSize != t2->getDataSize()) {
-            return sCtx.error("大小不同的两个张量不能相减");
-        }
+    int solve(const POperator& sOp, int nVars, STensor pVars[]) {
 
-        int idType1 = t1.type();
-        int idType2 = t2.type();
-        if(idType1 != idType2 ) {
-            return sCtx.error("类型不同的两个张量无法相减");
-        }
 
-        STensor spRet;
-        if( STensor::createTensor(spRet, t1.dimension(), idType1, nSize) != sCtx.success() ) {
-            return sCtx.error("创建结果张量失败");
-        }
+        switch(sOp.id) {
 
-        void* pT1 = t1.data();
-        void* pT2 = t2.data();
-        void* pOut = spRet.data();
-        if(idType1 == CBasicData<float>::getStaticType()) {
-            for(int i=0; i<nSize; i++) {
-                ((float*)pOut)[i] = ((float*)pT1)[i] - ((float*)pT2)[i];
+            #define TWO_ONE_ELEWISE(x,y) case POperator::x:{\
+                    static CRuntimeKey sKey(y);\
+                    return solveEleWise_Two_One(sKey, nVars, pVars);\
+                }\
+                break;
+            TWO_ONE_ELEWISE(plus,"sw.math.TensorPlus")
+            TWO_ONE_ELEWISE(minus,"sw.math.TensorMinus")
+            TWO_ONE_ELEWISE(multiply,"sw.math.TensorMultiply")
+            TWO_ONE_ELEWISE(divide,"sw.math.TensorDivide")
+
+            #define ONE_ONE_ELEWISE(x,y) case POperator::x:{\
+                    static CRuntimeKey sKey(y);\
+                    return solveEleWise_One_One(sKey, nVars, pVars);\
+                }\
+                break;
+            ONE_ONE_ELEWISE(square,"sw.math.TensorSquare")
+            ONE_ONE_ELEWISE(sqrt,"sw.math.TensorSqrt")
+
+            #define ONE_ONE_TOVALUE(x,y) case POperator::x:{\
+                    static CRuntimeKey sKey(y);\
+                    return solveToValue_One_One(sKey, nVars, pVars);\
+                }\
+                break;
+            ONE_ONE_TOVALUE(sum,"sw.math.TensorSum")
+            ONE_ONE_TOVALUE(avg,"sw.math.TensorAvg")
+
+        case POperator::product:{
+                static CRuntimeKey sKey("sw.math.TensorDivide");
+                return solveEleWise_Two_One(sKey, nVars, pVars);
             }
-        }else if(idType1 == CBasicData<double>::getStaticType()){
-            for(int i=0; i<nSize; i++) {
-                ((double*)pOut)[i] = ((double*)pT1)[i] - ((double*)pT2)[i];
+            break;
+        }
+        return sCtx.error("不支持的张量运算");
+    }
+
+    int solveEleWise_Two_One(CRuntimeKey& opKey, int nVars, STensor pVars[]) {
+        if(nVars != 3) {
+            return sCtx.error("双元操作的参数个数错误");
+        }
+
+        STensor sp1 = pVars[0];
+        STensor sp2 = pVars[1];
+        PDATATYPE type1 = sp1.type();
+        PDATATYPE type2 = sp2.type();
+        if(type1 != type2) {
+            return sCtx.error("两个类型不同的张量不能相加");
+        }
+        if(sp2.size() < 1) {
+            return sCtx.error("无效张量");
+        }
+        int nSizeIn = sp1.size();
+        if( STensor::createTensor(pVars[2], sp1.dimension(), type1, nSizeIn) != sCtx.success() ) {
+            return sCtx.error("创建张量失败");
+        }
+
+        if( opKey.m_sRuntimeKey.runtimeKey == 0) {
+            if( !opKey.updateRumtimeKey(type1) ) {
+                return sCtx.error("不支持的数据类型");
             }
-        }else{
-            return sCtx.error("不支持的数据类型");
         }
-        spOut = spRet;
-        return sCtx.success();
+
+        int ret = solve(opKey.m_sRuntimeKey, {1, &nSizeIn}, {1, &nSizeIn}, 0, nullptr, 3, pVars);
+        if(ret != sCtx.success()) {
+            pVars[2].release();
+        }
+        return ret;
     }
 
-    //
-    // 升维
-    //
-    int upHighDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) {
-        int nPrevDims = spIn.size();
-        const int* pPrevDimSizes = spIn.data();
-
-        std::vector<int> pNewDimSizes(nPrevDims+nDims);
-        for(int i=0; i<nPrevDims; i++) {
-            pNewDimSizes[nDims+i] = pPrevDimSizes[i];
-        }
-        for(int i=0; i<nDims; i++) {
-            pNewDimSizes[i] = pDimSizes[i];
-        }
-        spOut = SDimension(nPrevDims+nDims,pNewDimSizes.data());
-        return sCtx.success();
-    }
-
-    //
-    // 降维
-    //
-    int downHighDimension(const SDimension& spIn, int nDims, SDimension& spOut){
-        int nPrevDims = spIn.size();
-        if(nPrevDims-nDims < 1) {
-            return sCtx.error("一维一下维度，无法降维");
-        }
-        const int* pDimSizes = spIn.data();
-        spOut = SDimension(nPrevDims-nDims,pDimSizes+1);
-        return sCtx.success();
-    }
-
-    //
-    // 升维
-    //
-    int upLowDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) {
-        int nPrevDims = spIn.size();
-        const int* pPrevDimSizes = spIn.data();
-
-        std::vector<int> pNewDimSizes(nPrevDims+nDims);
-        for(int i=0; i<nPrevDims; i++) {
-            pNewDimSizes[i] = pPrevDimSizes[i];
-        }
-        for(int i=0; i<nDims; i++) {
-            pNewDimSizes[nPrevDims+i] = pDimSizes[i];
-        }
-        spOut = SDimension(nPrevDims+nDims,pNewDimSizes.data());
-        return sCtx.success();
-    }
-
-    //
-    // 降维
-    //
-    int downLowDimension(const SDimension& spIn, int nDims, SDimension& spOut){
-        int nPrevDims = spIn.size();
-        if(nPrevDims - nDims < 1) {
-            sCtx.error("一维一下维度，无法降维");
-        }
-        const int* pDimSizes = spIn.data();
-        spOut = SDimension(nPrevDims-nDims,pDimSizes);
-        return sCtx.success();
-    }
-
-    bool isEqual(const SDimension& spDim1, const SDimension& spDim2) {
-        if(spDim1.getPtr() == spDim2.getPtr()) {
-            return true;
+    int solveEleWise_One_One(CRuntimeKey& opKey, int nVars, STensor pVars[]) {
+        if(nVars != 2) {
+            return sCtx.error("单元操作的参数个数错误");
         }
 
-        int nSize1 = spDim1.size();
-        int nSize2 = spDim2.size();
-        const int* pDimSize1 = spDim1.data();
-        const int* pDimSize2 = spDim2.data();
-        if( nSize1 != nSize2 ) {
-            return false;
+        STensor spIn = pVars[0];
+        PDATATYPE type = spIn.type();
+        int nSizeIn = spIn.size();
+        if( STensor::createTensor(pVars[1], spIn.dimension(), type, nSizeIn) != sCtx.success() ) {
+            return sCtx.error("创建张量失败");
         }
 
-        while(nSize1>0) {
-            if(*pDimSize2 != *pDimSize1) {
-                return false;
+        if( opKey.m_sRuntimeKey.runtimeKey == 0) {
+            if( !opKey.updateRumtimeKey(type) ) {
+                return sCtx.error("不支持的数据类型");
             }
-            nSize1--, pDimSize1++, pDimSize2++;
         }
-        return true;
+
+        int ret = solve(opKey.m_sRuntimeKey, {1, &nSizeIn}, {1, &nSizeIn}, 0, nullptr, 2, pVars);
+        if(ret != sCtx.success()) {
+            pVars[1].release();
+        }
+        return ret;
+    }
+
+    int solveToValue_One_One(CRuntimeKey& opKey, int nVars, STensor pVars[]) {
+        if(nVars != 2) {
+            return sCtx.error("单元操作的参数个数错误");
+        }
+
+        STensor spIn = pVars[0];
+        PDATATYPE type = spIn.type();
+        int nSizeIn = spIn.size();
+        if( STensor::createVector(pVars[1], type, 1) != sCtx.success() ) {
+            return sCtx.error("创建张量失败");
+        }
+
+        if( opKey.m_sRuntimeKey.runtimeKey == 0) {
+            if( !opKey.updateRumtimeKey(type) ) {
+                return sCtx.error("不支持的数据类型");
+            }
+        }
+
+        int nRange = 0;
+        int ret = solve(opKey.m_sRuntimeKey, {0, &nSizeIn}, {0, &nSizeIn}, 0, nullptr, 2, pVars);
+        if(ret != sCtx.success()) {
+            pVars[1].release();
+        }
+        return ret;
+    }
+    int solve(  PRuntimeKey opKernalKey, PVector evalKernalRange, PVector deviaKernalRange,
+                int nArgs, PMemory pArgs[], 
+                int nVars, STensor pVars[]) {
+        std::vector<PMemory> arrArgs(nArgs+nVars*2);
+        PMemory* pMemory = arrArgs.data();
+        for(int i=0; i<nArgs; i++, pMemory++) {
+            *pMemory = pArgs[i];
+        }
+
+        #define __MAX_VARS 8
+        if(nVars>__MAX_VARS) {
+            return sCtx.error("超过最大求解变量数值");
+        }
+        PVector pVec[__MAX_VARS];
+        SDevice device = SDevice::defaultDevice();
+        for(int i=0; i<nVars; i++, pMemory+=2) {
+            if( pVars[i]->getDataInDevice(device, pVec[i]) != sCtx.success() ) {
+                return sCtx.error("读取张量数据错误");
+            }
+            pMemory[0].size = sizeof(int);
+            pMemory[0].pIntArray = &pVec[i].size;
+            pMemory[1].size = sizeof(void*);
+            pMemory[1].data = &pVec[i].pIntArray;
+        }
+        return device->runKernel(opKernalKey, nArgs+nVars*2, arrArgs.data(), evalKernalRange.size, evalKernalRange.pIntArray);
     }
 };
 

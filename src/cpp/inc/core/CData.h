@@ -104,41 +104,36 @@ private:
 
 template<typename TValue> class CBasicData : public PData{
 public:
-    static const char* __getClassKey() {
-        static const char* s_key = getBasicTypeKey();
-        return s_key;
-    }
     typedef TValue __TValue;
-
     static PDATATYPE getStaticType() {
-        static PDATATYPE s_idType = SCore::getFactory()->getDataType(__getClassKey());
+        static PDATATYPE s_idType = getBasicTypeKey();
         return s_idType;
     }
 
 private:
-    static const char* getBasicTypeKey() {
+    static PDATATYPE getBasicTypeKey() {
         if(typeid(TValue) == typeid(bool)) {
-            return "sw.core.Bool";
+            return PDATATYPE_BOOL;
         } else if(typeid(TValue) == typeid(char)) {
-            return "sw.core.Char";
+            return PDATATYPE_CHAR;
         } else if(typeid(TValue) == typeid(unsigned char)) {
-            return "sw.core.UChar";
+            return PDATATYPE_UCHAR;
         } else if(typeid(TValue) == typeid(int)) {
-            return "sw.core.Int";
-        } else if(typeid(TValue) == typeid(PDATATYPE)) {
-            return "sw.core.UInt";
+            return PDATATYPE_INT;
+        } else if(typeid(TValue) == typeid(unsigned int)) {
+            return PDATATYPE_UINT;
         } else if(typeid(TValue) == typeid(short)) {
-            return "sw.core.Short";
+            return PDATATYPE_SHORT;
         } else if(typeid(TValue) == typeid(long)) {
-            return "sw.core.Long";
+            return PDATATYPE_LONG;
         } else if(typeid(TValue) == typeid(float)) {
-            return "sw.core.Float";
+            return PDATATYPE_FLOAT;
         } else if(typeid(TValue) == typeid(double)) {
-            return "sw.core.Double";
+            return PDATATYPE_DOUBLE;
         } else if(typeid(TValue) == typeid(char*)) {
-            return "sw.core.String";
+            return PDATATYPE_PCHAR;
         }
-        return nullptr;
+        return PDATATYPE_UNKNOWN;
     }
 
 public:

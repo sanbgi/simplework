@@ -2,7 +2,7 @@
 #define __SimpleWork_Dimension_h__
 
 #include "SMathFactory.h"
-#include "STensorSolver.h"
+#include "SDimensionSolver.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -51,30 +51,30 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Dimension, "sw.math.Dimension")
 
     SDimension upHighDimension(int nDimSize) {
         SDimension spDim;
-        STensorSolver::getSolver()->upHighDimension(*this, 1, &nDimSize, spDim);
+        SDimensionSolver::getSolver()->upHighDimension(*this, 1, &nDimSize, spDim);
         return spDim;
     }
 
     SDimension downHighDimension(int nDims = 1) {
         SDimension spDim;
-        STensorSolver::getSolver()->downHighDimension(*this, nDims, spDim);
+        SDimensionSolver::getSolver()->downHighDimension(*this, nDims, spDim);
         return spDim;
     }
 
     SDimension upLowDimension(int nDimSize) {
         SDimension spDim;
-        STensorSolver::getSolver()->upLowDimension(*this, 1, &nDimSize, spDim);
+        SDimensionSolver::getSolver()->upLowDimension(*this, 1, &nDimSize, spDim);
         return spDim;
     }
 
     SDimension downLowDimension(int nDims = 1) {
         SDimension spDim;
-        STensorSolver::getSolver()->downLowDimension(*this, nDims, spDim);
+        SDimensionSolver::getSolver()->downLowDimension(*this, nDims, spDim);
         return spDim;
     }
 
     bool isEqual(const SDimension& spDim) {
-        return STensorSolver::getSolver()->isEqual(*this, spDim);;
+        return SDimensionSolver::getSolver()->isEqual(*this, spDim);;
     }
 
     static int createDimension(SDimension& spDim, int nDims, const int* pDimSizes) {

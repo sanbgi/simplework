@@ -2,60 +2,51 @@
 #define __SimpleWork_STensorSolver_h__
 
 #include "math.h"
+#include "SMathFactory.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
-class STensor;
-class SDimension;
+struct POperator {
+    enum {
+        plus,
+        minus,
+        multiply,
+        divide,
+        product,
+        square,
+        sqrt,
+        sum,
+        avg,
+    }id;
+    const PData* extra;
+};
 
-/**
- * 张量类定义
- */
+//
+// 向量求解器
+//
 SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensorSolver", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensorSolver", 220309)
+        //
+        // 求解
+        //
+        virtual int solve(const POperator& sOp, int nVars, STensor pVars[]) = 0;
 
         //
-        // 张量相减
+        // 求解
         //
-        virtual int minus( const STensor& t1, const STensor& t2, STensor& spOut) = 0;
-
-        //
-        // 升维
-        //  @nDimSize 第一个维度(新维度)大小
-        //
-        virtual int upHighDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) = 0;
-
-        //
-        // 降维
-        //  @nDimSize 第一个维度(新维度)大小
-        //
-        virtual int downHighDimension(const SDimension& spIn, int nDims, SDimension& spOut) = 0;
-
-        //
-        // 升维
-        //  @nDimSize 第一个维度(新维度)大小
-        //
-        virtual int upLowDimension(const SDimension& spIn, int nDims, int pDimSizes[], SDimension& spOut) = 0;
-
-        //
-        // 降维
-        //  @nDimSize 第一个维度(新维度)大小
-        //
-        virtual int downLowDimension(const SDimension& spIn, int nDims, SDimension& spOut) = 0;
-
-        //
-        // 判断维度是否相同
-        //
-        virtual bool isEqual(const SDimension& spDim1, const SDimension& spDim2) = 0;
+        virtual int solve(
+                        PRuntimeKey opKernalKey, PVector evalKernalRange, PVector deviaKernalRange,
+                        int nArgs, PMemory pArgs[], 
+                        int nVars, STensor pVars[]) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-public:
-    static STensorSolver& getSolver() {
-        static STensorSolver g_solver = SObject::createObject<STensorSolver>();
+    static STensorSolver getSolver(){
+        static STensorSolver g_solver = SObject::createObject(STensorSolver::__getClassKey());
         return g_solver;
     }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(TensorSolver)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

@@ -3,7 +3,7 @@
 
 #include "SMathFactory.h"
 #include "SDimension.h"
-#include "STensorEquation.h"
+#include "STensorSolver.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -107,34 +107,44 @@ public:
     }
 
 public:
-    static STensor eval(STensorEquation spEquation, const STensor& a) {
-        STensor spOut;
-        spEquation->eval(nullptr, 1, &a, spOut);
-        return spOut;
-    }
-    static STensor eval(STensorEquation spEquation, const STensor& a, const STensor& b) {
-        STensor spOut;
-        STensor pInVars[] = { a, b };
-        spEquation->eval(nullptr, 2, pInVars, spOut);
-        return spOut;
-    }
-    STensor operator + (const STensor& spIn) {
-        static STensorEquation spEquation = SObject::createObject("sw.math.PlusEquation");
-        return eval(spEquation, *this, spIn);
-    }
-    STensor operator - (const STensor& spIn) {
-        static STensorEquation spEquation = SObject::createObject("sw.math.MinusEquation");
-        return eval(spEquation, *this, spIn);
+    static int solveOp(const POperator& spOp, int nVars, STensor pVars[]) {
+        static STensorSolver spOperator = SObject::createObject("sw.math.TensorSolver");
+        return spOperator->solve(spOp, nVars, pVars);
     }
 
-    //
-    // 均方根
-    //
-    STensor rootMeanSquare () {
-        static STensorEquation spEquation = SObject::createObject("sw.math.RootMeanSquareEquation");
-        return eval(spEquation, *this);
+public:
+    STensor avg() {
+        STensor pVars[2] = {*this};
+        solveOp({POperator::avg}, 2, pVars);
+        return pVars[1];
     }
-    
+    STensor sqrt() {
+        STensor pVars[2] = {*this};
+        solveOp({POperator::sqrt}, 2, pVars);
+        return pVars[1];
+    }
+    STensor square() {
+        STensor pVars[2] = {*this};
+        solveOp({POperator::square}, 2, pVars);
+        return pVars[1];
+    }
+    STensor rootMeanSquare() {
+        return square().avg().sqrt();
+    }
+    STensor variance(){
+        return ((*this)-avg()).rootMeanSquare();
+    }
+    STensor operator + (const STensor& spIn) {
+        STensor pVars[3] = {*this, spIn};
+        solveOp({POperator::plus}, 3, pVars);
+        return pVars[2];
+    }
+    STensor operator - (const STensor& spIn) {
+        STensor pVars[3] = {*this, spIn};
+        solveOp({POperator::minus}, 3, pVars);
+        return pVars[2];
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE

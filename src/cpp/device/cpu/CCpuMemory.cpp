@@ -5,10 +5,10 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CCpuMemory");
-class CCpuMemory : public CObject, IDeviceMemory, IArchivable{
+class CCpuMemory : public CObject, IMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IMemory)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -42,16 +42,16 @@ private://IDeviceMemory
         return SDeviceFactory::getFactory()->getCpuDevice(spDevice);
     }
 
-    int getMemory(PMemory& devcieMemory){
-        if(!m_spTaker) {
-            return sCtx.error();
+    int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory){
+        if( spDevice != SDevice::cpu() ) {
+            return sCtx.error("无法获取非CPU设备内存");
         }
-        devcieMemory.size = m_nSize;
-        devcieMemory.data = m_spTaker;
+        deviceMemory.size = m_nSize;
+        deviceMemory.data = m_spTaker;
         return sCtx.success();
     }
 
-    int setDeviceMemory(PMemory cpuDeviceMemory, int iOffset=0){
+    int setMemory(PMemory cpuDeviceMemory, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }
@@ -62,7 +62,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int getDeviceMemory(PMemory cpuDeviceMemory, int iOffset=0){
+    int getMemory(PMemory cpuDeviceMemory, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }

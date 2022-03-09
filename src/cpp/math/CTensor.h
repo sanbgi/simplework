@@ -38,7 +38,6 @@ public://ITensor
     PDATATYPE getDataType();
     int getDataSize();
     int getDataInDevice(const SDevice& spDevice, PVector& deviceData);
-    void* getDataPtr(PDATATYPE idElementType, int iPos=0);
 
 public:
     CTensor();
@@ -51,7 +50,7 @@ protected:
     int m_nVer;
     int m_nElementSize;
     //CTaker<void*> m_spElementData;
-    SMovableMemory m_spMemory;
+    SMemory m_spMemory;
     SDimension m_spDimVector;
 };
 

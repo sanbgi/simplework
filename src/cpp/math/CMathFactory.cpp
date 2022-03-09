@@ -2,7 +2,6 @@
 #include <map>
 #include "CTensor.h"
 #include "CDimension.h"
-#include "CMathSolver.h"
 
 using namespace sw;
 
@@ -27,10 +26,6 @@ public:
 
     int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) {
         return CDimension::createDimension(spDimension, nElementSize, pElementData);
-    }
-
-    int createSolver(PDATATYPE idType, SMathSolver& spSolver) {
-        return CMathSolver::createSolver(idType, spSolver);
     }
 };
 

@@ -63,10 +63,6 @@ public:
                 ar.arBlockArray("data", nSize, (Q*)(void*)spTaker);
             }
 
-            void* getDataPtr(void* pPtr, int iPos) {
-                return (Q*)pPtr+iPos;
-            }
-
             int size() { 
                 return sizeof(Q);
             }
@@ -104,10 +100,6 @@ public:
                 }
             }
 
-            void* getDataPtr(void* pPtr, int iPos) {
-                return (Q*)pPtr+iPos;
-            }
-
             int size() { 
                 return sizeof(Q);
             }
@@ -127,14 +119,12 @@ public:
     }
 
     virtual void initData(CTaker<void*>& spTaker, int nSize, const void* pData) = 0;
-    virtual void* getDataPtr(void* pPtr, int iPos) = 0;
     virtual void archiveData(const SArchive& ar, CTaker<void*>& spTaker, int nSize) = 0;
     virtual int size() = 0;
 };
 
 int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, const void* pData) {
-    //pTypeAssist->initData(m_spElementData, nSize, pData);
-    m_spMemory = SMovableMemory::createMemory({nSize*pTypeAssist->size(), (void*)pData});
+    m_spMemory = SMemory::createMemory({nSize*pTypeAssist->size(), (void*)pData});
     m_pTypeAssist = pTypeAssist;
     m_nElementSize = nSize;
     return SError::ERRORTYPE_SUCCESS;
@@ -182,22 +172,10 @@ int CTensor::getDataSize() {
     return m_nElementSize;
 }
 
-void* CTensor::getDataPtr(PDATATYPE idElementType, int iPos) {
-    if( idElementType == getDataType() ){
-        PMemory sMemory;
-        if( m_spMemory->getDataInDevice(SDevice::cpu(), &sMemory) != sCtx.success() ) {
-            return nullptr;
-        }
-        return m_pTypeAssist->getDataPtr(sMemory.data, iPos);
-        //return m_pTypeAssist->getDataPtr(m_spElementData, iPos);
-    }
-    return nullptr;
-}
-
 int CTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
     PMemory deviceMemory;
     int ret;
-    if( ret = m_spMemory->getDataInDevice(spDevice, &deviceMemory) == sCtx.success() ) {
+    if( (ret = m_spMemory->getMemoryInDevice(spDevice, deviceMemory)) == sCtx.success() ) {
         deviceData.size = m_nElementSize;
         deviceData.data = deviceMemory.data;
     }
@@ -234,7 +212,6 @@ int CTensor::toArchive(const SArchive& ar) {
     CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
     ar.arBlock("ver", m_nVer);
     ar.arBlock("size", m_nElementSize);
-    //m_pTypeAssist->archiveData(ar, m_spElementData, m_nElementSize);
     ar.arObject("data", m_spMemory);
     ar.arObject("dimension", m_spDimVector);
     return sCtx.success();
