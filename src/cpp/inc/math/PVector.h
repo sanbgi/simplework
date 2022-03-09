@@ -9,11 +9,6 @@ struct PVector {
     SIMPLEWORK_PDATAKEY(PVector, "sw.math.Vector")
 
     //
-    // 数据类型
-    //
-    PID type;
-
-    //
     //  数据个数
     //
     int size;
@@ -35,11 +30,6 @@ struct PVector {
 
 struct PDeviaVector {
     SIMPLEWORK_PDATAKEY(PDeviaVector, "sw.math.DeviaVector")
-    
-    //
-    // 数据类型
-    //
-    PID type;
     
     //
     // 大小

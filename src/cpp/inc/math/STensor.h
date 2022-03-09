@@ -7,8 +7,6 @@
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
-class SDevice;
-
 /**
  * 张量类定义
  */
@@ -34,13 +32,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 转移到指定设备，并返回数据
         //
-        virtual int toDevice(const SDevice& spDevice, PVector* pDeviceData) = 0;
-
-        //
-        // 获取元素数据指针
-        //
-        virtual void* getDataPtr(PDATATYPE eElementType, int iPos=0) = 0;
-
+        virtual int getDataInDevice(const SDevice& spDevice, PVector& deviceData) = 0;
+        
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
@@ -82,13 +75,21 @@ public:
     }
 
     void* data(int iPos=0) const {
+        PVector deviceMemory = { 0, nullptr };
         IFace* pFace = getPtr();
-        return pFace != nullptr ? pFace->getDataPtr(pFace->getDataType(), iPos) : nullptr;
+        if(pFace != nullptr) {
+            pFace->getDataInDevice(SDevice::cpuDevice(), deviceMemory); 
+        }
+        return deviceMemory.data;
     }
 
     template<typename Q> Q* data(int iPos = 0) const{
+        PVector deviceMemory = { 0, nullptr };
         IFace* pFace = getPtr();
-        return pFace != nullptr ? (Q*)pFace->getDataPtr(pFace->getDataType(), iPos) : (Q*)nullptr;
+        if(pFace != nullptr) {
+            pFace->getDataInDevice(SDevice::cpuDevice(), deviceMemory); 
+        }
+        return ((Q*)deviceMemory.data)+iPos;
     }
 
     SDimension dimension() const {

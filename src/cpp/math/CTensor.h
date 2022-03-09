@@ -37,7 +37,7 @@ public://ITensor
     int getDimension(SDimension& spDim);
     PDATATYPE getDataType();
     int getDataSize();
-    int toDevice(const SDevice& spDevice, PVector* pDeviceData);
+    int getDataInDevice(const SDevice& spDevice, PVector& deviceData);
     void* getDataPtr(PDATATYPE idElementType, int iPos=0);
 
 public:

@@ -26,9 +26,9 @@ public://ITensorEquation
             return sCtx.error("创建张量失败");
         }
         PVector inVars[] = {
-            {0, nSizeIn, sp1.data() },
+            {nSizeIn, sp1.data() },
         };
-        if( eval(sp1.type(), nullptr, 1, inVars, {0, 1, spOut.data()} ) != sCtx.success() ) {
+        if( eval(sp1.type(), nullptr, 1, inVars, {1, spOut.data()} ) != sCtx.success() ) {
             return sCtx.error("数据类型不支持");
         }
         outVar = spOut;

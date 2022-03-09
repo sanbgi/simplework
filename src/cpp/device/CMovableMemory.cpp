@@ -26,7 +26,7 @@ protected://IArchivable
     const char* getClassKey() { return SMovableMemory::__getClassKey(); }
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
-            if( toDevice(SDevice::cpuDevice()) != sCtx.success() ) {
+            if( getDataInDevice(SDevice::cpuDevice()) != sCtx.success() ) {
                 return sCtx.error("内存无法保存到CPU");
             }
         }
@@ -35,7 +35,7 @@ protected://IArchivable
 
 
 private://IMovableMemory
-    int toDevice(const SDevice& spDevice, PMemory* pDeviceMemory=nullptr){
+    int getDataInDevice(const SDevice& spDevice, PMemory* pDeviceMemory=nullptr){
         if( spDevice->createMemory(m_spMemory, m_spMemory) != sCtx.success() ) {
             return sCtx.error("创建设备内存异常");
         }

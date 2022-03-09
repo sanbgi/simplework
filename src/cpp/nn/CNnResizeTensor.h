@@ -20,8 +20,7 @@ public://ITensor
     int getDimension(SDimension& spDim);
     PDATATYPE getDataType();
     int getDataSize();
-    int toDevice(const SDevice& spDevice, PVector* pDeviceData);
-    void* getDataPtr(PDATATYPE eElementType, int iPos=0);
+    int getDataInDevice(const SDevice& spDevice, PVector& deviceData);
 
 private://IArchivable
     int getClassVer() { return 220209; }

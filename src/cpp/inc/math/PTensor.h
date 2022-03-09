@@ -12,21 +12,16 @@ struct PTensor {
     SIMPLEWORK_PDATAKEY(PTensor, "sw.math.Tensor")
 
     //
+    // 维度信息
+    //
+    SDimension spDimension;
+
+    //
     //  张量数据类型
     //      SData::getBasicTypeIdentifier<int>      int类型张量
     //      SData::getBasicTypeIdentifier<float>    float类型张量
     //
     PDATATYPE idType;
-
-    //
-    //  张量的维度数量
-    //
-    int nDims;
-
-    //
-    //  张量的每一个维度尺寸
-    //
-    int* pDimSizes;
 
     //
     //  数据个数，与所有维度尺寸的乘积相同

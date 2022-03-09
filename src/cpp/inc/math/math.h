@@ -2,6 +2,7 @@
 #define __SimpleWork_Math_h__
 
 #include "../core/core.h"
+#include "../device/device.h"
 
 #define SIMPLEWORK_MATH_NAMESPACE sw
 #define SIMPLEWORK_MATH_NAMESPACE_ENTER namespace sw {

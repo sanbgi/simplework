@@ -15,7 +15,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MovableMemory, "sw.device.MovableMemory")
         //
         // 获取内存值
         //
-        virtual int toDevice(const SDevice& spDevice, PMemory* pDeviceMemory=nullptr) = 0;
+        virtual int getDataInDevice(const SDevice& spDevice, PMemory* pDeviceMemory=nullptr) = 0;
 
         //
         // 修改内存值

@@ -233,7 +233,7 @@ int CIdxFileReader::readFile(const char* szFileName, STensor& spData) {
     }
 
     int nSize = nDims*sizeof(int) + nData*nEleByte;
-    unsigned char* pData = (unsigned char*)spTensor->getDataPtr(idType);
+    unsigned char* pData = spTensor.data<unsigned char>();
     if( !idxFile.read((char*)pData, nData*nEleByte) ){
         return sCtx.error(string(string("IDX文件数据数据不完整，读取数据信息失败，文件名: ") + szFileName).c_str());
     }

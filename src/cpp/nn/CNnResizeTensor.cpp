@@ -36,12 +36,8 @@ int CNnResizeTensor::getDataSize() {
     return m_src.spTensor.size();
 }
 
-int CNnResizeTensor::toDevice(const SDevice& spDevice, PVector* pDeviceData) {
-    return m_src.spTensor->toDevice(spDevice, pDeviceData);
-}
-
-void* CNnResizeTensor::getDataPtr(PDATATYPE eElementType, int iPos) {
-    return m_src.spTensor->getDataPtr(eElementType, iPos);
+int CNnResizeTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
+    return m_src.spTensor->getDataInDevice(spDevice, deviceData);
 }
 
 int CNnResizeTensor::toArchive(const SArchive& ar) {
