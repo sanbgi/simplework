@@ -136,6 +136,7 @@ public:
         }
         return ret;
     }
+    
     int solve(  PRuntimeKey opKernalKey, PVector evalKernalRange, PVector deviaKernalRange,
                 int nArgs, PMemory pArgs[], 
                 int nVars, STensor pVars[]) {

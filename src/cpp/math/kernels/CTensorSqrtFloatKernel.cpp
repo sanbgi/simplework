@@ -26,8 +26,8 @@ public://IMathOperator
 #include "CTensorSqrtFloatKernel.cl"
         }sKernel = {pCtx};
         sKernel.eval(
-                _KArg(int)(pArgs[0]), _KArg(float*)(pArgs[1]),
-                _KArg(int)(pArgs[2]), _KArg(float*)(pArgs[3]));
+                _KArg(int,0), _KArg(float*,1),
+                _KArg(int,2), _KArg(float*,3));
         return sCtx.success();
     }
 };

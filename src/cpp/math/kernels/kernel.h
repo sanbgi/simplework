@@ -10,7 +10,8 @@ public:
         return *(Q*)sMemory.data;
     }
 };
-#define _KArg(x) CKernelArgs::getArg<x>
+
+#define _KArg(tp,id) *(tp*)pArgs[id].data
 #define global
 #define __global
 #define volatile
