@@ -39,7 +39,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         return spDevice;
     }
 
-    static SDevice cpuDevice() {
+    static SDevice cpu() {
         SDevice spDevice;
         SDeviceFactory::getFactory()->getCpuDevice(spDevice);
         return spDevice;

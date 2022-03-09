@@ -185,7 +185,7 @@ int CTensor::getDataSize() {
 void* CTensor::getDataPtr(PDATATYPE idElementType, int iPos) {
     if( idElementType == getDataType() ){
         PMemory sMemory;
-        if( m_spMemory->getDataInDevice(SDevice::cpuDevice(), &sMemory) != sCtx.success() ) {
+        if( m_spMemory->getDataInDevice(SDevice::cpu(), &sMemory) != sCtx.success() ) {
             return nullptr;
         }
         return m_pTypeAssist->getDataPtr(sMemory.data, iPos);

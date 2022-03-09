@@ -26,7 +26,7 @@ protected://IArchivable
     const char* getClassKey() { return SMovableMemory::__getClassKey(); }
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
-            if( getDataInDevice(SDevice::cpuDevice()) != sCtx.success() ) {
+            if( getDataInDevice(SDevice::cpu()) != sCtx.success() ) {
                 return sCtx.error("内存无法保存到CPU");
             }
         }
