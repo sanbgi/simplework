@@ -144,6 +144,11 @@ public:
         solveOp({POperator::minus}, 3, pVars);
         return pVars[2];
     }
+    STensor operator * (const STensor& spIn) {
+        STensor pVars[3] = {*this, spIn};
+        solveOp({POperator::multiply}, 3, pVars);
+        return pVars[2];
+    }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)
 
