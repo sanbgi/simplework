@@ -11,22 +11,13 @@ struct PNnResizeTensor {
     //
     // 原始数据
     //
-    STensor spSrc;
-
-    //
-    // 新数据维度信息
-    //
-    SDimension spResizeDimension;
-
-    //
-    // 新数据相对于原始数据的起始位置
-    //
-    int iResizeOffset;
+    STensor spTensor;
 
     //
     // 额外存储参数
     //
-    SObject spExtra;
+    SObject spExtra1;
+    SObject spExtra2;
 };
 
 //

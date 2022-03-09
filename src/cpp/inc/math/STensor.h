@@ -7,6 +7,8 @@
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
+class SDevice;
+
 /**
  * 张量类定义
  */
@@ -28,6 +30,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         // 获取元素数量
         //
         virtual int getDataSize() = 0;
+
+        //
+        // 转移到指定设备，并返回数据
+        //
+        virtual int toDevice(const SDevice& spDevice, PVector* pDeviceData) = 0;
 
         //
         // 获取元素数据指针

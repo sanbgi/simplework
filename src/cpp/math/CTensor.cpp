@@ -194,6 +194,19 @@ void* CTensor::getDataPtr(PDATATYPE idElementType, int iPos) {
     return nullptr;
 }
 
+int CTensor::toDevice(const SDevice& spDevice, PVector* pDeviceData) {
+    PMemory deviceMemory;
+    int ret;
+    if( ret = m_spMemory->toDevice(spDevice, &deviceMemory) == sCtx.success() ) {
+        if(pDeviceData != nullptr) {
+            pDeviceData->type = m_pTypeAssist->m_idType;
+            pDeviceData->size = m_nElementSize;
+            pDeviceData->data = deviceMemory.data;
+        }
+    }
+    return ret;
+}
+
 CTensor::CTensor() {
     m_nVer = 0;
     m_nElementSize = 0;

@@ -21,7 +21,7 @@ protected://IArchivable
     int getClassVer() { return 220112; }
     const char* getClassName() { return "Tensor"; } 
     const char* getClassKey() { return __getClassKey(); }
-    virtual int toArchive(const SArchive& ar);
+    int toArchive(const SArchive& ar);
 
 public://Factory
     static const char* __getClassKey() { return "sw.math.Tensor"; }
@@ -37,6 +37,7 @@ public://ITensor
     int getDimension(SDimension& spDim);
     PDATATYPE getDataType();
     int getDataSize();
+    int toDevice(const SDevice& spDevice, PVector* pDeviceData);
     void* getDataPtr(PDATATYPE idElementType, int iPos=0);
 
 public:

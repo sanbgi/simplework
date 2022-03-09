@@ -197,6 +197,11 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     if( STensor::createVector<Q>(spOpSolveBuffer, solveCtx.nSumSize[EVOperator] * nBatchs) != sCtx.success()) {
         return sCtx.error("创建计算缓冲区失败");
     }
+    STensor spOut;
+    SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
+    if( STensor::createTensor<Q>(spOut, spOutDim, spOutDim.dataSize()) != sCtx.success()) {
+        return sCtx.error("创建计算缓冲区失败");
+    }
 
     //  
     // 准备计算指针
@@ -247,9 +252,8 @@ int CLayerNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         (*instruct.solver.pEvalFun)(instruct.solver.pParameterData, nBatchs, instruct.args.nInVars, evalIn, evalOut);
     }
 
-    SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
-    int iOffset = (int)(((Q*)solveVars[solveCtx.iOutVar].data)-pOpSolvedBuffer);
-    return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
+    memcpy(spOut.data(), solveVars[solveCtx.iOutVar].data, solveVars[solveCtx.iOutVar].size*sizeof(Q) );
+    return CNnResizeTensor::createResizeTensor({spOut, spOpSolveBuffer, spBatchIn}, spBatchOut);
 }
 
 int CLayerNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
@@ -290,7 +294,8 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
 
     PNnResizeTensor sResizeTensor;
     spResizeOut->getResizeData(sResizeTensor);
-    spBatchIn = sResizeTensor.spExtra;
+    STensor spOpTensor = sResizeTensor.spExtra1;
+    spBatchIn = sResizeTensor.spExtra2;
 
     //
     // 准备计算缓冲区
@@ -321,7 +326,7 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
         Q* pItOpDevia = pOpDeviaBuffer;
         Q* pItStateDevia = pStateDeviaBuffer;
         Q* pItWeightDevia = pWeightDeviaBuffer;
-        Q* pItOpVar = sResizeTensor.spSrc.data<Q>();
+        Q* pItOpVar = spOpTensor.data<Q>();
         PDeviaVector* pItVec = solveVars.data();
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
@@ -384,7 +389,7 @@ int CLayerNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDe
 
     solveCtx.spOptimizer->updateDeviation(nBatchs);
     STensor spWeightDevia = STensor::createVector<Q>(nWeights, pWeightDeviaBuffer);
-    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spBatchInDeviation.dimension(), 0, spWeightDevia}, spBatchInDeviation);
+    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spWeightDevia}, spBatchInDeviation);
 }
 
 int CLayerNetwork::update(const STensor& spBatchInDeviation) {
@@ -411,7 +416,7 @@ int CLayerNetwork::updateT(const STensor& spBatchInDeviation) {
 
     PNnResizeTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
-    STensor spWeightDevia = sResizeTensor.spExtra;
+    STensor spWeightDevia = sResizeTensor.spExtra1;
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
     int nWeights = solveCtx.nSumSize[EVWeight];

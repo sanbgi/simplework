@@ -346,6 +346,11 @@ int COpenCLNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     if( STensor::createVector<Q>(spOpSolveBuffer, solveCtx.nSumSize[EVOperator] * nBatchs) != sCtx.success()) {
         return sCtx.error("创建计算缓冲区失败");
     }
+    STensor spOut;
+    SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
+    if( STensor::createTensor<Q>(spOut, spOutDim, spOutDim.dataSize()) != sCtx.success()) {
+        return sCtx.error("创建计算缓冲区失败");
+    }
 
     struct PSolveVector {
         int size;
@@ -466,9 +471,8 @@ int COpenCLNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             }
         }
     }
-
-    SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
-    return CNnResizeTensor::createResizeTensor({spOpSolveBuffer, spOutDim, iOffset, spBatchIn}, spBatchOut);
+    memcpy(spOut.data(), spOpSolveBuffer.data<Q>()+iOffset, spOut.size()*sizeof(Q) );
+    return CNnResizeTensor::createResizeTensor({spOut, spOpSolveBuffer, spBatchIn}, spBatchOut);
 }
 
 int COpenCLNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
@@ -523,7 +527,8 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
 
     PNnResizeTensor sResizeTensor;
     spResizeOut->getResizeData(sResizeTensor);
-    spBatchIn = sResizeTensor.spExtra;
+    STensor spOpTensor = sResizeTensor.spExtra1;
+    spBatchIn = sResizeTensor.spExtra2;
 
     struct PSolveDeviaVector {
         int size;
@@ -532,7 +537,7 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
     };
     vector<PSolveDeviaVector> solveVars(solveCtx.arrVars.size());
     {
-        Q* pItOpVar = sResizeTensor.spSrc.data<Q>();
+        Q* pItOpVar = spOpTensor.data<Q>();
         PSolveDeviaVector* pItVec = solveVars.data();
         PSolveDeviaVector* pOutVar = solveVars.data() + solveCtx.iOutVar;
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
@@ -676,7 +681,7 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
 
     solveCtx.spOptimizer->updateDeviation(nBatchs);
     STensor spWeightDevia = STensor::createVector<Q>(nWeights, pWeightDeviaBuffer);
-    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spBatchInDeviation.dimension(), 0, spWeightDevia}, spBatchInDeviation);
+    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spWeightDevia}, spBatchInDeviation);
 }
 
 int COpenCLNetwork::update(const STensor& spBatchInDeviation) {
@@ -703,7 +708,7 @@ int COpenCLNetwork::updateT(const STensor& spBatchInDeviation) {
 
     PNnResizeTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
-    STensor spWeightDevia = sResizeTensor.spExtra;
+    STensor spWeightDevia = sResizeTensor.spExtra1;
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
     int nWeights = solveCtx.nSumSize[EVWeight];
