@@ -10,6 +10,24 @@ class SDeviceEvent;
 class SMemory;
 
 //
+// 
+//
+struct PKernalKey {
+    //
+    // kernelid指针
+    //
+    int* pKernalId;
+    // 
+    // kernel程序名字，一般为: sw.math.TensorPlus等
+    //
+    const char* szProgramName;
+    //
+    // kernel函数名字，比如：FloatForword
+    //
+    const char* szKernalName;
+};
+
+//
 // 计算设备
 //
 SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
@@ -30,7 +48,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         // 执行运算任务
         //
         virtual int runKernel(
-                        const PRuntimeKey& opKey, 
+                        const PKernalKey& kernelKey, 
                         int nArgs, 
                         PMemory pArgs[], 
                         int nRanges = 0, 

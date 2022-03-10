@@ -12,11 +12,21 @@ class CTensorSolver : public CObject, ITensorSolver {
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public:
-    int solve(const POperator& sOp, int nVars, STensor pVars[]) {
+    int solve(const PTensorOperator& sOp, int nVars, STensor pVars[]) {
         switch(sOp.id) {
-            #define TWO_ONE_ELEWISE(x,y) case POperator::x:{\
-                    static PRuntimeKey sKey(y);\
-                    return solveEleWise_Two_One(sKey, nVars, pVars);\
+            #define TWO_ONE_ELEWISE(x,y) case PTensorOperator::x:{\
+                    switch(nVars>0?pVars[0].type():0) {\
+                    case PDATATYPE_FLOAT:\
+                        {\
+                            static int sKernelId=0;\
+                            return solveEleWise_Two_One({&sKernelId, y, "FloatEval"}, nVars, pVars);\
+                        }\
+                    case PDATATYPE_DOUBLE:\
+                        {\
+                            static int sKernelId=0;\
+                            return solveEleWise_Two_One({&sKernelId, y, "DoubleEval"}, nVars, pVars);\
+                        }\
+                    }\
                 }\
                 break;
             TWO_ONE_ELEWISE(plus,"sw.math.TensorPlus")
@@ -24,32 +34,63 @@ public:
             TWO_ONE_ELEWISE(multiply,"sw.math.TensorMultiply")
             TWO_ONE_ELEWISE(divide,"sw.math.TensorDivide")
 
-            #define ONE_ONE_ELEWISE(x,y) case POperator::x:{\
-                    static PRuntimeKey sKey(y);\
-                    return solveEleWise_One_One(sKey, nVars, pVars);\
+            #define ONE_ONE_ELEWISE(x,y) case PTensorOperator::x:{\
+                    switch(nVars>0?pVars[0].type():0) {\
+                    case PDATATYPE_FLOAT:\
+                        {\
+                            static int sKernelId=0;\
+                            return solveEleWise_One_One({&sKernelId, y, "FloatEval"}, nVars, pVars);\
+                        }\
+                    case PDATATYPE_DOUBLE:\
+                        {\
+                            static int sKernelId=0;\
+                            return solveEleWise_One_One({&sKernelId, y, "DoubleEval"}, nVars, pVars);\
+                        }\
+                    }\
                 }\
                 break;
             ONE_ONE_ELEWISE(square,"sw.math.TensorSquare")
             ONE_ONE_ELEWISE(sqrt,"sw.math.TensorSqrt")
 
-            #define ONE_ONE_TOVALUE(x,y) case POperator::x:{\
-                    static PRuntimeKey sKey(y);\
-                    return solveToValue_One_One(sKey, nVars, pVars);\
+            #define ONE_ONE_TOVALUE(x,y) case PTensorOperator::x:{\
+                    switch(nVars>0?pVars[0].type():0) {\
+                    case PDATATYPE_FLOAT:\
+                        {\
+                            static int sKernelId=0;\
+                            return solveToValue_One_One({&sKernelId, y, "FloatEval"}, nVars, pVars);\
+                        }\
+                    case PDATATYPE_DOUBLE:\
+                        {\
+                            static int sKernelId=0;\
+                            return solveToValue_One_One({&sKernelId, y, "DoubleEval"}, nVars, pVars);\
+                        }\
+                    }\
                 }\
                 break;
             ONE_ONE_TOVALUE(sum,"sw.math.TensorSum")
             ONE_ONE_TOVALUE(avg,"sw.math.TensorAvg")
 
-        case POperator::product:{
-                static PRuntimeKey sKey("sw.math.TensorDivide");
-                return solveEleWise_Two_One(sKey, nVars, pVars);
+        case PTensorOperator::product:
+            {
+                switch(nVars>0?pVars[0].type():0) {
+                    case PDATATYPE_FLOAT:
+                        {
+                            static int sKernelId=0;
+                            return solveEleWise_Two_One({&sKernelId, "sw.math.TensorDivide", "FloatEval"}, nVars, pVars);
+                        }
+                    case PDATATYPE_DOUBLE:
+                        {
+                            static int sKernelId=0;
+                            return solveEleWise_Two_One({&sKernelId, "sw.math.TensorDivide", "DoubleEval"}, nVars, pVars);
+                        }
+                }
             }
             break;
         }
         return sCtx.error("不支持的张量运算");
     }
 
-    int solveEleWise_Two_One(PRuntimeKey& opKey, int nVars, STensor pVars[]) {
+    int solveEleWise_Two_One(const PKernalKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 3) {
             return sCtx.error("双元操作的参数个数错误");
         }
@@ -76,7 +117,7 @@ public:
         return ret;
     }
 
-    int solveEleWise_One_One(PRuntimeKey& opKey, int nVars, STensor pVars[]) {
+    int solveEleWise_One_One(const PKernalKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -95,7 +136,7 @@ public:
         return ret;
     }
 
-    int solveToValue_One_One(PRuntimeKey& opKey, int nVars, STensor pVars[]) {
+    int solveToValue_One_One(const PKernalKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -115,7 +156,7 @@ public:
         return ret;
     }
 
-    int solve(  PRuntimeKey kernelKey,
+    int solve(  PKernalKey kernelKey,
                 PVector kernalRange,
                 PMemory kernalParameter,
                 int nVars, STensor pVars[]) {

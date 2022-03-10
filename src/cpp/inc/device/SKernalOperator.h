@@ -10,6 +10,7 @@ struct PKernalCtx {
     int* pRanges;
     int* pRangeSizes;
 };
+typedef void (*FKernalFunc)(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]);
 
 //
 // 计算内存
@@ -19,9 +20,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(KernalOperator)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.device.IKernalOperator", 220307)
 
         //
-        // 运算
+        // 获取内核函数地址
         //
-        virtual int process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) = 0;
+        virtual FKernalFunc getKernalFunc(const char* szName) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
  

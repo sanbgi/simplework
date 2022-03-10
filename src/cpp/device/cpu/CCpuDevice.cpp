@@ -38,10 +38,10 @@ private://IDevice
         return spSrcMemory->getMemory(sMemory);
     }
 
-    int runKernel(const PRuntimeKey& opKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
-        IKernalOperator* pOp = getOperator(opKey);
-        if(pOp == nullptr) {
-            return sCtx.error((std::string("创建运算对象失败, 名称:") + opKey.runtimeKey).c_str());
+    int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
+        FKernalFunc func = getKernel(kernelKey);
+        if(func == nullptr) {
+            return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.szProgramName).c_str());
         }
 
         #define MAX_RANGE_SIZE 10
@@ -77,7 +77,7 @@ private://IDevice
         int iRangeLayer=0;
         if(nRanges>0) {
             while(iRangeLayer>=0) {
-                pOp->process(&ctx, nArgs, pArgs);
+                func(&ctx,nArgs,pArgs);
                 iRangeLayer = nRanges-1;
                 while(iRangeLayer>=0){
                     pLocalRange[iRangeLayer]++;
@@ -88,25 +88,41 @@ private://IDevice
                 }
             }
         }else{
-            pOp->process(&ctx, nArgs, pArgs);
+            func(&ctx,nArgs,pArgs);
         }
         return sCtx.success();
     }
 
 private:
-    static IKernalOperator* getOperator(const PRuntimeKey& opKey) {
-        static std::map<PID,SKernalOperator> sMapOps;
-        auto it = sMapOps.find(opKey.runtimeId);
-        if( it != sMapOps.end() ) {
-            return it->second.getPtr();
+    static FKernalFunc getKernel(const PKernalKey& kernelKey) {
+        static std::map<PID,FKernalFunc> sMapKernels;
+        static std::map<string,SKernalOperator> sMapOps;
+        if(kernelKey.pKernalId && *kernelKey.pKernalId > 0) {
+            auto it = sMapKernels.find(*kernelKey.pKernalId);
+            if( it != sMapKernels.end() ) {
+                return it->second;
+            }
         }
 
-        SKernalOperator spOp = SObject::createObject(opKey.runtimeKey);
-        if(spOp) {
-            sMapOps[opKey.runtimeId] = spOp;
+        if( kernelKey.szKernalName == nullptr || kernelKey.szProgramName == nullptr) {
+            return nullptr;
         }
 
-        return spOp.getPtr();
+        SKernalOperator spOp = SObject::createObject(kernelKey.szProgramName);
+        if(!spOp) {
+            return nullptr;
+        }
+        FKernalFunc kernelFunc = spOp->getKernalFunc(kernelKey.szKernalName);
+        if(kernelFunc) {
+            string keyName = string(kernelKey.szProgramName)+"."+kernelKey.szKernalName;
+            PRuntimeKey rKey(keyName.c_str());
+            sMapOps[kernelKey.szProgramName] = spOp;
+            sMapKernels[rKey.runtimeId] = kernelFunc;
+            if(kernelKey.pKernalId != nullptr && *kernelKey.pKernalId != rKey.runtimeId) {
+                *kernelKey.pKernalId = rKey.runtimeId;
+            }
+        }
+        return kernelFunc;
     }
 
 public://Factory

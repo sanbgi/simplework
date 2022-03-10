@@ -12,7 +12,6 @@ kernel void eval(
 }
 
 kernel void devia(
-    void* pPatameter,
     int nIn1, global float * pIn, global float * pInDevia,
     int nOut, global float * pOut, global float * pOutDevia)
 {

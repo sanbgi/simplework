@@ -15,7 +15,10 @@ public://Factory
     static const char* __getClassKey() { return "sw.math.TensorSqrt"; }
 
 public://IMathOperator
-    int process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    FKernalFunc getKernalFunc(const char* szName) {
+        return process;
+    }
+    static void process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         struct CKernelWraper {
         public:
             const PKernalCtx* pCtx;
@@ -28,7 +31,6 @@ public://IMathOperator
         sKernel.eval(
                 _KArg(int,0), _KArg(float*,1),
                 _KArg(int,2), _KArg(float*,3));
-        return sCtx.success();
     }
 };
 

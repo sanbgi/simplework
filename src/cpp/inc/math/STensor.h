@@ -102,7 +102,7 @@ public:
     }
 
 public:
-    static int solveOp(const POperator& spOp, int nVars, STensor pVars[]) {
+    static int solveOp(const PTensorOperator& spOp, int nVars, STensor pVars[]) {
         static STensorSolver spOperator = SObject::createObject("sw.math.TensorSolver");
         return spOperator->solve(spOp, nVars, pVars);
     }
@@ -110,17 +110,17 @@ public:
 public:
     STensor avg() {
         STensor pVars[2] = {*this};
-        solveOp({POperator::avg}, 2, pVars);
+        solveOp({PTensorOperator::avg}, 2, pVars);
         return pVars[1];
     }
     STensor sqrt() {
         STensor pVars[2] = {*this};
-        solveOp({POperator::sqrt}, 2, pVars);
+        solveOp({PTensorOperator::sqrt}, 2, pVars);
         return pVars[1];
     }
     STensor square() {
         STensor pVars[2] = {*this};
-        solveOp({POperator::square}, 2, pVars);
+        solveOp({PTensorOperator::square}, 2, pVars);
         return pVars[1];
     }
     STensor rootMeanSquare() {
@@ -131,17 +131,17 @@ public:
     }
     STensor operator + (const STensor& spIn) {
         STensor pVars[3] = {*this, spIn};
-        solveOp({POperator::plus}, 3, pVars);
+        solveOp({PTensorOperator::plus}, 3, pVars);
         return pVars[2];
     }
     STensor operator - (const STensor& spIn) {
         STensor pVars[3] = {*this, spIn};
-        solveOp({POperator::minus}, 3, pVars);
+        solveOp({PTensorOperator::minus}, 3, pVars);
         return pVars[2];
     }
     STensor operator * (const STensor& spIn) {
         STensor pVars[3] = {*this, spIn};
-        solveOp({POperator::multiply}, 3, pVars);
+        solveOp({PTensorOperator::multiply}, 3, pVars);
         return pVars[2];
     }
 

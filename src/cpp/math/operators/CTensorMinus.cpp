@@ -14,7 +14,7 @@ public://Factory
     static const char* __getClassKey() { return "sw.math.TensorMinus"; }
 
 public://IMathOperator
-    int process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         struct CKernelWraper {
         public:
             const PKernalCtx* pCtx;
@@ -28,7 +28,10 @@ public://IMathOperator
                 _KArg(int,0), _KArg(float*,1),
                 _KArg(int,2), _KArg(float*,3),
                 _KArg(int,4), _KArg(float*,5));
-        return sCtx.success();
+    }
+
+    FKernalFunc getKernalFunc(const char* szName) {
+        return process;
     }
 };
 

@@ -16,7 +16,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorHooker, "sw.math.TensorHooker")
         // 内核求解(可以HOOK)
         //
         virtual int onSolve(
-                        PRuntimeKey kernalKey, 
+                        PKernalKey kernalKey, 
                         PVector kernalRange, 
                         PMemory kernalParameter,
                         int nVars, STensor pVars[]) = 0;

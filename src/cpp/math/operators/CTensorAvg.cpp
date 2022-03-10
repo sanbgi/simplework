@@ -25,12 +25,15 @@ public://Kernel
     };
     
 public://IKernalOperator
-    int process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.eval(
                 _KArg(int,0), _KArg(float*,1),
                 _KArg(int,2), _KArg(float*,3));
-        return sCtx.success();
+    }
+
+    FKernalFunc getKernalFunc(const char* szName) {
+        return process;
     }
 };
 

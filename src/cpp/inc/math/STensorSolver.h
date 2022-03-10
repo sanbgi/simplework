@@ -6,7 +6,7 @@
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
 class STensorHooker;
-struct POperator {
+struct PTensorOperator {
     enum {
         plus,
         minus,
@@ -31,14 +31,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         // 解析求解
         //
         virtual int solve(
-                        const POperator& sOp, 
+                        const PTensorOperator& rOp, 
                         int nVars, STensor pVars[]) = 0;
 
         //
         // 内核求解(可以HOOK)
         //
         virtual int solve(
-                        PRuntimeKey kernalKey, 
+                        PKernalKey kernalKey, 
                         PVector kernalRange, 
                         PMemory kernalParameter,
                         int nVars, STensor pVars[]) = 0;
