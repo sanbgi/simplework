@@ -23,16 +23,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(NnFactory, "sw.nn.NnFactory")
         virtual int openIdxFileReader(const char* szFileName, SNnPipe& spPipe) = 0;
 
         //
-        //  归一化张量，将字节数据归一到[0,1]范围
-        //
-        virtual int normalizeTensor(const STensor& spIn, STensor& spOut) = 0;
-
-        //
-        //  分类化张量，将张量中的每一个分类下标，都转化为一个分类向量，新向量对应下标位置为1.0，其它位置为0.0
-        //
-        virtual int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) = 0;
-
-        //
         //  网络序列化
         //
         virtual int saveNetwork(const char* szFileName, const SNnNetwork& spNet) = 0;

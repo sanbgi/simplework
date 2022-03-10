@@ -108,6 +108,26 @@ public:
     }
 
 public:
+    STensor toFloat() {
+        STensor pVars[2] = {*this};
+        solveOp({PTensorOperator::toFloat}, 2, pVars);
+        return pVars[1];
+    }
+    STensor toDouble() {
+        STensor pVars[2] = {*this};
+        solveOp({PTensorOperator::toDouble}, 2, pVars);
+        return pVars[1];
+    }
+    STensor toFloatOneHot(int nClassify) {
+        STensor pVars[2] = {*this};
+        solveOp({PTensorOperator::toFloatOneHot, &nClassify}, 2, pVars);
+        return pVars[1];
+    }
+    STensor toDoubleOneHot(int nClassify) {
+        STensor pVars[2] = {*this};
+        solveOp({PTensorOperator::toDoubleOneHot, &nClassify}, 2, pVars);
+        return pVars[1];
+    }
     STensor avg() {
         STensor pVars[2] = {*this};
         solveOp({PTensorOperator::avg}, 2, pVars);

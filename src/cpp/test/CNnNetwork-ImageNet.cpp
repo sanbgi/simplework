@@ -217,7 +217,6 @@ void CNnNetwork::runImageNet() {
         SAvFactory::getAvFactory()->openAvFrameConverter(frameSample, spFilter);
     }
 
-
     map<int,int> mapClassifies = {
         {764, 0},
         {537, 1},
@@ -308,8 +307,8 @@ void CNnNetwork::runImageNet() {
                     continue;
                 }
 
-                spClassify = SNnNetwork::classifyTensor(s_nClassifies, spClassify);
-                spBatchIn = SNnNetwork::normalizeTensor(spBatchIn);
+                spClassify = spClassify.toFloatOneHot(s_nClassifies);
+                spBatchIn = spBatchIn.toFloat() * STensor::createValue<float>(1.0f/255);
             }
 
             //

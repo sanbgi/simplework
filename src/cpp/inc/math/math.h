@@ -11,6 +11,7 @@
 #include "PVector.h"
 #include "STensor.h"
 #include "STensorHooker.h"
+#include "STensorOperator.h"
 #include "STensorSolver.h"
 
 #include "SDimension.h"

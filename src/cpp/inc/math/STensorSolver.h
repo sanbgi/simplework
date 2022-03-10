@@ -13,12 +13,19 @@ struct PTensorOperator {
         multiply,
         divide,
         product,
+
         square,
         sqrt,
         sum,
         avg,
+
+        toFloat,
+        toDouble,
+        toFloatOneHot,
+        toDoubleOneHot
     }id;
-    const PData* extra;
+
+    void* extra;
 };
 
 //
@@ -30,9 +37,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //
         // 解析求解
         //
-        virtual int solve(
-                        const PTensorOperator& rOp, 
-                        int nVars, STensor pVars[]) = 0;
+        virtual int solve( const PTensorOperator& rOp, int nVars, STensor pVars[]) = 0;
 
         //
         // 内核求解(可以HOOK)

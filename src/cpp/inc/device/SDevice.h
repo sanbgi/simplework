@@ -10,7 +10,7 @@ class SDeviceEvent;
 class SMemory;
 
 //
-// 
+// 内核标识
 //
 struct PKernalKey {
     //
@@ -22,7 +22,7 @@ struct PKernalKey {
     //
     const char* szProgramName;
     //
-    // kernel函数名字，比如：FloatForword
+    // kernel函数名字，比如：floatEval
     //
     const char* szKernalName;
 };

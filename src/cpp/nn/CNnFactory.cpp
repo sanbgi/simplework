@@ -2,7 +2,6 @@
 #include "nn.h"
 #include "CNnNetwork.h"
 #include "CIdxFileReader.h"
-#include "CTensorSolver.h"
 
 using namespace sw;
 
@@ -19,14 +18,6 @@ public:
 
     int openIdxFileReader(const char* szFileName, SNnPipe& spPipe) {
         return CIdxFileReader::createReader(szFileName, spPipe);
-    }
-
-    int normalizeTensor(const STensor& spIn, STensor& spOut) {
-        return CTensorSolver::normalize(spIn, spOut);
-    }
-
-    int classifyTensor(int nClassify, const STensor& spIn, STensor& spOut) {
-        return CTensorSolver::classify(nClassify, spIn, spOut);
     }
 
     int saveNetwork(const char* szFileName, const SNnNetwork& spNet) {

@@ -72,18 +72,6 @@ public:
         return SObject::createObject("sw.nn.CompositeNetwork", CData<PNnCompositeNetwork>(rData));
     }
 
-    static STensor normalizeTensor(const STensor& spIn) {
-        STensor spOut;
-        SNnFactory::getFactory()->normalizeTensor(spIn, spOut);
-        return spOut;
-    }
-
-    static STensor classifyTensor(int nClassify, const STensor& spIn) {
-        STensor spOut;
-        SNnFactory::getFactory()->classifyTensor(nClassify, spIn, spOut);
-        return spOut;
-    }
-
     static int saveFile(const char* szFileName, const SNnNetwork& spNet) {
         return SNnFactory::getFactory()->saveNetwork(szFileName, spNet);
     }

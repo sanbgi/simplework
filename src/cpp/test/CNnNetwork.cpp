@@ -47,12 +47,12 @@ void CNnNetwork::runLearn() {
             // 
             // 分类信息
             //
-            STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
-
+            //STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
+            STensor spClassify = spBatchLabel.toFloatOneHot(10);
             //
             // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
             //
-            STensor spIn = SNnNetwork::normalizeTensor(spBatchImage);
+            STensor spIn = spBatchImage.toFloat() * STensor::createValue<float>(1.0f/255);
 
             //
             // 神经网络求解
@@ -139,12 +139,13 @@ void CNnNetwork::runTest() {
         // 
         // 分类信息
         //
-        STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
+        //STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
+        STensor spClassify = spBatchLabel.toFloatOneHot(10);
 
         //
         // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
         //
-        STensor spIn = SNnNetwork::normalizeTensor(spBatchImage);
+        STensor spIn = spBatchImage.toFloat() * STensor::createValue<float>(1.0f/255);
 
         //
         // 神经网络求解
