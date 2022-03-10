@@ -78,7 +78,7 @@ public:
         PVector deviceMemory = { 0, nullptr };
         IFace* pFace = getPtr();
         if(pFace != nullptr) {
-            pFace->getDataInDevice(SDevice::cpu(), deviceMemory); 
+            pFace->getDataInDevice(spDevice, deviceMemory); 
         }
         return deviceMemory.data;
     }
@@ -87,7 +87,7 @@ public:
         PVector deviceMemory = { 0, nullptr };
         IFace* pFace = getPtr();
         if(pFace != nullptr) {
-            pFace->getDataInDevice(SDevice::cpu(), deviceMemory); 
+            pFace->getDataInDevice(spDevice, deviceMemory); 
         }
         return (Q*)deviceMemory.data;
     }

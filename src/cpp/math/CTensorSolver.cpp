@@ -14,7 +14,6 @@ class CTensorSolver : public CObject, ITensorSolver {
 public:
     int solve(const POperator& sOp, int nVars, STensor pVars[]) {
         switch(sOp.id) {
-
             #define TWO_ONE_ELEWISE(x,y) case POperator::x:{\
                     static PRuntimeKey sKey(y);\
                     return solveEleWise_Two_One(sKey, nVars, pVars);\

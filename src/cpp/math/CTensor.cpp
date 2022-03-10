@@ -151,14 +151,6 @@ SDimension& CTensor::getDimVector() {
     return m_spDimVector;
 }
 
-int CTensor::getVer() {
-    return m_nVer;
-}
-
-int CTensor::updateVer() {
-    return ++m_nVer;
-}
-
 int CTensor::getDimension(SDimension& spDim) {
     spDim = getDimVector();
     return sCtx.success();
@@ -183,7 +175,6 @@ int CTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
 }
 
 CTensor::CTensor() {
-    m_nVer = 0;
     m_nElementSize = 0;
 }
 
@@ -210,7 +201,6 @@ int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, PDATA
 
 int CTensor::toArchive(const SArchive& ar) {
     CTypeAssist::archiveAssist(&m_pTypeAssist, ar);
-    ar.arBlock("ver", m_nVer);
     ar.arBlock("size", m_nElementSize);
     ar.arObject("data", m_spMemory);
     ar.arObject("dimension", m_spDimVector);

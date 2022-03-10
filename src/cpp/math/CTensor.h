@@ -32,8 +32,6 @@ public://ITensor
     SDimension& getDimVector();
 
 public://ITensor
-    int getVer();
-    int updateVer();
     int getDimension(SDimension& spDim);
     PDATATYPE getDataType();
     int getDataSize();
@@ -47,9 +45,7 @@ public:
 
 protected:
     CTypeAssist* m_pTypeAssist;
-    int m_nVer;
     int m_nElementSize;
-    //CTaker<void*> m_spElementData;
     SMemory m_spMemory;
     SDimension m_spDimVector;
 };
