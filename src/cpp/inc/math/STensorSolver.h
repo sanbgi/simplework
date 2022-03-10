@@ -49,9 +49,15 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         virtual int pushHooker(const STensorHooker& spHooker) = 0;
 
         //
+        // 获取钩子
+        //
+        virtual int getHooker(STensorHooker& spHooker) = 0;
+
+        //
         // 取消钩子
         //
         virtual int popHooker() = 0;
+
 
     SIMPLEWORK_INTERFACE_LEAVE
 

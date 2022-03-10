@@ -120,8 +120,9 @@ public:
                 PMemory kernalParameter,
                 int nVars, STensor pVars[]) {
 
+        //钩子机制
         if( m_arrHookers.size() ) {
-            if( (*m_arrHookers.rbegin())->solve(kernelKey,kernalRange,kernalParameter,nVars,pVars) == sCtx.success() ) {
+            if( (*m_arrHookers.rbegin())->onSolve(kernelKey,kernalRange,kernalParameter,nVars,pVars) == sCtx.success() ) {
                 return sCtx.success();
             }
         }
@@ -161,6 +162,14 @@ public:
             m_arrHookers.push_back(spHooker);
         }
         return sCtx.success();
+    }
+
+    int getHooker(STensorHooker& spHooker) {
+        if(m_arrHookers.size() > 0){
+            spHooker = *m_arrHookers.rbegin();
+            return sCtx.success();
+        }
+        return sCtx.error();
     }
         
     int popHooker(){
