@@ -84,12 +84,7 @@ public:
     }
 
     template<typename Q> Q* data(const SDevice& spDevice=SDevice::cpu()) const{
-        PVector deviceMemory = { 0, nullptr };
-        IFace* pFace = getPtr();
-        if(pFace != nullptr) {
-            pFace->getDataInDevice(spDevice, deviceMemory); 
-        }
-        return (Q*)deviceMemory.data;
+        return (Q*)data(spDevice);
     }
 
     SDimension dimension() const {

@@ -119,16 +119,24 @@ public:
                 PVector kernalRange,
                 PMemory kernalParameter,
                 int nVars, STensor pVars[]) {
+
+        if( m_arrHookers.size() ) {
+            if( (*m_arrHookers.rbegin())->solve(kernelKey,kernalRange,kernalParameter,nVars,pVars) == sCtx.success() ) {
+                return sCtx.success();
+            }
+        }
+
         #define __MAX_VARS 8
         if(nVars>__MAX_VARS) {
             return sCtx.error("超过最大求解变量数值");
         }
 
+        SDevice device = SDevice::defaultDevice();
+
         int nArgs = nVars*2;
         PVector pData[__MAX_VARS];
         PMemory pArgs[__MAX_VARS*2];
         PMemory* pMemory = pArgs;
-        SDevice device = SDevice::defaultDevice();
         for(int i=0; i<nVars; i++, pMemory+=2) {
             if( pVars[i]->getDataInDevice(device, pData[i]) != sCtx.success() ) {
                 return sCtx.error("读取张量数据错误");
@@ -138,8 +146,33 @@ public:
             pMemory[1].size = sizeof(void*);
             pMemory[1].data = &pData[i].pIntArray;
         }
-        return device->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray);
+
+        //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
+        SDeviceEvent sEvent;
+        int ret = device->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        if(sEvent) {
+            sEvent->wait();
+        }
+        return ret;
     }
+
+    int pushHooker(const STensorHooker& spHooker){
+        if(spHooker){
+            m_arrHookers.push_back(spHooker);
+        }
+        return sCtx.success();
+    }
+        
+    int popHooker(){
+        if(m_arrHookers.size() > 0){
+            m_arrHookers.pop_back();
+            return sCtx.success();
+        }
+        return sCtx.error();
+    }
+
+private:
+    std::vector<STensorHooker> m_arrHookers;
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSolver, STensorSolver::__getClassKey())

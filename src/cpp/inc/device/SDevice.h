@@ -29,7 +29,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         //
         // 执行运算任务
         //
-        virtual int runKernel(const PRuntimeKey& opKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) = 0;
+        virtual int runKernel(
+                        const PRuntimeKey& opKey, 
+                        int nArgs, 
+                        PMemory pArgs[], 
+                        int nRanges = 0, 
+                        int pRanges[]=nullptr, 
+                        SDeviceEvent* pEvent=nullptr) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

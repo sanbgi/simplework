@@ -2,10 +2,10 @@
 #define __SimpleWork_STensorSolver_h__
 
 #include "math.h"
-#include "SMathFactory.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
+class STensorHooker;
 struct POperator {
     enum {
         plus,
@@ -42,6 +42,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
                         PVector kernalRange, 
                         PMemory kernalParameter,
                         int nVars, STensor pVars[]) = 0;
+
+        //
+        // 设置钩子，只有最后一个钩子有效
+        //
+        virtual int pushHooker(const STensorHooker& spHooker) = 0;
+
+        //
+        // 取消钩子
+        //
+        virtual int popHooker() = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
