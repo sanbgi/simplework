@@ -28,16 +28,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
 
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.ITensorSolver", 220309)
         //
-        // 求解
-        //
-        virtual int solve(const POperator& sOp, int nVars, STensor pVars[]) = 0;
-
-        //
-        // 求解
+        // 解析求解
         //
         virtual int solve(
-                        PRuntimeKey opKernalKey, PVector evalKernalRange, PVector deviaKernalRange,
-                        int nArgs, PMemory pArgs[], 
+                        const POperator& sOp, 
+                        int nVars, STensor pVars[]) = 0;
+
+        //
+        // 内核求解(可以HOOK)
+        //
+        virtual int solve(
+                        PRuntimeKey kernalKey, 
+                        PVector kernalRange, 
+                        PMemory kernalParameter,
                         int nVars, STensor pVars[]) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE

@@ -1,17 +1,17 @@
 
-#include "kernel.h"
+#include "operator.h"
 
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-static SCtx sCtx("CTensorSquareFloatKernel");
-class CTensorSquareFloatKernel : public CObject, IKernalOperator {
+static SCtx sCtx("CTensorSquare");
+class CTensorSquare : public CObject, IKernalOperator {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IKernalOperator)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://Factory
-    static const char* __getClassKey() { return "sw.math.TensorSquareFloatKernel"; }
+    static const char* __getClassKey() { return "sw.math.TensorSquare"; }
 
 public://IMathOperator
     int process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
@@ -22,7 +22,7 @@ public://IMathOperator
                 return pCtx->pRanges[i];
             }
 
-#include "CTensorSquareFloatKernel.cl"
+#include "TensorSquare.cl"
         }sKernel = {pCtx};
         sKernel.eval(
                 _KArg(int,0), _KArg(float*,1),
@@ -31,4 +31,4 @@ public://IMathOperator
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSquareFloatKernel, CTensorSquareFloatKernel::__getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CTensorSquare, CTensorSquare::__getClassKey())

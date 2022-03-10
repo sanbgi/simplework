@@ -101,8 +101,7 @@ private:
             return it->second.getPtr();
         }
 
-        string classKey = string(opKey.runtimeKey) + "Kernel";
-        SKernalOperator spOp = SObject::createObject(classKey.c_str());
+        SKernalOperator spOp = SObject::createObject(opKey.runtimeKey);
         if(spOp) {
             sMapOps[opKey.runtimeId] = spOp;
         }

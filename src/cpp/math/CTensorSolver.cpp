@@ -2,7 +2,6 @@
 #include <map>
 #include <vector>
 #include "CTensor.h"
-#include "CRuntimeKey.hpp"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -14,12 +13,10 @@ class CTensorSolver : public CObject, ITensorSolver {
 
 public:
     int solve(const POperator& sOp, int nVars, STensor pVars[]) {
-
-
         switch(sOp.id) {
 
             #define TWO_ONE_ELEWISE(x,y) case POperator::x:{\
-                    static CRuntimeKey sKey(y);\
+                    static PRuntimeKey sKey(y);\
                     return solveEleWise_Two_One(sKey, nVars, pVars);\
                 }\
                 break;
@@ -29,7 +26,7 @@ public:
             TWO_ONE_ELEWISE(divide,"sw.math.TensorDivide")
 
             #define ONE_ONE_ELEWISE(x,y) case POperator::x:{\
-                    static CRuntimeKey sKey(y);\
+                    static PRuntimeKey sKey(y);\
                     return solveEleWise_One_One(sKey, nVars, pVars);\
                 }\
                 break;
@@ -37,7 +34,7 @@ public:
             ONE_ONE_ELEWISE(sqrt,"sw.math.TensorSqrt")
 
             #define ONE_ONE_TOVALUE(x,y) case POperator::x:{\
-                    static CRuntimeKey sKey(y);\
+                    static PRuntimeKey sKey(y);\
                     return solveToValue_One_One(sKey, nVars, pVars);\
                 }\
                 break;
@@ -45,7 +42,7 @@ public:
             ONE_ONE_TOVALUE(avg,"sw.math.TensorAvg")
 
         case POperator::product:{
-                static CRuntimeKey sKey("sw.math.TensorDivide");
+                static PRuntimeKey sKey("sw.math.TensorDivide");
                 return solveEleWise_Two_One(sKey, nVars, pVars);
             }
             break;
@@ -53,7 +50,7 @@ public:
         return sCtx.error("不支持的张量运算");
     }
 
-    int solveEleWise_Two_One(CRuntimeKey& opKey, int nVars, STensor pVars[]) {
+    int solveEleWise_Two_One(PRuntimeKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 3) {
             return sCtx.error("双元操作的参数个数错误");
         }
@@ -73,20 +70,14 @@ public:
             return sCtx.error("创建张量失败");
         }
 
-        if( opKey.m_sRuntimeKey.runtimeKey == 0) {
-            if( !opKey.updateRumtimeKey(type1) ) {
-                return sCtx.error("不支持的数据类型");
-            }
-        }
-
-        int ret = solve(opKey.m_sRuntimeKey, {1, &nSizeIn}, {1, &nSizeIn}, 0, nullptr, 3, pVars);
+        int ret = solve(opKey, {1, &nSizeIn}, {0}, 3, pVars);
         if(ret != sCtx.success()) {
             pVars[2].release();
         }
         return ret;
     }
 
-    int solveEleWise_One_One(CRuntimeKey& opKey, int nVars, STensor pVars[]) {
+    int solveEleWise_One_One(PRuntimeKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -98,20 +89,14 @@ public:
             return sCtx.error("创建张量失败");
         }
 
-        if( opKey.m_sRuntimeKey.runtimeKey == 0) {
-            if( !opKey.updateRumtimeKey(type) ) {
-                return sCtx.error("不支持的数据类型");
-            }
-        }
-
-        int ret = solve(opKey.m_sRuntimeKey, {1, &nSizeIn}, {1, &nSizeIn}, 0, nullptr, 2, pVars);
+        int ret = solve(opKey, {1, &nSizeIn}, {0}, 2, pVars);
         if(ret != sCtx.success()) {
             pVars[1].release();
         }
         return ret;
     }
 
-    int solveToValue_One_One(CRuntimeKey& opKey, int nVars, STensor pVars[]) {
+    int solveToValue_One_One(PRuntimeKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -123,45 +108,38 @@ public:
             return sCtx.error("创建张量失败");
         }
 
-        if( opKey.m_sRuntimeKey.runtimeKey == 0) {
-            if( !opKey.updateRumtimeKey(type) ) {
-                return sCtx.error("不支持的数据类型");
-            }
-        }
-
         int nRange = 0;
-        int ret = solve(opKey.m_sRuntimeKey, {0, &nSizeIn}, {0, &nSizeIn}, 0, nullptr, 2, pVars);
+        int ret = solve(opKey, {0, &nSizeIn}, {0}, 2, pVars);
         if(ret != sCtx.success()) {
             pVars[1].release();
         }
         return ret;
     }
-    
-    int solve(  PRuntimeKey opKernalKey, PVector evalKernalRange, PVector deviaKernalRange,
-                int nArgs, PMemory pArgs[], 
-                int nVars, STensor pVars[]) {
-        std::vector<PMemory> arrArgs(nArgs+nVars*2);
-        PMemory* pMemory = arrArgs.data();
-        for(int i=0; i<nArgs; i++, pMemory++) {
-            *pMemory = pArgs[i];
-        }
 
+    int solve(  PRuntimeKey kernelKey,
+                PVector kernalRange,
+                PMemory kernalParameter,
+                int nVars, STensor pVars[]) {
         #define __MAX_VARS 8
         if(nVars>__MAX_VARS) {
             return sCtx.error("超过最大求解变量数值");
         }
-        PVector pVec[__MAX_VARS];
+
+        int nArgs = nVars*2;
+        PVector pData[__MAX_VARS];
+        PMemory pArgs[__MAX_VARS*2];
+        PMemory* pMemory = pArgs;
         SDevice device = SDevice::defaultDevice();
         for(int i=0; i<nVars; i++, pMemory+=2) {
-            if( pVars[i]->getDataInDevice(device, pVec[i]) != sCtx.success() ) {
+            if( pVars[i]->getDataInDevice(device, pData[i]) != sCtx.success() ) {
                 return sCtx.error("读取张量数据错误");
             }
             pMemory[0].size = sizeof(int);
-            pMemory[0].pIntArray = &pVec[i].size;
+            pMemory[0].pIntArray = &pData[i].size;
             pMemory[1].size = sizeof(void*);
-            pMemory[1].data = &pVec[i].pIntArray;
+            pMemory[1].data = &pData[i].pIntArray;
         }
-        return device->runKernel(opKernalKey, nArgs+nVars*2, arrArgs.data(), evalKernalRange.size, evalKernalRange.pIntArray);
+        return device->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray);
     }
 };
 
