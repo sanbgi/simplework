@@ -15,10 +15,13 @@ public://Factory
 
 public://IMathOperator
     FKernalFunc getKernalFunc(const char* szName) {
-        return process;
+        if(szName != nullptr) {
+            if( strcmp(szName, "floatEval") == 0 ) return floatEval;
+        }
+        return nullptr;
     }
 
-    static void process(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         struct CKernelWraper {
         public:
             const PKernalCtx* pCtx;
@@ -28,7 +31,7 @@ public://IMathOperator
 
 #include "TensorPlus.cl"
         }sKernel = {pCtx};
-        sKernel.eval(
+        sKernel.floatEval(
                 _KArg(int,0), _KArg(float*,1),
                 _KArg(int,2), _KArg(float*,3),
                 _KArg(int,4), _KArg(float*,5));

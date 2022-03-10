@@ -1,5 +1,5 @@
 
-kernel void eval(
+kernel void floatEval(
     int nIn, global float * pIn,
     int nOut, global float * pOut)
 {
@@ -11,7 +11,7 @@ kernel void eval(
     pOut[0] = sum / nIn;
 }
 
-kernel void devia(
+kernel void floatDevia(
     int nIn1, global float * pIn, global float * pInDevia,
     int nOut, global float * pOut, global float * pOutDevia)
 {

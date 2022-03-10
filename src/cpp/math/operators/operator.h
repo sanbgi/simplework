@@ -4,13 +4,6 @@
 #include "../math.h"
 #include <string>
 
-class CKernelArgs {
-public:
-    template<typename Q> static Q& getArg(PMemory &sMemory) {
-        return *(Q*)sMemory.data;
-    }
-};
-
 #define _KArg(tp,id) *(tp*)pArgs[id].data
 #define global
 #define __global

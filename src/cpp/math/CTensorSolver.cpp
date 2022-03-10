@@ -19,12 +19,12 @@ public:
                     case PDATATYPE_FLOAT:\
                         {\
                             static int sKernelId=0;\
-                            return solveEleWise_Two_One({&sKernelId, y, "FloatEval"}, nVars, pVars);\
+                            return solveEleWise_Two_One({&sKernelId, y, "floatEval"}, nVars, pVars);\
                         }\
                     case PDATATYPE_DOUBLE:\
                         {\
                             static int sKernelId=0;\
-                            return solveEleWise_Two_One({&sKernelId, y, "DoubleEval"}, nVars, pVars);\
+                            return solveEleWise_Two_One({&sKernelId, y, "doubleEval"}, nVars, pVars);\
                         }\
                     }\
                 }\
@@ -39,12 +39,12 @@ public:
                     case PDATATYPE_FLOAT:\
                         {\
                             static int sKernelId=0;\
-                            return solveEleWise_One_One({&sKernelId, y, "FloatEval"}, nVars, pVars);\
+                            return solveEleWise_One_One({&sKernelId, y, "floatEval"}, nVars, pVars);\
                         }\
                     case PDATATYPE_DOUBLE:\
                         {\
                             static int sKernelId=0;\
-                            return solveEleWise_One_One({&sKernelId, y, "DoubleEval"}, nVars, pVars);\
+                            return solveEleWise_One_One({&sKernelId, y, "doubleEval"}, nVars, pVars);\
                         }\
                     }\
                 }\
@@ -57,12 +57,12 @@ public:
                     case PDATATYPE_FLOAT:\
                         {\
                             static int sKernelId=0;\
-                            return solveToValue_One_One({&sKernelId, y, "FloatEval"}, nVars, pVars);\
+                            return solveToValue_One_One({&sKernelId, y, "floatEval"}, nVars, pVars);\
                         }\
                     case PDATATYPE_DOUBLE:\
                         {\
                             static int sKernelId=0;\
-                            return solveToValue_One_One({&sKernelId, y, "DoubleEval"}, nVars, pVars);\
+                            return solveToValue_One_One({&sKernelId, y, "doubleEval"}, nVars, pVars);\
                         }\
                     }\
                 }\
@@ -76,12 +76,12 @@ public:
                     case PDATATYPE_FLOAT:
                         {
                             static int sKernelId=0;
-                            return solveEleWise_Two_One({&sKernelId, "sw.math.TensorDivide", "FloatEval"}, nVars, pVars);
+                            return solveEleWise_Two_One({&sKernelId, "sw.math.TensorDivide", "floatEval"}, nVars, pVars);
                         }
                     case PDATATYPE_DOUBLE:
                         {
                             static int sKernelId=0;
-                            return solveEleWise_Two_One({&sKernelId, "sw.math.TensorDivide", "DoubleEval"}, nVars, pVars);
+                            return solveEleWise_Two_One({&sKernelId, "sw.math.TensorDivide", "doubleEval"}, nVars, pVars);
                         }
                 }
             }
