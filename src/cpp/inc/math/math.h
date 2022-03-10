@@ -9,6 +9,7 @@
 #define SIMPLEWORK_MATH_NAMESPACE_LEAVE }
 
 #include "PVector.h"
+#include "POneHot.h"
 #include "STensor.h"
 #include "STensorHooker.h"
 #include "STensorOperator.h"

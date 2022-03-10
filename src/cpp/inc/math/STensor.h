@@ -4,6 +4,7 @@
 #include "SMathFactory.h"
 #include "SDimension.h"
 #include "STensorSolver.h"
+#include "STensorOperator.h"
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -67,7 +68,6 @@ public:
         return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
 
-
 public:
     int size() const{
         IFace* pFace = getPtr();
@@ -102,46 +102,38 @@ public:
     }
 
 public:
-    static int solveOp(const PTensorOperator& spOp, int nVars, STensor pVars[]) {
+    static STensor& solveOp(const PTensorOperator& spOp, int nVars, STensor pVars[]) {
         static STensorSolver spOperator = SObject::createObject("sw.math.TensorSolver");
-        return spOperator->solve(spOp, nVars, pVars);
+        spOperator->solve(spOp, nVars, pVars);
+        return pVars[nVars-1];
     }
 
 public:
     STensor toFloat() {
         STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::toFloat}, 2, pVars);
-        return pVars[1];
+        return solveOp({PTensorOperator::toFloat}, 2, pVars);
     }
     STensor toDouble() {
         STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::toDouble}, 2, pVars);
-        return pVars[1];
+        return solveOp({PTensorOperator::toDouble}, 2, pVars);
     }
-    STensor toFloatOneHot(int nClassify) {
+    STensor oneHot(int nClassify, PDATATYPE toType) {
+        static STensorOperator spOperator = SObject::createObject("sw.math.TensorOneHot");
         STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::toFloatOneHot, &nClassify}, 2, pVars);
-        return pVars[1];
-    }
-    STensor toDoubleOneHot(int nClassify) {
-        STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::toDoubleOneHot, &nClassify}, 2, pVars);
+        spOperator->solve(CData<POneHot>({nClassify, toType}), 2, pVars);
         return pVars[1];
     }
     STensor avg() {
         STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::avg}, 2, pVars);
-        return pVars[1];
+        return solveOp({PTensorOperator::avg}, 2, pVars);
     }
     STensor sqrt() {
         STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::sqrt}, 2, pVars);
-        return pVars[1];
+        return solveOp({PTensorOperator::sqrt}, 2, pVars);
     }
     STensor square() {
         STensor pVars[2] = {*this};
-        solveOp({PTensorOperator::square}, 2, pVars);
-        return pVars[1];
+        return solveOp({PTensorOperator::square}, 2, pVars);
     }
     STensor rootMeanSquare() {
         return square().avg().sqrt();
@@ -151,18 +143,15 @@ public:
     }
     STensor operator + (const STensor& spIn) {
         STensor pVars[3] = {*this, spIn};
-        solveOp({PTensorOperator::plus}, 3, pVars);
-        return pVars[2];
+        return solveOp({PTensorOperator::plus}, 3, pVars);
     }
     STensor operator - (const STensor& spIn) {
         STensor pVars[3] = {*this, spIn};
-        solveOp({PTensorOperator::minus}, 3, pVars);
-        return pVars[2];
+        return solveOp({PTensorOperator::minus}, 3, pVars);
     }
     STensor operator * (const STensor& spIn) {
         STensor pVars[3] = {*this, spIn};
-        solveOp({PTensorOperator::multiply}, 3, pVars);
-        return pVars[2];
+        return solveOp({PTensorOperator::multiply}, 3, pVars);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Tensor)

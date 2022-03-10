@@ -86,10 +86,6 @@ public:
                 static int sKernelId=0;
                 return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uctodEval"}, nVars, pVars, PDATATYPE_DOUBLE);
             }
-
-        case PTensorOperator::toFloatOneHot:
-        case PTensorOperator::toDoubleOneHot:
-            return solveOneHot(sOp,nVars,pVars);
         }
 
         return sCtx.error("不支持的张量运算");
@@ -183,54 +179,6 @@ public:
         return ret;
     }
     
-    int solveOneHot(const PTensorOperator& sOp, int nVars, STensor pVars[]) {
-        if(nVars != 2) {
-            return sCtx.error("单元操作的参数个数错误");
-        }
-
-        int nClassify = (sOp.extra!=nullptr)?*(int*)sOp.extra:0;
-        if(nClassify > 1000000 || nClassify <= 0) {
-            return sCtx.error("分类数不合法，无法生成OneHot张量");
-        }
-
-        STensor spIn = pVars[0];
-        PDATATYPE type = spIn.type();
-        if(type != PDATATYPE_UCHAR && type != PDATATYPE_INT) {
-            return sCtx.error("OneHot张量只支持整数类型");
-        }
-
-        int ret = sCtx.error();
-        int nSizeOut = spIn.size()*nClassify;
-        if( sOp.id == PTensorOperator::toFloatOneHot) {
-            if( STensor::createTensor<float>(pVars[1], spIn.dimension().upLowDimension(nClassify), nSizeOut) != sCtx.success() ) {
-                return sCtx.error("创建张量失败");
-            }
-            if( type == PDATATYPE_UCHAR ) {
-                static int s_kernelId = 0;
-                ret = solve({&s_kernelId, "sw.math.TensorOneHot", "uctofEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
-            }else{
-                static int s_kernelId = 0;
-                ret = solve({&s_kernelId, "sw.math.TensorOneHot", "itofEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
-            }
-        }else if( sOp.id == PTensorOperator::toDoubleOneHot) {
-            if( STensor::createTensor<double>(pVars[1], spIn.dimension().upLowDimension(nClassify), nSizeOut) != sCtx.success() ) {
-                return sCtx.error("创建张量失败");
-            }
-            if( type == PDATATYPE_UCHAR ) {
-                static int s_kernelId = 0;
-                ret = solve({&s_kernelId, "sw.math.TensorOneHot", "uctodEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
-            }else{
-                static int s_kernelId = 0;
-                ret = solve({&s_kernelId, "sw.math.TensorOneHot", "itodEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
-            }
-        }
-
-        if(ret != sCtx.success()) {
-            pVars[1].release();
-        }
-        return ret;
-    }
-
     int solve(  PKernalKey kernelKey,
                 PVector kernalRange,
                 PMemory kernalParameter,
@@ -249,11 +197,9 @@ public:
         }
 
         SDevice device = SDevice::defaultDevice();
-
         int nArgs = nVars*2;
         PVector pData[__MAX_VARS];
         PMemory pArgs[__MAX_VARS*2+1];
-
         PMemory* pMemory = pArgs;
         if(kernalParameter.size>0) {
             nArgs += 1;

@@ -307,7 +307,7 @@ void CNnNetwork::runImageNet() {
                     continue;
                 }
 
-                spClassify = spClassify.toFloatOneHot(s_nClassifies);
+                spClassify = spClassify.oneHot(s_nClassifies, PDATATYPE_FLOAT);
                 spBatchIn = spBatchIn.toFloat() * STensor::createValue<float>(1.0f/255);
             }
 

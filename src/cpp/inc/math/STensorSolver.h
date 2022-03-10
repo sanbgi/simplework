@@ -21,11 +21,7 @@ struct PTensorOperator {
 
         toFloat,
         toDouble,
-        toFloatOneHot,
-        toDoubleOneHot
     }id;
-
-    void* extra;
 };
 
 //

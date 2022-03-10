@@ -48,7 +48,7 @@ void CNnNetwork::runLearn() {
             // 分类信息
             //
             //STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
-            STensor spClassify = spBatchLabel.toFloatOneHot(10);
+            STensor spClassify = spBatchLabel.oneHot(10, PDATATYPE_FLOAT);
             //
             // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
             //
@@ -140,7 +140,7 @@ void CNnNetwork::runTest() {
         // 分类信息
         //
         //STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
-        STensor spClassify = spBatchLabel.toFloatOneHot(10);
+        STensor spClassify = spBatchLabel.oneHot(10,PDATATYPE_FLOAT);
 
         //
         // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
