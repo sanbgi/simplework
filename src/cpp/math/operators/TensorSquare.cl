@@ -9,6 +9,6 @@ kernel void eval(
 
 kernel void devia(
     int nIn1, global float * pIn, global float * pInDevia,
-    int nOut, global float * pOutDevia)
+    int nOut, global float * pOut, global float * pOutDevia)
 {
 }
