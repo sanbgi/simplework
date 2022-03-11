@@ -22,7 +22,7 @@ public://Factory
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVWeight; }
-    void* getData(PDATATYPE idType);
+    STensor getData(PDATATYPE idType);
     int getDimension(SDimension& spDimension) {
         spDimension = m_spDimension;
         return sCtx.success();
@@ -50,7 +50,7 @@ int CNnWeightVariable::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-void* CNnWeightVariable::getData(PDATATYPE idType) {
+STensor CNnWeightVariable::getData(PDATATYPE idType) {
     if(!m_spData) {
         int nDims = m_spDimension.size();
         const int* pDimSize = m_spDimension.data();
@@ -61,7 +61,7 @@ void* CNnWeightVariable::getData(PDATATYPE idType) {
         }
 
         if(STensor::createTensor(m_spData, m_spDimension, idType, nData) != sCtx.success()) {
-            return nullptr;
+            return STensor();
         }
 
         void* pData = m_spData.data();
@@ -72,7 +72,7 @@ void* CNnWeightVariable::getData(PDATATYPE idType) {
             initWeightT<double>(nData, pData);
         }
     }
-    return m_spData.data();
+    return m_spData;
 }
 
 template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWeights) {

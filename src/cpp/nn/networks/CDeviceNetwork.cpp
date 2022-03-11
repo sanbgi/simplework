@@ -57,7 +57,8 @@ private:
         struct PSolveVar {
             ENnVariableType type;//ENnVariableType
             int size;
-            void* data; //存储状态及权重值的指针
+            STensor data;
+            //void* data; //存储状态及权重值的指针
         };
 
         // 计算指令
@@ -78,10 +79,6 @@ private:
         int iInVar;
         int iOutVar;
         int nSumSize[EVMax];
-        int nMaxParameterSize;
-    
-        int nInputTensorSize;
-        int nOutputTensorSize;
         SOptimizer spOptimizer;
     };
     CTaker<PSolveGraphInfos*> m_spSolveGraphInfos;
@@ -168,10 +165,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
     SDimension spOutDimension = m_sSolveGraph.arrVars[m_sSolveGraph.iOutVar].dimension();
     solveCtx.iInVar = m_sSolveGraph.iInVar;
     solveCtx.iOutVar = m_sSolveGraph.iOutVar;
-    solveCtx.nMaxParameterSize = nMaxParameterSize;
     solveCtx.idType = idType;
-    solveCtx.nInputTensorSize = spInDimension.dataSize();
-    solveCtx.nOutputTensorSize = spOutDimension.dataSize();
     solveCtx.spInDimension = spInDimension;
     solveCtx.spOutDimension = spOutDimension;
     m_spSolveGraphInfos.take(taker);
@@ -200,7 +194,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     SDimension spInDimension = spBatchIn.dimension();
     int nBatchs = *spInDimension.data();
     int nInputSize = spInDimension.dataSize();
-    if(nInputSize != nBatchs * solveCtx.nInputTensorSize) {
+    if(nInputSize != nBatchs * solveCtx.spInDimension.dataSize()) {
         return sCtx.error("输入张量尺寸和网络需要的尺寸不匹配");
     }
     
@@ -241,8 +235,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             case ENnVariableType::EVState:
             case ENnVariableType::EVWeight:
                 pItVec->size = pItVar->size;
-                pItVec->buffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), pItVar->data});
-                pItVec->data = pItVec->buffer.data(spDevice);
+                pItVec->data = pItVar->data.data(spDevice);
                 break;
             }
         }
@@ -363,8 +356,8 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
 
     SDimension spBatchOutDimension = spBatchOut.dimension();
     int nBatchs = *spBatchOutDimension.data();
-    int nOutputSize = spBatchOutDimension.dataSize();
-    if(nOutputSize != nBatchs * solveCtx.nOutputTensorSize) {
+    int nOutputSize = spBatchOut.size();
+    if(nOutputSize != nBatchs * solveCtx.spOutDimension.dataSize()) {
         return sCtx.error("输出张量尺寸和网络需要的尺寸不匹配");
     }
 
@@ -432,8 +425,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
                     pItVec->size = pItVar->size;
                     pItVec->deviaBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), nullptr});
                     zeroBuffer(spDevice,pItVec->deviaBuffer);
-                    pItVec->dataBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), pItVar->data});
-                    pItVec->data = pItVec->dataBuffer.data(spDevice);
+                    pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
                 }
                 break;
@@ -443,8 +435,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
                     pItVec->size = pItVar->size;
                     pItVec->deviaBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), nullptr});
                     zeroBuffer(spDevice,pItVec->deviaBuffer);
-                    pItVec->dataBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), pItVar->data});
-                    pItVec->data = pItVec->dataBuffer.data(spDevice);
+                    pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
                     arrWeightDeviaExtras.push_back(pItVec->deviaBuffer);
                 }
@@ -596,7 +587,7 @@ int CDeviceNetwork::updateT(const STensor& spBatchInDeviation) {
         case ENnVariableType::EVWeight:
             {
                 Q* pItDevia = pItWeightDevia;
-                Q* pItData = (Q*)(itVar->data);
+                Q* pItData = (Q*)itVar->data.data();
                 Q* pDataEnd = pItData + itVar->size;
                 while(pItData < pDataEnd) {
                     *pItData -= *pItDevia;

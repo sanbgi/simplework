@@ -29,8 +29,8 @@ public://INnVariable
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVInput; }
-    void* getData(PDATATYPE) {
-        return nullptr;
+    STensor getData(PDATATYPE) {
+        return STensor();
     }
 
 protected:

@@ -123,7 +123,7 @@ int CLayerNetwork::initNetwork(PDATATYPE idType) {
         PSolveGraphInfos::PSolveVar solveVar;
         solveVar.size = spToSolveVar->getSize();
         solveVar.type = spToSolveVar->getVariableType();
-        solveVar.data = spToSolveVar->getData(idType);
+        solveVar.data = spToSolveVar->getData(idType).data();
         solveCtx.nSumSize[solveVar.type] += solveVar.size;
         arrVars.push_back(solveVar);
     }

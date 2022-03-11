@@ -23,7 +23,7 @@ public://Factory
     
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVState; }
-    void* getData(PDATATYPE idType);
+    STensor getData(PDATATYPE idType);
 
     int getDimension(SDimension& spDimension) {
         spDimension = m_spDimension;
@@ -47,7 +47,7 @@ int CNnStateVariable::__initialize(const PData* pData) {
     return sCtx.success();
 }
 
-void* CNnStateVariable::getData(PDATATYPE idType) {
+STensor CNnStateVariable::getData(PDATATYPE idType) {
     if(!m_spData) {
         int nDims = m_spDimension.size();
         const int* pDimSize = m_spDimension.data();
@@ -58,10 +58,10 @@ void* CNnStateVariable::getData(PDATATYPE idType) {
         }
 
         if(STensor::createTensor(m_spData, m_spDimension, idType, nData) != sCtx.success()) {
-            return nullptr;
+            return STensor();
         }
     }
-    return m_spData.data();
+    return m_spData;
 }
 
 int CNnStateVariable::toArchive(const SArchive& ar) {

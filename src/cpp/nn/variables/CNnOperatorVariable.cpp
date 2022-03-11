@@ -24,8 +24,8 @@ public://CObject
 
 private:
     ENnVariableType getVariableType() { return ENnVariableType::EVOperator; }
-    void* getData(PDATATYPE idType) {
-        return nullptr;
+    STensor getData(PDATATYPE idType) {
+        return STensor();
     }
     int getDimension(SDimension& spDimension) {
         spDimension = m_spDimension;
