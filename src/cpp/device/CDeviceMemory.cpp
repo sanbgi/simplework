@@ -58,11 +58,11 @@ private://IDeviceMemory
         return m_spMemory->getMemoryInDevice(spDevice,deviceMemory);
     }
 
-    int setMemory(PMemory cpuMemory, int iOffset=0){
+    int setMemory(const PMemory& cpuMemory, int iOffset=0){
         return m_spMemory->setMemory(cpuMemory, iOffset);
     }
 
-    int getMemory(PMemory cpuMemory, int iOffset=0){
+    int getMemory(const PMemory& cpuMemory, int iOffset=0){
         return m_spMemory->getMemory(cpuMemory, iOffset);
     }
 

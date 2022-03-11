@@ -68,7 +68,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int setMemory(PMemory cpuMemory, int iOffset=0){
+    int setMemory(const PMemory& cpuMemory, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
@@ -81,7 +81,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int getMemory(PMemory cpuMemory, int iOffset=0){
+    int getMemory(const PMemory& cpuMemory, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
