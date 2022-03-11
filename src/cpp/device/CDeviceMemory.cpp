@@ -5,10 +5,10 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CMemory");
-class CMemory : public CObject, IMemory, IArchivable{
+class CMemory : public CObject, IDeviceMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -23,7 +23,7 @@ protected://CObject
 
 protected://IArchivable
     int getClassVer() { return 220308; }
-    const char* getClassKey() { return SMemory::__getClassKey(); }
+    const char* getClassKey() { return SDeviceMemory::__getClassKey(); }
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
             PMemory sMemory;
@@ -35,7 +35,12 @@ protected://IArchivable
     }
 
 
-private://IMemory
+private://IDeviceMemory
+    int getSize() {
+        IDeviceMemory* pMemory = m_spMemory.getPtr();
+        return pMemory != nullptr ? pMemory->getSize() : 0;
+    }
+
     int getDevice(SDevice& spDevice){
         return m_spMemory->getDevice(spDevice);
     }
@@ -58,7 +63,7 @@ private://IMemory
     }
 
 private:
-    SMemory m_spMemory;
+    SDeviceMemory m_spMemory;
 };
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CMemory, SMemory::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CMemory, SDeviceMemory::__getClassKey())

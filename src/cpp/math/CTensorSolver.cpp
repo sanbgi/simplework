@@ -2,6 +2,8 @@
 #include <map>
 #include <vector>
 #include "CTensor.h"
+#define __MAX_VARS 8
+#define __MAX_PARAMETER_SIZE 8
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
@@ -191,39 +193,37 @@ public:
             }
         }
 
-        #define __MAX_VARS 8
         if(nVars>__MAX_VARS) {
             return sCtx.error("超过最大求解变量数值");
         }
 
+        //
+        // 如果运算设备不是CPU，并且当前的内核计算参数如果大于__MAX_PARAMETER_SIZE个字
+        //  节，则需要将计算参数拷贝到设备内存, 注意，这个时候，设备内存由spKernalParameterInDevice
+        //  持有，所以，执行必须同步执行，不能异步执行（？）
+        //
         SDevice device = SDevice::defaultDevice();
-        int nArgs = nVars*2;
-        PVector pData[__MAX_VARS];
-        PMemory pArgs[__MAX_VARS*2+1];
-        PMemory* pMemory = pArgs;
-        if(kernalParameter.size>0) {
-            nArgs += 1;
-            pMemory->size = kernalParameter.size;
-            pMemory->data = kernalParameter.data;
-            pMemory++;
-        }
-        for(int i=0; i<nVars; i++, pMemory+=2) {
-            if( pVars[i]->getDataInDevice(device, pData[i]) != sCtx.success() ) {
-                return sCtx.error("读取张量数据错误");
+        SDeviceMemory spKernalParameterInDevice;
+        if( device != SDevice::cpu() ) {
+            if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
+                spKernalParameterInDevice = SDeviceMemory::createMemory(kernalParameter);
+                if( !spKernalParameterInDevice ) {
+                    return sCtx.error("创建设备内存错误");
+                }
+
+                if(spKernalParameterInDevice->getMemoryInDevice(device, kernalParameter) != sCtx.success()) {
+                    return sCtx.error("获取设备内存错误");
+                }
             }
-            pMemory[0].size = sizeof(int);
-            pMemory[0].pIntArray = &pData[i].size;
-            pMemory[1].size = sizeof(void*);
-            pMemory[1].data = &pData[i].pIntArray;
         }
 
-        //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
-        SDeviceEvent sEvent;
-        int ret = device->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
-        if(sEvent) {
-            sEvent->wait();
+        PVector pVecs[__MAX_VARS];
+        for(int i=0; i<nVars; i++) {
+            if(pVars[i]->getDataInDevice(device,pVecs[i]) != sCtx.success()) {
+                return sCtx.error("获取张量数据异常");
+            }
         }
-        return ret;
+        return runEvalKernel(device,kernelKey,kernalRange,kernalParameter,nVars,pVecs);
     }
 
     int pushHooker(const STensorHooker& spHooker){
@@ -247,6 +247,79 @@ public:
             return sCtx.success();
         }
         return sCtx.error();
+    }
+
+    int runEvalKernel(const SDevice& spDevice,
+                        PKernalKey kernelKey,
+                        PVector kernalRange,
+                        PMemory kernalParameter,
+                        int nVars,
+                        const PVector pVars[] ) {
+        if(nVars>__MAX_VARS) {
+            return sCtx.error("超过最大求解变量数值");
+        }
+
+        int nArgs = nVars*2;
+        PMemory pArgs[__MAX_VARS*2+1];
+        PMemory* pMemory = pArgs;
+        if(kernalParameter.size>0) {
+            nArgs += 1;
+            pMemory->size = kernalParameter.size;
+            pMemory->data = kernalParameter.data;
+            pMemory++;
+        }
+        for(int i=0; i<nVars; i++, pMemory+=2) {
+            pMemory[0].size = sizeof(int);
+            pMemory[0].pIntArray = (int*)&pVars[i].size;
+            pMemory[1].size = sizeof(void*);
+            pMemory[1].data = (void*)&pVars[i].data;
+        }
+
+        //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
+        SDeviceEvent sEvent;
+        int ret = spDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        if(sEvent) {
+            sEvent->wait();
+        }
+        return ret;
+    }
+            
+    int runDeviaKernel(
+                        const SDevice& spDevice,
+                        PKernalKey kernelKey,
+                        PVector kernalRange,
+                        PMemory kernalParameter,
+                        int nVars,
+                        const PDeviaVector pVars[] ) {
+                if(nVars>__MAX_VARS) {
+            return sCtx.error("超过最大求解变量数值");
+        }
+
+        int nArgs = nVars*3;
+        PMemory pArgs[__MAX_VARS*3+1];
+        PMemory* pMemory = pArgs;
+        if(kernalParameter.size>0) {
+            nArgs += 1;
+            pMemory->size = kernalParameter.size;
+            pMemory->data = kernalParameter.data;
+            pMemory++;
+        }
+        for(int i=0; i<nVars; i++, pMemory+=3) {
+            pMemory[0].size = sizeof(int);
+            pMemory[0].pIntArray = (int*)&pVars[i].size;
+            pMemory[1].size = sizeof(void*);
+            pMemory[1].data = (void*)&pVars[i].data;
+            pMemory[2].size = sizeof(void*);
+            pMemory[2].data = (void*)&pVars[i].devia;
+        }
+
+        //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
+        SDeviceEvent sEvent;
+        int ret = spDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        if(sEvent) {
+            sEvent->wait();
+        }
+        return ret;
     }
 
 private:

@@ -46,7 +46,7 @@ public:
 protected:
     CTypeAssist* m_pTypeAssist;
     int m_nElementSize;
-    SMemory m_spMemory;
+    SDeviceMemory m_spMemory;
     SDimension m_spDimVector;
 };
 

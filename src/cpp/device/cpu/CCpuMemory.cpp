@@ -5,10 +5,10 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CCpuMemory");
-class CCpuMemory : public CObject, IMemory, IArchivable{
+class CCpuMemory : public CObject, IDeviceMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -38,6 +38,10 @@ protected://IArchivable
     }
 
 private://IDeviceMemory
+    int getSize() {
+        return m_nSize;
+    }
+
     int getDevice(SDevice& spDevice){
         return SDeviceFactory::getFactory()->getCpuDevice(spDevice);
     }

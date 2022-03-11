@@ -14,6 +14,7 @@ class CDimension : public CObject, public IDimension, IArchivable {
 
 public://CObject
     static int createDimension(SDimension& spDim, int nDims, const int* pDimSizes);
+    int __initialize(const PData* pData);
 
 public:
     int getClassVer() { return 220112; }

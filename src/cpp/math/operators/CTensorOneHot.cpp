@@ -53,7 +53,7 @@ private://ITensorOperator
             return sCtx.error("创建张量失败");
         }
 
-        int ret = sCtx.error();
+        int ret = -1;
         STensorSolver spSolver = STensorSolver::getSolver();
         if( pOneHot->idType == PDATATYPE_FLOAT ) {
             if( type == PDATATYPE_UCHAR ) {

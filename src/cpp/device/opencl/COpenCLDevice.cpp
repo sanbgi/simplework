@@ -12,11 +12,11 @@ class COpenCLDevice : public CObject, public IDevice{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://IDevice
-    int createMemory(const PMemory& cpuMemory, SMemory& spDeviceMemory){
+    int createMemory(const PMemory& cpuMemory, SDeviceMemory& spDeviceMemory){
         return sCtx.success();
     }
 
-    int createMemory(const SMemory& spSrcMemory, SMemory& spDeviceMemory){
+    int createMemory(const SDeviceMemory& spSrcMemory, SDeviceMemory& spDeviceMemory){
         return sCtx.success();
     }
 

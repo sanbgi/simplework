@@ -7,7 +7,7 @@
 #define SIMPLEWORK_DEVICE_NAMESPACE_ENTER namespace sw {
 #define SIMPLEWORK_DEVICE_NAMESPACE_LEAVE }
 
-#include "SMemory.h"
+#include "SDeviceMemory.h"
 #include "SDevice.h"
 #include "SDeviceFactory.h"
 #include "SDeviceEvent.h"

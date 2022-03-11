@@ -6,13 +6,18 @@
 
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
-
 //
 // 计算内存
 //
-SIMPLEWORK_INTERFACECLASS_ENTER(Memory, "sw.device.Memory")
+SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.device.IMemory", 220307)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.device.IDeviceMemory", 220307)
+
+        //
+        // 获取内存大小
+        //
+        virtual int getSize() = 0;
+
         //
         // 获取设备
         //
@@ -35,6 +40,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Memory, "sw.device.Memory")
 
     SIMPLEWORK_INTERFACE_LEAVE
 
+    int size() const {
+        IFace* pFace = getPtr();
+        return pFace != nullptr ? pFace->getSize() : 0;
+    }
+
+    void* data(const SDevice& spDevice = SDevice::cpu()) {
+        IFace* pFace = getPtr();
+        if(pFace == nullptr) return nullptr;
+        PMemory sMemory = { 0, nullptr };
+        pFace->getMemoryInDevice(spDevice, sMemory);
+        return sMemory.data;
+    }
+
     SDevice device() const {
         SDevice spDevice;
         IFace* pFace = getPtr();
@@ -42,11 +60,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Memory, "sw.device.Memory")
         return spDevice;
     }
 
-    static SMemory createMemory(const PMemory& sMemory) {
-        return SObject::createObject(SMemory::__getClassKey(), CData<PMemory>(sMemory));
+    static SDeviceMemory createMemory(const PMemory& cpuMemory) {
+        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PMemory>(cpuMemory));
     }
  
-SIMPLEWORK_INTERFACECLASS_LEAVE(Memory)
+SIMPLEWORK_INTERFACECLASS_LEAVE(DeviceMemory)
 
 SIMPLEWORK_DEVICE_NAMESPACE_LEAVE
 

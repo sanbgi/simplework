@@ -14,12 +14,12 @@ class CCpuDevice : public CObject, public IDevice{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://IDevice
-    int createMemory(const PMemory& cpuMemory, SMemory& spDeviceMemory){
+    int createMemory(const PMemory& cpuMemory, SDeviceMemory& spDeviceMemory){
         spDeviceMemory = SObject::createObject("sw.device.CpuMemory", CData<PMemory>(cpuMemory));
         return spDeviceMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
     }
 
-    int createMemory(const SMemory& spSrcMemory, SMemory& spDeviceMemory){
+    int createMemory(const SDeviceMemory& spSrcMemory, SDeviceMemory& spDeviceMemory){
         SDevice spDevice = spSrcMemory.device();
         if(spDevice.getPtr() == this) {
             spDeviceMemory = spSrcMemory;
@@ -30,7 +30,7 @@ private://IDevice
             return sCtx.error("创建内存所对应的原始内存无效");
         }
 
-        SMemory spMemory;
+        SDeviceMemory spMemory;
         if(createMemory({sMemory.size, nullptr}, spMemory) != sCtx.success()) {
             return sCtx.error();
         }
