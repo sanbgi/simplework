@@ -8,8 +8,10 @@ file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/cpu/*.cpp" )
 list ( APPEND SRC_LIST ${SRC_FILES} )
 file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/opencl/*.cpp" )
 list ( APPEND SRC_LIST ${SRC_FILES} )
-
 add_library(${SIMPLEWORK_DEVICE_MODULE_NAME} SHARED ${SRC_LIST})
-target_link_libraries(${SIMPLEWORK_DEVICE_MODULE_NAME} "sw.core")
 set_target_properties(${SIMPLEWORK_DEVICE_MODULE_NAME} PROPERTIES PREFIX "")
 
+target_link_libraries(${SIMPLEWORK_DEVICE_MODULE_NAME} "sw.core")
+
+find_package(OpenCL REQUIRED)
+target_link_libraries(${SIMPLEWORK_DEVICE_MODULE_NAME} OpenCL::OpenCL)

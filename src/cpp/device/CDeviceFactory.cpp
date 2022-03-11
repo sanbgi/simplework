@@ -21,6 +21,12 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
         return sCtx.success();
     }
 
+    int getOpenclDevice(SDevice& spDevice) {
+        static SDevice g_openclDevice = SObject::createObject("sw.device.OpenclDevice");
+        spDevice = g_openclDevice;
+        return sCtx.success();
+    }
+
     int getDefaultDevice(SDevice& spDevice) {
         return getCpuDevice(spDevice);
     }

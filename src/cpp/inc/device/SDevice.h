@@ -69,6 +69,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         return spDevice;
     }
  
+     static SDevice opencl() {
+        SDevice spDevice;
+        SDeviceFactory::getFactory()->getOpenclDevice(spDevice);
+        return spDevice;
+    }
 SIMPLEWORK_INTERFACECLASS_LEAVE(Device)
 
 SIMPLEWORK_DEVICE_NAMESPACE_LEAVE

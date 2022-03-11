@@ -25,17 +25,19 @@ private://IDevice
             spDeviceMemory = spSrcMemory;
             return sCtx.success();
         }
-        PMemory sMemory;
+
+        int size = spSrcMemory.size();
+        CTaker<char*> spTaker(new char[size], [](char* pMemory){
+            delete[] pMemory;
+        });
+
+        PMemory sMemory = {size, spTaker};
         if( !spSrcMemory || spSrcMemory->getMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
 
         SDeviceMemory spMemory;
-        if(createMemory({sMemory.size, nullptr}, spMemory) != sCtx.success()) {
-            return sCtx.error();
-        }
-        spMemory->getMemory(sMemory);
-        return spSrcMemory->getMemory(sMemory);
+        return createMemory(sMemory, spMemory);
     }
 
     int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {

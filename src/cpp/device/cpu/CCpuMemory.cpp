@@ -55,25 +55,25 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int setMemory(PMemory cpuDeviceMemory, int iOffset=0){
+    int setMemory(PMemory cpuMemory, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }
-        if(cpuDeviceMemory.size + iOffset > m_nSize) {
+        if(cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        memcpy((unsigned char*)m_spTaker + iOffset, cpuDeviceMemory.pByteArray, cpuDeviceMemory.size);
+        memcpy((unsigned char*)m_spTaker + iOffset, cpuMemory.pByteArray, cpuMemory.size);
         return sCtx.success();
     }
 
-    int getMemory(PMemory cpuDeviceMemory, int iOffset=0){
+    int getMemory(PMemory cpuMemory, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }
-        if(cpuDeviceMemory.size + iOffset > m_nSize) {
+        if(cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        memcpy(cpuDeviceMemory.pByteArray, (unsigned char*)m_spTaker + iOffset , cpuDeviceMemory.size);
+        memcpy(cpuMemory.pByteArray, (unsigned char*)m_spTaker + iOffset , cpuMemory.size);
         return sCtx.success();
     }
 
