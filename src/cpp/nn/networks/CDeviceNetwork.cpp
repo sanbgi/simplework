@@ -59,23 +59,26 @@ private:
             int size;
             STensor data;
         };
+        //解算参数列表
+        vector<PSolveVar> arrVars;
+
 
         // 计算指令
         struct PSolveInstruct {
             string programName;
             SDeviceMemory spParameters;
             
+            int nInVars;
+            int pInVars[4];
+            int iOutVar;
+            
             int nRanges;
             int pRanges[3];
-            PNnAtomOperatorArgs args;
 
             int evalKernelId;
             int deviaKernelId;
         };
-        int zeroKernelId;
 
-        //解算参数列表
-        vector<PSolveVar> arrVars;
         //解算步骤列表
         vector<PSolveInstruct> arrInstructs;
 
@@ -150,7 +153,9 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         if(solveFunc.nParamterSize > 0) {
             solveParameter.spParameters = SDeviceMemory::createMemory({solveFunc.nParamterSize, solveFunc.pParameterData});
         }
-        solveParameter.args = spOp;
+        solveParameter.nInVars = spOp.nInVars;
+        solveParameter.iOutVar = spOp.iOutVar;
+        memcpy(solveParameter.pInVars, spOp.pInVars, sizeof(int)*spOp.nInVars);
         solveParameter.evalKernelId = solveParameter.deviaKernelId = 0;
         solveParameter.programName = string("sw.nn.")+(*itOp)->getName();
         solveParameter.nRanges = 1;
@@ -181,7 +186,6 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         arrInstructs.push_back(solveParameter);
         itParameter++, itOp++;
     }
-    solveCtx.zeroKernelId = 0;
 
     //
     // 创建优化器
@@ -276,7 +280,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     PSolveVector* pVec;
     PMemory pMemorys[12];
     for(auto& instruct : solveCtx.arrInstructs ) {
-        int nMemory = instruct.args.nInVars*2 + 4;
+        int nMemory = instruct.nInVars*2 + 4;
         PMemory* pMemory = pMemorys;
         SDeviceMemory spParameter;
         void* pParameter=nullptr;
@@ -293,15 +297,15 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         pMemory->size = sizeof(int);
         pMemory->data = &nBatchs;
         pMemory++;
-        for(int j=0; j<instruct.args.nInVars; j++) {
-            pVec = &solveVars[instruct.args.pInVars[j]];
+        for(int j=0; j<instruct.nInVars; j++) {
+            pVec = &solveVars[instruct.pInVars[j]];
             pMemory[0].size = sizeof(pVec->size);
             pMemory[0].data = &pVec->size;
             pMemory[1].size = sizeof(pVec->data);
             pMemory[1].data = &pVec->data;
             pMemory+=2;
         }
-        pVec = &solveVars[instruct.args.iOutVar];
+        pVec = &solveVars[instruct.iOutVar];
         pMemory[0].size = sizeof(pVec->size);
         pMemory[0].data = &pVec->size;
         pMemory[1].size = sizeof(pVec->data);
@@ -465,7 +469,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         //准备输入输出计算参数
         PSolveGraphInfos::PSolveInstruct& instruct = *itSolver;
 
-        int nMemory = instruct.args.nInVars*3 + 4;
+        int nMemory = instruct.nInVars*3 + 4;
         PMemory* pMemory = pMemorys;
         void* pParameter=nullptr;
         if(instruct.spParameters) {
@@ -482,8 +486,8 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         pMemory->data = &nBatchs;
         pMemory++;
 
-        for(int j=0; j<instruct.args.nInVars; j++) {
-            pVec = &solveVars[instruct.args.pInVars[j]];
+        for(int j=0; j<instruct.nInVars; j++) {
+            pVec = &solveVars[instruct.pInVars[j]];
             pMemory[0].size = sizeof(pVec->size);
             pMemory[0].data = &pVec->size;
             pMemory[1].size = sizeof(pVec->data);
@@ -492,7 +496,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
             pMemory[2].data = &pVec->devia;
             pMemory+=3;
         }
-        pVec = &solveVars[instruct.args.iOutVar];
+        pVec = &solveVars[instruct.iOutVar];
         pMemory[0].size = sizeof(pVec->size);
         pMemory[0].data = &pVec->size;
         pMemory[1].size = sizeof(pVec->devia);
