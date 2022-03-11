@@ -244,7 +244,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
                 {
                     pItVec->size = pItVar->size * nBatchs;
                     Q* pIn = spBatchIn.data<Q>();
-                    pItVec->buffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), pItVar->data});
+                    pItVec->buffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), pIn});
                     pItVec->data = pItVec->buffer.data(spDevice);
                 }
                 break;
