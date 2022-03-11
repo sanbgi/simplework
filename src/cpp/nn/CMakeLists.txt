@@ -23,5 +23,8 @@ add_library(${SIMPLEWORK_NN_MODULE_NAME} SHARED ${SRC_LIST})
 target_link_libraries(${SIMPLEWORK_NN_MODULE_NAME} "sw.core")
 set_target_properties(${SIMPLEWORK_NN_MODULE_NAME} PROPERTIES PREFIX "")
 
+find_package(OpenCL REQUIRED)
+target_link_libraries(${SIMPLEWORK_NN_MODULE_NAME} OpenCL::OpenCL)
+
 file( GLOB allOpenCLFiles "${CMAKE_CURRENT_SOURCE_DIR}/operators/*.cl")
 file( COPY ${allOpenCLFiles} DESTINATION "${PROJECT_BINARY_DIR}/bin/opencl/${SIMPLEWORK_NN_MODULE_NAME}" )

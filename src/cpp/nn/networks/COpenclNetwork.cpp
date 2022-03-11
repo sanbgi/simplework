@@ -11,8 +11,8 @@
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("COpenCLNetwork");
-class COpenCLNetwork : public CObject, public INnNetwork, public IArchivable{
+static SCtx sCtx("COpenclNetwork");
+class COpenclNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
@@ -27,7 +27,7 @@ private://IArchivable
     int toArchive(const SArchive& ar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.OpenCLNetwork"; }
+    static const char* __getClassKey() { return "sw.nn.OpenclNetwork"; }
 
 public://INnOpenCLNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
@@ -153,17 +153,17 @@ private:
         static bool s_Initialized = false;
         static cl::Program s_programBasic;
         if( !s_Initialized ) {
-            if( getProgram("zero", s_programBasic) != sCtx.success() ) {
+            if( getProgram("Zero", s_programBasic) != sCtx.success() ) {
                 return sCtx.error();
             }
             s_Initialized = true;
         }
-        k = cl::Kernel(s_programBasic, "floatEval");;
+        k = cl::Kernel(s_programBasic, "ucharEval");;
         return sCtx.success();
     }
 };
 
-int COpenCLNetwork::__initialize(const PData* pData){
+int COpenclNetwork::__initialize(const PData* pData){
     const PNnNetwork* pNet = CData<PNnNetwork>(pData);
     if(pNet == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -203,7 +203,7 @@ int COpenCLNetwork::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int COpenCLNetwork::initNetwork(PDATATYPE idType) {
+int COpenclNetwork::initNetwork(PDATATYPE idType) {
     if(m_spSolveGraphInfos) {
         if(idType == m_spSolveGraphInfos->idType) {
             return sCtx.success();
@@ -232,7 +232,7 @@ int COpenCLNetwork::initNetwork(PDATATYPE idType) {
         PSolveGraphInfos::PSolveVar solveVar;
         solveVar.size = spToSolveVar->getSize();
         solveVar.type = spToSolveVar->getVariableType();
-        solveVar.data = spToSolveVar->getData(idType);
+        solveVar.data = spToSolveVar->getData(idType).data();
         solveCtx.nSumSize[solveVar.type] += solveVar.size;
         arrVars.push_back(solveVar);
     }
@@ -273,7 +273,7 @@ int COpenCLNetwork::initNetwork(PDATATYPE idType) {
     //
     // 获取置零内核
     //
-    if( getBasicKernel<float>("zero",solveCtx.kZero) != sCtx.success() ) {
+    if( getBasicKernel<float>("Zero",solveCtx.kZero) != sCtx.success() ) {
         return sCtx.error("获取计算内核错误");
     }
 
@@ -298,7 +298,7 @@ int COpenCLNetwork::initNetwork(PDATATYPE idType) {
     return sCtx.success();
 }
 
-int COpenCLNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+int COpenclNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     PDATATYPE idType = spBatchIn.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -314,7 +314,7 @@ int COpenCLNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
 }
 
 template<typename Q>
-int COpenCLNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
+int COpenclNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     cl_int ret = 0;
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
 
@@ -462,7 +462,7 @@ int COpenCLNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     return CNnResizeTensor::createResizeTensor({spOut, 2, pExtras}, spBatchOut);
 }
 
-int COpenCLNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int COpenclNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     int idType = spBatchOut.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -496,7 +496,7 @@ static int zeroBuffer(cl::Kernel k, cl::Buffer buffer, int size) {
 }
 
 template<typename Q>
-int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int COpenclNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     cl_int ret = 0;
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
 
@@ -514,8 +514,8 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
 
     PNnResizeTensor sResizeTensor;
     spResizeOut->getResizeData(sResizeTensor);
-    STensor spOpTensor = sResizeTensor.spExtra1;
-    spBatchIn = sResizeTensor.spExtra2;
+    STensor spOpTensor = sResizeTensor.pExtras[0];
+    spBatchIn = sResizeTensor.pExtras[1];
 
     struct PSolveDeviaVector {
         int size;
@@ -668,10 +668,11 @@ int COpenCLNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
 
     solveCtx.spOptimizer->updateDeviation(nBatchs);
     STensor spWeightDevia = STensor::createVector<Q>(nWeights, pWeightDeviaBuffer);
-    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spWeightDevia}, spBatchInDeviation);
+    SObject pExtras[] = {spWeightDevia};
+    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, 1, pExtras}, spBatchInDeviation);
 }
 
-int COpenCLNetwork::update(const STensor& spBatchInDeviation) {
+int COpenclNetwork::update(const STensor& spBatchInDeviation) {
     int idType = spBatchInDeviation.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -687,7 +688,7 @@ int COpenCLNetwork::update(const STensor& spBatchInDeviation) {
 }
 
 template<typename Q>
-int COpenCLNetwork::updateT(const STensor& spBatchInDeviation) {
+int COpenclNetwork::updateT(const STensor& spBatchInDeviation) {
     SNnResizeTensor spResizeDevia = spBatchInDeviation;
     if( !spResizeDevia ) {
         return sCtx.error("非有效的输出，无法用于学习");
@@ -695,7 +696,7 @@ int COpenCLNetwork::updateT(const STensor& spBatchInDeviation) {
 
     PNnResizeTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
-    STensor spWeightDevia = sResizeTensor.spExtra1;
+    STensor spWeightDevia = sResizeTensor.pExtras[0];
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
     int nWeights = solveCtx.nSumSize[EVWeight];
@@ -730,10 +731,10 @@ int COpenCLNetwork::updateT(const STensor& spBatchInDeviation) {
     return sCtx.success();
 }
 
-int COpenCLNetwork::toArchive(const SArchive& ar) {
+int COpenclNetwork::toArchive(const SArchive& ar) {
     m_sSolveGraph.toArchive(ar);
     ar.visitString("optimizer", m_strOptimizer);
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(COpenCLNetwork, COpenCLNetwork::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(COpenclNetwork, COpenclNetwork::__getClassKey())

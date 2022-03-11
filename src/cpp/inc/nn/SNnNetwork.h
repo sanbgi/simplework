@@ -50,6 +50,9 @@ public:
     static SNnNetwork createDeviceNetwork(const PNnNetwork& rNet) {
         return SObject::createObject("sw.nn.DeviceNetwork", CData<PNnNetwork>(rNet));
     }
+    static SNnNetwork createOpenclNetwork(const PNnNetwork& rNet) {
+        return SObject::createObject("sw.nn.OpenclNetwork", CData<PNnNetwork>(rNet));
+    }
     static SNnNetwork createNetwork(const SDimension spInDimension, const SNnModule& spModule) {
         class CNnNetworkSolver : public INnNetworkSolver {
             int solve(const SNnVariable& spIn, SNnVariable& spOut) {

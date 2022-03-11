@@ -181,8 +181,12 @@ kernel void floatDevia(
     if(iHeight < pThis->completeOut.top) {
         rcConv.top = rcPading.top - iHeight * pThis->nStrideHeight;
         rcConv.bottom = sizeConv.height;
-        pIn += rcConv.top * stepInConv.height;
-        pWeights += rcConv.top * stepConv.height;
+        nOffsetIn = rcConv.top * stepInConv.height;
+        pIn += nOffsetIn;
+        pInDevia += nOffsetIn;
+        nOffsetWeight = rcConv.top * stepConv.height;
+        pWeights += nOffsetWeight;
+        pWeightsDevia += nOffsetWeight;
     }else if(iHeight > pThis->completeOut.bottom) {
         rcConv.top = 0;
         rcConv.bottom = sizeConv.height + (sizeOut.height - 1 - iHeight) * pThis->nStrideHeight - rcPading.bottom;
@@ -195,8 +199,12 @@ kernel void floatDevia(
     if(iWidth < pThis->completeOut.left) {
         rcConv.left = rcPading.left - iWidth * pThis->nStrideWidth;
         rcConv.right = sizeConv.width;
-        pIn += rcConv.left * stepInConv.width;
-        pWeights += rcConv.left * stepConv.width;
+        nOffsetIn = rcConv.left * stepInConv.width;
+        pIn += nOffsetIn;
+        pInDevia += nOffsetIn;
+        nOffsetWeight = rcConv.left * stepConv.width;
+        pWeights += nOffsetWeight;
+        pWeightsDevia += nOffsetWeight;
     }else if(iWidth > pThis->completeOut.right) {
         rcConv.left = 0;
         rcConv.right = sizeConv.width + (sizeOut.width - 1 - iWidth) * pThis->nStrideWidth - rcPading.right;

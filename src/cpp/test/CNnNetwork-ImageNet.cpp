@@ -73,6 +73,7 @@ void CNnNetwork::prepareImageNet() {
 }
 
 SNnNetwork CNnNetwork::createResNet() {
+    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {224, 224, 3};
     SNnNetwork spNetwork = SNnNetwork::createNetwork({
         SDimension::createDimension(3,pDimSizes),
@@ -202,9 +203,6 @@ SNnNetwork CNnNetwork::createResNet() {
 
 
 void CNnNetwork::runImageNet() {
-    //prepareImageNet();
-    //return;
-
     SAvNetwork spFilter;
     SNnNetwork nn = createResNet();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");

@@ -385,7 +385,8 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
     }
     int nExtras = sResizeTensor.nExtras;
     SObject* pExtras = sResizeTensor.pExtras;
-    spBatchIn = *pExtras++;
+    spBatchIn = *pExtras;
+    pExtras++;
     nExtras--;
 
     if( int errCode = STensor::createTensor(spBatchInDeviation, spBatchIn.dimension(), solveCtx.idType, spBatchIn.size()) != sCtx.success() ) {
@@ -419,7 +420,8 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
                     if(nExtras < 1 ) {
                         return sCtx.error("计算数据错误，无法用于传递偏导数");
                     }
-                    SDeviceMemory spOp = *pExtras++;
+                    SDeviceMemory spOp = *pExtras;
+                    pExtras++;
                     nExtras--;
 
                     if(!spOp || spOp.size() != pItVec->size*sizeof(Q) ) {
