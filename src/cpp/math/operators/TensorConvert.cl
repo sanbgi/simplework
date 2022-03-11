@@ -1,6 +1,6 @@
 
 
-kernel void uc2floatEval(
+kernel void uchar2floatEval(
     int nIn1, global unsigned char * pIn,
     int nOut, global float * pOut)
 {
@@ -8,7 +8,7 @@ kernel void uc2floatEval(
     pOut[gid] = pIn[gid];
 }
 
-kernel void uc2doubleEval(
+kernel void uchar2doubleEval(
     int nIn1, global unsigned char * pIn,
     int nOut, global double * pOut)
 {

@@ -236,7 +236,6 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
             return sCtx.success();
         }
     });
-    return spNetwork;
     SNnNetwork::saveFile("D://snetwork.bin", spNetwork);
     /*
     std::vector<SNnUnit> arrUnits;

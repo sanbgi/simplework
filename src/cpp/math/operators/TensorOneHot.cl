@@ -17,7 +17,7 @@ kernel void int2doubleEval(
     pOut[gid] = (pIn[gid/nClassify] == gid%nIn) ? 1.0 : 0.0;
 }
 
-kernel void uc2floatEval(
+kernel void uchar2floatEval(
     int nClassify,
     int nIn, global unsigned char * pIn,
     int nOut, global float * pOut)
@@ -26,7 +26,7 @@ kernel void uc2floatEval(
     pOut[gid] = (pIn[gid/nClassify] == gid%nIn) ? 1.0f : 0.0f;
 }
 
-kernel void uc2doubleEval(
+kernel void uchar2doubleEval(
     int nClassify,
     int nIn, global unsigned char * pIn,
     int nOut, global double * pOut)

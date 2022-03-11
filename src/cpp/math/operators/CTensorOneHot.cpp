@@ -20,8 +20,8 @@ private://IKernalOperator
         if(szName != nullptr) {
             if( strcmp(szName, "int2floatEval") == 0 ) return int2floatEval;
             if( strcmp(szName, "int2doubleEval") == 0 ) return int2doubleEval;
-            if( strcmp(szName, "uc2floatEval") == 0 ) return uc2floatEval;
-            if( strcmp(szName, "uc2doubleEval") == 0 ) return uc2doubleEval;
+            if( strcmp(szName, "uchar2floatEval") == 0 ) return uchar2floatEval;
+            if( strcmp(szName, "uchar2doubleEval") == 0 ) return uchar2doubleEval;
         }
         return nullptr;
     }
@@ -58,7 +58,7 @@ private://ITensorOperator
         if( pOneHot->idType == PDATATYPE_FLOAT ) {
             if( type == PDATATYPE_UCHAR ) {
                 static int s_kernelId = 0;
-                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uc2floatEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uchar2floatEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
             }else{
                 static int s_kernelId = 0;
                 ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "int2floatEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
@@ -66,7 +66,7 @@ private://ITensorOperator
         }else if( pOneHot->idType == PDATATYPE_DOUBLE) {
             if( type == PDATATYPE_UCHAR ) {
                 static int s_kernelId = 0;
-                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uc2doubleEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uchar2doubleEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
             }else{
                 static int s_kernelId = 0;
                 ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "int2doubleEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
@@ -106,17 +106,17 @@ public:
                 _KArg(int,3), _KArg(double*,4));
     }
 
-    static void uc2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uchar2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uc2floatEval(
+        sKernel.uchar2floatEval(
                 _KArg(int,0),
                 _KArg(int,1), _KArg(unsigned char*,2),
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void uc2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uchar2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uc2doubleEval(
+        sKernel.uchar2doubleEval(
                 _KArg(int,0),
                 _KArg(int,1), _KArg(unsigned char*,2),
                 _KArg(int,3), _KArg(double*,4));

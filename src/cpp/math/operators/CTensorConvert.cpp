@@ -19,8 +19,8 @@ public://IMathOperator
         if(szName != nullptr) {
             if( strcmp(szName, "int2floatEval") == 0 ) return int2floatEval;
             if( strcmp(szName, "int2doubleEval") == 0 ) return int2doubleEval;
-            if( strcmp(szName, "uc2floatEval") == 0 ) return uc2floatEval;
-            if( strcmp(szName, "uc2doubleEval") == 0 ) return uc2doubleEval;
+            if( strcmp(szName, "uchar2floatEval") == 0 ) return uchar2floatEval;
+            if( strcmp(szName, "uchar2doubleEval") == 0 ) return uchar2doubleEval;
         }
         return nullptr;
     }
@@ -50,16 +50,16 @@ public:
                 _KArg(int,2), _KArg(double*,3));
     }
 
-    static void uc2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uchar2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uc2floatEval(
+        sKernel.uchar2floatEval(
                 _KArg(int,0), _KArg(unsigned char*,1),
                 _KArg(int,2), _KArg(float*,3));
     }
 
-    static void uc2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uchar2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uc2doubleEval(
+        sKernel.uchar2doubleEval(
                 _KArg(int,0), _KArg(unsigned char*,1),
                 _KArg(int,2), _KArg(double*,3));
     }
