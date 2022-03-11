@@ -55,19 +55,22 @@ private:
 
         // 计算变量
         struct PSolveVar {
-            ENnVariableType type;//ENnVariableType
+            ENnVariableType type;
             int size;
             STensor data;
-            //void* data; //存储状态及权重值的指针
         };
 
         // 计算指令
         struct PSolveInstruct {
-            PSolveFunc solver;
+            string programName;
+            SDeviceMemory spParameters;
+            
+            int nRanges;
+            int pRanges[3];
             PNnAtomOperatorArgs args;
+
             int evalKernelId;
             int deviaKernelId;
-            string programName;
         };
         int zeroKernelId;
 
@@ -142,13 +145,39 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
     while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
         PNnAtomOperatorArgs spOp = *itParameter;
         PSolveGraphInfos::PSolveInstruct solveParameter;
-        solveParameter.args = spOp;
-        (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveParameter.solver);
-        if(solveParameter.solver.nParamterSize > nMaxParameterSize) {
-            nMaxParameterSize = solveParameter.solver.nParamterSize;
+        PSolveFunc solveFunc;
+        (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);
+        if(solveFunc.nParamterSize > 0) {
+            solveParameter.spParameters = SDeviceMemory::createMemory({solveFunc.nParamterSize, solveFunc.pParameterData});
         }
+        solveParameter.args = spOp;
         solveParameter.evalKernelId = solveParameter.deviaKernelId = 0;
         solveParameter.programName = string("sw.nn.")+(*itOp)->getName();
+        solveParameter.nRanges = 1;
+        solveParameter.pRanges[0] = solveParameter.pRanges[1] = solveParameter.pRanges[2] = 0;
+        switch(solveFunc.eClRange) {
+            case PSolveFunc::PBatchAndOut:
+                solveParameter.nRanges = 2;
+                solveParameter.pRanges[0] = -1;
+                solveParameter.pRanges[1] = arrVars[spOp.iOutVar].size;
+                break;
+
+            case PSolveFunc::PBatch:
+                solveParameter.pRanges[0] = -1;
+                break;
+
+            case PSolveFunc::PCustomer:
+                solveParameter.pRanges[0] = solveFunc.nCustomerRange;
+                break;
+
+            case PSolveFunc::POut:
+                solveParameter.pRanges[0] = -arrVars[spOp.iOutVar].size;
+                break;
+
+            default:
+                solveParameter.pRanges[0] = 1;
+                break;
+        }
         arrInstructs.push_back(solveParameter);
         itParameter++, itOp++;
     }
@@ -251,9 +280,8 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         PMemory* pMemory = pMemorys;
         SDeviceMemory spParameter;
         void* pParameter=nullptr;
-        if(instruct.solver.nParamterSize>0) {
-            spParameter = SDeviceMemory::createMemory({instruct.solver.nParamterSize, instruct.solver.pParameterData});
-            pParameter = spParameter.data(spDevice);
+        if(instruct.spParameters) {
+            pParameter = instruct.spParameters.data(spDevice);
             pMemory->size = sizeof(void*);
             pMemory->data = &pParameter;
         }else{
@@ -279,31 +307,11 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         pMemory[1].size = sizeof(pVec->data);
         pMemory[1].data = &pVec->data;
 
-        int nRanges = 1;
-        int pRanges[3];
-        switch(instruct.solver.eClRange) {
-            case PSolveFunc::PBatchAndOut:
-                nRanges = 2;
-                pRanges[0] = nBatchs;
-                pRanges[1] = pVec->size/nBatchs;
-                break;
-
-            case PSolveFunc::PBatch:
-                pRanges[0] = nBatchs;
-                break;
-
-            case PSolveFunc::PCustomer:
-                pRanges[0] = instruct.solver.nCustomerRange;
-                break;
-
-            case PSolveFunc::POut:
-                pRanges[0] = pVec->size;
-                break;
-
-            default:
-                pRanges[0] = 1;
-                break;
-        }
+        int nRanges = instruct.nRanges;
+        int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
+        pRanges[0] *= pRanges[0] < 0 ? -nBatchs : 1;
+        pRanges[1] *= pRanges[1] < 0 ? -nBatchs : 1;
+        pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spDevice->runKernel(
                 {&instruct.evalKernelId, instruct.programName.c_str(), "floatEval"}, 
                 nMemory, pMemorys, 
@@ -459,11 +467,9 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
 
         int nMemory = instruct.args.nInVars*3 + 4;
         PMemory* pMemory = pMemorys;
-        SDeviceMemory spParameter;
         void* pParameter=nullptr;
-        if(instruct.solver.nParamterSize>0) {
-            spParameter = SDeviceMemory::createMemory({instruct.solver.nParamterSize, instruct.solver.pParameterData});
-            pParameter = spParameter.data(spDevice);
+        if(instruct.spParameters) {
+            pParameter = instruct.spParameters.data(spDevice);
             pMemory->size = sizeof(void*);
             pMemory->data = &pParameter;
         }else{
@@ -492,31 +498,11 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         pMemory[1].size = sizeof(pVec->devia);
         pMemory[1].data = &pVec->devia;
 
-        int nRanges = 1;
-        int pRanges[3];
-        switch(instruct.solver.eClRange) {
-            case PSolveFunc::PBatchAndOut:
-                nRanges = 2;
-                pRanges[0] = nBatchs;
-                pRanges[1] = pVec->size/nBatchs;
-                break;
-
-            case PSolveFunc::PBatch:
-                pRanges[0] = nBatchs;
-                break;
-
-            case PSolveFunc::PCustomer:
-                pRanges[0] = instruct.solver.nCustomerRange;
-                break;
-
-            case PSolveFunc::POut:
-                pRanges[0] = pVec->size;
-                break;
-
-            default:
-                pRanges[0] = 1;
-                break;
-        }
+        int nRanges = instruct.nRanges;
+        int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
+        pRanges[0] *= pRanges[0] < 0 ? -nBatchs : 1;
+        pRanges[1] *= pRanges[1] < 0 ? -nBatchs : 1;
+        pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spDevice->runKernel(
                 {&instruct.deviaKernelId, instruct.programName.c_str(), "floatDevia"}, 
                 nMemory, pMemorys, 
