@@ -138,7 +138,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "product"; } 
+    const char* getName() { return "Product"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arBlock("data", m_sData);

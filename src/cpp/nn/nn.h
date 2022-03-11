@@ -3,6 +3,7 @@
 
 #include "../inc/nn/nn.h"
 #include "../inc/io/io.h"
+#include "../inc/device/device.h"
 
 #ifndef _DEBUG
 #define _DEBUG

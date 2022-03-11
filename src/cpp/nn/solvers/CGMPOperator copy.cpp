@@ -122,7 +122,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "GPoolSolver"; } 
+    const char* getName() { return "Gmp"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arBlock("poolwidth", m_nPoolWidth);

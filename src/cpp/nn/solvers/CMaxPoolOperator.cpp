@@ -393,7 +393,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "maxpool"; } 
+    const char* getName() { return "MaxPool"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arBlock("data", m_sData);

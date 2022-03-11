@@ -378,8 +378,9 @@ static int zeroBuffer(const SDevice& spDevice, SDeviceMemory spMemory, int size)
     void* pData = spMemory.data(spDevice);
     sMemory.size = sizeof(void*);
     sMemory.data = &pData;
+    size = spMemory.size();
     if( spDevice->runKernel(
-        {&kernelId, "sw.nn.zero", "floatEval"},
+        {&kernelId, "sw.nn.Zero", "ucharEval"},
         1, &sMemory, 1, &size) != sCtx.success() ){
         return sCtx.error("设备运行内核Zero错误");
     }

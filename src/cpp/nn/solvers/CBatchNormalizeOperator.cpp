@@ -207,7 +207,7 @@ public:
 
 private://IArchivable
     int getClassVer() { return 220112; }
-    const char* getName() { return "batchnormalize"; } 
+    const char* getName() { return "BatchNormalize"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar) {
         ar.arObject("buffer", m_spBuffer);

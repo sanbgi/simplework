@@ -219,19 +219,19 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 }
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
-    SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {28, 28};
     SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;
-            x = x.conv({5,5,32});
-            x = x.maxpool({2,2,2,2});
-            x = x.batchNormalize(PNnBatchNormalize());
-            x = x.conv({7,7,64});
-            x = x.maxpool({2,2,2,2});
-            x = x.batchNormalize(PNnBatchNormalize());
-            x = x.dense({576});
+            //x = x.conv({5,5,32});
+            //x = x.maxpool({2,2,2,2});
+            //x = x.batchNormalize(PNnBatchNormalize());
+            //x = x.conv({7,7,64});
+            //x = x.maxpool({2,2,2,2});
+            //x = x.batchNormalize(PNnBatchNormalize());
+            //x = x.dense({576});
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();
