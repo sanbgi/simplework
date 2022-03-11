@@ -204,7 +204,7 @@ public:
         //
         SDevice device = SDevice::defaultDevice();
         SDeviceMemory spKernalParameterInDevice;
-        if( device != SDevice::cpu() ) {
+        if( device.getPtr() != SDevice::cpu().getPtr() ) {
             if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
                 spKernalParameterInDevice = SDeviceMemory::createMemory(kernalParameter);
                 if( !spKernalParameterInDevice ) {

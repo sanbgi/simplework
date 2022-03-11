@@ -35,9 +35,7 @@ private://IDevice
         if( !spSrcMemory || spSrcMemory->getMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
-
-        SDeviceMemory spMemory;
-        return createMemory(sMemory, spMemory);
+        return createMemory(sMemory, spDeviceMemory);
     }
 
     int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {

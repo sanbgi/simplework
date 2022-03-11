@@ -1,5 +1,9 @@
 
 #include "../device.h"
+#include <map>
+#include <string>
+#include <fstream> 
+#include <iostream>
 #define CL_HPP_TARGET_OPENCL_VERSION 200
 #include "cl/cl2.hpp"
 
@@ -24,7 +28,7 @@ protected://CObject
 
         m_nSize = pMemory->size;
         cl_int err;
-        m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, pMemory->size, nullptr, &err);
+        m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
         if( err != CL_SUCCESS ) {
             return sCtx.error("创建Opencl内存失败");
         }
@@ -52,23 +56,22 @@ private://IDeviceMemory
     }
 
     int getDevice(SDevice& spDevice){
-        return SDeviceFactory::getFactory()->getCpuDevice(spDevice);
+        return SDeviceFactory::getFactory()->getOpenclDevice(spDevice);
     }
 
     int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory){
-        if( spDevice != SDevice::opencl() ) {
+        if( spDevice.getPtr() != SDevice::opencl().getPtr() ) {
             return sCtx.error("无法获取非Opencl设备内存");
         }
         deviceMemory.size = m_nSize;
-        deviceMemory.data = &m_sBuffer;
+        deviceMemory.data = m_sBuffer.get();
         return sCtx.success();
     }
 
     int setMemory(PMemory cpuMemory, int iOffset=0){
-        //TODO
-        //if(!m_sBuffer) {
-        //    return sCtx.error("设备内存无效");
-        //}
+        if(m_sBuffer.get() == nullptr) {
+            return sCtx.error("设备内存无效");
+        }
         if(cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
@@ -79,10 +82,9 @@ private://IDeviceMemory
     }
 
     int getMemory(PMemory cpuMemory, int iOffset=0){
-        //TODO
-        //if(!m_sBuffer) {
-        //    return sCtx.error("设备内存无效");
-        //}
+        if(m_sBuffer.get() == nullptr) {
+            return sCtx.error("设备内存无效");
+        }
         if(cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
@@ -99,8 +101,7 @@ private:
     int m_nSize;
     cl::Buffer m_sBuffer;
 };
-
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(COpenclMemory, COpenclMemory::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(COpenclMemory, COpenclMemory::__getClassKey())
 
 class COpenclDevice : public CObject, public IDevice{
 
@@ -108,7 +109,7 @@ class COpenclDevice : public CObject, public IDevice{
         SIMPLEWORK_INTERFACE_ENTRY(IDevice)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-public://CObject
+protected://CObject
     int __initialize(const PData* pData){
         static bool s_initialized = false;
         static std::once_flag s_initializedFlag;
@@ -163,17 +164,143 @@ private://IDevice
         if( !spSrcMemory || spSrcMemory->getMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
-
-        SDeviceMemory spMemory;
-        return createMemory(sMemory, spMemory);
+        return createMemory(sMemory, spDeviceMemory);
     }
 
     int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
+        cl::Kernel kernel;
+        if( getKernel(kernelKey, kernel) != sCtx.success() ) {
+            return sCtx.error("内核计算错误，找不到指定的内核");
+        }
+
+        PMemory* pArg = pArgs;
+        for(int i=0; i<nArgs; i++, pArg++) {
+            kernel.setArg(i,pArg->size, pArg->data);
+        }
+
+        cl::Event event;
+        cl::NDRange globalRange;
+        switch(nRanges) {
+            case 0:
+                globalRange = cl::NDRange(1);
+                break;
+
+            case 1:
+                globalRange = cl::NDRange(pRanges[0]);
+                break;
+
+            case 2:
+                globalRange = cl::NDRange(pRanges[0],pRanges[1]);
+                break;
+
+            case 3:
+                globalRange = cl::NDRange(pRanges[0],pRanges[1],pRanges[2]);
+                break;
+
+            default:
+                return sCtx.error("内核计算范围不支持超过3个维度");
+        }
+        cl_int ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
+            kernel,
+            cl::NullRange,
+            globalRange,
+            cl::NullRange,
+            nullptr,
+            &event
+        );
+        if(ret != CL_SUCCESS) {
+            return sCtx.error("OpenCL计算错误");
+        }
+        event.wait();
+        return sCtx.success();
+    }
+
+private:
+    static int getKernel(const PKernalKey& kernelKey, cl::Kernel& kernelFunc) {
+        static std::map<PID,cl::Kernel> sMapKernels;
+        static std::map<string,cl::Program> sMapPrograms;
+        if(kernelKey.pKernalId && *kernelKey.pKernalId > 0) {
+            auto it = sMapKernels.find(*kernelKey.pKernalId);
+            if( it != sMapKernels.end() ) {
+                kernelFunc = it->second;
+                return sCtx.success();
+            }
+        }
+
+        if( kernelKey.szKernalName == nullptr || kernelKey.szProgramName == nullptr) {
+            return sCtx.error("内核参数错误");
+        }
+
+        cl::Program clProgram;
+        string strProgramName = kernelKey.szProgramName;
+        auto itProgram = sMapPrograms.find(strProgramName);
+        if( itProgram == sMapPrograms.end() ) {
+            if( getProgram(strProgramName, clProgram) != sCtx.success() ) {
+                return sCtx.error((string("内核创建错误，内核名：")+strProgramName).c_str());
+            }
+            sMapPrograms[strProgramName] = clProgram;
+        }else{
+            clProgram = itProgram->second;
+        }
+
+        cl::Kernel kernel = cl::Kernel(clProgram, kernelKey.szKernalName);
+        if(kernel.get() == nullptr) {
+            string errMsg = string("创建内核错误，程序名：")+strProgramName+", 内核名:"+kernelKey.szKernalName;
+            return sCtx.error(errMsg.c_str());
+        }
+        
+        string keyName = string(kernelKey.szProgramName)+"."+kernelKey.szKernalName;
+        PRuntimeKey rKey(keyName.c_str());
+        sMapKernels[rKey.runtimeId] = kernel;
+        if(kernelKey.pKernalId != nullptr && *kernelKey.pKernalId != rKey.runtimeId) {
+            *kernelKey.pKernalId = rKey.runtimeId;
+        }
+        kernelFunc = kernel;
+        return sCtx.success();
+    }
+
+    static int getProgram(string name, cl::Program& program) {
+        auto ipos = name.rfind(".");
+        if( ipos == string::npos || ipos < 1 || ipos >= name.length() - 1) {
+            return sCtx.error(("内核程序名错误, 名字："+name).c_str());
+        }
+        auto filename = "opencl/"+name.substr(0,ipos)+"/"+name.substr(ipos+1)+".cl";
+        ifstream in(filename.c_str(), std::ios_base::binary);
+        if(!in.good()) {
+            return sCtx.error(("读取内核文件错误，文件名："+filename).c_str());
+        }
+
+        // get file length
+        in.seekg(0, std::ios_base::end);
+        size_t length = in.tellg();
+        in.seekg(0, std::ios_base::beg);
+
+        // read program source
+        std::vector<char> data(length + 1);
+        in.read(data.data(), length);
+        data[length] = 0;
+
+        cl::Program vectorProgram(data.data());
+        try {
+            cl_int ret = vectorProgram.build("-cl-std=CL2.0");
+            if( ret != CL_SUCCESS) {
+                return sCtx.error(("编译内核文件错误，文件名："+filename).c_str());
+            }
+        }
+        catch (...) {
+            // Print build info for all devices
+            cl_int buildErr = CL_SUCCESS;
+            auto buildInfo = vectorProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(&buildErr);
+            for (auto &pair : buildInfo) {
+                std::cerr << pair.second << std::endl << std::endl;
+            }
+            return sCtx.error(("编译内核文件错误，文件名："+filename).c_str());
+        }
+        program = vectorProgram;
         return sCtx.success();
     }
 
 public://Factory
     static const char* __getClassKey() { return "sw.device.OpenclDevice"; }
 };
-
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(COpenclDevice, COpenclDevice::__getClassKey())

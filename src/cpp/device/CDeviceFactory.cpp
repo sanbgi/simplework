@@ -22,14 +22,26 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
     }
 
     int getOpenclDevice(SDevice& spDevice) {
-        static SDevice g_openclDevice = SObject::createObject("sw.device.OpenclDevice");
+        static PMemory g_initMemory;
+        static SDevice g_openclDevice = SObject::createObject("sw.device.OpenclDevice", CData<PMemory>(g_initMemory));
         spDevice = g_openclDevice;
         return sCtx.success();
     }
 
     int getDefaultDevice(SDevice& spDevice) {
-        return getCpuDevice(spDevice);
+        if(!m_spDefaultDevice) {
+            m_spDefaultDevice = SDevice::cpu();
+        }
+        spDevice = m_spDefaultDevice;
+        return sCtx.success();
     }
+
+    int setDefaultDevice(const SDevice& spDevice) {
+        m_spDefaultDevice = spDevice;
+        return sCtx.success();
+    }
+
+    SDevice m_spDefaultDevice;
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CDeviceFactory, SDeviceFactory::__getClassKey())

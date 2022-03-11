@@ -18,10 +18,13 @@ void CNnNetwork::runTestNetwork(){
 }
 
 void CNnNetwork::runLearn() {
+    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     //
     // 一次读取10个
     //
     STensor spPipeIn = STensor::createValue(10);
+    int *pPipeIn = spPipeIn.data<int>();
+    
     SNnNetwork nn = createLayerNetwork();
     //SNnNetwork nn = createRnnNetwork();
     //SNnNetwork nn = createNetwork();
@@ -233,6 +236,7 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
             return sCtx.success();
         }
     });
+    return spNetwork;
     SNnNetwork::saveFile("D://snetwork.bin", spNetwork);
     /*
     std::vector<SNnUnit> arrUnits;

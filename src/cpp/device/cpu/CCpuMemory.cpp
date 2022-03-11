@@ -47,7 +47,7 @@ private://IDeviceMemory
     }
 
     int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory){
-        if( spDevice != SDevice::cpu() ) {
+        if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
             return sCtx.error("无法获取非CPU设备内存");
         }
         deviceMemory.size = m_nSize;

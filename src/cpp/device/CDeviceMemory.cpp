@@ -46,12 +46,16 @@ private://IDeviceMemory
     }
 
     int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory){
-        if( m_spMemory->getMemoryInDevice(spDevice, deviceMemory) != sCtx.success() ) {
-            if( spDevice->createMemory(m_spMemory, m_spMemory) != sCtx.success() ) {
+        SDevice spInDevice = m_spMemory.device();
+        if( spInDevice.getPtr() != spDevice.getPtr() ) {
+            SDeviceMemory sMemory;
+            if( spDevice->createMemory(m_spMemory, sMemory) != sCtx.success() ) {
                 return sCtx.error("创建设备内存异常");
             }
+            m_spMemory = sMemory;
+            return m_spMemory->getMemoryInDevice(spDevice, deviceMemory);
         }
-        return m_spMemory->getMemoryInDevice(spDevice, deviceMemory);
+        return m_spMemory->getMemoryInDevice(spDevice,deviceMemory);
     }
 
     int setMemory(PMemory cpuMemory, int iOffset=0){

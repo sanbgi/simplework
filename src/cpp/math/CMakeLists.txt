@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(SimpleWork VERSION 0.1.0)
 
 set ( SIMPLEWORK_MATH_MODULE_NAME sw.math )
 set( SRC_LIST )
@@ -12,6 +11,5 @@ add_library(${SIMPLEWORK_MATH_MODULE_NAME} SHARED ${SRC_LIST})
 target_link_libraries(${SIMPLEWORK_MATH_MODULE_NAME} "sw.core")
 set_target_properties(${SIMPLEWORK_MATH_MODULE_NAME} PROPERTIES PREFIX "")
 
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+file( GLOB allOpenCLFiles "${CMAKE_CURRENT_SOURCE_DIR}/operators/*.cl")
+file( COPY ${allOpenCLFiles} DESTINATION "${PROJECT_BINARY_DIR}/bin/opencl/sw.math" )

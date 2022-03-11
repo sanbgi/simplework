@@ -185,13 +185,13 @@ int main(int argc, char *argv[]){
     });
     p->visit(nullptr);
 
-    p = CVisitor<void*, void, std::function<void(void*)>>([&](void*){
+    CVisitor<void*, void, std::function<void(void*)>> sV([&](void*){
         i=10;
         i++;
     });
+    p = &sV;
     p->visit(nullptr);
 
-    getInt({1,2,3});
     //SDimension(3,{0,1,2});
     //testOpenCL();
     //cl::Buffer bf();
