@@ -80,13 +80,13 @@ public:
         case PTensorOperator::toFloat:
             {
                 static int sKernelId=0;
-                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uctofEval"}, nVars, pVars, PDATATYPE_FLOAT);
+                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uc2floatEval"}, nVars, pVars, PDATATYPE_FLOAT);
             }
 
         case PTensorOperator::toDouble:
             {
                 static int sKernelId=0;
-                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uctodEval"}, nVars, pVars, PDATATYPE_DOUBLE);
+                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uc2doubleEval"}, nVars, pVars, PDATATYPE_DOUBLE);
             }
         }
 

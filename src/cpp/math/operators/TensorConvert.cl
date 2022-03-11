@@ -1,6 +1,6 @@
 
 
-kernel void uctofEval(
+kernel void uc2floatEval(
     int nIn1, global unsigned char * pIn,
     int nOut, global float * pOut)
 {
@@ -8,7 +8,7 @@ kernel void uctofEval(
     pOut[gid] = pIn[gid];
 }
 
-kernel void uctodEval(
+kernel void uc2doubleEval(
     int nIn1, global unsigned char * pIn,
     int nOut, global double * pOut)
 {
@@ -16,7 +16,7 @@ kernel void uctodEval(
     pOut[gid] = pIn[gid];
 }
 
-kernel void itofEval(
+kernel void int2floatEval(
     int nIn1, global int * pIn,
     int nOut, global float * pOut)
 {
@@ -24,7 +24,7 @@ kernel void itofEval(
     pOut[gid] = pIn[gid];
 }
 
-kernel void itodEval(
+kernel void int2doubleEval(
     int nIn1, global int * pIn,
     int nOut, global double * pOut)
 {

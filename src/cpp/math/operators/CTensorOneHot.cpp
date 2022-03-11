@@ -18,10 +18,10 @@ public://Factory
 private://IKernalOperator
     FKernalFunc getKernalFunc(const char* szName) {
         if(szName != nullptr) {
-            if( strcmp(szName, "itofEval") == 0 ) return itofEval;
-            if( strcmp(szName, "itodEval") == 0 ) return itodEval;
-            if( strcmp(szName, "uctofEval") == 0 ) return uctofEval;
-            if( strcmp(szName, "uctodEval") == 0 ) return uctodEval;
+            if( strcmp(szName, "int2floatEval") == 0 ) return int2floatEval;
+            if( strcmp(szName, "int2doubleEval") == 0 ) return int2doubleEval;
+            if( strcmp(szName, "uc2floatEval") == 0 ) return uc2floatEval;
+            if( strcmp(szName, "uc2doubleEval") == 0 ) return uc2doubleEval;
         }
         return nullptr;
     }
@@ -58,18 +58,18 @@ private://ITensorOperator
         if( pOneHot->idType == PDATATYPE_FLOAT ) {
             if( type == PDATATYPE_UCHAR ) {
                 static int s_kernelId = 0;
-                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uctofEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uc2floatEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
             }else{
                 static int s_kernelId = 0;
-                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "itofEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "int2floatEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
             }
         }else if( pOneHot->idType == PDATATYPE_DOUBLE) {
             if( type == PDATATYPE_UCHAR ) {
                 static int s_kernelId = 0;
-                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uctodEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "uc2doubleEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
             }else{
                 static int s_kernelId = 0;
-                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "itodEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve({&s_kernelId, "sw.math.TensorOneHot", "int2doubleEval"}, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
             }
         }
 
@@ -90,33 +90,33 @@ public:
 #include "TensorOneHot.cl"
     };
 
-    static void itofEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void int2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.itofEval(
+        sKernel.int2floatEval(
                 _KArg(int,0),
                 _KArg(int,1), _KArg(int*,2),
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void itodEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void int2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.itodEval(
+        sKernel.int2doubleEval(
                 _KArg(int,0),
                 _KArg(int,1), _KArg(int*,2),
                 _KArg(int,3), _KArg(double*,4));
     }
 
-    static void uctofEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uc2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uctofEval(
+        sKernel.uc2floatEval(
                 _KArg(int,0),
                 _KArg(int,1), _KArg(unsigned char*,2),
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void uctodEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uc2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uctodEval(
+        sKernel.uc2doubleEval(
                 _KArg(int,0),
                 _KArg(int,1), _KArg(unsigned char*,2),
                 _KArg(int,3), _KArg(double*,4));

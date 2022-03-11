@@ -1,5 +1,5 @@
 
-kernel void itofEval(
+kernel void int2floatEval(
     int nClassify,
     int nIn, global int * pIn,
     int nOut, global float * pOut)
@@ -8,7 +8,7 @@ kernel void itofEval(
     pOut[gid] = (pIn[gid/nClassify] == gid%nIn) ? 1.0f : 0.0f;
 }
 
-kernel void itodEval(
+kernel void int2doubleEval(
     int nClassify,
     int nIn, global int * pIn,
     int nOut, global double * pOut)
@@ -17,7 +17,7 @@ kernel void itodEval(
     pOut[gid] = (pIn[gid/nClassify] == gid%nIn) ? 1.0 : 0.0;
 }
 
-kernel void uctofEval(
+kernel void uc2floatEval(
     int nClassify,
     int nIn, global unsigned char * pIn,
     int nOut, global float * pOut)
@@ -26,7 +26,7 @@ kernel void uctofEval(
     pOut[gid] = (pIn[gid/nClassify] == gid%nIn) ? 1.0f : 0.0f;
 }
 
-kernel void uctodEval(
+kernel void uc2doubleEval(
     int nClassify,
     int nIn, global unsigned char * pIn,
     int nOut, global double * pOut)

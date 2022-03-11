@@ -17,10 +17,10 @@ public://Factory
 public://IMathOperator
     FKernalFunc getKernalFunc(const char* szName) {
         if(szName != nullptr) {
-            if( strcmp(szName, "itofEval") == 0 ) return itofEval;
-            if( strcmp(szName, "itodEval") == 0 ) return itodEval;
-            if( strcmp(szName, "uctofEval") == 0 ) return uctofEval;
-            if( strcmp(szName, "uctodEval") == 0 ) return uctodEval;
+            if( strcmp(szName, "int2floatEval") == 0 ) return int2floatEval;
+            if( strcmp(szName, "int2doubleEval") == 0 ) return int2doubleEval;
+            if( strcmp(szName, "uc2floatEval") == 0 ) return uc2floatEval;
+            if( strcmp(szName, "uc2doubleEval") == 0 ) return uc2doubleEval;
         }
         return nullptr;
     }
@@ -36,30 +36,30 @@ public:
 #include "TensorConvert.cl"
     };
 
-    static void itofEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void int2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.itofEval(
+        sKernel.int2floatEval(
                 _KArg(int,0), _KArg(int*,1),
                 _KArg(int,2), _KArg(float*,3));
     }
 
-    static void itodEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void int2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.itodEval(
+        sKernel.int2doubleEval(
                 _KArg(int,0), _KArg(int*,1),
                 _KArg(int,2), _KArg(double*,3));
     }
 
-    static void uctofEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uc2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uctofEval(
+        sKernel.uc2floatEval(
                 _KArg(int,0), _KArg(unsigned char*,1),
                 _KArg(int,2), _KArg(float*,3));
     }
 
-    static void uctodEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uc2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
         CKernelWraper sKernel = {pCtx};
-        sKernel.uctodEval(
+        sKernel.uc2doubleEval(
                 _KArg(int,0), _KArg(unsigned char*,1),
                 _KArg(int,2), _KArg(double*,3));
     }
