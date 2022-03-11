@@ -6,7 +6,7 @@ typedef struct{
     int m_nMinBatch;
 }PBatchNormalize;
 
-kernel void batchnormalize_eval(
+kernel void floatEval(
     global PBatchNormalize* pThis, 
     int nBatchs,
     int nIn, global float* pIn,
@@ -45,7 +45,7 @@ kernel void batchnormalize_eval(
     }
 }
 
-kernel void batchnormalize_devia(
+kernel void floatDevia(
     global PBatchNormalize* pThis, 
     int nBatchs,
     int nIn, global float * pIn, global float * pInDevia,

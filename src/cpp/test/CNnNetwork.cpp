@@ -220,7 +220,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
     int pDimSizes[] = {28, 28};
-    SNnNetwork spNetwork = SNnNetwork::createNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createOpenCLNetwork({
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;

@@ -1,7 +1,7 @@
 typedef struct {
 }PSoftmaxParameter;
 
-kernel void softmax_eval(
+kernel void floatEval(
     global PSoftmaxParameter* pParameter, 
     int nBatchs,
     int nIn, global float * pIn,
@@ -30,7 +30,7 @@ kernel void softmax_eval(
     }
 }
 
-kernel void softmax_devia(
+kernel void floatDevia(
     global PSoftmaxParameter* pParameter, 
     int nBatchs,
     int nIn, global float * pIn, global float * pInDevia, 

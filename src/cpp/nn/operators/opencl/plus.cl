@@ -1,7 +1,7 @@
 typedef struct {
 }PPlusParameter;
 
-kernel void plus_eval(
+kernel void floatEval(
     global PPlusParameter* pParameter, 
     int nBatchs,
     int nIn1, global float * pIn1,
@@ -12,7 +12,7 @@ kernel void plus_eval(
     pOut[gid] = pIn1[gid%nIn1] + pIn2[gid%nIn2];
 }
 
-kernel void plus_devia(
+kernel void floatDevia(
     global PPlusParameter* pParameter, 
     int nBatchs,
     int nIn1, global float * pIn1, global float * pIn1Devia,

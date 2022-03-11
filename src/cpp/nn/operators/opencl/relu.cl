@@ -1,7 +1,7 @@
 typedef struct {
 }PReluParameter;
 
-kernel void relu_eval(
+kernel void floatEval(
     global PReluParameter* pParameter, 
     int nBatchs,
     int nIn1, global float * pIn,
@@ -11,7 +11,7 @@ kernel void relu_eval(
     pOut[gid] = pIn[gid] >= 0 ? pIn[gid] : 0.0f;
 }
 
-kernel void relu_devia(
+kernel void floatDevia(
     global PReluParameter* pParameter, 
     int nBatchs,
     int nIn1, global float * pIn, global float * pInDevia, 

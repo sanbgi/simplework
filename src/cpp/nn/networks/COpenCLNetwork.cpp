@@ -92,7 +92,7 @@ public:
 
 private:
     static int getProgram(string name, cl::Program& program) {
-        string filename = "opencl/" + name;
+        string filename = "opencl/sw.nn/" + name + ".cl";
         ifstream in(filename.c_str(), std::ios_base::binary);
         if(!in.good()) {
             return sCtx.error(("读取内核文件错误，文件名："+filename).c_str());
@@ -129,21 +129,21 @@ private:
     }
 
     template<typename Q>
-    static int getKernel(string name, string ext, cl::Kernel& kEval, cl::Kernel& kDevia) {
+    static int getKernel(string name, cl::Kernel& kEval, cl::Kernel& kDevia) {
         static map<string,cl::Program> s_mapProgrames;
         auto it = s_mapProgrames.find(name);
         if( it != s_mapProgrames.end() ) {
-            kEval = cl::Kernel(it->second, (name + "_eval").c_str());
-            kDevia = cl::Kernel(it->second, (name + "_devia").c_str());
+            kEval = cl::Kernel(it->second, "floatEval");
+            kDevia = cl::Kernel(it->second, "floatDevia");
             return sCtx.success();
         }
 
         cl::Program program;
-        if( getProgram(name+ext, program) != sCtx.success() ) {
+        if( getProgram(name, program) != sCtx.success() ) {
             return sCtx.error();
         }
-        kEval = cl::Kernel(program, (name + "_eval").c_str());
-        kDevia = cl::Kernel(program, (name + "_devia").c_str());
+        kEval = cl::Kernel(program, "floatEval");
+        kDevia = cl::Kernel(program, "floatDevia");
         s_mapProgrames[name] = program;
         return sCtx.success();
     }
@@ -153,24 +153,12 @@ private:
         static bool s_Initialized = false;
         static cl::Program s_programBasic;
         if( !s_Initialized ) {
-            
-            unsigned long idType = CBasicData<Q>::getStaticType();
-            if( idType == CBasicData<float>::getStaticType()) {
-                const string ext = "_float.cl";
-                if( getProgram("basic"+ext, s_programBasic) != sCtx.success() ) {
-                    return sCtx.error();
-                }
-            }else if( idType == CBasicData<double>::getStaticType() ) {
-                const string ext = "_double.cl";
-                if( getProgram("basic"+ext, s_programBasic) != sCtx.success() ) {
-                    return sCtx.error();
-                }
-            }else{
-                return sCtx.error("数据类型目前只支持float、double");
+            if( getProgram("zero", s_programBasic) != sCtx.success() ) {
+                return sCtx.error();
             }
             s_Initialized = true;
         }
-        k = cl::Kernel(s_programBasic, name.c_str());;
+        k = cl::Kernel(s_programBasic, "floatEval");;
         return sCtx.success();
     }
 };
@@ -267,13 +255,11 @@ int COpenCLNetwork::initNetwork(PDATATYPE idType) {
 
         string name = (*itOp)->getName();
         if(idType == CBasicData<float>::getStaticType()) {
-            const string ext = "_float.cl";
-            if( getKernel<float>(name,ext,solveParameter.eval, solveParameter.devia) != sCtx.success() ) {
+            if( getKernel<float>(name,solveParameter.eval, solveParameter.devia) != sCtx.success() ) {
                 return sCtx.error("获取计算内核错误");
             }
         }else if( idType == CBasicData<double>::getStaticType() ) {
-            const string ext = "_double.cl";
-            if( getKernel<float>(name,ext,solveParameter.eval, solveParameter.devia) != sCtx.success() ) {
+            if( getKernel<float>(name,solveParameter.eval, solveParameter.devia) != sCtx.success() ) {
                 return sCtx.error("获取计算内核错误");
             }
         }else{

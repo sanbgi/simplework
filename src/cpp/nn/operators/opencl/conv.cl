@@ -42,7 +42,7 @@ typedef struct {
     CBatchSize2D stepConv;
 }PConvParameter;
 
-kernel void conv_eval(
+kernel void floatEval(
     global PConvParameter* pThis, 
     int nBatchs,
     int nIn, global float * pIn,
@@ -139,7 +139,7 @@ kernel void conv_eval(
     pOut[gid] = dConv;// - (*it.pBais);
 }
 
-kernel void conv_devia(
+kernel void floatDevia(
     global PConvParameter* pThis, 
     int nBatchs,
     int nIn, global float * pIn, global float * pInDevia,

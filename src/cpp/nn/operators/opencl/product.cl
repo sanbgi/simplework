@@ -4,7 +4,7 @@ typedef struct {
     int nOut;
 }PProductParameter;
 
-kernel void product_eval(
+kernel void floatEval(
     global PProductParameter* pParameter, 
     int nBatchs,
     int nIn, global float * pIn,
@@ -25,7 +25,7 @@ kernel void product_eval(
     pOut[gid] = fOut;
 }
 
-kernel void product_devia(
+kernel void floatDevia(
     global PProductParameter* pParameter, 
     int nBatchs,
     int nIn, global float * pIn, global float * pInDevia,

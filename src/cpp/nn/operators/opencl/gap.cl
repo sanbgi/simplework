@@ -1,4 +1,4 @@
-kernel void gap_eval(
+kernel void floatEval(
     global void* pThis, 
     int nBatchs,
     int nIn, global float * pIn,
@@ -21,7 +21,7 @@ kernel void gap_eval(
     pOut[gid] = sumPlane / nPoolSize;
 }
 
-kernel void gap_devia(
+kernel void floatDevia(
     global void* pThis, 
     int nBatchs,
     int nIn, global float * pIn, global float * pInDevia,

@@ -24,7 +24,7 @@ typedef struct{
     int m_nOutTensorSize;
 }PMaxpoolParameter;
 
-kernel void maxpool_eval(
+kernel void floatEval(
     global PMaxpoolParameter* pThis, 
     int nBatchs,
     int nIn, global float * pIn,
@@ -133,7 +133,7 @@ kernel void maxpool_eval(
     pOut[gid] = dMax;
 }
 
-kernel void maxpool_devia(
+kernel void floatDevia(
     global PMaxpoolParameter* pThis, 
     int nBatchs,
     int nIn, global float * pIn, global float * pInDevia,
