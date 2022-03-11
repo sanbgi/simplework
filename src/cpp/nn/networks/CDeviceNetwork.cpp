@@ -2,6 +2,7 @@
 #include "network.h"
 
 #include <map>
+#include <vector>
 #include <string>
 #include <fstream> 
 #include <iostream>
@@ -210,6 +211,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     if( STensor::createVector<Q>(spOpSolveBuffer, solveCtx.nSumSize[EVOperator] * nBatchs) != sCtx.success()) {
         return sCtx.error("创建计算缓冲区失败");
     }
+
     STensor spOut;
     SDimension spOutDim = solveCtx.spOutDimension.upHighDimension(nBatchs);
     if( STensor::createTensor<Q>(spOut, spOutDim, spOutDim.dataSize()) != sCtx.success()) {
@@ -349,7 +351,8 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         }
     }
     memcpy(spOut.data(), spOpSolveBuffer.data<Q>()+iOffset, spOut.size()*sizeof(Q) );
-    return CNnResizeTensor::createResizeTensor({spOut, spOpSolveBuffer, spBatchIn}, spBatchOut);
+    SObject pExtras[] = {spOpSolveBuffer, spBatchIn};
+    return CNnResizeTensor::createResizeTensor({spOut, 2, pExtras}, spBatchOut);
 }
 
 int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
@@ -407,8 +410,8 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
     SDevice spDevice = SDevice::defaultDevice();
     PNnResizeTensor sResizeTensor;
     spResizeOut->getResizeData(sResizeTensor);
-    STensor spOpTensor = sResizeTensor.spExtra1;
-    spBatchIn = sResizeTensor.spExtra2;
+    STensor spOpTensor = sResizeTensor.pExtras[0];
+    spBatchIn = sResizeTensor.pExtras[1];
 
     struct PSolveDeviaVector {
         int size;
@@ -578,8 +581,8 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
     }
 
     solveCtx.spOptimizer->updateDeviation(nBatchs);
-    STensor spWeightDevia = STensor::createVector<Q>(nWeights, pWeightDeviaBuffer);
-    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, spWeightDevia}, spBatchInDeviation);
+    SObject pExtras[] = { STensor::createVector<Q>(nWeights, pWeightDeviaBuffer) };
+    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, 1, pExtras}, spBatchInDeviation);
 }
 
 int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
@@ -606,7 +609,7 @@ int CDeviceNetwork::updateT(const STensor& spBatchInDeviation) {
 
     PNnResizeTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
-    STensor spWeightDevia = sResizeTensor.spExtra1;
+    STensor spWeightDevia = sResizeTensor.pExtras[0];
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
     int nWeights = solveCtx.nSumSize[EVWeight];

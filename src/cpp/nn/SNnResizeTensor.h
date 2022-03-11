@@ -14,10 +14,10 @@ struct PNnResizeTensor {
     STensor spTensor;
 
     //
-    // 额外存储参数
+    // 扩展存储数组
     //
-    SObject spExtra1;
-    SObject spExtra2;
+    int nExtras;
+    SObject* pExtras; 
 };
 
 //

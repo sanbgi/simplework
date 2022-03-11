@@ -458,7 +458,8 @@ int COpenCLNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         }
     }
     memcpy(spOut.data(), spOpSolveBuffer.data<Q>()+iOffset, spOut.size()*sizeof(Q) );
-    return CNnResizeTensor::createResizeTensor({spOut, spOpSolveBuffer, spBatchIn}, spBatchOut);
+    SObject pExtras[] = {spOpSolveBuffer, spBatchIn};
+    return CNnResizeTensor::createResizeTensor({spOut, 2, pExtras}, spBatchOut);
 }
 
 int COpenCLNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {

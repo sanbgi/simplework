@@ -3,6 +3,7 @@
 
 #include "nn.h"
 #include "SNnResizeTensor.h"
+#include <vector>
 
 using namespace sw;
 using namespace std;
@@ -36,7 +37,10 @@ public://Factory
     static int createResizeTensor(const PNnResizeTensor& rTenser, STensor& spTensor);
 
 private:
-    PNnResizeTensor m_src;
+    STensor m_spTensor;
+    SObject m_spExtra1;
+    SObject m_spExtra2;
+    std::vector<SObject> m_arrExtras;
 };
 
 #endif//__SimpleWork_nn_CNnResizeTensor_H__
