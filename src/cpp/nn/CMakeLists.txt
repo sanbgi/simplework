@@ -14,11 +14,15 @@ list ( APPEND SRC_LIST ${SRC_VARIABLE_FILES} )
 list ( APPEND SRC_LIST ${SRC_OPTIMIZER_FILES} )
 list ( APPEND SRC_LIST ${SRC_MODULE_FILES} )
 list ( APPEND SRC_LIST ${SRC_NETWORK_FILES} )
+
+file ( GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/solvers/*.cpp" )
+list ( APPEND SRC_LIST ${SRC_FILES} )
+
 add_library(${SIMPLEWORK_NN_MODULE_NAME} SHARED ${SRC_LIST})
 
 find_package(OpenCL REQUIRED)
 target_link_libraries(${SIMPLEWORK_NN_MODULE_NAME} "sw.core" OpenCL::OpenCL)
 set_target_properties(${SIMPLEWORK_NN_MODULE_NAME} PROPERTIES PREFIX "")
 
-file( GLOB allOpenCLFiles "${CMAKE_CURRENT_SOURCE_DIR}/operators/opencl/*.cl")
+file( GLOB allOpenCLFiles "${CMAKE_CURRENT_SOURCE_DIR}/operators/*.cl")
 file( COPY ${allOpenCLFiles} DESTINATION "${PROJECT_BINARY_DIR}/bin/opencl/${SIMPLEWORK_NN_MODULE_NAME}" )
