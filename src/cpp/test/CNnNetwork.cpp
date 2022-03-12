@@ -71,7 +71,8 @@ void CNnNetwork::runLearn() {
             // 求均方根
             //
             STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
-            float fRMS = *spRootMeanSquare.data<float>();
+            float* pFRMS = spRootMeanSquare.data<float>();
+            float fRMS = *pFRMS;
             //if( fRMS > 0.02 )
             
             {

@@ -81,7 +81,7 @@ private://IDevice
                 iRangeLayer = nRanges-1;
                 while(iRangeLayer>=0){
                     pLocalRange[iRangeLayer]++;
-                    if(pLocalRange[iRangeLayer] < pRanges[iRangeLayer] - 1) {
+                    if(pLocalRange[iRangeLayer] < pRanges[iRangeLayer]) {
                         break;
                     }
                     pLocalRange[iRangeLayer--] = 0;

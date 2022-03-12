@@ -33,7 +33,7 @@ struct PSolveFunc {
     int nParamterSize;
     void* pParameterData;
     enum {
-        PBatchAndOut,
+        //PBatchAndOut,
         PBatch,
         POut,
         PCustomer,

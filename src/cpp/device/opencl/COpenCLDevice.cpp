@@ -88,7 +88,8 @@ private://IDeviceMemory
         if(cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        if( cl::copy(m_sBuffer, cpuMemory.pByteArray, cpuMemory.pByteArray+cpuMemory.size ) != CL_SUCCESS ) {
+        cl_int err;
+        if( (err = cl::copy(m_sBuffer, cpuMemory.pByteArray, cpuMemory.pByteArray+cpuMemory.size )) != CL_SUCCESS ) {
             return sCtx.error("Opencl内存拷贝错误");
         }
         return sCtx.success();
@@ -231,8 +232,9 @@ private://IDevice
             nullptr,
             &event
         );
-
-        /*如果内核支持不支持超过范围的RANGE，则可以启用下面代码来拆分指令
+        
+        /*
+        //如果内核支持不支持超过范围的RANGE，则可以启用下面代码来拆分指令
         cl_int ret = CL_SUCCESS;
         cl::Event event;
         if(nRanges == 0) {
@@ -297,14 +299,14 @@ private://IDevice
                 iRuningLayer = nRanges-1;
                 while(iRuningLayer>=0){
                     iOffset[iRuningLayer] += nWorkSize[iRuningLayer];
-                    if(iOffset[iRuningLayer] < pRanges[iRuningLayer]-1) {
+                    if(iOffset[iRuningLayer] < pRanges[iRuningLayer]) {
                         break;
                     }
                     iOffset[iRuningLayer--] = 0;
                 }
             }
-        }
-        */
+        }*/
+        
         if(ret != CL_SUCCESS) {
             return sCtx.error("OpenCL计算错误");
         }

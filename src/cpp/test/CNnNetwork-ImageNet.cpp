@@ -156,6 +156,7 @@ SNnNetwork CNnNetwork::createResNet() {
                 }
             };
             SNnVariable x = spIn;
+            //x = x.maxpool({2,2,2,2,"same"});
             x = x.conv({7,7,64,1,2,2,"same","relu"});
             x = x.maxpool({3,3,2,2,"same"});
             int nResNet = 50;
@@ -229,8 +230,6 @@ static int loadImage(const SAvNetwork& spFilter, const char* szFilename, STensor
 }
 
 void CNnNetwork::runImageNet() {
-                        printf("fbcd");
-
     SAvNetwork spFilter;
     SNnNetwork nn = createResNet();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");

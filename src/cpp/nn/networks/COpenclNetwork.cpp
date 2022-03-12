@@ -400,10 +400,6 @@ int COpenclNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         instruct.eval.setArg(instruct.args.nInVars*2+3, pVec->data);
         cl::NDRange globalRange;
         switch(instruct.solver.eClRange) {
-            case PSolveFunc::PBatchAndOut:
-                globalRange = cl::NDRange(nBatchs, pVec->size/nBatchs);
-                break;
-
             case PSolveFunc::PBatch:
                 globalRange = cl::NDRange(nBatchs);
                 break;
@@ -606,10 +602,6 @@ int COpenclNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         instruct.devia.setArg(instruct.args.nInVars*3+3, pVec->devia);
         cl::NDRange globalRange;
         switch(instruct.solver.eClRange) {
-            case PSolveFunc::PBatchAndOut:
-                globalRange = cl::NDRange(nBatchs, pVec->size/nBatchs);
-                break;
-
             case PSolveFunc::PBatch:
                 globalRange = cl::NDRange(nBatchs);
                 break;

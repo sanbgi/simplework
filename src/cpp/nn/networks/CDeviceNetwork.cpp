@@ -161,12 +161,6 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         solveParameter.nRanges = 1;
         solveParameter.pRanges[0] = solveParameter.pRanges[1] = solveParameter.pRanges[2] = 0;
         switch(solveFunc.eClRange) {
-            case PSolveFunc::PBatchAndOut:
-                solveParameter.nRanges = 2;
-                solveParameter.pRanges[0] = -1;
-                solveParameter.pRanges[1] = arrVars[spOp.iOutVar].size;
-                break;
-
             case PSolveFunc::PBatch:
                 solveParameter.pRanges[0] = -1;
                 break;
