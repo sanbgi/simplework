@@ -19,7 +19,7 @@ public://Kernel
         int get_global_id(int i) {
             return pCtx->pRanges[i];
         }
-
+        
 #include "BatchNormalize.cl"
     };
     

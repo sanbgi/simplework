@@ -221,7 +221,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 SNnNetwork CNnNetwork::createLayerNetwork() {
     //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {28, 28};
-    SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createNetwork({
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;
@@ -231,8 +231,7 @@ SNnNetwork CNnNetwork::createLayerNetwork() {
             x = x.conv({7,7,64});
             x = x.maxpool({2,2,2,2});
             x = x.batchNormalize(PNnBatchNormalize());
-            //x = x.dense({576});
-            x = x.gap();
+            x = x.dense({576});
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();
@@ -360,7 +359,7 @@ SNnNetwork CNnNetwork::createResNetwork() {
             x = ResNet::resBlock(x, 3, 32, 128);
             x = x.maxpool({2,2,2,2});
             x = ResNet::resBlock(x, 3, 32, 512);
-            x = x.gmp();
+            x = x.gap();
             x = x.dense({10, "softmax"});
             spOut = x;
             return sCtx.success();

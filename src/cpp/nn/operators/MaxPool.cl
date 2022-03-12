@@ -256,5 +256,15 @@ kernel void floatDevia(
     }
 
     //(*pExpectDelta) += (*it.pOutDeviation);
-    *pExpectDelta += pOutDevia[gid];
+    union {
+        unsigned int intVal;
+        float floatVal;
+    } newVal, prevVal;
+    do {
+        prevVal.floatVal = (*pExpectDelta);
+        newVal.floatVal = prevVal.floatVal + pOutDevia[gid];
+    } while (atomic_cmpxchg((volatile __global unsigned int *)pExpectDelta, 
+                            prevVal.intVal, newVal.intVal) 
+                            != prevVal.intVal);
+    //*pExpectDelta += pOutDevia[gid];
 }

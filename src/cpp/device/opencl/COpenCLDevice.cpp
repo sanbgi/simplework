@@ -138,7 +138,26 @@ protected://CObject
         });
         if(s_initialized == false) {
             return sCtx.error("初始化OpenCL失败");
-        } 
+        }
+
+        cl_int err = CL_SUCCESS;
+        cl::Device device = cl::Device::getDefault(&err);
+        if(err != CL_SUCCESS) {
+            return sCtx.error("无法获得默认Opencl设备");
+        }
+
+        auto maxWorkItemSize = device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>(&err);
+        if(err != CL_SUCCESS) {
+            return sCtx.error("Opencl设备最大工作项未知");
+        }
+
+
+        int nMaxRange = sizeof(m_pMaxRanges)/sizeof(m_pMaxRanges[0]);
+        int nMaxDeviceRange = maxWorkItemSize.size();
+        m_nMaxRanges = nMaxDeviceRange > nMaxRange ? nMaxRange : nMaxDeviceRange;
+        for(int i=0; i<m_nMaxRanges; i++) {
+            m_pMaxRanges[i] = maxWorkItemSize[i] * 100000;
+        }
         return sCtx.success();
     }
 
@@ -178,6 +197,10 @@ private://IDevice
             kernel.setArg(i,pArg->size, pArg->data);
         }
 
+        if(nRanges < 0 || nRanges > m_nMaxRanges ) {
+            return sCtx.error("内核计算参数错误，nRnages不符合要求");
+        }
+
         cl::Event event;
         cl::NDRange globalRange;
         switch(nRanges) {
@@ -208,6 +231,80 @@ private://IDevice
             nullptr,
             &event
         );
+
+        /*如果内核支持不支持超过范围的RANGE，则可以启用下面代码来拆分指令
+        cl_int ret = CL_SUCCESS;
+        cl::Event event;
+        if(nRanges == 0) {
+            ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
+                kernel,
+                cl::NullRange,
+                cl::NDRange(1),
+                cl::NullRange,
+                nullptr,
+                &event
+            );
+        }else{
+            int iOffset[3] = {0, 0, 0};
+            int nWorkSize[3];
+            int iRuningLayer=nRanges-1;
+            while(iRuningLayer>=0) {
+                int sum = 0;
+                for(int i=0; i<nRanges; i++) {
+                    if( pRanges[i] - iOffset[i] > m_pMaxRanges[i]) {
+                        nWorkSize[i] = m_pMaxRanges[i];
+                    }else{
+                        nWorkSize[i] = pRanges[i] - iOffset[i];
+                    }
+                    sum += nWorkSize[i];
+                }
+                if(sum == 0) {
+                    break;
+                }
+
+                if(nRanges == 1) {
+                    ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
+                        kernel,
+                        cl::NDRange(iOffset[0]),
+                        cl::NDRange(nWorkSize[0]),
+                        cl::NullRange,
+                        nullptr,
+                        &event
+                    );
+                }else if(nRanges == 2) {
+                    ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
+                        kernel,
+                        cl::NDRange(iOffset[0], iOffset[1]),
+                        cl::NDRange(nWorkSize[0], nWorkSize[1]),
+                        cl::NullRange,
+                        nullptr,
+                        &event
+                    );
+                }else if(nRanges == 3) {
+                    ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
+                        kernel,
+                        cl::NDRange(iOffset[0], iOffset[1], iOffset[2]),
+                        cl::NDRange(nWorkSize[0], nWorkSize[1], nWorkSize[2]),
+                        cl::NullRange,
+                        nullptr,
+                        &event
+                    );
+                }
+                if(ret != CL_SUCCESS) {
+                    break;
+                }
+                
+                iRuningLayer = nRanges-1;
+                while(iRuningLayer>=0){
+                    iOffset[iRuningLayer] += nWorkSize[iRuningLayer];
+                    if(iOffset[iRuningLayer] < pRanges[iRuningLayer]-1) {
+                        break;
+                    }
+                    iOffset[iRuningLayer--] = 0;
+                }
+            }
+        }
+        */
         if(ret != CL_SUCCESS) {
             return sCtx.error("OpenCL计算错误");
         }
@@ -302,5 +399,9 @@ private:
 
 public://Factory
     static const char* __getClassKey() { return "sw.device.OpenclDevice"; }
+
+private:
+    int m_nMaxRanges;
+    int m_pMaxRanges[3];
 };
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(COpenclDevice, COpenclDevice::__getClassKey())

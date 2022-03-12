@@ -84,13 +84,13 @@ kernel void floatDevia(
         float floatVal;
     } newVal, prevVal;
     for(i=0; i<nItems; i++) {
-        //do {
-        //    prevVal.floatVal = (*pInDevia);
-        //    newVal.floatVal = prevVal.floatVal + *pOutDevia * x;
-        //} while (atomic_cmpxchg((volatile __global unsigned int *)pInDevia, 
-        //                        prevVal.intVal, newVal.intVal) 
-        //                        != prevVal.intVal);
-        (*pInDevia) += *pOutDevia * x;
+        do {
+            prevVal.floatVal = (*pInDevia);
+            newVal.floatVal = prevVal.floatVal + *pOutDevia * x;
+        } while (atomic_cmpxchg((volatile __global unsigned int *)pInDevia, 
+                                prevVal.intVal, newVal.intVal) 
+                                != prevVal.intVal);
+        //(*pInDevia) += *pOutDevia * x;
         pInDevia += nLayer;
         pOutDevia += nLayer;
     }

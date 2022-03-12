@@ -73,9 +73,9 @@ void CNnNetwork::prepareImageNet() {
 }
 
 SNnNetwork CNnNetwork::createResNet() {
-    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {224, 224, 3};
-    SNnNetwork spNetwork = SNnNetwork::createNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(3,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             struct ResNet {
@@ -201,12 +201,40 @@ SNnNetwork CNnNetwork::createResNet() {
     return SNnNetwork::loadFile("D://snetwork_resnet.bin");
 }
 
+static int loadImage(const SAvNetwork& spFilter, const char* szFilename, STensor& spTensor) {
+    SArchivable spArchive;
+    if( SArchivable::loadBinaryFile((string(szFilename)+".tbin").c_str(), spArchive) == sCtx.success() ) {
+        spTensor = spArchive;
+        return sCtx.success();
+    }
+
+    SAvFrame spFrame = SAvFrame::loadImageFile(szFilename);
+    if( !spFrame ) {
+        return sCtx.error((string("加载图片文件失败，文件名：")+szFilename).c_str());
+    }
+
+    if( spFilter->pipeIn(spFrame, spFrame) != sCtx.success() ) {
+        return sCtx.error((string("图片格式转化异常，文件名：")+szFilename).c_str());
+    }
+
+    int pDimSizes[] = {224, 224, 3};
+    if( STensor::createTensor<unsigned char>(spTensor, SDimension::createDimension(3,pDimSizes), 224 * 224 * 3 ) != sCtx.success() ) {
+        return sCtx.error("创建输入图片张量失败");
+    }
+
+    SArchivable::saveBinaryFile((string(szFilename)+".tbin").c_str(), spTensor);
+    const PAvFrame* pAvFrame = spFrame->getFramePtr();
+    memcpy(spTensor.data(), pAvFrame->ppPlanes[0], 224*224*3);
+    return sCtx.success();
+}
 
 void CNnNetwork::runImageNet() {
+                        printf("fbcd");
+
     SAvNetwork spFilter;
     SNnNetwork nn = createResNet();
     //SNnNetwork nn = SNnNetwork::loadFile("D://snetwork.bin");
-    SAvOut spWindow = SAvOut::openWindow("TestWindow", 224, 224);
+    //SAvOut spWindow = SAvOut::openWindow("TestWindow", 224, 224);
     {
         PAvSample frameSample;
         frameSample.sampleType = EAvSampleType::AvSampleType_Video;
@@ -274,13 +302,28 @@ void CNnNetwork::runImageNet() {
                 int nPrepared = 0;
                 vector<string>::iterator itf = arrFiles.begin();
                 while(itf != arrFiles.end()) {
-                    SAvFrame spImage = SAvFrame::loadImageFile((rootFolder+"/"+*itf).c_str());
-                    if( !spImage ) {
+                    STensor spImage;
+                    if( loadImage(spFilter,(rootFolder+"/"+*itf).c_str(), spImage) == sCtx.success() ) {
+                        memcpy(pBatchIn, spImage.data(), 224*224*3);
+
+                        string filename = *itf;
+                        size_t isepchar = filename.find('/');
+                        istringstream iconverter(filename.substr(isepchar-3,3));
+                        iconverter >> *pClassify;
+                        *pClassify = mapClassifies[*pClassify];
+                    }else{
                         cout << *itf << "\n";
                         outstream << *itf << "\n";
                         break;
                     }
 
+                    /*
+                    SAvFrame spImage = SAvFrame::loadImageFile(filename.c_str());
+                    if( !spImage ) {
+                        cout << *itf << "\n";
+                        outstream << *itf << "\n";
+                        break;
+                    }
                     if( spFilter->pipeIn(spImage, spImage) == sCtx.success() ) {
                         spWindow->writeFrame(spImage);
 
@@ -295,7 +338,8 @@ void CNnNetwork::runImageNet() {
                     }else{
                         cout << *itf << "\n";
                         outstream << *itf << "\n";
-                    }
+                    }*/
+
                     pBatchIn += 224 * 224 * 3;
                     nPrepared++;
                     pClassify++;
@@ -324,7 +368,7 @@ void CNnNetwork::runImageNet() {
             //
             STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
             float fRMS = *spRootMeanSquare.data<float>();
-            if( fRMS > 0.0001 ) {
+            {
                 //
                 // 学习更新神经网络
                 //
@@ -338,9 +382,8 @@ void CNnNetwork::runImageNet() {
                 //
                 // 保存网络
                 //
-                SNnNetwork::saveFile("D://snetwork.bin", nn);
+                //SNnNetwork::saveFile("D://snetwork.bin", nn);
             }
-
 
             //
             // 打印一些结果信息
@@ -365,7 +408,7 @@ void CNnNetwork::runImageNet() {
                 sumAcc = sumAcc * sumX + (1-xAcc) * (1-sumX);
                 sumLoss = sumLoss * sumX + delta * (1-sumX);
                 static int t = 0;
-                if( t++ % 10 == 0)
+                if( t++ % 1 == 0)
                 {
                     std::cout   << "\rt:" << t << ",\tloss:" << delta <<",\trms:"<< fRMS 
                                 <<",\tnAcc:" << nAcc << ", \tavgAccDelta:" << xAcc<< "\tsAcc:"

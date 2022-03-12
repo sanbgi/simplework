@@ -20,12 +20,6 @@ public://Kernel
             return pCtx->pRanges[i];
         }
 
-        //TODO原子操作实现
-        static int atomic_cmpxchg(unsigned int* pV, int oldV, int newV) {
-            *pV = newV;
-            return oldV;
-        }
-
 #include "Conv.cl"
     };
     

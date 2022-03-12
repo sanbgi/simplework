@@ -64,15 +64,4 @@ kernel void floatDevia(
                                 != prevVal.intVal);
         pItIn++, pItMat++, pItInDevia++, pItMatDevia++;
     }
-    
-    /*
-    // Have a child kernel write into third quarter of output
-    ndrange_t ndrange = ndrange_1D(nIn);
-    enqueue_kernel(get_default_queue(), CLK_ENQUEUE_FLAGS_WAIT_KERNEL, ndrange,
-    ^{
-        int i=get_global_id(0);
-        pItInDevia[i] += pItMat[i]*fOutDevia;
-        pItMatDevia[i] += pIn[i]*fOutDevia; 
-    });
-    */
 }

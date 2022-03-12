@@ -78,6 +78,9 @@ STensor CNnWeightVariable::getData(PDATATYPE idType) {
 template<typename Q> void CNnWeightVariable::initWeightT(int nWeights, void* pWeights) {
     Q xWeight = (Q)0.1;
     for(int i=0; i<nWeights; i++) {
+        //double r = i/777.1*10234665;
+        //r = r - (int)r;
+        //((Q*)pWeights)[i] = (Q)m_dAvg + -xWeight + r * xWeight * 2;
         ((Q*)pWeights)[i] = (Q)m_dAvg + -xWeight + CUtils::rand() * xWeight * 2;
     }
 }

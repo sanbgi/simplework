@@ -117,7 +117,7 @@ private://IArchivable
     }
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.GPoolSolver"; }
+    static const char* __getClassKey() { return "sw.nn.GapSolver"; }
 
 private:
     int m_nPoolWidth;
