@@ -34,7 +34,7 @@ protected://CObject
         }
 
         if(pMemory->data != nullptr) {
-            if( setMemory(*pMemory) != sCtx.success() ) {
+            if( setCpuMemory(*pMemory) != sCtx.success() ) {
                 return sCtx.error("拷贝Opencl内存失败");
             }
         }
@@ -68,7 +68,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int setMemory(const PMemory& cpuMemory, int iOffset=0){
+    int setCpuMemory(const PMemory& cpuMemory, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
@@ -81,7 +81,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int getMemory(const PMemory& cpuMemory, int iOffset=0){
+    int getCpuMemory(const PMemory& cpuMemory, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
@@ -168,20 +168,20 @@ private://IDevice
         return spDeviceMemory ? sCtx.success() : sCtx.error("创建内存失败");
     }
 
-    int createMemory(const SDeviceMemory& spSrcMemory, SDeviceMemory& spDeviceMemory){
-        SDevice spDevice = spSrcMemory.device();
+    int createMemory(const SDeviceMemory& spMemory, SDeviceMemory& spDeviceMemory){
+        SDevice spDevice = spMemory.device();
         if(spDevice.getPtr() == this) {
-            spDeviceMemory = spSrcMemory;
+            spDeviceMemory = spMemory;
             return sCtx.success();
         }
 
-        int size = spSrcMemory.size();
+        int size = spMemory.size();
         CTaker<char*> spTaker(new char[size], [](char* pMemory){
             delete[] pMemory;
         });
 
         PMemory sMemory = {size, spTaker};
-        if( !spSrcMemory || spSrcMemory->getMemory(sMemory) != sCtx.success() ) {
+        if( !spMemory || spMemory->getCpuMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
         return createMemory(sMemory, spDeviceMemory);

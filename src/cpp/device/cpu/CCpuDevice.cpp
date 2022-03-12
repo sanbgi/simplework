@@ -19,23 +19,32 @@ private://IDevice
         return spDeviceMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
     }
 
-    int createMemory(const SDeviceMemory& spSrcMemory, SDeviceMemory& spDeviceMemory){
-        SDevice spDevice = spSrcMemory.device();
+    int createMemory(const SDeviceMemory& spMemory, SDeviceMemory& spDeviceMemory){
+        SDevice spDevice = spMemory.device();
         if(spDevice.getPtr() == this) {
-            spDeviceMemory = spSrcMemory;
+            spDeviceMemory = spMemory;
             return sCtx.success();
         }
 
-        int size = spSrcMemory.size();
-        CTaker<char*> spTaker(new char[size], [](char* pMemory){
-            delete[] pMemory;
-        });
-
-        PMemory sMemory = {size, spTaker};
-        if( !spSrcMemory || spSrcMemory->getMemory(sMemory) != sCtx.success() ) {
-            return sCtx.error("创建内存所对应的原始内存无效");
+        //创建CPU内存
+        SDeviceMemory toMemory;
+        if( createMemory({spMemory.size(), nullptr}, toMemory) != sCtx.success() ) {
+            return sCtx.error("创建内存失败");
         }
-        return createMemory(sMemory, spDeviceMemory);
+
+        //获取内存指针
+        PMemory sMemory;
+        if( toMemory->getMemoryInDevice(toMemory.device(), sMemory) != sCtx.success() ) {
+            return sCtx.error("未知异常错误");
+        }
+
+        //拷贝内存值
+        if( spMemory->getCpuMemory(sMemory) != sCtx.success() ) {
+            return sCtx.error("从指定的设备内存，拷贝值到CPU内存失败");
+        }
+
+        spDeviceMemory = toMemory;
+        return sCtx.success();
     }
 
     int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {

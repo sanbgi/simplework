@@ -20,22 +20,23 @@ kernel void floatEval(
 
     int i;
     global float *pItIn, *pItOut;
-    float avg = 0.0f, x = 1.0f;
+    float avg = 0.0f, x;
     if(nBatchs>=pThis->m_nMinBatch) {
         float sum = 0.0f;
         for(i=0, pItIn=pIn; i<nItems; i++) {
             sum += *pItIn;
             pItIn += nLayer;
         }
-
         avg = sum/nItems;
+
         float delta, variance = 0.0f;
         for(i=0, pItIn=pIn; i<nItems; i++) {
             delta = *pItIn - avg;
             variance += delta * delta;
             pItIn += nLayer;
         }
-        x = 1.0f/sqrt(variance/nItems+pThis->m_dEsp);
+        variance = variance/nItems;
+        x = 1.0f/sqrt(variance+pThis->m_dEsp);
     }
 
     for(i=0, pItIn=pIn, pItOut=pOut; i<nItems; i++) {

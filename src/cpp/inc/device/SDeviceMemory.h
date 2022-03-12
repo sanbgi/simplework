@@ -31,12 +31,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         //
         // 修改内存值
         //
-        virtual int setMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
+        virtual int setCpuMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
 
         //
         // 读取内存值
         //
-        virtual int getMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
+        virtual int getCpuMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

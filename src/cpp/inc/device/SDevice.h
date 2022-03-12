@@ -42,7 +42,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         //
         // 创建设备内存
         //
-        virtual int createMemory(const SDeviceMemory& spSrcMemory, SDeviceMemory& spDeviceMemory) = 0;
+        virtual int createMemory(const SDeviceMemory& spMemory, SDeviceMemory& spDeviceMemory) = 0;
 
         //
         // 执行运算任务

@@ -55,7 +55,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int setMemory(const PMemory& cpuMemory, int iOffset=0){
+    int setCpuMemory(const PMemory& cpuMemory, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }
@@ -66,7 +66,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int getMemory(const PMemory& cpuMemory, int iOffset=0){
+    int getCpuMemory(const PMemory& cpuMemory, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }

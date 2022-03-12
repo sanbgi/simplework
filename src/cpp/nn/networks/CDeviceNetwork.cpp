@@ -276,7 +276,6 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     for(auto& instruct : solveCtx.arrInstructs ) {
         int nMemory = instruct.nInVars*2 + 4;
         PMemory* pMemory = pMemorys;
-        SDeviceMemory spParameter;
         void* pParameter=nullptr;
         if(instruct.spParameters) {
             pParameter = instruct.spParameters.data(spDevice);
@@ -522,7 +521,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVWeight:
-                pItVec->deviaBuffer->getMemory({pItVec->size*(int)sizeof(Q),pItWeightBuffer});
+                pItVec->deviaBuffer->getCpuMemory({pItVec->size*(int)sizeof(Q),pItWeightBuffer});
                 pItWeightBuffer += pItVec->size;
                 break;
             }
