@@ -498,7 +498,6 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
     return CNnExtraTensor::createResizeTensor({spBatchInDeviation, 1, pExtras2}, spBatchInDeviation);
 }
 
-
 int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
     int idType = spBatchInDeviation.type();
     if( initNetwork(idType) != sCtx.success() ) {
