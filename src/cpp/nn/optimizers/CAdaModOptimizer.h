@@ -71,6 +71,10 @@ private:
         return sCtx.success();
     }
 
+    int updateDeviation(PDATATYPE idType, int nBatchs, const SDevice& spDevice, int nDeviations, void* pDeviations ) {
+        return sCtx.success();
+    }
+
 public:
     static int createOptimizer(SOptimizer& spOptimizer) {
         CPointer<CAdaModOptimizer> sp;

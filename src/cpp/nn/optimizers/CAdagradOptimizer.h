@@ -45,9 +45,13 @@ private:
         return sCtx.success();
     }
 
+    int updateDeviation(PDATATYPE idType, int nBatchs, const SDevice& spDevice, int nDeviations, void* pDeviations ) {
+        return sCtx.success();
+    }
+
 public:
     static int createOptimizer(SOptimizer& spOptimizer) {
-        CPointer<CAdagradOptimizer<double>> sp;
+        CPointer<CAdagradOptimizer> sp;
         CObject::createObject(sp);
         spOptimizer.setPtr(sp.getPtr());
         return sCtx.success();

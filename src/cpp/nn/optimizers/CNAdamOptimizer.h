@@ -66,6 +66,51 @@ private:
         return sCtx.success();
     }
 
+    int updateDeviation(PDATATYPE idType, int nBatchs, const SDevice& spDevice, int nDeviations, void* pDeviations ) {
+        if(nDeviations != m_nDeviations) {
+            int nBytes = nDeviations*sizeof(Q);
+            m_spMomentum = SDeviceMemory::createDeviceMemory({spDevice,{nBytes, nullptr}});
+            m_spVelocity = SDeviceMemory::createDeviceMemory({spDevice,{nBytes, nullptr}});
+            if(!m_spMomentum || !m_spVelocity) {
+                m_nDeviations = 0;
+                return sCtx.error("创建内存异常");
+            }
+
+            if( spDevice.memoryZero(m_spMomentum.data(spDevice), 0, nBytes) != sCtx.success() ||
+                spDevice.memoryZero(m_spVelocity.data(spDevice), 0, nBytes) != sCtx.success() ) {
+                return sCtx.error("初始化动量异常");
+            }
+            
+            m_nDeviations = nDeviations;
+            m_dBeta1Bais = 1;
+            m_dBeta2Bais = 1;
+        }
+
+        Q esp = 1e-8f;
+        Q learnRate = 0.001f;
+        Q beta1 = 0.9f;
+        Q beta2 = 0.999f;
+
+        m_dBeta1Bais *= beta1;
+        m_dBeta2Bais *= beta2;
+        PKernalVariable pArgs[] = {
+            nBatchs,
+            m_dBeta1Bais,
+            m_dBeta2Bais,
+            pDeviations,
+            m_spMomentum.data(spDevice),
+            m_spVelocity.data(spDevice),
+        };
+        static int sKernalId = 0;
+        switch(CBasicData<Q>::getStaticType()) {
+            case PDATATYPE_FLOAT:
+                return spDevice->runKernel( {&sKernalId, "sw.nn.Nadam.floatEval"}, 6, pArgs, 1, &nDeviations);
+            case PDATATYPE_DOUBLE:
+                return spDevice->runKernel( {&sKernalId, "sw.nn.Nadam.doubleEval"}, 6, pArgs, 1, &nDeviations);
+        }
+        return sCtx.error("数据类型暂时不支持");
+    }
+
 public:
     static int createOptimizer(SOptimizer& spOptimizer) {
         CPointer<CNAdamOptimizer> sp;
@@ -91,6 +136,9 @@ private:
     Q* m_pVelocity;
     Q m_dBeta1Bais;
     Q m_dBeta2Bais;
+
+    SDeviceMemory m_spMomentum;
+    SDeviceMemory m_spVelocity;
 };
 
 

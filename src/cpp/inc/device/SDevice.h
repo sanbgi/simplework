@@ -55,6 +55,8 @@ PKERNALVARIABLE_TYPE(short)
 PKERNALVARIABLE_TYPE(unsigned short)
 PKERNALVARIABLE_TYPE(int)
 PKERNALVARIABLE_TYPE(unsigned int)
+PKERNALVARIABLE_TYPE(float)
+PKERNALVARIABLE_TYPE(double)
 PKERNALVARIABLE_TYPE(long)
 PKERNALVARIABLE_TYPE(long long)
 PKERNALVARIABLE_TYPE(void*)
@@ -112,7 +114,7 @@ public://常用辅助函数
     //
     // 内存初始化为零
     //
-    int memoryZero(void* pDevicePointer, int iOffset, int nBytes) {
+    int memoryZero(void* pDevicePointer, int iOffset, int nBytes) const {
         static int sSetKernalId = 0;
         PKernalVariable pArgs[] = {
             {pDevicePointer},
@@ -124,7 +126,7 @@ public://常用辅助函数
     //
     // 内存片段拷贝，从pSrc(iSrcOffset) --> pDest(iDestOffset）
     //
-    int memoryCopy(void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nBytes) {
+    int memoryCopy(void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nBytes) const {
         static int sSetKernalId = 0;
         PKernalVariable pArgs[] = {
             {pDest},

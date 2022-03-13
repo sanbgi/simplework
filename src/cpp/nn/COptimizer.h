@@ -3,6 +3,8 @@
 
 #include "nn.h"
 
+using namespace sw;
+
 //
 // 神经网络核心接口定义
 //
@@ -19,6 +21,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Optimizer)
         // 更新偏差值
         //
         virtual int updateDeviation(int nBatchSize) = 0;
+
+        //
+        // 更新偏差值
+        //
+        virtual int updateDeviation(PDATATYPE idType, int nBatchs, const SDevice& spDevice, int nDeviations, void* pDeviations ) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -40,6 +40,7 @@ private:
     //从计算图中获取的求解信息
     struct PSolveGraphInfos {
         PDATATYPE idType;
+        int nElementSize;
         SDimension spInDimension;
         SDimension spOutDimension;
 
@@ -105,6 +106,23 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         }
     }
 
+    string strType;
+    int nElementSize;
+    switch(idType) {
+        case PDATATYPE_FLOAT:
+            strType = "float";
+            nElementSize = sizeof(float);
+            break;
+
+        case PDATATYPE_DOUBLE:
+            strType = "double";
+            nElementSize = sizeof(double);
+            break;
+
+        default:
+            return sCtx.error("数据类型还不支持");
+    }
+
     CTaker<PSolveGraphInfos*> taker(new PSolveGraphInfos, [](PSolveGraphInfos* pCtx){
         delete pCtx;
     });
@@ -150,15 +168,8 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         memcpy(solveParameter.pInVars, spOp.pInVars, sizeof(int)*spOp.nInVars);
         solveParameter.evalKernelId = solveParameter.deviaKernelId = 0;
         solveParameter.programName = string("sw.nn.")+(*itOp)->getName();
-        if(idType == PDATATYPE_FLOAT) {
-            solveParameter.evalKernameName = solveParameter.programName+".floatEval";
-            solveParameter.deviaKernameName = solveParameter.programName+".floatDevia";
-        }else if(idType == PDATATYPE_DOUBLE){
-            solveParameter.evalKernameName = solveParameter.programName+".doubleEval";
-            solveParameter.deviaKernameName = solveParameter.programName+".doubleDevia";
-        }else{
-            return sCtx.error("数据类型暂不支持");
-        }
+        solveParameter.evalKernameName = solveParameter.programName+"."+strType+"Eval";
+        solveParameter.deviaKernameName = solveParameter.programName+"."+strType+"Devia";
         solveParameter.nRanges = 1;
         solveParameter.pRanges[0] = solveParameter.pRanges[1] = solveParameter.pRanges[2] = 0;
         switch(solveFunc.eClRange) {
@@ -194,6 +205,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
     solveCtx.iInVar = m_sSolveGraph.iInVar;
     solveCtx.iOutVar = m_sSolveGraph.iOutVar;
     solveCtx.idType = idType;
+    solveCtx.nElementSize = nElementSize;
     solveCtx.spInDimension = spInDimension;
     solveCtx.spOutDimension = spOutDimension;
     m_spSolveGraphInfos.take(taker);
@@ -206,17 +218,9 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         return sCtx.error("网络初始化失败");
     }
 
-    int nElementBytes = 0;
-    if(idType == CBasicData<double>::getStaticType()) {
-        nElementBytes = sizeof(double);
-    }else
-    if(idType == CBasicData<float>::getStaticType()) {
-        nElementBytes = sizeof(float);
-    }else{
-        return sCtx.error("不支持的数据类型");
-    }
-
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
+    int nElementSize = solveCtx.nElementSize;
+
     SDimension spInDimension = spBatchIn.dimension();
     int nBatchs = *spInDimension.data();
     int nInputSize = spInDimension.dataSize();
@@ -252,7 +256,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
             case ENnVariableType::EVOperator:
                 pItVec->size = pItVar->size * nBatchs;
                 if( pItVec != pOutVar) {
-                    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementBytes, nullptr}});
+                    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementSize, nullptr}});
                     pItVec->data = spBuffer.data(spDevice);
                     arrExtras.push_back(spBuffer);
                 }
@@ -321,18 +325,8 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         return sCtx.error("偏差数据类型或尺寸错误");
     }
 
-    int nElementBytes = 0;
-    if(idType == CBasicData<double>::getStaticType()) {
-        nElementBytes = sizeof(double);
-    }else
-    if(idType == CBasicData<float>::getStaticType()) {
-        nElementBytes = sizeof(float);
-    }else{
-        return sCtx.error("不支持的数据类型");
-    }
-
-
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
+    int nElementSize = solveCtx.nElementSize;
 
     SDimension spBatchOutDimension = spBatchOut.dimension();
     int nBatchs = *spBatchOutDimension.data();
@@ -391,33 +385,33 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
                     pExtras++;
                     nExtras--;
 
-                    if(!spOp || spOp.size() != pItVec->size*nElementBytes ) {
+                    if(!spOp || spOp.size() != pItVec->size*nElementSize ) {
                         return sCtx.error("计算数据错误，无法用于传递偏导数");
                     }
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementBytes, nullptr}});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementSize, nullptr}});
                     pItVec->data = spOp.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
-                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementBytes);
+                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
                 }
                 break;
 
             case ENnVariableType::EVState:
                 {
                     pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementBytes, nullptr}});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementSize, nullptr}});
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
-                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementBytes);
+                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
                 }
                 break;
 
             case ENnVariableType::EVWeight:
                 {
                     pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice,{pItVec->size * nElementBytes, nullptr}});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice,{pItVec->size * nElementSize, nullptr}});
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
-                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementBytes);
+                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
                 }
                 break;
             }
@@ -473,28 +467,31 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         }
     }
 
+    int nWeights = solveCtx.nSumSize[EVWeight];
+    SDeviceMemory spWeights = SDeviceMemory::createDeviceMemory({spDevice, {nWeights*nElementSize, nullptr}});
+    if( !spWeights ){
+        return sCtx.error("创建权重张量失败");
+    }
+
     //
     // 拷贝权重核输入偏导数
     //
-    int nWeights = solveCtx.nSumSize[EVWeight];
-    char* pWeightDeviaBuffer = (char*)solveCtx.spOptimizer->getDeviationPtr(nWeights);
+    void* pWeights = spWeights.data(spDevice);
+    int iWeightOffset = 0;
     {
-        char* pItWeightBuffer = pWeightDeviaBuffer;
         PSolveDeviaVector* pItVec = solveVars.data();
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVWeight:
-                pItVec->deviaBuffer->getCpuMemory({pItVec->size*nElementBytes,pItWeightBuffer});
-                pItWeightBuffer += pItVec->size * nElementBytes;
+                spDevice.memoryCopy(pWeights, iWeightOffset*nElementSize, pItVec->devia, 0, pItVec->size*nElementSize);
+                iWeightOffset += pItVec->size;
                 break;
             }
         }
     }
-    solveCtx.spOptimizer->updateDeviation(nBatchs);
 
-    STensor spWeights;
-    if( STensor::createVector(spWeights, idType, nWeights, pWeightDeviaBuffer) != sCtx.success() ) {
-        return sCtx.error("创建权重张量失败");
+    if( solveCtx.spOptimizer->updateDeviation(idType, nBatchs, spDevice, nWeights, pWeights) != sCtx.success() ){
+        return sCtx.error("权重计算异常");
     }
 
     SObject pExtras2[] = { spWeights };
@@ -515,11 +512,11 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
 
     PNnExtraTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
-    STensor spWeightDevia = sResizeTensor.pExtras[0];
+    SDeviceMemory spWeightDevia = sResizeTensor.pExtras[0];
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
     int nWeights = solveCtx.nSumSize[EVWeight];
-    if(spWeightDevia.size() != nWeights) {
+    if(spWeightDevia.size() != nWeights * solveCtx.nElementSize) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
