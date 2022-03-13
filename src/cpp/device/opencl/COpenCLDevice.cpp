@@ -203,60 +203,6 @@ private://IDevice
         return createMemory(sMemory, spDeviceMemory);
     }
 
-    int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
-        cl::Kernel kernel;
-        if( getKernel(kernelKey, kernel) != sCtx.success() ) {
-            return sCtx.error("内核计算错误，找不到指定的内核");
-        }
-
-        PMemory* pArg = pArgs;
-        for(int i=0; i<nArgs; i++, pArg++) {
-            kernel.setArg(i,pArg->size, pArg->data);
-        }
-
-        if(nRanges < 0 || nRanges > m_nMaxRanges ) {
-            return sCtx.error("内核计算参数错误，nRnages不符合要求");
-        }
-
-        cl::Event event;
-        cl::NDRange globalRange;
-        switch(nRanges) {
-            case 0:
-                globalRange = cl::NDRange(1);
-                break;
-
-            case 1:
-                globalRange = cl::NDRange(pRanges[0]);
-                break;
-
-            case 2:
-                globalRange = cl::NDRange(pRanges[0],pRanges[1]);
-                break;
-
-            case 3:
-                globalRange = cl::NDRange(pRanges[0],pRanges[1],pRanges[2]);
-                break;
-
-            default:
-                return sCtx.error("内核计算范围不支持超过3个维度");
-        }
-        cl_int ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
-            kernel,
-            cl::NullRange,
-            globalRange,
-            cl::NullRange,
-            nullptr,
-            &event
-        );
-        
-        
-        if(ret != CL_SUCCESS) {
-            return sCtx.error("OpenCL计算错误");
-        }
-        event.wait();
-        return sCtx.success();
-    }
-
     int runKernel(  const PKernalKey& kernelKey, 
                     int nArgs, 
                     PKernalVariable pArgs[], 
@@ -308,7 +254,7 @@ private://IDevice
         );
         
         /*
-        //如果内核支持不支持超过范围的RANGE，则可以启用下面代码来拆分指令
+        //如果内核支持不支持超过范围的RANGE，则可以启用下面代码来拆分指令（目前看起来必要性不高)
         cl_int ret = CL_SUCCESS;
         cl::Event event;
         if(nRanges == 0) {
@@ -473,9 +419,9 @@ private:
         in.read(data.data(), length);
         data[length] = 0;
 
-        cl::Program vectorProgram(data.data());
+        cl::Program clProgram(data.data());
         try {
-            cl_int ret = vectorProgram.build("-cl-std=CL2.0");
+            cl_int ret = clProgram.build("-cl-std=CL2.0");
             if( ret != CL_SUCCESS) {
                 return sCtx.error(("编译内核文件错误，文件名："+filename).c_str());
             }
@@ -483,13 +429,13 @@ private:
         catch (...) {
             // Print build info for all devices
             cl_int buildErr = CL_SUCCESS;
-            auto buildInfo = vectorProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(&buildErr);
+            auto buildInfo = clProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(&buildErr);
             for (auto &pair : buildInfo) {
                 std::cerr << pair.second << std::endl << std::endl;
             }
             return sCtx.error(("编译内核文件错误，文件名："+filename).c_str());
         }
-        program = vectorProgram;
+        program = clProgram;
         sMapPrograms[name] = program;
         return sCtx.success();
     }
