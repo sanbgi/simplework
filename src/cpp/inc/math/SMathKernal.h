@@ -125,6 +125,30 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         return -1;
     }
 
+    static int equal(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
+        PKernalVariable pArgs[] = {
+            {pDest},
+            {iDestOffset},
+            {pSrc},
+            {iSrcOffset}
+        };
+        switch(idType) {
+        case PDATATYPE_INT:{
+            static int sSetKernalId = 0;
+            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.intEval"}, 4, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_FLOAT:{
+            static int sSetKernalId = 0;
+            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.floatEval"}, 4, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_DOUBLE:{
+            static int sSetKernalId = 0;
+            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.doubleEval"}, 4, pArgs, 1, &nElements);
+            }
+        };
+        return -1;
+    }
+
     template<typename Q>
     static int equal(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
         static int sSetKernalId = 0;

@@ -483,7 +483,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVWeight:
-                spDevice.memoryCopy(pWeights, iWeightOffset*nElementSize, pItVec->devia, 0, pItVec->size*nElementSize);
+                SMathKernal::equal(spDevice, idType, pWeights, iWeightOffset,pItVec->devia, 0, pItVec->size );
                 iWeightOffset += pItVec->size;
                 break;
             }
