@@ -10,7 +10,7 @@ struct PKernalCtx {
     int* pRanges;
     int* pRangeSizes;
 };
-typedef void (*FKernalFunc)(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]);
+typedef void (*FKernalFunc)(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]);
 
 //
 // 计算内存

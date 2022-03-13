@@ -21,7 +21,7 @@ public://IMathOperator
         }
         return nullptr;
     }
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         struct CKernelWraper {
         public:
             const PKernalCtx* pCtx;

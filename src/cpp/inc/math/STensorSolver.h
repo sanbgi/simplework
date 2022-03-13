@@ -83,13 +83,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //          2，参数一：为size
         //          3，参数二：数据指针值（所以，其指针务必为设备内存指针）
         //
-        virtual int runEvalKernel(
-                        const SDevice& spDevice,
-                        PKernalKey kernelKey,
-                        PVector kernalRange,
-                        PMemory kernalParameter,
-                        int nVars,
-                        const PVector pVars[] ) = 0;
+        //virtual int runEvalKernel(
+        //                const SDevice& spDevice,
+        //                PKernalKey kernelKey,
+        //                PVector kernalRange,
+        //                PMemory kernalParameter,
+        //                int nVars,
+        //                const PVector pVars[] ) = 0;
 
         //
         // 设备上反向偏导（累加模式）
@@ -104,13 +104,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //      3，参数二：数据指针值（所以，其指针务必为设备内存指针）
         //      4，参数三：偏导指针值（所以，其指针务必为设备内存指针）
         //
-        virtual int runDeviaKernel(
-                        const SDevice& spDevice,
-                        PKernalKey kernelKey,
-                        PVector kernalRange,
-                        PMemory kernalParameter,
-                        int nVars,
-                        const PDeviaVector pVars[] ) = 0;
+        //virtual int runDeviaKernel(
+        //                const SDevice& spDevice,
+        //                PKernalKey kernelKey,
+        //                PVector kernalRange,
+        //                PMemory kernalParameter,
+        //                int nVars,
+        //                const PDeviaVector pVars[] ) = 0;
 
 
     SIMPLEWORK_INTERFACE_LEAVE

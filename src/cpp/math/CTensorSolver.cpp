@@ -197,33 +197,62 @@ public:
             return sCtx.error("超过最大求解变量数值");
         }
 
+        SDevice spDevice = SDevice::cpu();
+
+        PKernalVariable pKernelArgs[__MAX_VARS*2+1];
+        int nKernalArgs = 0;
+        PKernalVariable* pKernelArg = pKernelArgs;
+
         //
         // 如果运算设备不是CPU，并且当前的内核计算参数如果大于__MAX_PARAMETER_SIZE个字
         //  节，则需要将计算参数拷贝到设备内存, 注意，这个时候，设备内存由spKernalParameterInDevice
         //  持有，所以，执行必须同步执行，不能异步执行（？）
         //
-        SDevice device = SDevice::defaultDevice();
         SDeviceMemory spKernalParameterInDevice;
-        if( device.getPtr() != SDevice::cpu().getPtr() ) {
+        if(kernalParameter.size>0) {
+            //
+            // 如果大于8个字节，则在非CPU情况下，需要把指针转化为设备指针再传递指针
+            //
             if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
-                spKernalParameterInDevice = SDeviceMemory::createMemory(kernalParameter);
-                if( !spKernalParameterInDevice ) {
-                    return sCtx.error("创建设备内存错误");
-                }
+                if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
+                    PMemory sKernalMemory;
+                    spKernalParameterInDevice = SDeviceMemory::createDeviceMemory({spDevice, kernalParameter});
+                    if( !spKernalParameterInDevice ) {
+                        return sCtx.error("创建设备内存错误");
+                    }
 
-                if(spKernalParameterInDevice->getMemoryInDevice(device, kernalParameter) != sCtx.success()) {
-                    return sCtx.error("获取设备内存错误");
+                    if(spKernalParameterInDevice->getMemoryInDevice(spDevice, kernalParameter) != sCtx.success()) {
+                        return sCtx.error("获取设备内存错误");
+                    }
+                    *pKernelArg = PKernalVariable(kernalParameter.data);
+                }else{
+                    *pKernelArg = PKernalVariable(kernalParameter.data);
+                }
+            }else{
+                for(int i=0; i<kernalParameter.size; i++) {
+                    pKernelArg->data[i] = kernalParameter.pByteArray[i];
+                    pKernelArg->size = kernalParameter.size;
                 }
             }
+            nKernalArgs += 1;
+            pKernelArg++;
         }
 
-        PVector pVecs[__MAX_VARS];
         for(int i=0; i<nVars; i++) {
-            if(pVars[i]->getDataInDevice(device,pVecs[i]) != sCtx.success()) {
+            PVector sVec;
+            if(pVars[i]->getDataInDevice(spDevice,sVec) != sCtx.success()) {
                 return sCtx.error("获取张量数据异常");
             }
+
+            pKernelArg[0] = PKernalVariable(sVec.size);
+            pKernelArg[1] = PKernalVariable(sVec.data);
+
+            nKernalArgs += 2;
+            pKernelArg += 2;
         }
-        return runEvalKernel(device,kernelKey,kernalRange,kernalParameter,nVars,pVecs);
+
+        //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
+        return spDevice->runKernel(kernelKey, nKernalArgs, pKernelArgs, kernalRange.size, kernalRange.pIntArray);
     }
 
     int pushHooker(const STensorHooker& spHooker){
@@ -249,7 +278,8 @@ public:
         return sCtx.error();
     }
 
-    int runEvalKernel(const SDevice& spDevice,
+    /*
+    int runKernel(const SDevice& spDevice,
                         PKernalKey kernelKey,
                         PVector kernalRange,
                         PMemory kernalParameter,
@@ -260,19 +290,16 @@ public:
         }
 
         int nArgs = nVars*2;
-        PMemory pArgs[__MAX_VARS*2+1];
-        PMemory* pMemory = pArgs;
+        PKernalVariable pArgs[__MAX_VARS*2+1];
+        PKernalVariable* pMemory = pArgs;
         if(kernalParameter.size>0) {
             nArgs += 1;
-            pMemory->size = kernalParameter.size;
-            pMemory->data = kernalParameter.data;
+            *pMemory = kernalParameter;
             pMemory++;
         }
         for(int i=0; i<nVars; i++, pMemory+=2) {
-            pMemory[0].size = sizeof(int);
-            pMemory[0].pIntArray = (int*)&pVars[i].size;
-            pMemory[1].size = sizeof(void*);
-            pMemory[1].data = (void*)&pVars[i].data;
+            pMemory[0] = PKernalVariable(pVars[i].size);
+            pMemory[1] = PKernalVariable(pVars[i].data);
         }
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
@@ -320,7 +347,7 @@ public:
             sEvent->wait();
         }
         return ret;
-    }
+    }*/
 
 private:
     std::vector<STensorHooker> m_arrHookers;

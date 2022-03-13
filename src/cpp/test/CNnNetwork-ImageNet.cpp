@@ -349,12 +349,23 @@ void CNnNetwork::runImageNet() {
                 }
 
                 spClassify = spClassify.oneHot(s_nClassifies, PDATATYPE_FLOAT);
+                //for(int i=0; i<spClassify.size(); i++) {
+                //    std::cout << spClassify.data<float>()[i];
+                //}
+                //std::cout << "\n";
+                //PVector sMemory;
+                //spClassify->getDataInDevice(SDevice::opencl(), sMemory);
+                //for(int i=0; i<spClassify.size(); i++) {
+                //    std::cout << spClassify.data<float>()[i];
+                //}
+                std::cout << "\n";
                 spBatchIn = spBatchIn.toFloat() * STensor::createValue<float>(1.0f/255);
             }
 
             //
             // 神经网络求解
             //
+            PVector sMemory;
             STensor spOut = nn.eval(spBatchIn);
 
             //
@@ -377,12 +388,12 @@ void CNnNetwork::runImageNet() {
                 // 更新网络
                 //
                 nn.update(spInDeviation);
-
-                //
-                // 保存网络
-                //
-                //SNnNetwork::saveFile("D://snetwork.bin", nn);
             }
+
+            //spClassify->getDataInDevice(SDevice::opencl(), sMemory);
+            //for(int i=0; i<spClassify.size(); i++) {
+            //    std::cout << spClassify.data<float>()[i];
+            //}
 
             //
             // 打印一些结果信息
@@ -396,7 +407,7 @@ void CNnNetwork::runImageNet() {
                 float delta = 0;
                 for(int i=0; i<nOutDeviation; i++) {
                     if( pOutTarget[i] > 0.8 ) {
-                        if(pOutDeviation[i] > -0.1) {
+                        if( abs(pOutDeviation[i]) < 0.3) {
                             nAcc++;
                             nHit++;
                         }

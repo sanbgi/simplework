@@ -29,7 +29,7 @@ public://Kernel
 #include "Plus.cl"
     };
     
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatEval(
                 _KArg(CKernelWraper::PPlusParameter*,0), 
@@ -39,7 +39,7 @@ public://Kernel
                 _KArg(int,6), _KArg(float*,7));
     }
 
-    static void floatDevia(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatDevia(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatDevia(
                 _KArg(CKernelWraper::PPlusParameter*,0), 

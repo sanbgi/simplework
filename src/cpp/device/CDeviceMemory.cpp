@@ -14,11 +14,15 @@ class CMemory : public CObject, IDeviceMemory, IArchivable{
 
 protected://CObject
     int __initialize(const PData* pData){
-        const PMemory* pMemory = CData<PMemory>(pData);
-        if(pMemory == nullptr || pMemory->size < 1) {
-            return sCtx.error("创建内存参数无效");
+        const PDeviceMemory* pDeviceMemory = CData<PDeviceMemory>(pData);
+        if( pDeviceMemory == nullptr ) {
+            const PMemory* pMemory = CData<PMemory>(pData);
+            if(pMemory == nullptr || pMemory->size < 1) {
+                return sCtx.error("创建内存参数无效");
+            }
+            return SDevice::cpu()->createMemory(*pMemory, m_spMemory);
         }
-        return SDevice::defaultDevice()->createMemory(*pMemory, m_spMemory);
+        return pDeviceMemory->spDevice->createMemory(pDeviceMemory->cpuMemory, m_spMemory);
     }
 
 protected://IArchivable

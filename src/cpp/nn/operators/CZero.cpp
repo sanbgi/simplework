@@ -23,7 +23,7 @@ public://Kernel
 #include "Zero.cl"
     };
     
-    static void ucharEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void ucharEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.ucharEval(
             _KArg(unsigned char*,0)

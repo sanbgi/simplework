@@ -9,9 +9,9 @@ using namespace sw;
 static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
-    //runLearn();
+    runLearn();
     //runTest();
-    runImageNet();
+    //runImageNet();
 }
 
 void CNnNetwork::runTestNetwork(){
@@ -220,9 +220,9 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 }
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
-    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {28, 28};
-    SNnNetwork spNetwork = SNnNetwork::createNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;

@@ -23,7 +23,7 @@ public://Kernel
 #include "TensorAvg.cl"
     };
     
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatEval(
                 _KArg(int,0), _KArg(float*,1),

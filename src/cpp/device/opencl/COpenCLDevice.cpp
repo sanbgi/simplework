@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream> 
 #include <iostream>
+//#define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 200
 #include "cl/cl2.hpp"
 
@@ -26,18 +27,21 @@ protected://CObject
             return sCtx.error("创建内存参数无效");
         }
 
-        m_nSize = pMemory->size;
         cl_int err;
-        m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
+        if(pMemory->data != nullptr) {
+            m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, pMemory->data, &err);
+        }else{
+            //CTaker<char*> spHostMemory(new char[pMemory->size], [](char* pPtr){
+            //    delete[] pPtr;
+            //});
+            //memset(spHostMemory, 0, pMemory->size);
+            //m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, spHostMemory, &err);
+            m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
+        }
         if( err != CL_SUCCESS ) {
             return sCtx.error("创建Opencl内存失败");
         }
-
-        if(pMemory->data != nullptr) {
-            if( setCpuMemory(*pMemory) != sCtx.success() ) {
-                return sCtx.error("拷贝Opencl内存失败");
-            }
-        }
+        m_nSize = pMemory->size;
         return sCtx.success();
     }
 
@@ -72,7 +76,7 @@ private://IDeviceMemory
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
-        if(cpuMemory.size + iOffset > m_nSize) {
+        if( iOffset != 0 || cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
         if( cl::copy(cpuMemory.pByteArray, cpuMemory.pByteArray+cpuMemory.size, m_sBuffer) != CL_SUCCESS ) {
@@ -85,7 +89,7 @@ private://IDeviceMemory
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
-        if(cpuMemory.size + iOffset > m_nSize) {
+        if( iOffset != 0 || cpuMemory.size + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
         cl_int err;
@@ -152,12 +156,15 @@ protected://CObject
             return sCtx.error("Opencl设备最大工作项未知");
         }
 
-
         int nMaxRange = sizeof(m_pMaxRanges)/sizeof(m_pMaxRanges[0]);
         int nMaxDeviceRange = maxWorkItemSize.size();
         m_nMaxRanges = nMaxDeviceRange > nMaxRange ? nMaxRange : nMaxDeviceRange;
         for(int i=0; i<m_nMaxRanges; i++) {
             m_pMaxRanges[i] = maxWorkItemSize[i] * 100000;
+        }
+        
+        if( cl::CommandQueue::getDefault().get() == nullptr ) {
+            return sCtx.error("创建默认的CommandQuere失败");
         }
         return sCtx.success();
     }
@@ -306,6 +313,63 @@ private://IDevice
                 }
             }
         }*/
+        
+        if(ret != CL_SUCCESS) {
+            return sCtx.error("OpenCL计算错误");
+        }
+        event.wait();
+        return sCtx.success();
+    }
+
+    int runKernel(  const PKernalKey& kernelKey, 
+                    int nArgs, 
+                    PKernalVariable pArgs[], 
+                    int nRanges = 0, 
+                    int pRanges[]=nullptr) {
+        cl::Kernel kernel;
+        if( getKernel(kernelKey, kernel) != sCtx.success() ) {
+            return sCtx.error("内核计算错误，找不到指定的内核");
+        }
+
+        PKernalVariable* pArg = pArgs;
+        for(int i=0; i<nArgs; i++, pArg++) {
+            kernel.setArg(i, pArg->size, pArg->data);
+        }
+
+        if(nRanges < 0 || nRanges > m_nMaxRanges ) {
+            return sCtx.error("内核计算参数错误，nRnages不符合要求");
+        }
+
+        cl::Event event;
+        cl::NDRange globalRange;
+        switch(nRanges) {
+            case 0:
+                globalRange = cl::NDRange(1);
+                break;
+
+            case 1:
+                globalRange = cl::NDRange(pRanges[0]);
+                break;
+
+            case 2:
+                globalRange = cl::NDRange(pRanges[0],pRanges[1]);
+                break;
+
+            case 3:
+                globalRange = cl::NDRange(pRanges[0],pRanges[1],pRanges[2]);
+                break;
+
+            default:
+                return sCtx.error("内核计算范围不支持超过3个维度");
+        }
+        cl_int ret = cl::CommandQueue::getDefault().enqueueNDRangeKernel(
+            kernel,
+            cl::NullRange,
+            globalRange,
+            cl::NullRange,
+            nullptr,
+            &event
+        );
         
         if(ret != CL_SUCCESS) {
             return sCtx.error("OpenCL计算错误");

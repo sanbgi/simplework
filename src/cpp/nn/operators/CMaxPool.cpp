@@ -23,7 +23,7 @@ public://Kernel
 #include "MaxPool.cl"
     };
     
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatEval(
                 _KArg(CKernelWraper::PMaxpoolParameter*,0), 
@@ -32,7 +32,7 @@ public://Kernel
                 _KArg(int,4), _KArg(float*,5));
     }
 
-    static void floatDevia(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatDevia(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatDevia(
                 _KArg(CKernelWraper::PMaxpoolParameter*,0), 

@@ -13,7 +13,7 @@ class CTensorMinus : public CObject, IKernalOperator {
 public://Factory
     static const char* __getClassKey() { return "sw.math.TensorMinus"; }
 
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         struct CKernelWraper {
         public:
             const PKernalCtx* pCtx;

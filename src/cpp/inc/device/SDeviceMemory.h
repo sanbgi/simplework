@@ -3,6 +3,7 @@
 
 #include "device.h"
 #include "SDevice.h"
+#include "PDeviceMemory.h"
 
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
@@ -62,6 +63,10 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
 
     static SDeviceMemory createMemory(const PMemory& cpuMemory) {
         return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PMemory>(cpuMemory));
+    }
+
+    static SDeviceMemory createDeviceMemory(const PDeviceMemory& deviceMemroy) {
+        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>(deviceMemroy));
     }
  
 SIMPLEWORK_INTERFACECLASS_LEAVE(DeviceMemory)

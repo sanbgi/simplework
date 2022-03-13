@@ -225,6 +225,8 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         return sCtx.error("输入张量尺寸和网络需要的尺寸不匹配");
     }
     
+    SDevice spDevice = SDevice::defaultDevice();
+
     //
     // 准备计算缓冲区
     //
@@ -235,7 +237,6 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     }
 
     std::vector<SObject> arrExtras = {spBatchIn};
-    SDevice spDevice = SDevice::defaultDevice();
     struct PSolveVector {
         int size;
         void* data;
@@ -253,7 +254,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
             case ENnVariableType::EVOperator:
                 pItVec->size = pItVar->size * nBatchs;
                 if( pItVec != pOutVar) {
-                    pItVec->buffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), nullptr});
+                    pItVec->buffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * (int)sizeof(Q), nullptr}});
                     pItVec->data = pItVec->buffer.data(spDevice);
                     arrExtras.push_back(pItVec->buffer);
                 }
@@ -272,37 +273,30 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     // 遍历计算序列并执行
     //
     PSolveVector* pVec;
-    PMemory pMemorys[12];
+    PKernalVariable pKernelArgs[12];
     for(auto& instruct : solveCtx.arrInstructs ) {
-        int nMemory = instruct.nInVars*2 + 4;
-        PMemory* pMemory = pMemorys;
-        void* pParameter=nullptr;
+        int nKernalArgs = instruct.nInVars*2 + 4;
+        PKernalVariable* pMemory = pKernelArgs;
         if(instruct.spParameters) {
-            pParameter = instruct.spParameters.data(spDevice);
-            pMemory->size = sizeof(void*);
-            pMemory->data = &pParameter;
+            *pMemory = PKernalVariable(instruct.spParameters.data(spDevice));
         }else{
-            pMemory->size = sizeof(void*);
-            pMemory->data = &pParameter;
+            *pMemory = PKernalVariable((void*)nullptr);
         }
         pMemory++;
 
-        pMemory->size = sizeof(int);
-        pMemory->data = &nBatchs;
+        *pMemory = PKernalVariable(nBatchs);
         pMemory++;
+
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
-            pMemory[0].size = sizeof(pVec->size);
-            pMemory[0].data = &pVec->size;
-            pMemory[1].size = sizeof(pVec->data);
-            pMemory[1].data = &pVec->data;
+            pMemory[0] = PKernalVariable(pVec->size);
+            pMemory[1] = PKernalVariable(pVec->data);
             pMemory+=2;
         }
+
         pVec = &solveVars[instruct.iOutVar];
-        pMemory[0].size = sizeof(pVec->size);
-        pMemory[0].data = &pVec->size;
-        pMemory[1].size = sizeof(pVec->data);
-        pMemory[1].data = &pVec->data;
+        pMemory[0] = PKernalVariable(pVec->size);
+        pMemory[1] = PKernalVariable(pVec->data);
 
         int nRanges = instruct.nRanges;
         int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
@@ -311,7 +305,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spDevice->runKernel(
                 {&instruct.evalKernelId, instruct.programName.c_str(), "floatEval"}, 
-                nMemory, pMemorys, 
+                nKernalArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }
@@ -341,10 +335,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
 
 static int zeroBuffer(const SDevice& spDevice, SDeviceMemory spMemory) {
     static int kernelId = 0;
-    PMemory sMemory;
-    void* pData = spMemory.data(spDevice);
-    sMemory.size = sizeof(void*);
-    sMemory.data = &pData;
+    PKernalVariable sMemory(spMemory.data(spDevice));
     int size = spMemory.size();
     if( spDevice->runKernel(
         {&kernelId, "sw.nn.Zero", "ucharEval"},
@@ -366,12 +357,13 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         return sCtx.error("输出张量尺寸和网络需要的尺寸不匹配");
     }
 
+    SDevice spDevice = SDevice::defaultDevice();
+
     SNnResizeTensor spResizeOut = spBatchOut;
     if( !spResizeOut ) {
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    SDevice spDevice = SDevice::defaultDevice();
     PNnResizeTensor sResizeTensor;
     if( spResizeOut->getResizeData(sResizeTensor) != sCtx.success() || sResizeTensor.nExtras < 1){
         return sCtx.error("数据错误");
@@ -420,7 +412,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
                     if(!spOp || spOp.size() != pItVec->size*sizeof(Q) ) {
                         return sCtx.error("计算数据错误，无法用于传递偏导数");
                     }
-                    pItVec->deviaBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), nullptr});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * (int)sizeof(Q), nullptr}});
                     zeroBuffer(spDevice,pItVec->deviaBuffer);
                     pItVec->data = spOp.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
@@ -430,7 +422,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
             case ENnVariableType::EVState:
                 {
                     pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), nullptr});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * (int)sizeof(Q), nullptr}});
                     zeroBuffer(spDevice,pItVec->deviaBuffer);
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
@@ -440,7 +432,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
             case ENnVariableType::EVWeight:
                 {
                     pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createMemory({pItVec->size * (int)sizeof(Q), nullptr});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice,{pItVec->size * (int)sizeof(Q), nullptr}});
                     zeroBuffer(spDevice,pItVec->deviaBuffer);
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
@@ -458,44 +450,34 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
     // 遍历计算序列并执行
     //
     PSolveDeviaVector* pVec;
-    PMemory pMemorys[17];
+    PKernalVariable pKernelArgs[17];
     for(auto itSolver=solveCtx.arrInstructs.rbegin(); itSolver != solveCtx.arrInstructs.rend(); itSolver++) {
 
         //准备输入输出计算参数
         PSolveGraphInfos::PSolveInstruct& instruct = *itSolver;
 
-        int nMemory = instruct.nInVars*3 + 4;
-        PMemory* pMemory = pMemorys;
-        void* pParameter=nullptr;
+        int nKernalArgs = instruct.nInVars*3 + 4;
+        PKernalVariable* pMemory = pKernelArgs;
         if(instruct.spParameters) {
-            pParameter = instruct.spParameters.data(spDevice);
-            pMemory->size = sizeof(void*);
-            pMemory->data = &pParameter;
+            *pMemory = PKernalVariable(instruct.spParameters.data(spDevice));
         }else{
-            pMemory->size = sizeof(void*);
-            pMemory->data = &pParameter;
+            *pMemory = PKernalVariable((void*)nullptr);
         }
         pMemory++;
 
-        pMemory->size = sizeof(int);
-        pMemory->data = &nBatchs;
+        *pMemory = PKernalVariable(nBatchs);
         pMemory++;
 
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
-            pMemory[0].size = sizeof(pVec->size);
-            pMemory[0].data = &pVec->size;
-            pMemory[1].size = sizeof(pVec->data);
-            pMemory[1].data = &pVec->data;
-            pMemory[2].size = sizeof(pVec->devia);
-            pMemory[2].data = &pVec->devia;
+            pMemory[0] = PKernalVariable(pVec->size);
+            pMemory[1] = PKernalVariable(pVec->data);
+            pMemory[2] = PKernalVariable(pVec->devia);
             pMemory+=3;
         }
         pVec = &solveVars[instruct.iOutVar];
-        pMemory[0].size = sizeof(pVec->size);
-        pMemory[0].data = &pVec->size;
-        pMemory[1].size = sizeof(pVec->devia);
-        pMemory[1].data = &pVec->devia;
+        pMemory[0] = PKernalVariable(pVec->size);
+        pMemory[1] = PKernalVariable(pVec->devia);
 
         int nRanges = instruct.nRanges;
         int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
@@ -504,7 +486,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spDevice->runKernel(
                 {&instruct.deviaKernelId, instruct.programName.c_str(), "floatDevia"}, 
-                nMemory, pMemorys, 
+                nKernalArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }

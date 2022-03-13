@@ -90,7 +90,7 @@ public:
 #include "TensorOneHot.cl"
     };
 
-    static void int2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void int2floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.int2floatEval(
                 _KArg(int,0),
@@ -98,7 +98,7 @@ public:
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void int2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void int2doubleEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.int2doubleEval(
                 _KArg(int,0),
@@ -106,7 +106,7 @@ public:
                 _KArg(int,3), _KArg(double*,4));
     }
 
-    static void uchar2floatEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uchar2floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.uchar2floatEval(
                 _KArg(int,0),
@@ -114,7 +114,7 @@ public:
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void uchar2doubleEval(const PKernalCtx* pCtx, int nArgs, PMemory pArgs[]) {
+    static void uchar2doubleEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.uchar2doubleEval(
                 _KArg(int,0),
