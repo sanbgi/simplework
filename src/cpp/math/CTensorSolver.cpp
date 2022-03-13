@@ -221,7 +221,7 @@ public:
                         return sCtx.error("创建设备内存错误");
                     }
 
-                    if(spKernalParameterInDevice->getMemoryInDevice(spDevice, kernalParameter) != sCtx.success()) {
+                    if(spKernalParameterInDevice->getMemory(spDevice, kernalParameter) != sCtx.success()) {
                         return sCtx.error("获取设备内存错误");
                     }
                     *pKernelArg = PKernalVariable(kernalParameter.data);

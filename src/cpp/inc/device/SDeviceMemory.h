@@ -27,17 +27,17 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         //
         // 获取内存值
         //
-        virtual int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory) = 0;
+        virtual int getMemory(const SDevice& spDevice, PMemory& deviceMemory) = 0;
 
         //
         // 修改内存值
         //
-        virtual int setCpuMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
+        virtual int writeMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
 
         //
         // 读取内存值
         //
-        virtual int getCpuMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
+        virtual int readMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -50,7 +50,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         IFace* pFace = getPtr();
         if(pFace == nullptr) return nullptr;
         PMemory sMemory = { 0, nullptr };
-        pFace->getMemoryInDevice(spDevice, sMemory);
+        pFace->getMemory(spDevice, sMemory);
         return sMemory.data;
     }
 

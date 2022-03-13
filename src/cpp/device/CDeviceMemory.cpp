@@ -31,7 +31,7 @@ protected://IArchivable
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
             PMemory sMemory;
-            if( getMemoryInDevice(SDevice::cpu(), sMemory) != sCtx.success() ) {
+            if( getMemory(SDevice::cpu(), sMemory) != sCtx.success() ) {
                 return sCtx.error("内存无法保存到CPU");
             }
         }
@@ -49,7 +49,7 @@ private://IDeviceMemory
         return m_spMemory->getDevice(spDevice);
     }
 
-    int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory){
+    int getMemory(const SDevice& spDevice, PMemory& deviceMemory){
         SDevice spInDevice = m_spMemory.device();
         if( spInDevice.getPtr() != spDevice.getPtr() ) {
             SDeviceMemory toMemory;
@@ -58,15 +58,15 @@ private://IDeviceMemory
             }
             m_spMemory = toMemory;
         }
-        return m_spMemory->getMemoryInDevice(spDevice,deviceMemory);
+        return m_spMemory->getMemory(spDevice,deviceMemory);
     }
 
-    int setCpuMemory(const PMemory& cpuMemory, int iOffset=0){
-        return m_spMemory->setCpuMemory(cpuMemory, iOffset);
+    int writeMemory(const PMemory& cpuMemory, int iOffset=0){
+        return m_spMemory->writeMemory(cpuMemory, iOffset);
     }
 
-    int getCpuMemory(const PMemory& cpuMemory, int iOffset=0){
-        return m_spMemory->getCpuMemory(cpuMemory, iOffset);
+    int readMemory(const PMemory& cpuMemory, int iOffset=0){
+        return m_spMemory->readMemory(cpuMemory, iOffset);
     }
 
 private:

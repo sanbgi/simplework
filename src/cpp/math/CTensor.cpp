@@ -167,7 +167,7 @@ int CTensor::getDataSize() {
 int CTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
     PMemory deviceMemory;
     int ret;
-    if( (ret = m_spMemory->getMemoryInDevice(spDevice, deviceMemory)) == sCtx.success() ) {
+    if( (ret = m_spMemory->getMemory(spDevice, deviceMemory)) == sCtx.success() ) {
         deviceData.size = m_nElementSize;
         deviceData.data = deviceMemory.data;
     }

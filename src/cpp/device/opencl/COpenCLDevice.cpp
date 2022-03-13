@@ -48,7 +48,7 @@ private://IDeviceMemory
         return SDeviceFactory::getFactory()->getOpenclDevice(spDevice);
     }
 
-    int getMemoryInDevice(const SDevice& spDevice, PMemory& deviceMemory){
+    int getMemory(const SDevice& spDevice, PMemory& deviceMemory){
         if( spDevice.getPtr() != SDevice::opencl().getPtr() ) {
             return sCtx.error("无法获取非Opencl设备内存");
         }
@@ -57,7 +57,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int setCpuMemory(const PMemory& cpuMemory, int iOffset=0){
+    int writeMemory(const PMemory& cpuMemory, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
@@ -70,7 +70,7 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int getCpuMemory(const PMemory& cpuMemory, int iOffset=0){
+    int readMemory(const PMemory& cpuMemory, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
@@ -169,7 +169,7 @@ private://IDevice
 
         if(spDevice.getPtr() == SDevice::cpu().getPtr()) {
             PMemory sMemory;
-            if( spMemory->getMemoryInDevice(spDevice, sMemory) != sCtx.success() ) {
+            if( spMemory->getMemory(spDevice, sMemory) != sCtx.success() ) {
                 return sCtx.error("无法获取内存指针");
             }
             return createMemory(sMemory, spDeviceMemory);
@@ -182,7 +182,7 @@ private://IDevice
         });
 
         PMemory sMemory = {size, spTaker};
-        if( !spMemory || spMemory->getCpuMemory(sMemory) != sCtx.success() ) {
+        if( !spMemory || spMemory->readMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
         return createMemory(sMemory, spDeviceMemory);
