@@ -1,17 +1,17 @@
-#ifndef __SimpleWork_nn_CNnResizeTensor_H__
-#define __SimpleWork_nn_CNnResizeTensor_H__
+#ifndef __SimpleWork_nn_CNnExtraTensor_H__
+#define __SimpleWork_nn_CNnExtraTensor_H__
 
 #include "nn.h"
-#include "SNnResizeTensor.h"
+#include "SNnExtraTensor.h"
 #include <vector>
 
 using namespace sw;
 using namespace std;
-class CNnResizeTensor : public CObject, public ITensor, public IArchivable, public INnResizeTensor {
+class CNnExtraTensor : public CObject, public ITensor, public IArchivable, public INnExtraTensor {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
         SIMPLEWORK_INTERFACE_ENTRY(ITensor)
-        SIMPLEWORK_INTERFACE_ENTRY(INnResizeTensor)
+        SIMPLEWORK_INTERFACE_ENTRY(INnExtraTensor)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://CObject
@@ -25,16 +25,16 @@ public://ITensor
 
 private://IArchivable
     int getClassVer() { return 220209; }
-    const char* getClassName() { return "NnResizeTensor"; } 
+    const char* getClassName() { return "NnExtraTensor"; } 
     const char* getClassKey() { return __getClassKey(); }
     int toArchive(const SArchive& ar);
 
-private://INnResizeTensor
-    int getResizeData(PNnResizeTensor& rResizeTensor);
+private://INnExtraTensor
+    int getResizeData(PNnExtraTensor& rResizeTensor);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.NnResizeTensor"; }
-    static int createResizeTensor(const PNnResizeTensor& rTenser, STensor& spTensor);
+    static const char* __getClassKey() { return "sw.nn.NnExtraTensor"; }
+    static int createResizeTensor(const PNnExtraTensor& rTenser, STensor& spTensor);
 
 private:
     STensor m_spTensor;
@@ -43,4 +43,4 @@ private:
     std::vector<SObject> m_arrExtras;
 };
 
-#endif//__SimpleWork_nn_CNnResizeTensor_H__
+#endif//__SimpleWork_nn_CNnExtraTensor_H__

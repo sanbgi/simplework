@@ -6,6 +6,6 @@
 #include "../SNnInternalVariable.h"
 #include "../CNnVariableSolver.h"
 #include "../SNnAtomOperator.h"
-#include "../CNnResizeTensor.h"
+#include "../CNnExtraTensor.h"
 
 #endif//__SimpleWork_NN_Networks_network_H__

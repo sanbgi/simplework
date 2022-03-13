@@ -80,16 +80,16 @@ int CCompositeNetwork::devia(const STensor& spBatchOut, const STensor& spOutDevi
         return sCtx.error("创建保存偏差的对象张量失败");
     }
     SObject pExtras[] = { spNetDevias };
-    return CNnResizeTensor::createResizeTensor({spOutDev, 1, pExtras}, spInDeviation);
+    return CNnExtraTensor::createResizeTensor({spOutDev, 1, pExtras}, spInDeviation);
 }
 
 int CCompositeNetwork::update(const STensor& spBatchInDeviation) {
-    SNnResizeTensor spResizeDevia = spBatchInDeviation;
+    SNnExtraTensor spResizeDevia = spBatchInDeviation;
     if( !spResizeDevia ) {
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    PNnResizeTensor sResizeTensor;
+    PNnExtraTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
     STensor spDevias = sResizeTensor.pExtras[0];
     

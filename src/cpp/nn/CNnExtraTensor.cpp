@@ -1,13 +1,13 @@
 
-#include "CNnResizeTensor.h"
+#include "CNnExtraTensor.h"
 
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("CNnResizeTensor");
+static SCtx sCtx("CNnExtraTensor");
 
-int CNnResizeTensor::__initialize(const PData* pData){
-    const PNnResizeTensor* pInitializer = CData<PNnResizeTensor>(pData);
+int CNnExtraTensor::__initialize(const PData* pData){
+    const PNnExtraTensor* pInitializer = CData<PNnExtraTensor>(pData);
     if(pInitializer == nullptr) {
         return sCtx.error("缺少初始化参数");
     }
@@ -18,44 +18,44 @@ int CNnResizeTensor::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CNnResizeTensor::createResizeTensor(const PNnResizeTensor& rTenser, STensor& spTensor) {
-    CPointer<CNnResizeTensor> spPointer;
+int CNnExtraTensor::createResizeTensor(const PNnExtraTensor& rTenser, STensor& spTensor) {
+    CPointer<CNnExtraTensor> spPointer;
     CObject::createObject(spPointer);
-    if(spPointer->__initialize(CData<PNnResizeTensor>(rTenser)) != sCtx.success()) {
+    if(spPointer->__initialize(CData<PNnExtraTensor>(rTenser)) != sCtx.success()) {
         return sCtx.error("初始化错误");
     }
     spTensor.setPtr(spPointer.getPtr());
     return sCtx.success();
 }
 
-int CNnResizeTensor::getDimension(SDimension& spDim) {
+int CNnExtraTensor::getDimension(SDimension& spDim) {
     spDim = m_spTensor.dimension();
     return sCtx.success();
 }
 
-PDATATYPE CNnResizeTensor::getDataType(){
+PDATATYPE CNnExtraTensor::getDataType(){
     return m_spTensor.type();
 }
 
-int CNnResizeTensor::getDataSize() {
+int CNnExtraTensor::getDataSize() {
     return m_spTensor.size();
 }
 
-int CNnResizeTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
+int CNnExtraTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
     return m_spTensor->getDataInDevice(spDevice, deviceData);
 }
 
-int CNnResizeTensor::toArchive(const SArchive& ar) {
+int CNnExtraTensor::toArchive(const SArchive& ar) {
     ar.arObject("src", m_spTensor);
     ar.arObjectArray("extras", m_arrExtras);
     return sCtx.success();
 }
 
-int CNnResizeTensor::getResizeData(PNnResizeTensor& rResizeTensor) {
+int CNnExtraTensor::getResizeData(PNnExtraTensor& rResizeTensor) {
     rResizeTensor.spTensor = m_spTensor;
     rResizeTensor.nExtras = m_arrExtras.size();
     rResizeTensor.pExtras = m_arrExtras.data();
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnResizeTensor, CNnResizeTensor::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CNnExtraTensor, CNnExtraTensor::__getClassKey())

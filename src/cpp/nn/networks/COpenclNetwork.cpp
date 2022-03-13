@@ -455,7 +455,7 @@ int COpenclNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
     }
     memcpy(spOut.data(), spOpSolveBuffer.data<Q>()+iOffset, spOut.size()*sizeof(Q) );
     SObject pExtras[] = {spOpSolveBuffer, spBatchIn};
-    return CNnResizeTensor::createResizeTensor({spOut, 2, pExtras}, spBatchOut);
+    return CNnExtraTensor::createResizeTensor({spOut, 2, pExtras}, spBatchOut);
 }
 
 int COpenclNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
@@ -503,12 +503,12 @@ int COpenclNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         return sCtx.error("输出张量尺寸和网络需要的尺寸不匹配");
     }
 
-    SNnResizeTensor spResizeOut = spBatchOut;
+    SNnExtraTensor spResizeOut = spBatchOut;
     if( !spResizeOut ) {
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    PNnResizeTensor sResizeTensor;
+    PNnExtraTensor sResizeTensor;
     spResizeOut->getResizeData(sResizeTensor);
     STensor spOpTensor = sResizeTensor.pExtras[0];
     spBatchIn = sResizeTensor.pExtras[1];
@@ -661,7 +661,7 @@ int COpenclNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
     solveCtx.spOptimizer->updateDeviation(nBatchs);
     STensor spWeightDevia = STensor::createVector<Q>(nWeights, pWeightDeviaBuffer);
     SObject pExtras[] = {spWeightDevia};
-    return CNnResizeTensor::createResizeTensor({spBatchInDeviation, 1, pExtras}, spBatchInDeviation);
+    return CNnExtraTensor::createResizeTensor({spBatchInDeviation, 1, pExtras}, spBatchInDeviation);
 }
 
 int COpenclNetwork::update(const STensor& spBatchInDeviation) {
@@ -681,12 +681,12 @@ int COpenclNetwork::update(const STensor& spBatchInDeviation) {
 
 template<typename Q>
 int COpenclNetwork::updateT(const STensor& spBatchInDeviation) {
-    SNnResizeTensor spResizeDevia = spBatchInDeviation;
+    SNnExtraTensor spResizeDevia = spBatchInDeviation;
     if( !spResizeDevia ) {
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    PNnResizeTensor sResizeTensor;
+    PNnExtraTensor sResizeTensor;
     spResizeDevia->getResizeData(sResizeTensor);
     STensor spWeightDevia = sResizeTensor.pExtras[0];
 
