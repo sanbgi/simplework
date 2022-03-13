@@ -17,12 +17,8 @@ struct PKernalKey {
     // kernelid指针
     //
     int* pKernalId;
-    // 
-    // kernel程序名字，一般为: sw.math.TensorPlus等
     //
-    const char* szProgramName;
-    //
-    // kernel函数名字，比如：floatEval
+    // kernel函数名字，比如：sw.math.TensorPlus.floatEval
     //
     const char* szKernalName;
 };
@@ -48,7 +44,7 @@ struct PKernalVariable{
     }
 
 #define PKERNALVARIABLE_TYPE(type) \
-    PKernalVariable(type v) {\
+    inline PKernalVariable(type v) {\
         size = sizeof(type);\
         *((type*)data) = v;\
     }

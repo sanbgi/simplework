@@ -14,12 +14,12 @@ static SCtx sCtx("CTensorSolver");
         case PDATATYPE_FLOAT:\
             {\
                 static int sKernelId=0;\
-                return solveEleWise_Two_One({&sKernelId, y, "floatEval"}, nVars, pVars);\
+                return solveEleWise_Two_One({&sKernelId, y".floatEval"}, nVars, pVars);\
             }\
         case PDATATYPE_DOUBLE:\
             {\
                 static int sKernelId=0;\
-                return solveEleWise_Two_One({&sKernelId, y, "doubleEval"}, nVars, pVars);\
+                return solveEleWise_Two_One({&sKernelId, y".doubleEval"}, nVars, pVars);\
             }\
         }\
     }\
@@ -30,12 +30,12 @@ static SCtx sCtx("CTensorSolver");
         case PDATATYPE_FLOAT:\
             {\
                 static int sKernelId=0;\
-                return solveEleWise_One_One({&sKernelId, y, "floatEval"}, nVars, pVars);\
+                return solveEleWise_One_One({&sKernelId, y".floatEval"}, nVars, pVars);\
             }\
         case PDATATYPE_DOUBLE:\
             {\
                 static int sKernelId=0;\
-                return solveEleWise_One_One({&sKernelId, y, "doubleEval"}, nVars, pVars);\
+                return solveEleWise_One_One({&sKernelId, y".doubleEval"}, nVars, pVars);\
             }\
         }\
     }\
@@ -46,12 +46,12 @@ static SCtx sCtx("CTensorSolver");
         case PDATATYPE_FLOAT:\
             {\
                 static int sKernelId=0;\
-                return solveToValue_One_One({&sKernelId, y, "floatEval"}, nVars, pVars);\
+                return solveToValue_One_One({&sKernelId, y".floatEval"}, nVars, pVars);\
             }\
         case PDATATYPE_DOUBLE:\
             {\
                 static int sKernelId=0;\
-                return solveToValue_One_One({&sKernelId, y, "doubleEval"}, nVars, pVars);\
+                return solveToValue_One_One({&sKernelId, y".doubleEval"}, nVars, pVars);\
             }\
         }\
     }\
@@ -80,13 +80,13 @@ public:
         case PTensorOperator::toFloat:
             {
                 static int sKernelId=0;
-                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uchar2floatEval"}, nVars, pVars, PDATATYPE_FLOAT);
+                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert.uchar2floatEval"}, nVars, pVars, PDATATYPE_FLOAT);
             }
 
         case PTensorOperator::toDouble:
             {
                 static int sKernelId=0;
-                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert", "uchar2doubleEval"}, nVars, pVars, PDATATYPE_DOUBLE);
+                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert.uchar2doubleEval"}, nVars, pVars, PDATATYPE_DOUBLE);
             }
         }
 

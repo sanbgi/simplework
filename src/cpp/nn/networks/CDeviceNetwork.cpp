@@ -75,6 +75,8 @@ private:
             int nRanges;
             int pRanges[3];
 
+            string evalKernameName;
+            string deviaKernameName;
             int evalKernelId;
             int deviaKernelId;
         };
@@ -158,6 +160,15 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         memcpy(solveParameter.pInVars, spOp.pInVars, sizeof(int)*spOp.nInVars);
         solveParameter.evalKernelId = solveParameter.deviaKernelId = 0;
         solveParameter.programName = string("sw.nn.")+(*itOp)->getName();
+        if(idType == PDATATYPE_FLOAT) {
+            solveParameter.evalKernameName = solveParameter.programName+".floatEval";
+            solveParameter.deviaKernameName = solveParameter.programName+".floatDevia";
+        }else if(idType == PDATATYPE_DOUBLE){
+            solveParameter.evalKernameName = solveParameter.programName+".doubleEval";
+            solveParameter.deviaKernameName = solveParameter.programName+".doubleDevia";
+        }else{
+            return sCtx.error("数据类型暂不支持");
+        }
         solveParameter.nRanges = 1;
         solveParameter.pRanges[0] = solveParameter.pRanges[1] = solveParameter.pRanges[2] = 0;
         switch(solveFunc.eClRange) {
@@ -304,7 +315,7 @@ int CDeviceNetwork::evalT(const STensor& spBatchIn, STensor& spBatchOut) {
         pRanges[1] *= pRanges[1] < 0 ? -nBatchs : 1;
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spDevice->runKernel(
-                {&instruct.evalKernelId, instruct.programName.c_str(), "floatEval"}, 
+                {&instruct.evalKernelId, instruct.evalKernameName.c_str()}, 
                 nKernalArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
@@ -338,7 +349,7 @@ static int zeroBuffer(const SDevice& spDevice, SDeviceMemory spMemory) {
     PKernalVariable sMemory(spMemory.data(spDevice));
     int size = spMemory.size();
     if( spDevice->runKernel(
-        {&kernelId, "sw.nn.Zero", "ucharEval"},
+        {&kernelId, "sw.nn.Zero.ucharEval"},
         1, &sMemory, 1, &size) != sCtx.success() ){
         return sCtx.error("设备运行内核Zero错误");
     }
@@ -485,7 +496,7 @@ int CDeviceNetwork::deviaT(const STensor& spBatchOut, const STensor& spBatchOutD
         pRanges[1] *= pRanges[1] < 0 ? -nBatchs : 1;
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spDevice->runKernel(
-                {&instruct.deviaKernelId, instruct.programName.c_str(), "floatDevia"}, 
+                {&instruct.deviaKernelId, instruct.deviaKernameName.c_str()}, 
                 nKernalArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");

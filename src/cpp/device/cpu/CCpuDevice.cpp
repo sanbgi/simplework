@@ -54,7 +54,7 @@ private://IDevice
                 int pRanges[]=nullptr) {
         FKernalFunc func = getKernel(kernelKey);
         if(func == nullptr) {
-            return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.szProgramName).c_str());
+            return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.szKernalName).c_str());
         }
 
         #define MAX_RANGE_SIZE 10
@@ -108,34 +108,66 @@ private://IDevice
 
 private:
     static FKernalFunc getKernel(const PKernalKey& kernelKey) {
-        static std::map<PID,FKernalFunc> sMapKernels;
-        static std::map<string,SKernalOperator> sMapOps;
-        if(kernelKey.pKernalId && *kernelKey.pKernalId > 0) {
-            auto it = sMapKernels.find(*kernelKey.pKernalId);
-            if( it != sMapKernels.end() ) {
-                return it->second;
+        static std::map<PID,FKernalFunc> sId2Kernels;
+        static std::map<string,FKernalFunc> sName2Kernels;
+        if(kernelKey.pKernalId) {
+            if( *kernelKey.pKernalId > 0 ) {
+                auto it = sId2Kernels.find(*kernelKey.pKernalId);
+                if( it != sId2Kernels.end() ) {
+                    return it->second;
+                }
+                return nullptr;
             }
         }
 
-        if( kernelKey.szKernalName == nullptr || kernelKey.szProgramName == nullptr) {
+        if( kernelKey.szKernalName == nullptr ) {
             return nullptr;
         }
 
-        SKernalOperator spOp = SObject::createObject(kernelKey.szProgramName);
+        auto it = sName2Kernels.find(kernelKey.szKernalName);
+        if( it != sName2Kernels.end() ) {
+            if(kernelKey.pKernalId != nullptr ) {
+                PRuntimeKey rKey(kernelKey.szKernalName);
+                sId2Kernels[rKey.runtimeId] = it->second;
+                *kernelKey.pKernalId = rKey.runtimeId;
+            }
+            return it->second;
+        }
+
+        string kernalName = kernelKey.szKernalName;
+        auto iProgramName = kernalName.rfind('.');
+        if( iProgramName <= 0 && iProgramName >= kernalName.length() - 1) {
+            return nullptr;
+        }
+        SKernalOperator spOp = getOperator(kernalName.substr(0,iProgramName));
         if(!spOp) {
             return nullptr;
         }
-        FKernalFunc kernelFunc = spOp->getKernalFunc(kernelKey.szKernalName);
+
+        FKernalFunc kernelFunc = spOp->getKernalFunc(kernalName.substr(iProgramName+1).c_str());
         if(kernelFunc) {
-            string keyName = string(kernelKey.szProgramName)+"."+kernelKey.szKernalName;
-            PRuntimeKey rKey(keyName.c_str());
-            sMapOps[kernelKey.szProgramName] = spOp;
-            sMapKernels[rKey.runtimeId] = kernelFunc;
-            if(kernelKey.pKernalId != nullptr && *kernelKey.pKernalId != rKey.runtimeId) {
-                *kernelKey.pKernalId = rKey.runtimeId;
+           if(kernelKey.pKernalId != nullptr) {
+                PRuntimeKey rKey(kernalName.c_str());
+                sId2Kernels[rKey.runtimeId] = kernelFunc;
+                 *kernelKey.pKernalId = rKey.runtimeId;
             }
+            sName2Kernels[kernalName] = kernelFunc;
         }
         return kernelFunc;
+    }
+
+    static SKernalOperator getOperator(string szProgramName) {
+        static std::map<string,SKernalOperator> sMapOps;
+        auto it = sMapOps.find(szProgramName);
+        if( it != sMapOps.end() ) {
+            return it->second;
+        }
+
+        SKernalOperator spOp = SObject::createObject(szProgramName.c_str());
+        if(spOp) {
+            sMapOps[szProgramName] = spOp;
+        }
+        return spOp;
     }
 
 public://Factory

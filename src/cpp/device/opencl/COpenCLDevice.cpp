@@ -182,6 +182,15 @@ private://IDevice
             return sCtx.success();
         }
 
+        if(spDevice.getPtr() == SDevice::cpu().getPtr()) {
+            PMemory sMemory;
+            if( spMemory->getMemoryInDevice(spDevice, sMemory) != sCtx.success() ) {
+                return sCtx.error("无法获取内存指针");
+            }
+            return createMemory(sMemory, spDeviceMemory);
+        }
+
+        //如果不是CPU内存，则需要内存拷贝到CPU内存，作为中转
         int size = spMemory.size();
         CTaker<char*> spTaker(new char[size], [](char* pMemory){
             delete[] pMemory;
@@ -382,48 +391,68 @@ private://IDevice
 private:
     static int getKernel(const PKernalKey& kernelKey, cl::Kernel& kernelFunc) {
         static std::map<PID,cl::Kernel> sMapKernels;
-        static std::map<string,cl::Program> sMapPrograms;
-        if(kernelKey.pKernalId && *kernelKey.pKernalId > 0) {
-            auto it = sMapKernels.find(*kernelKey.pKernalId);
-            if( it != sMapKernels.end() ) {
-                kernelFunc = it->second;
-                return sCtx.success();
+        static std::map<string,cl::Kernel> sNamedKernels;
+        if(kernelKey.pKernalId) {
+            if( *kernelKey.pKernalId > 0 ) {
+                auto it = sMapKernels.find(*kernelKey.pKernalId);
+                if( it != sMapKernels.end() ) {
+                    kernelFunc = it->second;
+                    return sCtx.success();
+                }
+                return sCtx.error("发现无效的KernalID");
             }
         }
 
-        if( kernelKey.szKernalName == nullptr || kernelKey.szProgramName == nullptr) {
+        if(kernelKey.szKernalName == nullptr) {
             return sCtx.error("内核参数错误");
         }
 
-        cl::Program clProgram;
-        string strProgramName = kernelKey.szProgramName;
-        auto itProgram = sMapPrograms.find(strProgramName);
-        if( itProgram == sMapPrograms.end() ) {
-            if( getProgram(strProgramName, clProgram) != sCtx.success() ) {
-                return sCtx.error((string("内核创建错误，内核名：")+strProgramName).c_str());
+        auto it = sNamedKernels.find(kernelKey.szKernalName);
+        if( it != sNamedKernels.end() ) {
+            if(kernelKey.pKernalId != nullptr ) {
+                PRuntimeKey rKey(kernelKey.szKernalName);
+                sMapKernels[rKey.runtimeId] = it->second;
+                *kernelKey.pKernalId = rKey.runtimeId;
             }
-            sMapPrograms[strProgramName] = clProgram;
-        }else{
-            clProgram = itProgram->second;
+            kernelFunc = it->second;
+            return sCtx.success();
         }
 
-        cl::Kernel kernel = cl::Kernel(clProgram, kernelKey.szKernalName);
-        if(kernel.get() == nullptr) {
-            string errMsg = string("创建内核错误，程序名：")+strProgramName+", 内核名:"+kernelKey.szKernalName;
-            return sCtx.error(errMsg.c_str());
+        string kernalName = kernelKey.szKernalName;
+        auto iProgramName = kernalName.rfind('.');
+        if( iProgramName <= 0 && iProgramName >= kernalName.length() - 1) {
+            return sCtx.error((string("无效的内核名，")+kernalName).c_str());
+        }
+
+        cl::Program clProgram;
+        if( getProgram(kernalName.substr(0,iProgramName), clProgram) != sCtx.success() ) {
+            return sCtx.error((string("内核创建错误，内核名：")+kernelKey.szKernalName).c_str());
         }
         
-        string keyName = string(kernelKey.szProgramName)+"."+kernelKey.szKernalName;
-        PRuntimeKey rKey(keyName.c_str());
+        cl::Kernel kernel = cl::Kernel(clProgram, kernalName.substr(iProgramName+1).c_str());
+        if(kernel.get() == nullptr) {
+            return sCtx.error((string("创建内核错误，内核名：")+kernelKey.szKernalName).c_str());
+        }
+        
+        PRuntimeKey rKey(kernelKey.szKernalName);
         sMapKernels[rKey.runtimeId] = kernel;
-        if(kernelKey.pKernalId != nullptr && *kernelKey.pKernalId != rKey.runtimeId) {
+        if(kernelKey.pKernalId != nullptr ) {
             *kernelKey.pKernalId = rKey.runtimeId;
         }
+
         kernelFunc = kernel;
+        sNamedKernels[kernalName] = kernel;
         return sCtx.success();
     }
 
     static int getProgram(string name, cl::Program& program) {
+        static std::map<string,cl::Program> sMapPrograms;
+        auto itProgram = sMapPrograms.find(name);
+        if( itProgram != sMapPrograms.end() ) {
+            program = itProgram->second;
+            return sCtx.success();
+        }
+
         auto ipos = name.rfind(".");
         if( ipos == string::npos || ipos < 1 || ipos >= name.length() - 1) {
             return sCtx.error(("内核程序名错误, 名字："+name).c_str());
@@ -461,6 +490,7 @@ private:
             return sCtx.error(("编译内核文件错误，文件名："+filename).c_str());
         }
         program = vectorProgram;
+        sMapPrograms[name] = program;
         return sCtx.success();
     }
 
