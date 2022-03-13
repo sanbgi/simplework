@@ -532,7 +532,7 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
         case ENnVariableType::EVWeight:
             {
                 void* pWeightData = itVar->data.data(spDevice);
-                SMathKernal::minusin(spDevice, solveCtx.idType, pWeightData, 0, pWeightDevia, iWeightOffset, itVar->size);
+                SMathKernal::minusEqual(spDevice, solveCtx.idType, pWeightData, 0, pWeightDevia, iWeightOffset, itVar->size);
                 iWeightOffset += itVar->size;
             }
             break;

@@ -50,8 +50,8 @@ void CNnNetwork::runLearn() {
             // 
             // 分类信息
             //
-            //STensor spClassify = SNnNetwork::classifyTensor(10, spBatchLabel);
             STensor spClassify = spBatchLabel.oneHot(10, PDATATYPE_FLOAT);
+            
             //
             // 图片信息，将字节类型图片张量，转化为[0,1)浮点类型张量
             //
@@ -73,8 +73,6 @@ void CNnNetwork::runLearn() {
             STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
             float* pFRMS = spRootMeanSquare.data<float>();
             float fRMS = *pFRMS;
-            //if( fRMS > 0.02 )
-            
             {
                 //
                 // 学习更新神经网络

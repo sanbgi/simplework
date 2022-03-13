@@ -8,7 +8,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
     SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IMathKernal", 211202)
     SIMPLEWORK_INTERFACE_LEAVE
     
-    static int plusin(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
+    static int plusEqual(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
         PKernalVariable pArgs[] = {
             {pDest},
             {iDestOffset},
@@ -18,21 +18,21 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         switch(idType) {
         case PDATATYPE_INT:{
             static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Plusin.intEval"}, 4, pArgs, 1, &nElements);
+            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.intEval"}, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_FLOAT:{
             static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Plusin.floatEval"}, 4, pArgs, 1, &nElements);
+            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.floatEval"}, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_DOUBLE:{
             static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Plusin.doubleEval"}, 4, pArgs, 1, &nElements);
+            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.doubleEval"}, 4, pArgs, 1, &nElements);
             }
         };
         return -1;
     }
 
-    static int minusin(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
+    static int minusEqual(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
         PKernalVariable pArgs[] = {
             {pDest},
             {iDestOffset},
@@ -42,15 +42,15 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         switch(idType) {
         case PDATATYPE_INT:{
             static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Minusin.intEval"}, 4, pArgs, 1, &nElements);
+            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.intEval"}, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_FLOAT:{
             static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Minusin.floatEval"}, 4, pArgs, 1, &nElements);
+            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.floatEval"}, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_DOUBLE:{
             static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Minusin.doubleEval"}, 4, pArgs, 1, &nElements);
+            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.doubleEval"}, 4, pArgs, 1, &nElements);
             }
         };
         return -1;
