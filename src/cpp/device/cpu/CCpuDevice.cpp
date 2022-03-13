@@ -47,62 +47,6 @@ private://IDevice
         return sCtx.success();
     }
 
-    /*
-    int runKernel(const PKernalKey& kernelKey, int nArgs, PMemory pArgs[], int nRanges=0, int pRanges[]=nullptr, SDeviceEvent* pEvent=nullptr) {
-        FKernalFunc func = getKernel(kernelKey);
-        if(func == nullptr) {
-            return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.szProgramName).c_str());
-        }
-
-        #define MAX_RANGE_SIZE 10
-        if(nRanges > MAX_RANGE_SIZE) {
-            return sCtx.error("并行计算的RANGE维度超过了限制范围");
-        }
-
-        int pLocalRange[MAX_RANGE_SIZE];
-        int* pLocalRangeEnd = pLocalRange+nRanges;
-        int* pItLocalRange = pLocalRange;
-        int* pItRange = pRanges;
-        while(pItLocalRange<pLocalRangeEnd) {
-            *pItLocalRange = 0;
-            if(*pItRange < 1) {
-                if(*pItRange == 0) {
-                    return sCtx.success();
-                }else{
-                    return sCtx.error("并行计算的RANGE维度值无效(必须大于0)");
-                }
-            }
-            pItRange++, pItLocalRange++;
-        }
-
-        PKernalCtx ctx = {
-            nRanges,
-            pLocalRange,
-            pRanges
-        };
-
-        //
-        // 这个地方如果有一个维度值为0或者小于0，则下面的程序执行会错误
-        //
-        int iRangeLayer=0;
-        if(nRanges>0) {
-            while(iRangeLayer>=0) {
-                func(&ctx,nArgs,pArgs);
-                iRangeLayer = nRanges-1;
-                while(iRangeLayer>=0){
-                    pLocalRange[iRangeLayer]++;
-                    if(pLocalRange[iRangeLayer] < pRanges[iRangeLayer]) {
-                        break;
-                    }
-                    pLocalRange[iRangeLayer--] = 0;
-                }
-            }
-        }else{
-            func(&ctx,nArgs,pArgs);
-        }
-        return sCtx.success();
-    }*/
-
     int runKernel(  const PKernalKey& kernelKey, 
                 int nArgs, 
                 PKernalVariable pArgs[], 
