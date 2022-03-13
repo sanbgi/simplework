@@ -22,3 +22,24 @@ kernel void doubleEval(
     pDest[gid+iDestOffset] -= pSrc[gid+iSrcOffset];
 }
 
+kernel void intEvalV(
+    global int * pDest, int iDestOffset, int v)
+{
+    int gid = get_global_id(0);
+    pDest[gid+iDestOffset] -= v;
+}
+
+kernel void floatEvalV(
+    global float * pDest, int iDestOffset, float v)
+{
+    int gid = get_global_id(0);
+    pDest[gid+iDestOffset] -= v;
+}
+
+kernel void doubleEvalV(
+    global double * pDest, int iDestOffset, double v)
+{
+    int gid = get_global_id(0);
+    pDest[gid+iDestOffset] -= v;
+}
+

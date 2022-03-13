@@ -4,14 +4,14 @@
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-static SCtx sCtx("CMinusEqual");
-class CMinusEqual : public CObject, IKernalOperator {
+static SCtx sCtx("CEqual");
+class CEqual : public CObject, IKernalOperator {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IKernalOperator)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://Factory
-    static const char* __getClassKey() { return "sw.math.MinusEqual"; }
+    static const char* __getClassKey() { return "sw.math.Equal"; }
 
 public://IMathOperator
     FKernalFunc getKernalFunc(const char* szName) {
@@ -34,7 +34,7 @@ public:
             return pCtx->pRanges[i];
         }
 
-#include "MinusEqual.cl"
+#include "Equal.cl"
     };
 
     static void intEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
@@ -77,4 +77,4 @@ public:
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CMinusEqual, CMinusEqual::__getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CEqual, CEqual::__getClassKey())
