@@ -73,9 +73,9 @@ void CNnNetwork::prepareImageNet() {
 }
 
 SNnNetwork CNnNetwork::createResNet() {
-    SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {224, 224, 3};
-    SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createOpenclNetwork({
         SDimension::createDimension(3,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             struct ResNet {
@@ -139,27 +139,26 @@ SNnNetwork CNnNetwork::createResNet() {
                             * 
                             */
                         }else{
-                            resX = resX.conv({1,1,nLayers/4,1,1,1,"same"});
-                            resX = resX.batchNormalize({1.0e-8});
-                            resX = resX.relu();
+                            //resX = resX.conv({1,1,nLayers/4,1,1,1,"same"});
+                            //resX = resX.batchNormalize({1.0e-8});
+                            //resX = resX.relu();
                         }
-                        resX = resX.conv({3,3,nLayers/4,1,1,1,"same",nullptr});
-                        resX = resX.batchNormalize({1.0e-8});
+                        //resX = resX.conv({3,3,nLayers/4,1,1,1,"same",nullptr});
+                        //resX = resX.batchNormalize({1.0e-8});
                         x = x.relu();
 
-                        resX = resX.conv({1,1,nLayers,1,1,1, "same"});
-                        resX = resX.batchNormalize({1.0e-8});
-                        x = x + resX;
-                        x = x.relu();
+                        //resX = resX.conv({1,1,nLayers,1,1,1, "same"});
+                        //resX = resX.batchNormalize({1.0e-8});
+                        //x = x + resX;
+                        //x = x.relu();
                     }
                     return x;
                 }
             };
             SNnVariable x = spIn;
-            //x = x.maxpool({2,2,2,2,"same"});
             x = x.conv({7,7,64,1,2,2,"same","relu"});
             x = x.maxpool({3,3,2,2,"same"});
-            int nResNet = 50;
+            int nResNet = 18;
             switch(nResNet) {
             case 18:
                 x = ResNet::resBlock2(x,2,1);
@@ -349,34 +348,30 @@ void CNnNetwork::runImageNet() {
                 }
 
                 spClassify = spClassify.oneHot(s_nClassifies, PDATATYPE_FLOAT);
-                //for(int i=0; i<spClassify.size(); i++) {
-                //    std::cout << spClassify.data<float>()[i];
-                //}
-                //std::cout << "\n";
-                //PVector sMemory;
-                //spClassify->getDataInDevice(SDevice::opencl(), sMemory);
-                //for(int i=0; i<spClassify.size(); i++) {
-                //    std::cout << spClassify.data<float>()[i];
-                //}
-                std::cout << "\n";
                 spBatchIn = spBatchIn.toFloat() * STensor::createValue<float>(1.0f/255);
             }
+
+            PVector sMemory;
+            //spClassify->getDataInDevice(SDevice::cpu(), sMemory);
 
             //
             // 神经网络求解
             //
-            PVector sMemory;
             STensor spOut = nn.eval(spBatchIn);
+            //spOut->getDataInDevice(SDevice::cpu(), sMemory);
 
             //
             // 计算偏差量
             //
             STensor spOutDeviation = spOut - spClassify;
+            //spOutDeviation->getDataInDevice(SDevice::cpu(), sMemory);
 
             //
             // 求均方根
             //
             STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
+            //spOutDeviation->getDataInDevice(SDevice::cpu(), sMemory);
+
             float fRMS = *spRootMeanSquare.data<float>();
             {
                 //

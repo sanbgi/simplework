@@ -13,11 +13,10 @@ using namespace std;
 
 static SCtx sCtx("COpencl");
 
-class COpenclMemory : public CObject, IDeviceMemory, IArchivable{
+class COpenclMemory : public CObject, IDeviceMemory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
-        //SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 protected://CObject
@@ -31,26 +30,12 @@ protected://CObject
         if(pMemory->data != nullptr) {
             m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, pMemory->data, &err);
         }else{
-            //CTaker<char*> spHostMemory(new char[pMemory->size], [](char* pPtr){
-            //    delete[] pPtr;
-            //});
-            //memset(spHostMemory, 0, pMemory->size);
-            //m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, spHostMemory, &err);
             m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
         }
         if( err != CL_SUCCESS ) {
             return sCtx.error("创建Opencl内存失败");
         }
         m_nSize = pMemory->size;
-        return sCtx.success();
-    }
-
-protected://IArchivable
-    int getClassVer() { return 220308; }
-    const char* getClassKey() { return COpenclMemory::__getClassKey(); }
-    int toArchive(const SArchive& ar) {
-        ar.arBlock("size", m_nSize);
-        //TODO
         return sCtx.success();
     }
 

@@ -4,8 +4,8 @@
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("CMemory");
-class CMemory : public CObject, IDeviceMemory, IArchivable{
+static SCtx sCtx("CDevicMemory");
+class CDevicMemory : public CObject, IDeviceMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
@@ -73,4 +73,4 @@ private:
     SDeviceMemory m_spMemory;
 };
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CMemory, SDeviceMemory::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CDevicMemory, SDeviceMemory::__getClassKey())

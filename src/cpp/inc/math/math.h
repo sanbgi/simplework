@@ -19,5 +19,6 @@
 #include "SDimensionSolver.h"
 
 #include "SMathFactory.h"
+#include "SMathKernal.h"
 
 #endif//__SimpleWork_Math_h__

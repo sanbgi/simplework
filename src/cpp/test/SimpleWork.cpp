@@ -40,6 +40,8 @@ void testIdx() {
 
 int main(int argc, char *argv[]){
 
+    STensor sp = STensor::createValue<int>(12);
+
     /*
     STensor sTestTensor = STensor::createVector<int>(100000);
 

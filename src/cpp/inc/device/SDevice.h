@@ -107,6 +107,34 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         SDeviceFactory::getFactory()->getOpenclDevice(spDevice);
         return spDevice;
     }
+
+public://常用辅助函数
+    //
+    // 内存初始化为零
+    //
+    int memoryZero(void* pDevicePointer, int iOffset, int nBytes) {
+        static int sSetKernalId = 0;
+        PKernalVariable pArgs[] = {
+            {pDevicePointer},
+            {iOffset}
+        };
+        return getPtr()->runKernel({&sSetKernalId, "sw.device.MemoryZero.ucharEval"}, 2, pArgs, 1, &nBytes);
+    }
+
+    //
+    // 内存片段拷贝，从pSrc(iSrcOffset) --> pDest(iDestOffset）
+    //
+    int memoryCopy(void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nBytes) {
+        static int sSetKernalId = 0;
+        PKernalVariable pArgs[] = {
+            {pDest},
+            {iDestOffset},
+            {pSrc},
+            {iSrcOffset}
+        };
+        return getPtr()->runKernel({&sSetKernalId, "sw.device.MemoryCopy.ucharEval"}, 4, pArgs, 1, &nBytes);
+    }
+
 SIMPLEWORK_INTERFACECLASS_LEAVE(Device)
 
 SIMPLEWORK_DEVICE_NAMESPACE_LEAVE
