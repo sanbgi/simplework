@@ -14,7 +14,7 @@ class SDeviceMemory;
 //
 struct PKernalKey {
     //
-    // kernelid指针
+    // kernelid指针(临时存储，不能持久化此ID，程序重启以后，下一次未必相同)
     //
     int* pKernalId;
     //

@@ -17,7 +17,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceFactory, "sw.device.DeviceFactory")
         //
         // 获取可用设备
         //
-        virtual int getAvaiableDevices(const char* szName, IVisitor<const SDevice&>& cbVisitor) = 0;
+        //virtual int getAvaiableDevices(const char* szName, IVisitor<const SDevice&>& cbVisitor) = 0;
 
         //
         // 获得Cpu设备
