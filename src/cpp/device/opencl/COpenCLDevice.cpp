@@ -155,12 +155,12 @@ protected://CObject
     }
 
 private://IDevice
-    int createMemory(const PMemory& cpuMemory, SDeviceMemory& spDeviceMemory){
-        spDeviceMemory = SObject::createObject("sw.device.OpenclMemory", CData<PMemory>(cpuMemory));
+    int createKernelMemory(SDeviceMemory& spDeviceMemory, int nSize, void* pInitData = nullptr){
+        spDeviceMemory = SObject::createObject("sw.device.OpenclMemory", CData<PMemory>({nSize, pInitData}));
         return spDeviceMemory ? sCtx.success() : sCtx.error("创建内存失败");
     }
 
-    int createMemory(const SDeviceMemory& spMemory, SDeviceMemory& spDeviceMemory){
+    int createKernelMemory(SDeviceMemory& spDeviceMemory, const SDeviceMemory& spMemory){
         SDevice spDevice = spMemory.device();
         if(spDevice.getPtr() == this) {
             spDeviceMemory = spMemory;
@@ -172,7 +172,7 @@ private://IDevice
             if( spMemory->getMemory(spDevice, sMemory) != sCtx.success() ) {
                 return sCtx.error("无法获取内存指针");
             }
-            return createMemory(sMemory, spDeviceMemory);
+            return createKernelMemory(spDeviceMemory, sMemory.size, sMemory.data);
         }
 
         //如果不是CPU内存，则需要内存拷贝到CPU内存，作为中转
@@ -185,7 +185,7 @@ private://IDevice
         if( !spMemory || spMemory->readMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
-        return createMemory(sMemory, spDeviceMemory);
+        return createKernelMemory(spDeviceMemory, sMemory.size, sMemory.data);
     }
 
     int runKernel(  const PKernalKey& kernelKey, 

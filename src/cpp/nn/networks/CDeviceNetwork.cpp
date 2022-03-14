@@ -161,7 +161,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         PSolveFunc solveFunc;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);
         if(solveFunc.nParamterSize > 0) {
-            solveParameter.spParameters = SDeviceMemory::createMemory({solveFunc.nParamterSize, solveFunc.pParameterData});
+            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::defaultDevice(),solveFunc.nParamterSize, solveFunc.pParameterData);
         }
         solveParameter.nInVars = spOp.nInVars;
         solveParameter.iOutVar = spOp.iOutVar;
@@ -256,7 +256,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
             case ENnVariableType::EVOperator:
                 pItVec->size = pItVar->size * nBatchs;
                 if( pItVec != pOutVar) {
-                    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementSize, nullptr}});
+                    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(spDevice, pItVec->size * nElementSize);
                     pItVec->data = spBuffer.data(spDevice);
                     arrExtras.push_back(spBuffer);
                 }
@@ -388,7 +388,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
                     if(!spOp || spOp.size() != pItVec->size*nElementSize ) {
                         return sCtx.error("计算数据错误，无法用于传递偏导数");
                     }
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementSize, nullptr}});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pItVec->size * nElementSize);
                     pItVec->data = spOp.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
                     spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
@@ -398,7 +398,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
             case ENnVariableType::EVState:
                 {
                     pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice, {pItVec->size * nElementSize, nullptr}});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pItVec->size * nElementSize);
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
                     spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
@@ -408,7 +408,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
             case ENnVariableType::EVWeight:
                 {
                     pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory({spDevice,{pItVec->size * nElementSize, nullptr}});
+                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pItVec->size * nElementSize);
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
                     spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
@@ -468,7 +468,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
     }
 
     int nWeights = solveCtx.nSumSize[EVWeight];
-    SDeviceMemory spWeights = SDeviceMemory::createDeviceMemory({spDevice, {nWeights*nElementSize, nullptr}});
+    SDeviceMemory spWeights = SDeviceMemory::createDeviceMemory(spDevice, nWeights*nElementSize);
     if( !spWeights ){
         return sCtx.error("创建权重张量失败");
     }

@@ -73,12 +73,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         //
         // 创建设备内存
         //
-        virtual int createMemory(const PMemory& cpuMemory, SDeviceMemory& spDeviceMemory) = 0;
+        virtual int createKernelMemory(SDeviceMemory& spKernelMemory, int nSize, void* pData = nullptr) = 0;
 
         //
         // 创建设备内存
         //
-        virtual int createMemory(const SDeviceMemory& spMemory, SDeviceMemory& spDeviceMemory) = 0;
+        virtual int createKernelMemory(SDeviceMemory& spKernelMemory, const SDeviceMemory& spMemory) = 0;
 
         //
         // 执行运算任务

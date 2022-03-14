@@ -69,8 +69,8 @@ private:
     int updateDeviation(PDATATYPE idType, int nBatchs, const SDevice& spDevice, int nDeviations, void* pDeviations ) {
         if(nDeviations != m_nDeviations) {
             int nBytes = nDeviations*sizeof(Q);
-            m_spMomentum = SDeviceMemory::createDeviceMemory({spDevice,{nBytes, nullptr}});
-            m_spVelocity = SDeviceMemory::createDeviceMemory({spDevice,{nBytes, nullptr}});
+            m_spMomentum = SDeviceMemory::createDeviceMemory(spDevice,nBytes, nullptr);
+            m_spVelocity = SDeviceMemory::createDeviceMemory(spDevice,nBytes, nullptr);
             if(!m_spMomentum || !m_spVelocity) {
                 m_nDeviations = 0;
                 return sCtx.error("创建内存异常");

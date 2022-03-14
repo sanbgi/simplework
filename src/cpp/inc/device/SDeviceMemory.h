@@ -8,7 +8,7 @@
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
 //
-// 计算内存
+// 设备内存
 //
 SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
 
@@ -61,12 +61,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         return spDevice;
     }
 
-    static SDeviceMemory createMemory(const PMemory& cpuMemory) {
-        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PMemory>(cpuMemory));
-    }
+    //static SDeviceMemory createMemory(int nSize, void* pData=nullptr) {
+    //    return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({nullptr,nSize,pData}));
+    //}
 
-    static SDeviceMemory createDeviceMemory(const PDeviceMemory& deviceMemroy) {
-        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>(deviceMemroy));
+    static SDeviceMemory createDeviceMemory(const SDevice& spDevice, int nSize, void* pData=nullptr) {
+        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice.getPtr(),nSize,pData}));
     }
  
 SIMPLEWORK_INTERFACECLASS_LEAVE(DeviceMemory)

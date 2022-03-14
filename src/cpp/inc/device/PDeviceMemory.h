@@ -6,19 +6,23 @@
 
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
-
 struct PDeviceMemory{
     SIMPLEWORK_PDATAKEY(PDeviceMemory, "sw.core.DeviceMemory")
 
-    //
     // 设备
-    //
-    SDevice spDevice;
+    IDevice* pDevice;
 
-    //
-    // 初始化内存
-    //
-    PMemory cpuMemory;
+    // 大小
+    int size;
+
+    // 指针
+    void* data;
+
+    PDeviceMemory(IDevice* pDevice, int size, void* data=nullptr) {
+        this->pDevice = pDevice;
+        this->size = size;
+        this->data = data;
+    }
 };
 
 

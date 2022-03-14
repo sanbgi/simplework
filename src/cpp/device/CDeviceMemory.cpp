@@ -15,14 +15,13 @@ class CDevicMemory : public CObject, IDeviceMemory, IArchivable{
 protected://CObject
     int __initialize(const PData* pData){
         const PDeviceMemory* pDeviceMemory = CData<PDeviceMemory>(pData);
-        if( pDeviceMemory == nullptr ) {
-            const PMemory* pMemory = CData<PMemory>(pData);
-            if(pMemory == nullptr || pMemory->size < 1) {
-                return sCtx.error("创建内存参数无效");
-            }
-            return SDevice::cpu()->createMemory(*pMemory, m_spMemory);
+        if( pDeviceMemory == nullptr ){
+            return sCtx.error("创建内存参数无效");
         }
-        return pDeviceMemory->spDevice->createMemory(pDeviceMemory->cpuMemory, m_spMemory);
+        if( pDeviceMemory->pDevice == nullptr ) {
+            return SDevice::cpu()->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
+        }
+        return pDeviceMemory->pDevice->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
     }
 
 protected://IArchivable
@@ -53,7 +52,7 @@ private://IDeviceMemory
         SDevice spInDevice = m_spMemory.device();
         if( spInDevice.getPtr() != spDevice.getPtr() ) {
             SDeviceMemory toMemory;
-            if( spDevice->createMemory(m_spMemory, toMemory) != sCtx.success()) {
+            if( spDevice->createKernelMemory(toMemory, m_spMemory) != sCtx.success()) {
                 return sCtx.error("创建设备内存异常");
             }
             m_spMemory = toMemory;

@@ -124,7 +124,7 @@ public:
 };
 
 int CTensor::initVector(CTypeAssist* pTypeAssist, int nSize, const void* pData) {
-    m_spMemory = SDeviceMemory::createMemory({nSize*pTypeAssist->size(), (void*)pData});
+    m_spMemory = SDeviceMemory::createDeviceMemory(SDevice::defaultDevice(), nSize*pTypeAssist->size(), (void*)pData);
     m_pTypeAssist = pTypeAssist;
     m_nElementSize = nSize;
     return SError::ERRORTYPE_SUCCESS;

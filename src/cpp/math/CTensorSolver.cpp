@@ -216,7 +216,7 @@ public:
             if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
                 if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
                     PMemory sKernalMemory;
-                    spKernalParameterInDevice = SDeviceMemory::createDeviceMemory({spDevice, kernalParameter});
+                    spKernalParameterInDevice = SDeviceMemory::createDeviceMemory(spDevice, kernalParameter.size, kernalParameter.data);
                     if( !spKernalParameterInDevice ) {
                         return sCtx.error("创建设备内存错误");
                     }

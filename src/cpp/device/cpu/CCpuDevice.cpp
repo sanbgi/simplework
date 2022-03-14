@@ -14,21 +14,21 @@ class CCpuDevice : public CObject, public IDevice{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://IDevice
-    int createMemory(const PMemory& cpuMemory, SDeviceMemory& spDeviceMemory){
-        spDeviceMemory = SObject::createObject("sw.device.CpuMemory", CData<PMemory>(cpuMemory));
-        return spDeviceMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
+    int createKernelMemory(SDeviceMemory& spKernelMemory, int nSize, void* pData = nullptr){
+        spKernelMemory = SObject::createObject("sw.device.CpuMemory", CData<PMemory>({nSize, pData}));
+        return spKernelMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
     }
 
-    int createMemory(const SDeviceMemory& spMemory, SDeviceMemory& spDeviceMemory){
+    int createKernelMemory(SDeviceMemory& spKernelMemory, const SDeviceMemory& spMemory){
         SDevice spDevice = spMemory.device();
         if(spDevice.getPtr() == this) {
-            spDeviceMemory = spMemory;
+            spKernelMemory = spMemory;
             return sCtx.success();
         }
 
         //创建CPU内存
         SDeviceMemory toMemory;
-        if( createMemory({spMemory.size(), nullptr}, toMemory) != sCtx.success() ) {
+        if( createKernelMemory(toMemory, spMemory.size()) != sCtx.success() ) {
             return sCtx.error("创建内存失败");
         }
 
@@ -43,7 +43,7 @@ private://IDevice
             return sCtx.error("从指定的设备内存，拷贝值到CPU内存失败");
         }
 
-        spDeviceMemory = toMemory;
+        spKernelMemory = toMemory;
         return sCtx.success();
     }
 
