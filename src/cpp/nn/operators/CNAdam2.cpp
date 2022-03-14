@@ -4,13 +4,13 @@
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-class CNadam : public CObject, IKernalOperator {
+class CNAdam : public CObject, IKernalOperator {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IKernalOperator)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.Nadam"; }
+    static const char* __getClassKey() { return "sw.nn.NAdam"; }
 
 public://Kernel
     struct CKernelWraper {
@@ -20,7 +20,7 @@ public://Kernel
             return pCtx->pRanges[i];
         }
 
-#include "Nadam.cl"
+#include "NAdam.cl"
     };
     
     static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
@@ -46,4 +46,4 @@ public://IKernalOperator
     }
 };
 
-SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNadam, CNadam::__getClassKey())
+SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CNAdam, CNAdam::__getClassKey())

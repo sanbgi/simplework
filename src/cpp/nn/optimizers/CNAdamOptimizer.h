@@ -104,9 +104,9 @@ private:
         static int sKernalId = 0;
         switch(CBasicData<Q>::getStaticType()) {
             case PDATATYPE_FLOAT:
-                return spDevice->runKernel( {&sKernalId, "sw.nn.Nadam.floatEval"}, 6, pArgs, 1, &nDeviations);
+                return spDevice->runKernel( {&sKernalId, "sw.nn.NAdam.floatEval"}, 6, pArgs, 1, &nDeviations);
             case PDATATYPE_DOUBLE:
-                return spDevice->runKernel( {&sKernalId, "sw.nn.Nadam.doubleEval"}, 6, pArgs, 1, &nDeviations);
+                return spDevice->runKernel( {&sKernalId, "sw.nn.NAdam.doubleEval"}, 6, pArgs, 1, &nDeviations);
         }
         return sCtx.error("数据类型暂时不支持");
     }
