@@ -38,8 +38,6 @@ public://Factory
 
 private:
     STensor m_spTensor;
-    SObject m_spExtra1;
-    SObject m_spExtra2;
     std::vector<SObject> m_arrExtras;
 };
 

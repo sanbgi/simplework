@@ -43,22 +43,23 @@ int main(int argc, char *argv[]){
     SDevice spDevice = SDevice::opencl();
     int i=0;
     int nElementSize = 1000000000;
+    SDeviceMemory spMemory = SDeviceMemory::createDeviceMemory(SDevice::opencl(), 1000000);
     for( i=0; i<10000; i++) {
-        SDeviceMemory spMemory = SDeviceMemory::createDeviceMemory(SDevice::opencl(), 1000000000);
+        SMathKernal::equal<int>(spDevice,spMemory.data(spDevice),0, i, spMemory.size()/sizeof(int));
         if( !spMemory ) {
             break;
         }
 
-        if( SMathKernal::equal<float>(spDevice, spMemory.data(spDevice), 0, 1.1f, nElementSize/sizeof(float)) != 0 ) {
+        int v[1000];
+        spMemory->readMemory({100,v});
+
+        if(v[0] != i) {
             break;
         }
-        //if( spDevice.memoryZero(spMemory.data(spDevice),0,nElementSize) != 0 ) {
-        //    break;
-        //}
-        //arrMemorirs.push_back(spMemory);
     }
     std::cout << "max i:" << i;
     */
+
 
     /*
     STensor sTestTensor = STensor::createVector<int>(100000);

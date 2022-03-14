@@ -61,6 +61,7 @@ void CNnNetwork::runLearn() {
             // 神经网络求解
             //
             STensor spOut = nn.eval(spIn);
+            float* pOut = (float*)spOut.data<float>();
 
             //
             // 计算偏差量

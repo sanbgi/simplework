@@ -244,8 +244,10 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     };
     vector<PSolveVector> solveVars(solveCtx.arrVars.size());
     auto pOutVar = solveVars.data() + solveCtx.iOutVar;
+    pOutVar->size = solveCtx.arrVars[solveCtx.iOutVar].size*nBatchs;
     pOutVar->data = spOut.data(spDevice);
     auto pInVar = solveVars.data() + solveCtx.iInVar;
+    pInVar->size = solveCtx.arrVars[solveCtx.iInVar].size*nBatchs;
     pInVar->data = spBatchIn.data(spDevice);
     {
         PSolveVector* pItVec = solveVars.data();
@@ -304,6 +306,24 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
             return sCtx.error("设备计算错误");
         }
     }
+
+    /*当跑ResNet50后，所有的内存拷贝都失效，感觉很像驱动程序的BUG，如果小模型，则没问题
+    int i=0;
+    int nEleSize = 4000;
+    SDeviceMemory spMemory = SDeviceMemory::createDeviceMemory(SDevice::opencl(), nEleSize);
+    for( i=0; i<10000; i++) {
+        SMathKernal::equal<int>(spDevice,spMemory.data(spDevice),0, i, spMemory.size()/sizeof(int));
+        if( !spMemory ) {
+            break;
+        }
+
+        int v[1000];
+        spMemory->readMemory({100,v});
+        if(v[0] != i) {
+            break;
+        }
+    }*/
+
     return CNnExtraTensor::createResizeTensor({spOut, (int)arrExtras.size(), arrExtras.data()}, spBatchOut);
 }
 

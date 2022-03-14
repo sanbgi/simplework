@@ -23,16 +23,16 @@ void CNnNetwork::prepareImageNet() {
     }
     _finddata_t folderInfo, fileInfo;
     string strRootFolder = s_rootFolder;
-    long hFolder = _findfirst((strRootFolder+"/*").c_str(), &folderInfo);
+    intptr_t  hFolder = _findfirst((strRootFolder+"/*").c_str(), &folderInfo);
     if(hFolder != 0) {
-        CTaker<long> spTaker(hFolder, [](long h){_findclose(h);});
+        CTaker<intptr_t > spTaker(hFolder, [](intptr_t  h){_findclose(h);});
         do{
             if ((folderInfo.attrib &  _A_SUBDIR)) {
                 string folderName = folderInfo.name;
                 if(folderName != "." && folderName != "..") {
-                    long hFile = _findfirst((strRootFolder+"/"+folderName+"/*.jpeg").c_str(), &fileInfo);
+                    intptr_t  hFile = _findfirst((strRootFolder+"/"+folderName+"/*.jpeg").c_str(), &fileInfo);
                     if(hFile != 0) {
-                        CTaker<long> spFileTaker(hFile, [](long h){_findclose(h);});
+                        CTaker<intptr_t > spFileTaker(hFile, [](intptr_t  h){_findclose(h);});
                         do{
                             if( !(fileInfo.attrib & _A_SUBDIR) ) {
                                 string fileName = fileInfo.name;
@@ -73,7 +73,7 @@ void CNnNetwork::prepareImageNet() {
 }
 
 SNnNetwork CNnNetwork::createResNet() {
-    SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {224, 224, 3};
     SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(3,pDimSizes),
@@ -139,18 +139,18 @@ SNnNetwork CNnNetwork::createResNet() {
                             * 
                             */
                         }else{
-                            //resX = resX.conv({1,1,nLayers/4,1,1,1,"same"});
-                            //resX = resX.batchNormalize({1.0e-8});
-                            //resX = resX.relu();
+                            resX = resX.conv({1,1,nLayers/4,1,1,1,"same"});
+                            resX = resX.batchNormalize({1.0e-8});
+                            resX = resX.relu();
                         }
-                        //resX = resX.conv({3,3,nLayers/4,1,1,1,"same",nullptr});
-                        //resX = resX.batchNormalize({1.0e-8});
+                        resX = resX.conv({3,3,nLayers/4,1,1,1,"same",nullptr});
+                        resX = resX.batchNormalize({1.0e-8});
                         x = x.relu();
 
-                        //resX = resX.conv({1,1,nLayers,1,1,1, "same"});
-                        //resX = resX.batchNormalize({1.0e-8});
-                        //x = x + resX;
-                        //x = x.relu();
+                        resX = resX.conv({1,1,nLayers,1,1,1, "same"});
+                        resX = resX.batchNormalize({1.0e-8});
+                        x = x + resX;
+                        x = x.relu();
                     }
                     return x;
                 }
@@ -264,7 +264,7 @@ void CNnNetwork::runImageNet() {
         
         float sumAcc = 0;
         float sumLoss = 0;
-        float sumX = 0.98;
+        float sumX = 0.98f;
         int nHit = 0;
         while(!instream.eof()) {
             int nBatchs = 10;
@@ -284,12 +284,12 @@ void CNnNetwork::runImageNet() {
             STensor spClassify;
             {
                 int pDimSizes[] = {(int)arrFiles.size(), 224, 224, 3};
-                if( STensor::createTensor<unsigned char>(spBatchIn, SDimension::createDimension(4,pDimSizes), 224 * 224 * 3 * arrFiles.size() ) != sCtx.success() ) {
+                if( STensor::createTensor<unsigned char>(spBatchIn, SDimension::createDimension(4,pDimSizes), 224 * 224 * 3 * (int)arrFiles.size() ) != sCtx.success() ) {
                     sCtx.error("创建输入图片张量失败");
                     continue;
                 }
 
-                int nFiles = arrFiles.size();
+                int nFiles = (int)arrFiles.size();
                 if( STensor::createTensor<int>(spClassify, SDimension::createDimension(1,&nFiles), nFiles ) != sCtx.success() ) {
                     sCtx.error("创建输入图片张量失败");
                     continue;
@@ -351,13 +351,15 @@ void CNnNetwork::runImageNet() {
                 spBatchIn = spBatchIn.toFloat() * STensor::createValue<float>(1.0f/255);
             }
 
-            PVector sMemory;
+            //PVector sMemory;
             //spClassify->getDataInDevice(SDevice::cpu(), sMemory);
+            SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
 
             //
             // 神经网络求解
             //
             STensor spOut = nn.eval(spBatchIn);
+            float* pOut = (float*)spOut.data();
             //spOut->getDataInDevice(SDevice::cpu(), sMemory);
 
             //
@@ -378,6 +380,7 @@ void CNnNetwork::runImageNet() {
             // 学习更新神经网络
             //
             STensor spInDeviation = nn.devia(spOut, spOutDeviation);
+            float fRMS2 = *spOutDeviation.rootMeanSquare().data<float>();
             float fRMSIn = *spInDeviation.rootMeanSquare().data<float>();
 
             //
