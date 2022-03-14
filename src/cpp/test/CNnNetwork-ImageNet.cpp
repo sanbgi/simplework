@@ -73,9 +73,9 @@ void CNnNetwork::prepareImageNet() {
 }
 
 SNnNetwork CNnNetwork::createResNet() {
-    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
     int pDimSizes[] = {224, 224, 3};
-    SNnNetwork spNetwork = SNnNetwork::createOpenclNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(3,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             struct ResNet {
@@ -158,7 +158,7 @@ SNnNetwork CNnNetwork::createResNet() {
             SNnVariable x = spIn;
             x = x.conv({7,7,64,1,2,2,"same","relu"});
             x = x.maxpool({3,3,2,2,"same"});
-            int nResNet = 18;
+            int nResNet = 50;
             switch(nResNet) {
             case 18:
                 x = ResNet::resBlock2(x,2,1);
@@ -370,20 +370,21 @@ void CNnNetwork::runImageNet() {
             // 求均方根
             //
             STensor spRootMeanSquare = spOutDeviation.rootMeanSquare();
+            float fRMS = *spRootMeanSquare.data<float>();
             //spOutDeviation->getDataInDevice(SDevice::cpu(), sMemory);
 
-            float fRMS = *spRootMeanSquare.data<float>();
-            {
-                //
-                // 学习更新神经网络
-                //
-                STensor spInDeviation = nn.devia(spOut, spOutDeviation);
+            
+            //
+            // 学习更新神经网络
+            //
+            STensor spInDeviation = nn.devia(spOut, spOutDeviation);
+            float fRMSIn = *spInDeviation.rootMeanSquare().data<float>();
 
-                //
-                // 更新网络
-                //
-                nn.update(spInDeviation);
-            }
+            //
+            // 更新网络
+            //
+            //nn.update(spInDeviation);
+            
 
             //spClassify->getDataInDevice(SDevice::opencl(), sMemory);
             //for(int i=0; i<spClassify.size(); i++) {
@@ -402,7 +403,7 @@ void CNnNetwork::runImageNet() {
                 float delta = 0;
                 for(int i=0; i<nOutDeviation; i++) {
                     if( pOutTarget[i] > 0.8 ) {
-                        if( abs(pOutDeviation[i]) < 0.3) {
+                        if( abs(pOutDeviation[i]) < 0.1) {
                             nAcc++;
                             nHit++;
                         }

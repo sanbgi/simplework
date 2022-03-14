@@ -16,10 +16,8 @@ public://Kernel
     struct CKernelWraper {
     public:
         const PKernalCtx* pCtx;
-        int get_global_id(int i) {
-            return pCtx->pRanges[i];
-        }
 
+#include "PrepareKernel.hpp"
 #include "Conv.cl"
     };
     

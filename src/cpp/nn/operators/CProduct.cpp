@@ -16,16 +16,8 @@ public://Kernel
     struct CKernelWraper {
     public:
         const PKernalCtx* pCtx;
-        int get_global_id(int i) {
-            return pCtx->pRanges[i];
-        }
-
-        //TODO原子操作实现
-        static int atomic_cmpxchg(unsigned int* pV, int oldV, int newV) {
-            *pV = newV;
-            return oldV;
-        }
-
+        
+#include "PrepareKernel.hpp"
 #include "Product.cl"
     };
     

@@ -464,16 +464,9 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
     //
     void* pDeviations = spDeviations.data(spDevice);
     int iDeviationOffset = 0;
-    {
-        PSolveDeviaVector* pItVec = solveVars.data();
-        for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
-            switch(pItVar->type) {
-            case ENnVariableType::EVWeight:
-                SMathKernal::equal(spDevice, idType, pDeviations, iDeviationOffset, pItVec->devia, 0, pItVec->size );
-                iDeviationOffset += pItVec->size;
-                break;
-            }
-        }
+    for(auto pItVec : weightVars) {
+        SMathKernal::equal(spDevice, idType, pDeviations, iDeviationOffset, pItVec->devia, 0, pItVec->size );
+        iDeviationOffset += pItVec->size; 
     }
 
     if( solveCtx.spOptimizer->updateDeviation(idType, nBatchs, spDevice, nWeights, pDeviations) != sCtx.success() ){
@@ -500,14 +493,13 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
     SDeviceMemory spWeightDevia = sResizeTensor.pExtras[0];
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
-    int nWeights = solveCtx.nWeights;
-    if(spWeightDevia.size() != nWeights * solveCtx.nElementSize) {
+    if(spWeightDevia.size() != solveCtx.nWeights * solveCtx.nElementSize) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
     SDevice spDevice = SDevice::opencl();
-    void* pWeightDevia = spWeightDevia.data(spDevice);
     int iDeviationOffset = 0;
+    void* pWeightDevia = spWeightDevia.data(spDevice);
     vector<PSolveGraphInfos::PSolveVar>::iterator itVar = solveCtx.arrVars.begin();
     while(itVar != solveCtx.arrVars.end() ) {
         switch(itVar->type) {
