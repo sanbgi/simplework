@@ -110,6 +110,10 @@ protected://CObject
             cl::Platform plat;
             for (auto &p : platforms) {
                 std::string platver = p.getInfo<CL_PLATFORM_VERSION>();
+                std::cout << "opencl ver:" << platver << "\n"; 
+            }
+            for (auto &p : platforms) {
+                std::string platver = p.getInfo<CL_PLATFORM_VERSION>();
                 if (platver.find("OpenCL 2.") != std::string::npos) {
                     plat = p;
                     break;

@@ -77,7 +77,7 @@ private:
 
         int iInVar;
         int iOutVar;
-        int nSumSize[EVMax];
+        int nWeights;
         SOptimizer spOptimizer;
     };
     CTaker<PSolveGraphInfos*> m_spSolveGraphInfos;
@@ -127,13 +127,10 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         delete pCtx;
     });
     PSolveGraphInfos& solveCtx = *taker;
-    for(int i=0; i<EVMax; i++) {
-        solveCtx.nSumSize[i] = 0;
-    }
-
     //
     // 更新计算变量数组
     //
+    int nWeights = 0;
     vector<PSolveGraphInfos::PSolveVar>& arrVars = solveCtx.arrVars;
     for(auto itVar : m_sSolveGraph.arrVars) {
         SNnInternalVariable spToSolveVar = itVar;
@@ -144,7 +141,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         solveVar.size = spToSolveVar->getSize();
         solveVar.type = spToSolveVar->getVariableType();
         solveVar.data = spToSolveVar->getData(idType);
-        solveCtx.nSumSize[solveVar.type] += solveVar.size;
+        nWeights += solveVar.type==ENnVariableType::EVWeight?solveVar.size:0;
         arrVars.push_back(solveVar);
     }
 
@@ -205,6 +202,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
     solveCtx.iInVar = m_sSolveGraph.iInVar;
     solveCtx.iOutVar = m_sSolveGraph.iOutVar;
     solveCtx.idType = idType;
+    solveCtx.nWeights = nWeights;
     solveCtx.nElementSize = nElementSize;
     solveCtx.spInDimension = spInDimension;
     solveCtx.spOutDimension = spOutDimension;
@@ -279,26 +277,20 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     for(auto& instruct : solveCtx.arrInstructs ) {
         int nKernalArgs = instruct.nInVars*2 + 4;
         PKernalVariable* pMemory = pKernelArgs;
-        if(instruct.spParameters) {
-            *pMemory = PKernalVariable(instruct.spParameters.data(spDevice));
-        }else{
-            *pMemory = PKernalVariable((void*)nullptr);
-        }
-        pMemory++;
-
-        *pMemory = PKernalVariable(nBatchs);
-        pMemory++;
+        pMemory[0] = (instruct.spParameters)?instruct.spParameters.data(spDevice):nullptr;
+        pMemory[1] = nBatchs;
+        pMemory += 2;
 
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
-            pMemory[0] = PKernalVariable(pVec->size);
-            pMemory[1] = PKernalVariable(pVec->data);
+            pMemory[0] = pVec->size;
+            pMemory[1] = pVec->data;
             pMemory+=2;
         }
 
         pVec = &solveVars[instruct.iOutVar];
-        pMemory[0] = PKernalVariable(pVec->size);
-        pMemory[1] = PKernalVariable(pVec->data);
+        pMemory[0] = pVec->size;
+        pMemory[1] = pVec->data;
 
         int nRanges = instruct.nRanges;
         int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
@@ -355,14 +347,17 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
     if( int errCode = STensor::createTensor(spBatchInDeviation, spBatchIn.dimension(), solveCtx.idType, spBatchIn.size()) != sCtx.success() ) {
         return sCtx.error(errCode, "创建输入偏差张量失败");
     }
-
+    
     struct PSolveDeviaVector {
         int size;
         void* data;
         void* devia;
         SDeviceMemory deviaBuffer;
     };
+
+    int nWeights = 0;
     vector<PSolveDeviaVector> solveVars(solveCtx.arrVars.size());
+    vector<PSolveDeviaVector*> weightVars;
     {
         PSolveDeviaVector* pItVec = solveVars.data();
         PSolveDeviaVector* pOutVar = solveVars.data() + solveCtx.iOutVar;
@@ -396,15 +391,6 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
                 break;
 
             case ENnVariableType::EVState:
-                {
-                    pItVec->size = pItVar->size;
-                    pItVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pItVec->size * nElementSize);
-                    pItVec->data = pItVar->data.data(spDevice);
-                    pItVec->devia = pItVec->deviaBuffer.data(spDevice);
-                    spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
-                }
-                break;
-
             case ENnVariableType::EVWeight:
                 {
                     pItVec->size = pItVar->size;
@@ -412,6 +398,10 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
                     pItVec->data = pItVar->data.data(spDevice);
                     pItVec->devia = pItVec->deviaBuffer.data(spDevice);
                     spDevice.memoryZero(pItVec->devia, 0, pItVec->size*nElementSize);
+                    if(pItVar->type == ENnVariableType::EVWeight) {
+                        nWeights += pItVec->size;
+                        weightVars.push_back(pItVec);
+                    }
                 }
                 break;
             }
@@ -433,26 +423,20 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
 
         int nKernalArgs = instruct.nInVars*3 + 4;
         PKernalVariable* pMemory = pKernelArgs;
-        if(instruct.spParameters) {
-            *pMemory = PKernalVariable(instruct.spParameters.data(spDevice));
-        }else{
-            *pMemory = PKernalVariable((void*)nullptr);
-        }
-        pMemory++;
-
-        *pMemory = PKernalVariable(nBatchs);
-        pMemory++;
+        pMemory[0] = (instruct.spParameters)?instruct.spParameters.data(spDevice):nullptr;
+        pMemory[1] = nBatchs;
+        pMemory += 2;
 
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
-            pMemory[0] = PKernalVariable(pVec->size);
-            pMemory[1] = PKernalVariable(pVec->data);
-            pMemory[2] = PKernalVariable(pVec->devia);
+            pMemory[0] = pVec->size;
+            pMemory[1] = pVec->data;
+            pMemory[2] = pVec->devia;
             pMemory+=3;
         }
         pVec = &solveVars[instruct.iOutVar];
-        pMemory[0] = PKernalVariable(pVec->size);
-        pMemory[1] = PKernalVariable(pVec->devia);
+        pMemory[0] = pVec->size;
+        pMemory[1] = pVec->devia;
 
         int nRanges = instruct.nRanges;
         int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
@@ -467,34 +451,36 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         }
     }
 
-    int nWeights = solveCtx.nSumSize[EVWeight];
-    SDeviceMemory spWeights = SDeviceMemory::createDeviceMemory(spDevice, nWeights*nElementSize);
-    if( !spWeights ){
+    //
+    // 创建偏导数
+    //
+    SDeviceMemory spDeviations = SDeviceMemory::createDeviceMemory(spDevice, nWeights*nElementSize);
+    if( !spDeviations ){
         return sCtx.error("创建权重张量失败");
     }
 
     //
-    // 拷贝权重核输入偏导数
+    // 拷贝权重偏导数
     //
-    void* pWeights = spWeights.data(spDevice);
-    int iWeightOffset = 0;
+    void* pDeviations = spDeviations.data(spDevice);
+    int iDeviationOffset = 0;
     {
         PSolveDeviaVector* pItVec = solveVars.data();
         for(auto pItVar = solveCtx.arrVars.begin(); pItVar != solveCtx.arrVars.end(); pItVar++, pItVec++ ){
             switch(pItVar->type) {
             case ENnVariableType::EVWeight:
-                SMathKernal::equal(spDevice, idType, pWeights, iWeightOffset,pItVec->devia, 0, pItVec->size );
-                iWeightOffset += pItVec->size;
+                SMathKernal::equal(spDevice, idType, pDeviations, iDeviationOffset, pItVec->devia, 0, pItVec->size );
+                iDeviationOffset += pItVec->size;
                 break;
             }
         }
     }
 
-    if( solveCtx.spOptimizer->updateDeviation(idType, nBatchs, spDevice, nWeights, pWeights) != sCtx.success() ){
+    if( solveCtx.spOptimizer->updateDeviation(idType, nBatchs, spDevice, nWeights, pDeviations) != sCtx.success() ){
         return sCtx.error("权重计算异常");
     }
 
-    SObject pExtras2[] = { spWeights };
+    SObject pExtras2[] = { spDeviations };
     return CNnExtraTensor::createResizeTensor({spBatchInDeviation, 1, pExtras2}, spBatchInDeviation);
 }
 
@@ -514,22 +500,22 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
     SDeviceMemory spWeightDevia = sResizeTensor.pExtras[0];
 
     PSolveGraphInfos& solveCtx = *m_spSolveGraphInfos;
-    int nWeights = solveCtx.nSumSize[EVWeight];
+    int nWeights = solveCtx.nWeights;
     if(spWeightDevia.size() != nWeights * solveCtx.nElementSize) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
     SDevice spDevice = SDevice::opencl();
     void* pWeightDevia = spWeightDevia.data(spDevice);
-    int iWeightOffset = 0;
+    int iDeviationOffset = 0;
     vector<PSolveGraphInfos::PSolveVar>::iterator itVar = solveCtx.arrVars.begin();
     while(itVar != solveCtx.arrVars.end() ) {
         switch(itVar->type) {
         case ENnVariableType::EVWeight:
             {
                 void* pWeightData = itVar->data.data(spDevice);
-                SMathKernal::minusEqual(spDevice, solveCtx.idType, pWeightData, 0, pWeightDevia, iWeightOffset, itVar->size);
-                iWeightOffset += itVar->size;
+                SMathKernal::minusEqual(spDevice, solveCtx.idType, pWeightData, 0, pWeightDevia, iDeviationOffset, itVar->size);
+                iDeviationOffset += itVar->size;
             }
             break;
         }

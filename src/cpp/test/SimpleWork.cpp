@@ -7,9 +7,7 @@
 #include "CAvNetwork.h"
 
 using namespace sw;
-using namespace sw;
-using namespace sw;
-using namespace sw;
+
 
 void testIdx() {
     SCtx sCtx("TestSimpleWork");
@@ -40,7 +38,27 @@ void testIdx() {
 
 int main(int argc, char *argv[]){
 
-    STensor sp = STensor::createValue<int>(12);
+    /*
+    std::vector<SDeviceMemory> arrMemorirs;
+    SDevice spDevice = SDevice::opencl();
+    int i=0;
+    int nElementSize = 1000000000;
+    for( i=0; i<10000; i++) {
+        SDeviceMemory spMemory = SDeviceMemory::createDeviceMemory(SDevice::opencl(), 1000000000);
+        if( !spMemory ) {
+            break;
+        }
+
+        if( SMathKernal::equal<float>(spDevice, spMemory.data(spDevice), 0, 1.1f, nElementSize/sizeof(float)) != 0 ) {
+            break;
+        }
+        //if( spDevice.memoryZero(spMemory.data(spDevice),0,nElementSize) != 0 ) {
+        //    break;
+        //}
+        //arrMemorirs.push_back(spMemory);
+    }
+    std::cout << "max i:" << i;
+    */
 
     /*
     STensor sTestTensor = STensor::createVector<int>(100000);
