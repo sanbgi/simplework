@@ -20,14 +20,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         virtual int getSize() = 0;
 
         //
+        // 获取内存值
+        //
+        virtual void* getData(const SDevice& spDevice) = 0;
+
+        //
         // 获取设备
         //
         virtual int getDevice(SDevice& spDevice) = 0;
-
-        //
-        // 获取内存值
-        //
-        virtual int getMemory(const SDevice& spDevice, PMemory& deviceMemory) = 0;
 
         //
         // 修改内存值
@@ -46,12 +46,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         return pFace != nullptr ? pFace->getSize() : 0;
     }
 
-    void* data(const SDevice& spDevice = SDevice::cpu()) {
+    void* data(const SDevice& spDevice = SDevice::cpu()) const {
         IFace* pFace = getPtr();
-        if(pFace == nullptr) return nullptr;
-        PMemory sMemory = { 0, nullptr };
-        pFace->getMemory(spDevice, sMemory);
-        return sMemory.data;
+        return (pFace != nullptr) ? pFace->getData(spDevice) : nullptr;
     }
 
     SDevice device() const {
@@ -60,10 +57,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         if(pFace) pFace->getDevice(spDevice);
         return spDevice;
     }
-
-    //static SDeviceMemory createMemory(int nSize, void* pData=nullptr) {
-    //    return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({nullptr,nSize,pData}));
-    //}
 
     static SDeviceMemory createDeviceMemory(const SDevice& spDevice, int nSize, void* pData=nullptr) {
         return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice.getPtr(),nSize,pData}));

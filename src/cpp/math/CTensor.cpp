@@ -165,13 +165,14 @@ int CTensor::getDataSize() {
 }
 
 int CTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
-    PMemory deviceMemory;
-    int ret;
-    if( (ret = m_spMemory->getMemory(spDevice, deviceMemory)) == sCtx.success() ) {
-        deviceData.size = m_nElementSize;
-        deviceData.data = deviceMemory.data;
+    void* pData = m_spMemory->getData(spDevice);
+    if( pData == nullptr) {
+        return sCtx.error("无法获取数据的设备指针");
     }
-    return ret;
+
+    deviceData.size = m_nElementSize;
+    deviceData.data = pData;
+    return sCtx.success();
 }
 
 CTensor::CTensor() {

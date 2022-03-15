@@ -29,10 +29,8 @@ protected://IArchivable
     const char* getClassKey() { return SDeviceMemory::__getClassKey(); }
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
-            PMemory sMemory;
-            if( getMemory(SDevice::cpu(), sMemory) != sCtx.success() ) {
-                return sCtx.error("内存无法保存到CPU");
-            }
+            //转化为CPU内存
+            getData(SDevice::cpu());
         }
         return ar.arObject("data", m_spMemory);
     }
@@ -48,16 +46,17 @@ private://IDeviceMemory
         return m_spMemory->getDevice(spDevice);
     }
 
-    int getMemory(const SDevice& spDevice, PMemory& deviceMemory){
+    void* getData(const SDevice& spDevice){
         SDevice spInDevice = m_spMemory.device();
         if( spInDevice.getPtr() != spDevice.getPtr() ) {
             SDeviceMemory toMemory;
             if( spDevice->createKernelMemory(toMemory, m_spMemory) != sCtx.success()) {
-                return sCtx.error("创建设备内存异常");
+                sCtx.error("创建设备内存异常");
+                return nullptr;
             }
             m_spMemory = toMemory;
         }
-        return m_spMemory->getMemory(spDevice,deviceMemory);
+        return m_spMemory->getData(spDevice);
     }
 
     int writeMemory(const PMemory& cpuMemory, int iOffset=0){

@@ -46,13 +46,12 @@ private://IDeviceMemory
         return SDeviceFactory::getFactory()->getCpuDevice(spDevice);
     }
 
-    int getMemory(const SDevice& spDevice, PMemory& deviceMemory){
+    void* getData(const SDevice& spDevice){
         if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
-            return sCtx.error("无法获取非CPU设备内存");
+            sCtx.error("无法获取非CPU设备内存");
+            return nullptr;
         }
-        deviceMemory.size = m_nSize;
-        deviceMemory.data = m_spTaker;
-        return sCtx.success();
+        return m_spTaker;
     }
 
     int writeMemory(const PMemory& cpuMemory, int iOffset=0){

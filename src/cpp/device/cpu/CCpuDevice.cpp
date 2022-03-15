@@ -32,13 +32,8 @@ private://IDevice
             return sCtx.error("创建内存失败");
         }
 
-        //获取内存指针
-        PMemory sMemory;
-        if( toMemory->getMemory(toMemory.device(), sMemory) != sCtx.success() ) {
-            return sCtx.error("未知异常错误");
-        }
-
         //拷贝内存值
+        PMemory sMemory = { toMemory.size(), toMemory.data() };
         if( spMemory->readMemory(sMemory) != sCtx.success() ) {
             return sCtx.error("从指定的设备内存，拷贝值到CPU内存失败");
         }

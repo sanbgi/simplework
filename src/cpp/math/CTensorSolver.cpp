@@ -215,16 +215,11 @@ public:
             //
             if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
                 if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
-                    PMemory sKernalMemory;
                     spKernalParameterInDevice = SDeviceMemory::createDeviceMemory(spDevice, kernalParameter.size, kernalParameter.data);
                     if( !spKernalParameterInDevice ) {
                         return sCtx.error("创建设备内存错误");
                     }
-
-                    if(spKernalParameterInDevice->getMemory(spDevice, kernalParameter) != sCtx.success()) {
-                        return sCtx.error("获取设备内存错误");
-                    }
-                    *pKernelArg = PKernalVariable(kernalParameter.data);
+                    *pKernelArg = PKernalVariable(spKernalParameterInDevice.data(spDevice));
                 }else{
                     *pKernelArg = PKernalVariable(kernalParameter.data);
                 }

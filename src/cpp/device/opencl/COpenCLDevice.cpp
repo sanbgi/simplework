@@ -59,13 +59,11 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int getMemory(const SDevice& spDevice, PMemory& deviceMemory){
+    void* getData(const SDevice& spDevice){
         if( spDevice.getPtr() != SDevice::opencl().getPtr() ) {
-            return sCtx.error("无法获取非Opencl设备内存");
+            return nullptr;
         }
-        deviceMemory.size = m_nSize;
-        deviceMemory.data = m_sBuffer.get();
-        return sCtx.success();
+        return m_sBuffer.get();
     }
 
     int writeMemory(const PMemory& cpuMemory, int iOffset=0){
@@ -183,11 +181,11 @@ private://IDevice
         }
 
         if(spDevice.getPtr() == SDevice::cpu().getPtr()) {
-            PMemory sMemory;
-            if( spMemory->getMemory(spDevice, sMemory) != sCtx.success() ) {
+            void* pData = spMemory.data(spDevice);
+            if( pData == nullptr ) {
                 return sCtx.error("无法获取内存指针");
             }
-            return createKernelMemory(spDeviceMemory, sMemory.size, sMemory.data);
+            return createKernelMemory(spDeviceMemory, spMemory.size(), pData);
         }
 
         //如果不是CPU内存，则需要内存拷贝到CPU内存，作为中转
