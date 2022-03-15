@@ -13,13 +13,13 @@ static SCtx sCtx("CTensorSolver");
         switch(nVars>0?pVars[0].type():0) {\
         case PDATATYPE_FLOAT:\
             {\
-                static int sKernelId=0;\
-                return solveEleWise_Two_One({&sKernelId, y".floatEval"}, nVars, pVars);\
+                static PRuntimeKey sKernelKey(y".floatEval");\
+                return solveEleWise_Two_One(sKernelKey, nVars, pVars);\
             }\
         case PDATATYPE_DOUBLE:\
             {\
-                static int sKernelId=0;\
-                return solveEleWise_Two_One({&sKernelId, y".doubleEval"}, nVars, pVars);\
+                static PRuntimeKey sKernelKey(y".doubleEval");\
+                return solveEleWise_Two_One(sKernelKey, nVars, pVars);\
             }\
         }\
     }\
@@ -29,13 +29,13 @@ static SCtx sCtx("CTensorSolver");
         switch(nVars>0?pVars[0].type():0) {\
         case PDATATYPE_FLOAT:\
             {\
-                static int sKernelId=0;\
-                return solveEleWise_One_One({&sKernelId, y".floatEval"}, nVars, pVars);\
+                static PRuntimeKey sKernelKey(y".floatEval");\
+                return solveEleWise_One_One(sKernelKey, nVars, pVars);\
             }\
         case PDATATYPE_DOUBLE:\
             {\
-                static int sKernelId=0;\
-                return solveEleWise_One_One({&sKernelId, y".doubleEval"}, nVars, pVars);\
+                static PRuntimeKey sKernelKey(y".doubleEval");\
+                return solveEleWise_One_One(sKernelKey, nVars, pVars);\
             }\
         }\
     }\
@@ -45,13 +45,13 @@ static SCtx sCtx("CTensorSolver");
         switch(nVars>0?pVars[0].type():0) {\
         case PDATATYPE_FLOAT:\
             {\
-                static int sKernelId=0;\
-                return solveToValue_One_One({&sKernelId, y".floatEval"}, nVars, pVars);\
+                static PRuntimeKey sKernelKey(y".floatEval");\
+                return solveToValue_One_One(sKernelKey, nVars, pVars);\
             }\
         case PDATATYPE_DOUBLE:\
             {\
-                static int sKernelId=0;\
-                return solveToValue_One_One({&sKernelId, y".doubleEval"}, nVars, pVars);\
+                static PRuntimeKey sKernelKey(y".doubleEval");\
+                return solveToValue_One_One(sKernelKey, nVars, pVars);\
             }\
         }\
     }\
@@ -79,21 +79,21 @@ public:
 
         case PTensorOperator::toFloat:
             {
-                static int sKernelId=0;
-                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert.uchar2floatEval"}, nVars, pVars, PDATATYPE_FLOAT);
+                static PRuntimeKey sKernelKey("sw.math.TensorConvert.uchar2floatEval");
+                return solveEleWise_One_One_Type(sKernelKey, nVars, pVars, PDATATYPE_FLOAT);
             }
 
         case PTensorOperator::toDouble:
             {
-                static int sKernelId=0;
-                return solveEleWise_One_One_Type({&sKernelId, "sw.math.TensorConvert.uchar2doubleEval"}, nVars, pVars, PDATATYPE_DOUBLE);
+                static PRuntimeKey sKernelKey("sw.math.TensorConvert.uchar2doubleEval");
+                return solveEleWise_One_One_Type(sKernelKey, nVars, pVars, PDATATYPE_DOUBLE);
             }
         }
 
         return sCtx.error("不支持的张量运算");
     }
 
-    int solveEleWise_Two_One(const PKernalKey& opKey, int nVars, STensor pVars[]) {
+    int solveEleWise_Two_One(const PRuntimeKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 3) {
             return sCtx.error("双元操作的参数个数错误");
         }
@@ -120,7 +120,7 @@ public:
         return ret;
     }
 
-    int solveEleWise_One_One(const PKernalKey& opKey, int nVars, STensor pVars[]) {
+    int solveEleWise_One_One(const PRuntimeKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -139,7 +139,7 @@ public:
         return ret;
     }
 
-    int solveEleWise_One_One_Type(const PKernalKey& opKey, int nVars, STensor pVars[], PDATATYPE type) {
+    int solveEleWise_One_One_Type(const PRuntimeKey& opKey, int nVars, STensor pVars[], PDATATYPE type) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -161,7 +161,7 @@ public:
         return ret;
     }
 
-    int solveToValue_One_One(const PKernalKey& opKey, int nVars, STensor pVars[]) {
+    int solveToValue_One_One(const PRuntimeKey& opKey, int nVars, STensor pVars[]) {
         if(nVars != 2) {
             return sCtx.error("单元操作的参数个数错误");
         }
@@ -181,7 +181,7 @@ public:
         return ret;
     }
     
-    int solve(  PKernalKey kernelKey,
+    int solve(  PRuntimeKey kernelKey,
                 PVector kernalRange,
                 PMemory kernalParameter,
                 int nVars, STensor pVars[]) {
@@ -275,7 +275,7 @@ public:
 
     /*
     int runKernel(const SDevice& spDevice,
-                        PKernalKey kernelKey,
+                        PRuntimeKey kernelKey,
                         PVector kernalRange,
                         PMemory kernalParameter,
                         int nVars,
@@ -308,7 +308,7 @@ public:
             
     int runDeviaKernel(
                         const SDevice& spDevice,
-                        PKernalKey kernelKey,
+                        PRuntimeKey kernelKey,
                         PVector kernalRange,
                         PMemory kernalParameter,
                         int nVars,

@@ -233,7 +233,7 @@ private://IDevice
         return createKernelMemory(spDeviceMemory, size, spTaker);
     }
 
-    int runKernel(  const PKernalKey& kernelKey, 
+    int runKernel(  const PRuntimeKey& kernelKey, 
                     int nArgs, 
                     PKernalVariable pArgs[], 
                     int nRanges = 0, 
@@ -367,36 +367,28 @@ private://IDevice
     }
 
 private:
-    static int getKernel(const PKernalKey& kernelKey, cl::Kernel& kernelFunc) {
+    static int getKernel(const PRuntimeKey& kernelKey, cl::Kernel& kernelFunc) {
         static std::map<PID,cl::Kernel> sMapKernels;
         static std::map<string,cl::Kernel> sNamedKernels;
-        if(kernelKey.pKernalId) {
-            if( *kernelKey.pKernalId > 0 ) {
-                auto it = sMapKernels.find(*kernelKey.pKernalId);
-                if( it != sMapKernels.end() ) {
-                    kernelFunc = it->second;
-                    return sCtx.success();
-                }
-                //return sCtx.error("发现无效的KernalID");
-            }
-        }
 
-        if(kernelKey.szKernalName == nullptr) {
-            return sCtx.error("内核参数错误");
-        }
-
-        auto it = sNamedKernels.find(kernelKey.szKernalName);
-        if( it != sNamedKernels.end() ) {
-            if(kernelKey.pKernalId != nullptr ) {
-                PRuntimeKey rKey(kernelKey.szKernalName);
-                sMapKernels[rKey.runtimeId] = it->second;
-                *kernelKey.pKernalId = rKey.runtimeId;
-            }
+        auto it = sMapKernels.find(kernelKey.runtimeId);
+        if( it != sMapKernels.end() ) {
             kernelFunc = it->second;
             return sCtx.success();
         }
 
-        string kernalName = kernelKey.szKernalName;
+        if(kernelKey.runtimeKey == nullptr) {
+            return sCtx.error("内核参数错误");
+        }
+
+        auto itNamedKernel = sNamedKernels.find(kernelKey.runtimeKey);
+        if( itNamedKernel != sNamedKernels.end() ) {
+            sMapKernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = itNamedKernel->second;
+            kernelFunc = itNamedKernel->second;
+            return sCtx.success();
+        }
+
+        string kernalName = kernelKey.runtimeKey;
         auto iProgramName = kernalName.rfind('.');
         if( iProgramName <= 0 && iProgramName >= kernalName.length() - 1) {
             return sCtx.error((string("无效的内核名，")+kernalName).c_str());
@@ -404,21 +396,16 @@ private:
 
         cl::Program clProgram;
         if( getProgram(kernalName.substr(0,iProgramName), clProgram) != sCtx.success() ) {
-            return sCtx.error((string("内核创建错误，内核名：")+kernelKey.szKernalName).c_str());
+            return sCtx.error((string("内核创建错误，内核名：")+kernelKey.runtimeKey).c_str());
         }
         
         cl::Kernel kernel = cl::Kernel(clProgram, kernalName.substr(iProgramName+1).c_str());
         if(kernel.get() == nullptr) {
-            return sCtx.error((string("创建内核错误，内核名：")+kernelKey.szKernalName).c_str());
-        }
-        
-        PRuntimeKey rKey(kernelKey.szKernalName);
-        sMapKernels[rKey.runtimeId] = kernel;
-        if(kernelKey.pKernalId != nullptr ) {
-            *kernelKey.pKernalId = rKey.runtimeId;
+            return sCtx.error((string("创建内核错误，内核名：")+kernelKey.runtimeKey).c_str());
         }
 
         kernelFunc = kernel;
+        sMapKernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = kernel;
         sNamedKernels[kernalName] = kernel;
         return sCtx.success();
     }

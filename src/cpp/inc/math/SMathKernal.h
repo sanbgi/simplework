@@ -17,16 +17,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         };
         switch(idType) {
         case PDATATYPE_INT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.intEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.PlusEqual.intEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_FLOAT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.floatEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.PlusEqual.floatEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_DOUBLE:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.doubleEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.PlusEqual.doubleEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         };
         return -1;
@@ -34,15 +34,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int plusEqual(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        static int sSetKernalId = 0;
         PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
         switch(CBasicData<Q>::getStaticType()) {
-        case PDATATYPE_INT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.intEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_FLOAT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.floatEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_DOUBLE:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.PlusEqual.doubleEvalV"}, 3, pArgs, 1, &nElements);
+        case PDATATYPE_INT:{
+            static PRuntimeKey sKernelKey("sw.math.PlusEqual.intEval");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_FLOAT:{
+            static PRuntimeKey sKernelKey("sw.math.PlusEqual.floatEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_DOUBLE:{
+            static PRuntimeKey sKernelKey("sw.math.PlusEqual.doubleEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
         };
         return -1;
     }
@@ -56,16 +61,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         };
         switch(idType) {
         case PDATATYPE_INT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.intEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.MinusEqual.intEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_FLOAT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.floatEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.MinusEqual.floatEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_DOUBLE:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.doubleEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.MinusEqual.doubleEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         };
         return -1;
@@ -73,15 +78,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int minusEqual(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        static int sSetKernalId = 0;
         PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
         switch(CBasicData<Q>::getStaticType()) {
-        case PDATATYPE_INT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.intEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_FLOAT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.floatEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_DOUBLE:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MinusEqual.doubleEvalV"}, 3, pArgs, 1, &nElements);
+        case PDATATYPE_INT:{
+            static PRuntimeKey sKernelKey("sw.math.MinusEqual.intEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_FLOAT:{
+            static PRuntimeKey sKernelKey("sw.math.MinusEqual.floatEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_DOUBLE:{
+            static PRuntimeKey sKernelKey("sw.math.MinusEqual.doubleEval");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
         };
         return -1;
     }
@@ -95,16 +105,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         };
         switch(idType) {
         case PDATATYPE_INT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MultiplyEqual.intEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.intEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_FLOAT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MultiplyEqual.floatEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.floatEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_DOUBLE:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MultiplyEqual.doubleEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.doubleEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         };
         return -1;
@@ -112,15 +122,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int multiplyEqual(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        static int sSetKernalId = 0;
         PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
         switch(CBasicData<Q>::getStaticType()) {
-        case PDATATYPE_INT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MultiplyEqual.intEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_FLOAT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MultiplyEqual.floatEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_DOUBLE:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.MultiplyEqual.doubleEvalV"}, 3, pArgs, 1, &nElements);
+        case PDATATYPE_INT:{
+            static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.intEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_FLOAT:{
+            static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.floatEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_DOUBLE:{
+            static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.doubleEval");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
         };
         return -1;
     }
@@ -134,16 +149,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
         };
         switch(idType) {
         case PDATATYPE_INT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.intEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.Equal.intEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_FLOAT:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.floatEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.Equal.floatEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         case PDATATYPE_DOUBLE:{
-            static int sSetKernalId = 0;
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.doubleEval"}, 4, pArgs, 1, &nElements);
+            static PRuntimeKey sKernelKey("sw.math.Equal.doubleEval");
+            return spDevice->runKernel(sKernelKey, 4, pArgs, 1, &nElements);
             }
         };
         return -1;
@@ -151,15 +166,20 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int equal(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        static int sSetKernalId = 0;
         PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v} };
         switch(CBasicData<Q>::getStaticType()) {
-        case PDATATYPE_INT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.intEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_FLOAT:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.floatEvalV"}, 3, pArgs, 1, &nElements);
-        case PDATATYPE_DOUBLE:
-            return spDevice->runKernel({&sSetKernalId, "sw.math.Equal.doubleEvalV"}, 3, pArgs, 1, &nElements);
+        case PDATATYPE_INT:{
+            static PRuntimeKey sKernelKey("sw.math.Equal.intEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_FLOAT:{
+            static PRuntimeKey sKernelKey("sw.math.Equal.floatEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
+        case PDATATYPE_DOUBLE:{
+            static PRuntimeKey sKernelKey("sw.math.Equal.doubleEvalV");
+            return spDevice->runKernel(sKernelKey, 3, pArgs, 1, &nElements);
+            }
         };
         return -1;
     }

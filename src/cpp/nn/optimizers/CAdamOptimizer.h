@@ -103,10 +103,14 @@ private:
         };
         static int sKernalId = 0;
         switch(CBasicData<Q>::getStaticType()) {
-            case PDATATYPE_FLOAT:
-                return spDevice->runKernel( {&sKernalId, "sw.nn.Adam.floatEval"}, 6, pArgs, 1, &nDeviations);
-            case PDATATYPE_DOUBLE:
-                return spDevice->runKernel( {&sKernalId, "sw.nn.Adam.doubleEval"}, 6, pArgs, 1, &nDeviations);
+            case PDATATYPE_FLOAT:{
+                static PRuntimeKey sKernelKey("sw.nn.Adam.floatEval");
+                return spDevice->runKernel( sKernelKey, 6, pArgs, 1, &nDeviations);
+                }
+            case PDATATYPE_DOUBLE:{
+                static PRuntimeKey sKernelKey("sw.nn.Adam.doubleEval");
+                return spDevice->runKernel( sKernelKey, 6, pArgs, 1, &nDeviations);
+                }
         }
         return sCtx.error("数据类型暂时不支持");
     }

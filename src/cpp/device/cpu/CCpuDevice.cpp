@@ -41,14 +41,14 @@ private://IDevice
         return sCtx.success();
     }
 
-    int runKernel(  const PKernalKey& kernelKey, 
+    int runKernel(  const PRuntimeKey& kernelKey, 
                 int nArgs, 
                 PKernalVariable pArgs[], 
                 int nRanges = 0, 
                 int pRanges[]=nullptr) {
         FKernalFunc func = getKernel(kernelKey);
         if(func == nullptr) {
-            return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.szKernalName).c_str());
+            return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.runtimeKey).c_str());
         }
 
         #define MAX_RANGE_SIZE 10
@@ -101,34 +101,26 @@ private://IDevice
     }
 
 private:
-    static FKernalFunc getKernel(const PKernalKey& kernelKey) {
+    static FKernalFunc getKernel(const PRuntimeKey& kernelKey) {
         static std::map<PID,FKernalFunc> sId2Kernels;
         static std::map<string,FKernalFunc> sName2Kernels;
-        if(kernelKey.pKernalId) {
-            if( *kernelKey.pKernalId > 0 ) {
-                auto it = sId2Kernels.find(*kernelKey.pKernalId);
-                if( it != sId2Kernels.end() ) {
-                    return it->second;
-                }
-                //return nullptr;
-            }
-        }
 
-        if( kernelKey.szKernalName == nullptr ) {
-            return nullptr;
-        }
-
-        auto it = sName2Kernels.find(kernelKey.szKernalName);
-        if( it != sName2Kernels.end() ) {
-            if(kernelKey.pKernalId != nullptr ) {
-                PRuntimeKey rKey(kernelKey.szKernalName);
-                sId2Kernels[rKey.runtimeId] = it->second;
-                *kernelKey.pKernalId = rKey.runtimeId;
-            }
+        auto it = sId2Kernels.find(kernelKey.runtimeId);
+        if( it != sId2Kernels.end() ) {
             return it->second;
         }
 
-        string kernalName = kernelKey.szKernalName;
+        if( kernelKey.runtimeKey == nullptr ) {
+            return nullptr;
+        }
+
+        auto itNamedKernel = sName2Kernels.find(kernelKey.runtimeKey);
+        if( itNamedKernel != sName2Kernels.end() ) {
+            sId2Kernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = itNamedKernel->second;
+            return itNamedKernel->second;
+        }
+
+        string kernalName = kernelKey.runtimeKey;
         auto iProgramName = kernalName.rfind('.');
         if( iProgramName <= 0 && iProgramName >= kernalName.length() - 1) {
             return nullptr;
@@ -140,11 +132,7 @@ private:
 
         FKernalFunc kernelFunc = spOp->getKernalFunc(kernalName.substr(iProgramName+1).c_str());
         if(kernelFunc) {
-           if(kernelKey.pKernalId != nullptr) {
-                PRuntimeKey rKey(kernalName.c_str());
-                sId2Kernels[rKey.runtimeId] = kernelFunc;
-                 *kernelKey.pKernalId = rKey.runtimeId;
-            }
+            sId2Kernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = kernelFunc;
             sName2Kernels[kernalName] = kernelFunc;
         }
         return kernelFunc;

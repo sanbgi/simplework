@@ -68,8 +68,8 @@ private:
 
             string evalKernameName;
             string deviaKernameName;
-            int evalKernelId;
-            int deviaKernelId;
+            PID evalKernelId;
+            PID deviaKernelId;
         };
 
         //解算步骤列表
@@ -165,10 +165,11 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         solveParameter.nInVars = spOp.nInVars;
         solveParameter.iOutVar = spOp.iOutVar;
         memcpy(solveParameter.pInVars, spOp.pInVars, sizeof(int)*spOp.nInVars);
-        solveParameter.evalKernelId = solveParameter.deviaKernelId = 0;
         solveParameter.programName = string("sw.nn.")+(*itOp)->getName();
         solveParameter.evalKernameName = solveParameter.programName+"."+strType+"Eval";
         solveParameter.deviaKernameName = solveParameter.programName+"."+strType+"Devia";
+        solveParameter.evalKernelId = PRuntimeKey(solveParameter.evalKernameName.c_str()).runtimeId;
+        solveParameter.deviaKernelId = PRuntimeKey(solveParameter.deviaKernameName.c_str()).runtimeId;
         solveParameter.nRanges = 1;
         solveParameter.pRanges[0] = solveParameter.pRanges[1] = solveParameter.pRanges[2] = 0;
         switch(solveFunc.eClRange) {
@@ -299,7 +300,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         pRanges[1] *= pRanges[1] < 0 ? -nBatchs : 1;
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spKernelDevice->runKernel(
-                {&instruct.evalKernelId, instruct.evalKernameName.c_str()}, 
+                {instruct.evalKernelId, instruct.evalKernameName.c_str()}, 
                 nKernalArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
@@ -485,7 +486,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         pRanges[1] *= pRanges[1] < 0 ? -nBatchs : 1;
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spKernelDevice->runKernel(
-                {&instruct.deviaKernelId, instruct.deviaKernameName.c_str()}, 
+                {instruct.deviaKernelId, instruct.deviaKernameName.c_str()}, 
                 nKernalArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");

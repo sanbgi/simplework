@@ -32,6 +32,11 @@ struct PRuntimeKey{
             runtimeKey = nullptr;
         }
     }
+
+    PRuntimeKey(PID rId, const char* szKey) {
+        runtimeId = rId;
+        runtimeKey = szKey;
+    }
 };
 
 __SimpleWork_Core_Namespace_Leave__

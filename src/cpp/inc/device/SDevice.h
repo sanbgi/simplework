@@ -10,20 +10,6 @@ class SDeviceEvent;
 class SDeviceMemory;
 
 //
-// 内核标识
-//
-struct PKernalKey {
-    //
-    // kernelid指针(临时存储，不能持久化此ID，程序重启以后，下一次未必相同)
-    //
-    int* pKernalId;
-    //
-    // kernel函数名字，比如：sw.math.TensorPlus.floatEval
-    //
-    const char* szKernalName;
-};
-
-//
 // 内核计算变量
 //
 struct PKernalVariable{
@@ -84,7 +70,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         // 执行运算任务
         //
         virtual int runKernel(
-                        const PKernalKey& kernelKey, 
+                        const PRuntimeKey& kernelKey, 
                         int nArgs, 
                         PKernalVariable pArgs[], 
                         int nRanges = 0, 
@@ -115,26 +101,26 @@ public://常用辅助函数
     // 内存初始化为零
     //
     int memoryZero(void* pDevicePointer, int iOffset, int nBytes) const {
-        static int sSetKernalId = 0;
+        static PRuntimeKey sKernelKey("sw.device.MemoryZero.ucharEval");
         PKernalVariable pArgs[] = {
             {pDevicePointer},
             {iOffset}
         };
-        return getPtr()->runKernel({&sSetKernalId, "sw.device.MemoryZero.ucharEval"}, 2, pArgs, 1, &nBytes);
+        return getPtr()->runKernel(sKernelKey, 2, pArgs, 1, &nBytes);
     }
 
     //
     // 内存片段拷贝，从pSrc(iSrcOffset) --> pDest(iDestOffset）
     //
     int memoryCopy(void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nBytes) const {
-        static int sSetKernalId = 0;
+        static PRuntimeKey sKernelKey("sw.device.MemoryCopy.ucharEval");
         PKernalVariable pArgs[] = {
             {pDest},
             {iDestOffset},
             {pSrc},
             {iSrcOffset}
         };
-        return getPtr()->runKernel({&sSetKernalId, "sw.device.MemoryCopy.ucharEval"}, 4, pArgs, 1, &nBytes);
+        return getPtr()->runKernel(sKernelKey, 4, pArgs, 1, &nBytes);
     }
 
 SIMPLEWORK_INTERFACECLASS_LEAVE(Device)

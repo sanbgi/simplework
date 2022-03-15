@@ -46,7 +46,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //  @pVars 求解涉及的张量，每个张量必须是一个合法的张量，内核求解时，不会检查张量是否合法
         //
         virtual int solve(
-                        PKernalKey kernalKey, 
+                        PRuntimeKey kernalKey, 
                         PVector kernalRange, 
                         PMemory kernalParameter,
                         int nVars, STensor pVars[]) = 0;
@@ -85,7 +85,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //
         //virtual int runEvalKernel(
         //                const SDevice& spDevice,
-        //                PKernalKey kernelKey,
+        //                PRuntimeKey kernelKey,
         //                PVector kernalRange,
         //                PMemory kernalParameter,
         //                int nVars,
@@ -106,7 +106,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //
         //virtual int runDeviaKernel(
         //                const SDevice& spDevice,
-        //                PKernalKey kernelKey,
+        //                PRuntimeKey kernelKey,
         //                PVector kernalRange,
         //                PMemory kernalParameter,
         //                int nVars,
