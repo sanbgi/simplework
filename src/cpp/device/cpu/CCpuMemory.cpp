@@ -54,25 +54,37 @@ private://IDeviceMemory
         return m_spTaker;
     }
 
-    int writeMemory(const PMemory& cpuMemory, int iOffset=0){
+    int writeMemory(const SDeviceMemory& spMemory) {
+        if(spMemory.getPtr() == this) {
+            return sCtx.success();
+        }
+
+        if(spMemory.size() != m_nSize) {
+            return sCtx.error("不能写入大小不一样的内存");
+        }
+
+        return spMemory->readMemory(m_nSize, m_spTaker);
+    }
+
+    int writeMemory(int nSize, void* pData, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }
-        if(cpuMemory.size + iOffset > m_nSize) {
+        if(nSize + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        memcpy((unsigned char*)m_spTaker + iOffset, cpuMemory.pByteArray, cpuMemory.size);
+        memcpy((unsigned char*)m_spTaker + iOffset, pData, nSize);
         return sCtx.success();
     }
 
-    int readMemory(const PMemory& cpuMemory, int iOffset=0){
+    int readMemory(int nSize, void* pData, int iOffset=0){
         if(!m_spTaker) {
             return sCtx.error();
         }
-        if(cpuMemory.size + iOffset > m_nSize) {
+        if(nSize + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        memcpy(cpuMemory.pByteArray, (unsigned char*)m_spTaker + iOffset , cpuMemory.size);
+        memcpy(pData, (unsigned char*)m_spTaker + iOffset , nSize);
         return sCtx.success();
     }
 

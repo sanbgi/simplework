@@ -30,14 +30,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         virtual int getDevice(SDevice& spDevice) = 0;
 
         //
+        // 写回内存
+        //
+        virtual int writeMemory(const SDeviceMemory& spMemory) = 0;
+
+        //
         // 修改内存值
         //
-        virtual int writeMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
+        virtual int writeMemory(int nSize, void* pData, int iOffset=0) = 0;
 
         //
         // 读取内存值
         //
-        virtual int readMemory(const PMemory& cpuMemory, int iOffset=0) = 0;
+        virtual int readMemory(int nSize, void* pData, int iOffset=0) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -59,8 +64,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
     }
 
     static SDeviceMemory createDeviceMemory(const SDevice& spDevice, int nSize, void* pData=nullptr) {
-        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice.getPtr(),nSize,pData}));
+        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice,nSize,pData}));
     }
+
+    static SDeviceMemory createDeviceMemory(const SDevice& spDevice, const SDeviceMemory& spKernelMemory) {
+        return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice, spKernelMemory}));
+    }
+
  
 SIMPLEWORK_INTERFACECLASS_LEAVE(DeviceMemory)
 

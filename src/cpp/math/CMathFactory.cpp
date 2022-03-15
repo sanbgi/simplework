@@ -24,6 +24,10 @@ public:
         return CTensor::createTensor(spTensor, &spDimVector, eElementType, nElementSize, pElementData);
     }
 
+    int createTensor(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const SDimension& spDimension, const SDeviceMemory& spDataBuffer) {
+        return CTensor::createTensor(spTensor, eElementType, nElementSize, spDimension, spDataBuffer);
+    }
+
     int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) {
         return CDimension::createDimension(spDimension, nElementSize, pElementData);
     }

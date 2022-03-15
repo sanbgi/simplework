@@ -33,6 +33,7 @@ public://ITensor
 
 public://ITensor
     int getDimension(SDimension& spDim);
+    int getDataBuffer(SDeviceMemory& spMemory);
     PDATATYPE getDataType();
     int getDataSize();
     int getDataInDevice(const SDevice& spDevice, PVector& deviceData);
@@ -42,6 +43,7 @@ public:
 
 public:
     static int createTensor(STensor& spTensor, const SDimension* pDimension, PDATATYPE idElementType, int nElementSize, const void* pElementData);
+    static int createTensor(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const SDimension& spDimension, const SDeviceMemory& spDataBuffer);
 
 protected:
     CTypeAssist* m_pTypeAssist;

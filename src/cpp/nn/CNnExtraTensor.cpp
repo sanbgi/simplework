@@ -29,8 +29,11 @@ int CNnExtraTensor::createResizeTensor(const PNnExtraTensor& rTenser, STensor& s
 }
 
 int CNnExtraTensor::getDimension(SDimension& spDim) {
-    spDim = m_spTensor.dimension();
-    return sCtx.success();
+    return m_spTensor->getDimension(spDim);
+}
+
+int CNnExtraTensor::getDataBuffer(SDeviceMemory& spMemory){
+    return m_spTensor->getDataBuffer(spMemory);
 }
 
 PDATATYPE CNnExtraTensor::getDataType(){

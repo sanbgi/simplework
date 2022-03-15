@@ -156,6 +156,12 @@ int CTensor::getDimension(SDimension& spDim) {
     return sCtx.success();
 }
 
+
+int CTensor::getDataBuffer(SDeviceMemory& spMemory) {
+    spMemory = m_spMemory;
+    return sCtx.success();
+}
+
 PDATATYPE CTensor::getDataType() {
     return m_pTypeAssist->m_idType;
 }
@@ -199,6 +205,31 @@ int CTensor::createTensor(STensor& spTensor, const SDimension* pDimension, PDATA
     spTensor.setPtr(sp.getPtr());
     return sCtx.success();
 }
+
+int CTensor::createTensor(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const SDimension& spDimension, const SDeviceMemory& spDataBuffer) {
+    CTypeAssist* pTypeAssist = CTypeAssist::getTypeAssist(eElementType);
+    if(pTypeAssist == nullptr) {
+        return sCtx.error("不支持指定类型的张量");
+    }
+
+    if( spDimension && spDimension.dataSize() != nElementSize ) {
+        return sCtx.error("维度定义与数据数量不一致");
+    }
+
+    if( spDataBuffer && spDataBuffer.size() != pTypeAssist->size() * nElementSize ) {
+        return sCtx.error("数据缓冲大小与数据量不一致");
+    }
+
+    CPointer<CTensor> sp;
+    CObject::createObject(sp);
+    sp->m_pTypeAssist = pTypeAssist;
+    sp->m_nElementSize = nElementSize;
+    sp->m_spDimVector = spDimension;
+    sp->m_spMemory = spDataBuffer;
+    spTensor.setPtr(sp.getPtr());
+    return sCtx.success();
+}
+
 
 int CTensor::toArchive(const SArchive& ar) {
     CTypeAssist::archiveAssist(&m_pTypeAssist, ar);

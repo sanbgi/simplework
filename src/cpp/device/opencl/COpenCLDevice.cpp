@@ -66,28 +66,61 @@ private://IDeviceMemory
         return m_sBuffer.get();
     }
 
-    int writeMemory(const PMemory& cpuMemory, int iOffset=0){
+    int writeMemory(const SDeviceMemory& spMemory) {
+        if(spMemory.getPtr() == this) {
+            return sCtx.success();
+        }
+
+        if(spMemory.size() != m_nSize) {
+            return sCtx.error("不能写入大小不一样的内存");
+        }
+
+        SDevice spDevice = spMemory.device();
+        if( spDevice.getPtr() == SDevice::cpu().getPtr() ) {
+            return writeMemory(m_nSize, spMemory.data(spDevice));
+        }else if( spDevice.getPtr() == SDevice::opencl().getPtr() ) {
+            void* pSrc = spMemory.data(spDevice);
+            if( pSrc == m_sBuffer.get() ) {
+                return sCtx.success();
+            }
+            //
+            //  如果都是Opencl设备，数据拷贝是不是可以不通过内存中转，直接拷贝？这里面涉
+            //  及到需要内核函数执行，依赖性较强
+            //
+            return spDevice.memoryCopy(m_sBuffer.get(), 0, pSrc, 0, m_nSize);
+        }
+        
+        CTaker<char*> spTaker(new char[m_nSize], [](char* pMemory){
+            delete[] pMemory;
+        });
+        if( spMemory->readMemory(m_nSize, spTaker) != sCtx.success() ){
+            return sCtx.error("读取数据源数据异常");
+        } 
+        return writeMemory(m_nSize, spTaker);
+    }
+
+    int writeMemory(int nSize, void* pData, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
-        if( iOffset != 0 || cpuMemory.size + iOffset > m_nSize) {
+        if( iOffset != 0 || nSize + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
-        if( cl::copy(cpuMemory.pByteArray, cpuMemory.pByteArray+cpuMemory.size, m_sBuffer) != CL_SUCCESS ) {
+        if( cl::copy(((unsigned char*)pData), ((unsigned char*)pData)+nSize, m_sBuffer) != CL_SUCCESS ) {
             return sCtx.error("Opencl内存拷贝错误");
         }
         return sCtx.success();
     }
 
-    int readMemory(const PMemory& cpuMemory, int iOffset=0){
+    int readMemory(int nSize, void* pData, int iOffset=0){
         if(m_sBuffer.get() == nullptr) {
             return sCtx.error("设备内存无效");
         }
-        if( iOffset != 0 || cpuMemory.size + iOffset > m_nSize) {
+        if( iOffset != 0 || nSize + iOffset > m_nSize) {
             return sCtx.error("设置内存超出了范围");
         }
         cl_int err;
-        if( (err = cl::copy(m_sBuffer, cpuMemory.pByteArray, cpuMemory.pByteArray+cpuMemory.size )) != CL_SUCCESS ) {
+        if( (err = cl::copy(m_sBuffer, ((unsigned char*)pData), ((unsigned char*)pData)+nSize )) != CL_SUCCESS ) {
             return sCtx.error("Opencl内存拷贝错误");
         }
         return sCtx.success();
@@ -194,11 +227,10 @@ private://IDevice
             delete[] pMemory;
         });
 
-        PMemory sMemory = {size, spTaker};
-        if( !spMemory || spMemory->readMemory(sMemory) != sCtx.success() ) {
+        if( !spMemory || spMemory->readMemory(size, spTaker) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }
-        return createKernelMemory(spDeviceMemory, sMemory.size, sMemory.data);
+        return createKernelMemory(spDeviceMemory, size, spTaker);
     }
 
     int runKernel(  const PKernalKey& kernelKey, 
@@ -345,7 +377,7 @@ private:
                     kernelFunc = it->second;
                     return sCtx.success();
                 }
-                return sCtx.error("发现无效的KernalID");
+                //return sCtx.error("发现无效的KernalID");
             }
         }
 

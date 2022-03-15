@@ -21,6 +21,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         virtual int getDimension(SDimension& spDim) = 0;
 
         //
+        // 获取数据
+        //  
+        virtual int getDataBuffer(SDeviceMemory& spMemory) = 0;
+
+        //
         // 获取元素类型
         //
         virtual PDATATYPE getDataType() = 0;
@@ -67,6 +72,9 @@ public:
     template<typename Q> static int createTensor(STensor& spTensor, const SDimension& spDimVector, int nElementSize, const Q* pElementData=nullptr) {
         return SMathFactory::getFactory()->createTensor(spTensor, spDimVector, CBasicData<Q>::getStaticType(), nElementSize, (void*)pElementData);
     }
+    static int createTensor(STensor& spTensor, PDATATYPE iElementType, int nElementSize, const SDimension& spDimension, const SDeviceMemory& spDataBuffer ) {
+        return SMathFactory::getFactory()->createTensor(spTensor, iElementType, nElementSize, spDimension, spDataBuffer);
+    }
 
 public:
     int size() const{
@@ -99,6 +107,17 @@ public:
     PDATATYPE type() const {
         IFace* pFace = getPtr();
         return pFace != nullptr ? pFace->getDataType() : 0;
+    }
+
+    SDevice device() const {
+        return dataBuffer().device();
+    }
+
+    SDeviceMemory dataBuffer() const {
+        SDeviceMemory spBuffer;
+        IFace* pFace = getPtr();
+        if(pFace != nullptr) { pFace->getDataBuffer(spBuffer); }
+        return spBuffer;
     }
 
 public:

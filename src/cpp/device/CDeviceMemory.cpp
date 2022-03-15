@@ -18,10 +18,11 @@ protected://CObject
         if( pDeviceMemory == nullptr ){
             return sCtx.error("创建内存参数无效");
         }
-        if( pDeviceMemory->pDevice == nullptr ) {
-            return SDevice::cpu()->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
+        SDevice spDevice = pDeviceMemory->pDevice == nullptr ? SDevice::cpu() : *pDeviceMemory->pDevice;
+        if(pDeviceMemory->pKernelMemory) {
+            return spDevice->createKernelMemory(m_spMemory, *pDeviceMemory->pKernelMemory);
         }
-        return pDeviceMemory->pDevice->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
+        return spDevice->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
     }
 
 protected://IArchivable
@@ -59,12 +60,16 @@ private://IDeviceMemory
         return m_spMemory->getData(spDevice);
     }
 
-    int writeMemory(const PMemory& cpuMemory, int iOffset=0){
-        return m_spMemory->writeMemory(cpuMemory, iOffset);
+    int writeMemory(const SDeviceMemory& spMemory){
+        return m_spMemory->writeMemory(spMemory);
     }
 
-    int readMemory(const PMemory& cpuMemory, int iOffset=0){
-        return m_spMemory->readMemory(cpuMemory, iOffset);
+    int writeMemory(int nSize, void* pData, int iOffset=0){
+        return m_spMemory->writeMemory(nSize, pData, iOffset);
+    }
+
+    int readMemory(int nSize, void* pData, int iOffset=0){
+        return m_spMemory->readMemory(nSize, pData, iOffset);
     }
 
 private:

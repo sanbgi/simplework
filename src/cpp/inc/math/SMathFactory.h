@@ -18,6 +18,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(MathFactory, "sw.math.MathFactory")
         //
         virtual int createVector(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const void* pElementData = nullptr) = 0;
         virtual int createTensor(STensor& spTensor, const SDimension& spDimVector, PDATATYPE eElementType, int nElementSize, const void* pElementData = nullptr ) = 0;
+        virtual int createTensor(STensor& spTensor, PDATATYPE eElementType, int nElementSize, const SDimension& spDimVector, const SDeviceMemory& spDataBuffer) = 0;
         virtual int createDimension(SDimension& spDimension, int nElementSize, const int* pElementData) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
