@@ -28,7 +28,7 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
         return sCtx.success();
     }
 
-    int getDefaultDevice(SDevice& spDevice) {
+    int getDefaultKernelDevic(SDevice& spDevice) {
         if(!m_spDefaultDevice) {
             m_spDefaultDevice = SDevice::cpu();
         }
@@ -36,7 +36,7 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
         return sCtx.success();
     }
 
-    int setDefaultDevice(const SDevice& spDevice) {
+    int setDefaultKernelDevic(const SDevice& spDevice) {
         m_spDefaultDevice = spDevice;
         return sCtx.success();
     }

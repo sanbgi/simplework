@@ -160,7 +160,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         PSolveFunc solveFunc;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);
         if(solveFunc.nParamterSize > 0) {
-            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::defaultDevice(),solveFunc.nParamterSize, solveFunc.pParameterData);
+            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::cpu(),solveFunc.nParamterSize, solveFunc.pParameterData);
         }
         solveParameter.nInVars = spOp.nInVars;
         solveParameter.iOutVar = spOp.iOutVar;
@@ -258,7 +258,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     pInVar->dataBuffer = spBatchIn.dataBuffer();
 
     SDevice spDevice = pInVar->dataBuffer.device();
-    SDevice spKernelDevice = SDevice::opencl();
+    SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     //
     // 遍历计算序列并执行
@@ -358,7 +358,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
     }
 
     SDevice spDevice = spBatchOutDeviation.device();
-    SDevice spKernelDevice = SDevice::opencl();
+    SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     PNnExtraTensor sResizeTensor;
     if( spResizeOut->getResizeData(sResizeTensor) != sCtx.success() || sResizeTensor.nExtras < 1){
@@ -555,7 +555,7 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
-    SDevice spKernelDevice = SDevice::opencl();
+    SDevice spKernelDevice = SDevice::defaultKernelDevice();
     SDeviceMemory spKernelDeiva;
     if( spKernelDevice->createKernelMemory(spKernelDeiva, spWeightDevia) != sCtx.success() ) {
         return sCtx.error("创建内核计算对象失败");

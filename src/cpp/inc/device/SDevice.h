@@ -78,9 +78,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
 
     SIMPLEWORK_INTERFACE_LEAVE
 
-    static SDevice defaultDevice() {
+    static SDevice defaultKernelDevice() {
         SDevice spDevice;
-        SDeviceFactory::getFactory()->getDefaultDevice(spDevice);
+        SDeviceFactory::getFactory()->getDefaultKernelDevic(spDevice);
         return spDevice;
     }
 

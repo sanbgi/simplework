@@ -73,7 +73,7 @@ void CNnNetwork::prepareImageNet() {
 }
 
 SNnNetwork CNnNetwork::createResNet() {
-    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    SDeviceFactory::getFactory()->setDefaultKernelDevic(SDevice::opencl());
     int pDimSizes[] = {224, 224, 3};
     SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(3,pDimSizes),
@@ -353,7 +353,7 @@ void CNnNetwork::runImageNet() {
 
             //PVector sMemory;
             //spClassify->getDataInDevice(SDevice::cpu(), sMemory);
-            //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+            //SDeviceFactory::getFactory()->setDefaultKernelDevic(SDevice::opencl());
 
             //
             // 神经网络求解

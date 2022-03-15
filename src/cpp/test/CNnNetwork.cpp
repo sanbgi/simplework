@@ -9,16 +9,16 @@ using namespace sw;
 static SCtx sCtx("CNnNetwork.Test");
 
 void CNnNetwork::run() {
-    runLearn();
+    //runLearn();
     //runTest();
-    //runImageNet();
+    runImageNet();
 }
 
 void CNnNetwork::runTestNetwork(){
 }
 
 void CNnNetwork::runLearn() {
-    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    //SDeviceFactory::getFactory()->setDefaultKernelDevic(SDevice::opencl());
     //
     // 一次读取10个
     //
@@ -219,7 +219,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 }
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
-    //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+    SDeviceFactory::getFactory()->setDefaultKernelDevic(SDevice::opencl());
     int pDimSizes[] = {28, 28};
     SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(2,pDimSizes),
