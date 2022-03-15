@@ -47,8 +47,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //
         virtual int solve(
                         PRuntimeKey kernalKey, 
-                        PVector kernalRange, 
                         PMemory kernalParameter,
+                        int nRanges, int pRanges[], 
                         int nVars, STensor pVars[]) = 0;
 
         //

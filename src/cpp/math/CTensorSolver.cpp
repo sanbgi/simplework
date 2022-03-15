@@ -113,7 +113,7 @@ public:
             return sCtx.error("创建张量失败");
         }
 
-        int ret = solve(opKey, {1, &nSizeIn}, {0}, 3, pVars);
+        int ret = solve(opKey, {0}, 1, &nSizeIn, 3, pVars);
         if(ret != sCtx.success()) {
             pVars[2].release();
         }
@@ -132,7 +132,7 @@ public:
             return sCtx.error("创建张量失败");
         }
 
-        int ret = solve(opKey, {1, &nSizeIn}, {0}, 2, pVars);
+        int ret = solve(opKey, {0}, 1, &nSizeIn, 2, pVars);
         if(ret != sCtx.success()) {
             pVars[1].release();
         }
@@ -154,7 +154,7 @@ public:
             return sCtx.error("创建张量失败");
         }
 
-        int ret = solve(opKey, {1, &nSizeIn}, {0}, 2, pVars);
+        int ret = solve(opKey, {0}, 1, &nSizeIn, 2, pVars);
         if(ret != sCtx.success()) {
             pVars[1].release();
         }
@@ -174,7 +174,7 @@ public:
         }
 
         int nRange = 0;
-        int ret = solve(opKey, {0, &nSizeIn}, {0}, 2, pVars);
+        int ret = solve(opKey, {0}, 0, &nSizeIn, 2, pVars);
         if(ret != sCtx.success()) {
             pVars[1].release();
         }
@@ -182,13 +182,13 @@ public:
     }
     
     int solve(  PRuntimeKey kernelKey,
-                PVector kernalRange,
                 PMemory kernalParameter,
+                int nRanges, int pRanges[], 
                 int nVars, STensor pVars[]) {
 
         //钩子机制
         if( m_arrHookers.size() ) {
-            if( (*m_arrHookers.rbegin())->onSolve(kernelKey,kernalRange,kernalParameter,nVars,pVars) == sCtx.success() ) {
+            if( (*m_arrHookers.rbegin())->onSolve(kernelKey,kernalParameter,nRanges,pRanges,nVars,pVars) == sCtx.success() ) {
                 return sCtx.success();
             }
         }
@@ -228,17 +228,17 @@ public:
         }
 
         for(int i=0; i<nVars; i++) {
-            PVector sVec;
-            if(pVars[i]->getDataInDevice(spKernelDevice,sVec) != sCtx.success()) {
+            SDeviceMemory spDataBuffer = pVars[i].dataBuffer();
+            if( !spDataBuffer ) {
                 return sCtx.error("获取张量数据异常");
             }
-            pKernelArg[0] = sVec.size;
-            pKernelArg[1] = sVec.data;
+            pKernelArg[0] = pVars[i].size();
+            pKernelArg[1] = spDataBuffer.data(spKernelDevice);
             nKernalArgs += 2, pKernelArg += 2;
         }
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
-        return spKernelDevice->runKernel(kernelKey, nKernalArgs, pKernelArgs, kernalRange.size, kernalRange.pIntArray);
+        return spKernelDevice->runKernel(kernelKey, nKernalArgs, pKernelArgs, nRanges, pRanges);
     }
 
     int pushHooker(const STensorHooker& spHooker){

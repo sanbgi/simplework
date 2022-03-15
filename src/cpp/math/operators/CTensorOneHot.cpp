@@ -58,18 +58,18 @@ private://ITensorOperator
         if( pOneHot->idType == PDATATYPE_FLOAT ) {
             if( type == PDATATYPE_UCHAR ) {
                 static PRuntimeKey sKernelKey("sw.math.TensorOneHot.uchar2floatEval");
-                ret = spSolver->solve(sKernelKey, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve(sKernelKey, {sizeof(nClassify), &nClassify}, 1, &nSizeOut, 2, pVars);
             }else{
                 static PRuntimeKey sKernelKey("sw.math.TensorOneHot.int2floatEval");
-                ret = spSolver->solve(sKernelKey, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve(sKernelKey, {sizeof(nClassify), &nClassify}, 1, &nSizeOut, 2, pVars);
             }
         }else if( pOneHot->idType == PDATATYPE_DOUBLE) {
             if( type == PDATATYPE_UCHAR ) {
                 static PRuntimeKey sKernelKey("sw.math.TensorOneHot.uchar2doubleEval");
-                ret = spSolver->solve(sKernelKey, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve(sKernelKey, {sizeof(nClassify), &nClassify}, 1, &nSizeOut, 2, pVars);
             }else{
                 static PRuntimeKey sKernelKey("sw.math.TensorOneHot.int2doubleEval");
-                ret = spSolver->solve(sKernelKey, {1, &nSizeOut}, {sizeof(nClassify), &nClassify}, 2, pVars);
+                ret = spSolver->solve(sKernelKey, {sizeof(nClassify), &nClassify}, 1, &nSizeOut, 2, pVars);
             }
         }
 
