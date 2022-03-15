@@ -197,7 +197,7 @@ public:
             return sCtx.error("超过最大求解变量数值");
         }
 
-        SDevice spDevice = SDevice::cpu();
+        SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
         PKernalVariable pKernelArgs[__MAX_VARS*2+1];
         int nKernalArgs = 0;
@@ -214,40 +214,31 @@ public:
             // 如果大于8个字节，则在非CPU情况下，需要把指针转化为设备指针再传递指针
             //
             if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
-                if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
-                    spKernalParameterInDevice = SDeviceMemory::createDeviceMemory(spDevice, kernalParameter.size, kernalParameter.data);
-                    if( !spKernalParameterInDevice ) {
-                        return sCtx.error("创建设备内存错误");
-                    }
-                    *pKernelArg = PKernalVariable(spKernalParameterInDevice.data(spDevice));
-                }else{
-                    *pKernelArg = PKernalVariable(kernalParameter.data);
+                if( spKernelDevice->createKernelMemory(spKernalParameterInDevice, kernalParameter.size, kernalParameter.data) != sCtx.success() ) {
+                    return sCtx.error("创建设备内存错误");
                 }
+                *pKernelArg = spKernalParameterInDevice.data(spKernelDevice);
             }else{
                 for(int i=0; i<kernalParameter.size; i++) {
                     pKernelArg->data[i] = kernalParameter.pByteArray[i];
                     pKernelArg->size = kernalParameter.size;
                 }
             }
-            nKernalArgs += 1;
-            pKernelArg++;
+            nKernalArgs += 1, pKernelArg++;
         }
 
         for(int i=0; i<nVars; i++) {
             PVector sVec;
-            if(pVars[i]->getDataInDevice(spDevice,sVec) != sCtx.success()) {
+            if(pVars[i]->getDataInDevice(spKernelDevice,sVec) != sCtx.success()) {
                 return sCtx.error("获取张量数据异常");
             }
-
-            pKernelArg[0] = PKernalVariable(sVec.size);
-            pKernelArg[1] = PKernalVariable(sVec.data);
-
-            nKernalArgs += 2;
-            pKernelArg += 2;
+            pKernelArg[0] = sVec.size;
+            pKernelArg[1] = sVec.data;
+            nKernalArgs += 2, pKernelArg += 2;
         }
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
-        return spDevice->runKernel(kernelKey, nKernalArgs, pKernelArgs, kernalRange.size, kernalRange.pIntArray);
+        return spKernelDevice->runKernel(kernelKey, nKernalArgs, pKernelArgs, kernalRange.size, kernalRange.pIntArray);
     }
 
     int pushHooker(const STensorHooker& spHooker){
@@ -274,7 +265,7 @@ public:
     }
 
     /*
-    int runKernel(const SDevice& spDevice,
+    int runKernel(const SDevice& spKernelDevice,
                         PRuntimeKey kernelKey,
                         PVector kernalRange,
                         PMemory kernalParameter,
@@ -299,7 +290,7 @@ public:
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
         SDeviceEvent sEvent;
-        int ret = spDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        int ret = spKernelDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
         if(sEvent) {
             sEvent->wait();
         }
@@ -307,7 +298,7 @@ public:
     }
             
     int runDeviaKernel(
-                        const SDevice& spDevice,
+                        const SDevice& spKernelDevice,
                         PRuntimeKey kernelKey,
                         PVector kernalRange,
                         PMemory kernalParameter,
@@ -337,7 +328,7 @@ public:
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
         SDeviceEvent sEvent;
-        int ret = spDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        int ret = spKernelDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
         if(sEvent) {
             sEvent->wait();
         }
