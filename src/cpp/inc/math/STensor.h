@@ -35,11 +35,6 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         virtual int getDataSize() = 0;
 
-        //
-        // 返回元素数据
-        //
-        //virtual int getDataInDevice(const SDevice& spDevice, PVector& deviceData) = 0;
-        
     SIMPLEWORK_INTERFACE_LEAVE
 
 public:
