@@ -574,10 +574,43 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
                 if( spKernelDevice->createKernelMemory(spKernelWeights, spWeightBuffer) != sCtx.success() ) {
                     return sCtx.error("创建内核计算对象失败");
                 }
+                
                 void* pWeightData = spKernelWeights.data(spKernelDevice);
+                switch(solveCtx.idType) {
+                    case PDATATYPE_FLOAT:{
+                        static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.floatEval");
+                        PKernalVariable pArgs[] = {
+                            0,
+                            iDeviationOffset,
+                            -1.0f,
+                            1.0f,
+                            pWeightData,
+                            pWeightDevia
+                        };
+                        spKernelDevice->runKernel(
+                            sKernelKey,
+                            6, pArgs,
+                            1, &itVar->size);
+                    }break;
 
-                SMathKernal::minusEqual(spKernelDevice, solveCtx.idType, pWeightData, 0, pWeightDevia, iDeviationOffset, itVar->size);
+                    case PDATATYPE_DOUBLE:{
+                        static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.doubleEval");
+                        PKernalVariable pArgs[] = {
+                            0,
+                            iDeviationOffset,
+                            -1.0f,
+                            1.0f,
+                            pWeightData,
+                            pWeightDevia
+                        };
+                        spKernelDevice->runKernel(
+                            sKernelKey,
+                            6, pArgs,
+                            1, &itVar->size);
 
+                    }break;
+                }
+                
                 if( spWeightBuffer->writeMemory(spKernelWeights) != sCtx.success() ) {
                     return sCtx.error("拷贝内核权重结果异常");
                 }
