@@ -6,7 +6,7 @@
 #include <iostream>
 //#define CL_HPP_ENABLE_EXCEPTIONS
 //#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-#define CL_HPP_TARGET_OPENCL_VERSION 210
+#define CL_HPP_TARGET_OPENCL_VERSION 200
 #include "cl/cl2.hpp"
 
 using namespace sw;
@@ -28,17 +28,19 @@ protected://CObject
         }
 
         cl_int err;
+
+        if(pMemory->data != nullptr) {
+            m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, pMemory->data, &err);
+        }else{
+            m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
+        }
+        /*
         m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
         if(pMemory->data != nullptr) {
             if( (err = cl::copy(pMemory->pByteArray, pMemory->pByteArray+pMemory->size, m_sBuffer)) != CL_SUCCESS ) {
                 return sCtx.error("Opencl内存拷贝错误");
             }
-        }
-        //if(pMemory->data != nullptr) {
-        //    m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, pMemory->data, &err);
-        //}else{
-        //    m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
-        //}
+        }*/
         if( err != CL_SUCCESS ) {
             return sCtx.error("创建Opencl内存失败");
         }

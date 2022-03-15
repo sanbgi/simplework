@@ -353,13 +353,13 @@ void CNnNetwork::runImageNet() {
 
             //PVector sMemory;
             //spClassify->getDataInDevice(SDevice::cpu(), sMemory);
-            SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
+            //SDeviceFactory::getFactory()->setDefaultDevice(SDevice::opencl());
 
             //
             // 神经网络求解
             //
             STensor spOut = nn.eval(spBatchIn);
-            float* pOut = (float*)spOut.data();
+            //float* pOut = (float*)spOut.data();
             //spOut->getDataInDevice(SDevice::cpu(), sMemory);
 
             //
@@ -386,7 +386,7 @@ void CNnNetwork::runImageNet() {
             //
             // 更新网络
             //
-            //nn.update(spInDeviation);
+            nn.update(spInDeviation);
             
 
             //spClassify->getDataInDevice(SDevice::opencl(), sMemory);
