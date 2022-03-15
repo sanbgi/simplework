@@ -38,7 +38,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(Tensor, "sw.math.Tensor")
         //
         // 返回元素数据
         //
-        virtual int getDataInDevice(const SDevice& spDevice, PVector& deviceData) = 0;
+        //virtual int getDataInDevice(const SDevice& spDevice, PVector& deviceData) = 0;
         
     SIMPLEWORK_INTERFACE_LEAVE
 
@@ -83,16 +83,11 @@ public:
     }
 
     void* data(const SDevice& spDevice=SDevice::cpu()) const {
-        PVector deviceMemory = { 0, nullptr };
-        IFace* pFace = getPtr();
-        if(pFace != nullptr) {
-            pFace->getDataInDevice(spDevice, deviceMemory); 
-        }
-        return deviceMemory.data;
+        return dataBuffer().data(spDevice);
     }
 
     template<typename Q> Q* data(const SDevice& spDevice=SDevice::cpu()) const{
-        return (Q*)data(spDevice);
+        return (Q*)dataBuffer().data(spDevice);
     }
 
     SDimension dimension() const {

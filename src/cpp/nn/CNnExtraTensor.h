@@ -22,7 +22,6 @@ public://ITensor
     int getDataBuffer(SDeviceMemory& spMemory);
     PDATATYPE getDataType();
     int getDataSize();
-    int getDataInDevice(const SDevice& spDevice, PVector& deviceData);
 
 private://IArchivable
     int getClassVer() { return 220209; }

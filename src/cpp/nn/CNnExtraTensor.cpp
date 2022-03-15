@@ -44,10 +44,6 @@ int CNnExtraTensor::getDataSize() {
     return m_spTensor.size();
 }
 
-int CNnExtraTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
-    return m_spTensor->getDataInDevice(spDevice, deviceData);
-}
-
 int CNnExtraTensor::toArchive(const SArchive& ar) {
     ar.arObject("src", m_spTensor);
     ar.arObjectArray("extras", m_arrExtras);

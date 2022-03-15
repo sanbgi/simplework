@@ -170,17 +170,6 @@ int CTensor::getDataSize() {
     return m_nElementSize;
 }
 
-int CTensor::getDataInDevice(const SDevice& spDevice, PVector& deviceData) {
-    void* pData = m_spMemory->getData(spDevice);
-    if( pData == nullptr) {
-        return sCtx.error("无法获取数据的设备指针");
-    }
-
-    deviceData.size = m_nElementSize;
-    deviceData.data = pData;
-    return sCtx.success();
-}
-
 CTensor::CTensor() {
     m_nElementSize = 0;
 }
