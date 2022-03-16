@@ -4,6 +4,23 @@ typedef struct {
     int nOut;
 }PProductParameter;
 
+#ifndef WITHOUT_OPENCL
+
+    void atomplus(global float* p, float v) {
+        union {
+            unsigned int intVal;
+            float floatVal;
+        } newVal, prevVal;
+        do {
+            prevVal.floatVal = *p;
+            newVal.floatVal = prevVal.floatVal + v;
+        } while (atomic_cmpxchg((volatile __global unsigned int *)p, 
+                                prevVal.intVal, newVal.intVal) 
+                                != prevVal.intVal);
+    }
+
+#endif//WITHOUT_OPENCL
+
 kernel void floatEval(
     global PProductParameter* pParameter, 
     int nBatchs,
@@ -49,19 +66,8 @@ kernel void floatDevia(
         float floatVal;
     } newVal, prevVal;
     while(nIn-->0) {
-        do {
-            prevVal.floatVal = *pItInDevia;
-            newVal.floatVal = prevVal.floatVal + fOutDevia * (*pItMat);
-        } while (atomic_cmpxchg((volatile __global unsigned int *)pItInDevia, 
-                                prevVal.intVal, newVal.intVal) 
-                                != prevVal.intVal);
-
-        do {
-            prevVal.floatVal = *pItMatDevia;
-            newVal.floatVal = prevVal.floatVal + fOutDevia * (*pItIn);
-        } while (atomic_cmpxchg((volatile __global unsigned int *)pItMatDevia, 
-                                prevVal.intVal, newVal.intVal) 
-                                != prevVal.intVal);
+        atomplus(pItInDevia, fOutDevia * (*pItMat));
+        atomplus(pItMatDevia, fOutDevia * (*pItIn));
         pItIn++, pItMat++, pItInDevia++, pItMatDevia++;
     }
 }

@@ -17,10 +17,8 @@ public://Factory
         struct CKernelWraper {
         public:
             const PKernelCtx* pCtx;
-            int get_global_id(int i) {
-                return pCtx->pRanges[i];
-            }
 
+#include "PrepareKernel.hpp"
 #include "TensorMinus.cl"
         }sKernel = {pCtx};
         sKernel.floatEval(

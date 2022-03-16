@@ -1,3 +1,20 @@
+#ifndef WITHOUT_OPENCL
+
+    void atomplus(global float* p, float v) {
+        union {
+            unsigned int intVal;
+            float floatVal;
+        } newVal, prevVal;
+        do {
+            prevVal.floatVal = *p;
+            newVal.floatVal = prevVal.floatVal + v;
+        } while (atomic_cmpxchg((volatile __global unsigned int *)p, 
+                                prevVal.intVal, newVal.intVal) 
+                                != prevVal.intVal);
+    }
+
+#endif//WITHOUT_OPENCL
+
 typedef struct {
     int batch;
     int height;
@@ -248,20 +265,8 @@ kernel void floatDevia(
                     //
                     // 累计计算权重值
                     //
-                    //(*it.pInDeviation) += deviationZ * (*it.pWeights);
-                    //(*it.pWeightDevivation) += deviationZ * (*it.pIn);
-                    do {
-                        prevVal.floatVal = (*it.pInDeviation);
-                        newVal.floatVal = prevVal.floatVal + deviationZ * (*it.pWeights);
-                    } while (atomic_cmpxchg((volatile __global unsigned int *)it.pInDeviation, 
-                                            prevVal.intVal, newVal.intVal) 
-                                            != prevVal.intVal);
-                    do {
-                        prevVal.floatVal = (*it.pWeightDevivation);
-                        newVal.floatVal = prevVal.floatVal + deviationZ * (*it.pIn);
-                    } while (atomic_cmpxchg((volatile __global unsigned int *)it.pWeightDevivation, 
-                                            prevVal.intVal, newVal.intVal) 
-                                            != prevVal.intVal);
+                    atomplus(it.pInDeviation, deviationZ * (*it.pWeights));
+                    atomplus(it.pWeightDevivation, deviationZ * (*it.pIn));
 
                     it.pIn++;
                     it.pInDeviation++;

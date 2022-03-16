@@ -1,3 +1,20 @@
+#ifndef WITHOUT_OPENCL
+
+    void atomplus(global float* p, float v) {
+        union {
+            unsigned int intVal;
+            float floatVal;
+        } newVal, prevVal;
+        do {
+            prevVal.floatVal = *p;
+            newVal.floatVal = prevVal.floatVal + v;
+        } while (atomic_cmpxchg((volatile __global unsigned int *)p, 
+                                prevVal.intVal, newVal.intVal) 
+                                != prevVal.intVal);
+    }
+
+#endif//WITHOUT_OPENCL
+
 typedef struct {
     int left;
     int right;
@@ -255,16 +272,6 @@ kernel void floatDevia(
         it.pInDeviation = varConvYBackup.pInDeviation + nInputHstep;
     }
 
-    //(*pExpectDelta) += (*it.pOutDeviation);
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } newVal, prevVal;
-    do {
-        prevVal.floatVal = (*pExpectDelta);
-        newVal.floatVal = prevVal.floatVal + pOutDevia[gid];
-    } while (atomic_cmpxchg((volatile __global unsigned int *)pExpectDelta, 
-                            prevVal.intVal, newVal.intVal) 
-                            != prevVal.intVal);
+    atomplus(pExpectDelta, pOutDevia[gid]);
     //*pExpectDelta += pOutDevia[gid];
 }

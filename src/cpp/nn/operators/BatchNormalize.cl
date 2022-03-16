@@ -1,4 +1,19 @@
+#ifndef WITHOUT_OPENCL
 
+    void atomplus(global float* p, float v) {
+        union {
+            unsigned int intVal;
+            float floatVal;
+        } newVal, prevVal;
+        do {
+            prevVal.floatVal = *p;
+            newVal.floatVal = prevVal.floatVal + v;
+        } while (atomic_cmpxchg((volatile __global unsigned int *)p, 
+                                prevVal.intVal, newVal.intVal) 
+                                != prevVal.intVal);
+    }
+
+#endif//WITHOUT_OPENCL
 
 typedef struct{
     int m_nLayers;
@@ -85,13 +100,7 @@ kernel void floatDevia(
         float floatVal;
     } newVal, prevVal;
     for(i=0; i<nItems; i++) {
-        do {
-            prevVal.floatVal = (*pInDevia);
-            newVal.floatVal = prevVal.floatVal + *pOutDevia * x;
-        } while (atomic_cmpxchg((volatile __global unsigned int *)pInDevia, 
-                                prevVal.intVal, newVal.intVal) 
-                                != prevVal.intVal);
-        //(*pInDevia) += *pOutDevia * x;
+        atomplus(pInDevia, *pOutDevia * x);
         pInDevia += nLayer;
         pOutDevia += nLayer;
     }

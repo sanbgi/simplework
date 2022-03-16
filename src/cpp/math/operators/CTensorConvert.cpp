@@ -29,10 +29,8 @@ public:
     struct CKernelWraper {
     public:
         const PKernelCtx* pCtx;
-        int get_global_id(int i) {
-            return pCtx->pRanges[i];
-        }
-
+        
+#include "PrepareKernel.hpp"
 #include "TensorConvert.cl"
     };
 
