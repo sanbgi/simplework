@@ -7,12 +7,12 @@
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
 class SDeviceEvent;
-class SDeviceMemory;
+class SKernelMemory;
 
 //
 // 内核计算变量
 //
-struct PKernalVariable{
+struct PKernelVariable{
     int size;
     union {
         unsigned char data[8];
@@ -24,13 +24,13 @@ struct PKernalVariable{
         void* p;
     };
 
-    inline PKernalVariable() {
+    inline PKernelVariable() {
         size = 0;
         l = 0;
     }
 
 #define PKERNALVARIABLE_TYPE(type) \
-    inline PKernalVariable(type v) {\
+    inline PKernelVariable(type v) {\
         size = sizeof(type);\
         *((type*)data) = v;\
     }
@@ -59,12 +59,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         //
         // 创建设备内存
         //
-        virtual int createKernelMemory(SDeviceMemory& spKernelMemory, int nSize, void* pData = nullptr) = 0;
+        virtual int createKernelMemory(SKernelMemory& spKernelMemory, int nSize, void* pData = nullptr) = 0;
 
         //
         // 创建设备内存
         //
-        virtual int createKernelMemory(SDeviceMemory& spKernelMemory, const SDeviceMemory& spMemory) = 0;
+        virtual int createKernelMemory(SKernelMemory& spKernelMemory, const SKernelMemory& spMemory) = 0;
 
         //
         // 执行运算任务
@@ -72,7 +72,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         virtual int runKernel(
                         const PRuntimeKey& kernelKey, 
                         int nArgs, 
-                        PKernalVariable pArgs[], 
+                        PKernelVariable pArgs[], 
                         int nRanges = 0, 
                         int pRanges[]=nullptr) = 0;
 
@@ -111,13 +111,25 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         return s_spDevice;
     }
 
+    bool isCpu(){
+        return getPtr() == cpu().getPtr();
+    }
+
+    bool isCuda() {
+        return getPtr() == cuda().getPtr();
+    }
+
+    bool isOpencl() {
+        return getPtr() == opencl().getPtr();
+    }
+
 public://常用辅助函数
     //
     // 内存初始化为零
     //
     int memoryZero(void* pDevicePointer, int iOffset, int nBytes) const {
         static PRuntimeKey sKernelKey("sw.device.MemoryZero.ucharEval");
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             {pDevicePointer},
             {iOffset}
         };
@@ -129,7 +141,7 @@ public://常用辅助函数
     //
     int memoryCopy(void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nBytes) const {
         static PRuntimeKey sKernelKey("sw.device.MemoryCopy.ucharEval");
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             {pDest},
             {iDestOffset},
             {pSrc},

@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
     int nElementSize = 1000000000;
     SDeviceMemory spMemory = SDeviceMemory::createDeviceMemory(SDevice::opencl(), 1000000);
     for( i=0; i<10000; i++) {
-        SMathKernal::equal<int>(spDevice,spMemory.data(spDevice),0, i, spMemory.size()/sizeof(int));
+        SMathKernel::equal<int>(spDevice,spMemory.data(spDevice),0, i, spMemory.size()/sizeof(int));
         if( !spMemory ) {
             break;
         }

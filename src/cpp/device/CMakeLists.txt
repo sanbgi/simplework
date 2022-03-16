@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-add_subdirectory(cuda)
+#add_subdirectory(cuda)
 add_subdirectory(opencl)
 
 set ( SIMPLEWORK_DEVICE_MODULE_NAME sw.device )

@@ -14,12 +14,12 @@ class CCpuDevice : public CObject, public IDevice{
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 private://IDevice
-    int createKernelMemory(SDeviceMemory& spKernelMemory, int nSize, void* pData = nullptr){
+    int createKernelMemory(SKernelMemory& spKernelMemory, int nSize, void* pData = nullptr){
         spKernelMemory = SObject::createObject("sw.device.CpuMemory", CData<PMemory>({nSize, pData}));
         return spKernelMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
     }
 
-    int createKernelMemory(SDeviceMemory& spKernelMemory, const SDeviceMemory& spMemory){
+    int createKernelMemory(SKernelMemory& spKernelMemory, const SKernelMemory& spMemory){
         SDevice spDevice = spMemory.device();
         if(spDevice.getPtr() == this) {
             spKernelMemory = spMemory;
@@ -27,7 +27,7 @@ private://IDevice
         }
 
         //创建CPU内存
-        SDeviceMemory toMemory;
+        SKernelMemory toMemory;
         if( createKernelMemory(toMemory, spMemory.size()) != sCtx.success() ) {
             return sCtx.error("创建内存失败");
         }
@@ -43,10 +43,10 @@ private://IDevice
 
     int runKernel(  const PRuntimeKey& kernelKey, 
                 int nArgs, 
-                PKernalVariable pArgs[], 
+                PKernelVariable pArgs[], 
                 int nRanges = 0, 
                 int pRanges[]=nullptr) {
-        FKernalFunc func = getKernel(kernelKey);
+        FKernelFunc func = getKernel(kernelKey);
         if(func == nullptr) {
             return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.runtimeKey).c_str());
         }
@@ -72,7 +72,7 @@ private://IDevice
             pItRange++, pItLocalRange++;
         }
 
-        PKernalCtx ctx = {
+        PKernelCtx ctx = {
             nRanges,
             pLocalRange,
             pRanges
@@ -101,9 +101,9 @@ private://IDevice
     }
 
 private:
-    static FKernalFunc getKernel(const PRuntimeKey& kernelKey) {
-        static std::map<PID,FKernalFunc> sId2Kernels;
-        static std::map<string,FKernalFunc> sName2Kernels;
+    static FKernelFunc getKernel(const PRuntimeKey& kernelKey) {
+        static std::map<PID,FKernelFunc> sId2Kernels;
+        static std::map<string,FKernelFunc> sName2Kernels;
 
         auto it = sId2Kernels.find(kernelKey.runtimeId);
         if( it != sId2Kernels.end() ) {
@@ -125,12 +125,12 @@ private:
         if( iProgramName <= 0 && iProgramName >= kernelName.length() - 1) {
             return nullptr;
         }
-        SKernalOperator spOp = getOperator(kernelName.substr(0,iProgramName));
+        SKernelOperator spOp = getOperator(kernelName.substr(0,iProgramName));
         if(!spOp) {
             return nullptr;
         }
 
-        FKernalFunc kernelFunc = spOp->getKernalFunc(kernelName.substr(iProgramName+1).c_str());
+        FKernelFunc kernelFunc = spOp->getKernelFunc(kernelName.substr(iProgramName+1).c_str());
         if(kernelFunc) {
             sId2Kernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = kernelFunc;
             sName2Kernels[kernelName] = kernelFunc;
@@ -138,14 +138,14 @@ private:
         return kernelFunc;
     }
 
-    static SKernalOperator getOperator(string szProgramName) {
-        static std::map<string,SKernalOperator> sMapOps;
+    static SKernelOperator getOperator(string szProgramName) {
+        static std::map<string,SKernelOperator> sMapOps;
         auto it = sMapOps.find(szProgramName);
         if( it != sMapOps.end() ) {
             return it->second;
         }
 
-        SKernalOperator spOp = SObject::createObject(szProgramName.c_str());
+        SKernelOperator spOp = SObject::createObject(szProgramName.c_str());
         if(spOp) {
             sMapOps[szProgramName] = spOp;
         }

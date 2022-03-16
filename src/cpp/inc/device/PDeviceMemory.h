@@ -6,7 +6,7 @@
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
 class SDevice;
-class SDeviceMemroy;
+class SKernelMemory;
 
 struct PDeviceMemory{
     SIMPLEWORK_PDATAKEY(PDeviceMemory, "sw.core.DeviceMemory")
@@ -17,7 +17,7 @@ struct PDeviceMemory{
     //
     // 内核内存
     //
-    const SDeviceMemory* pKernelMemory;
+    const SKernelMemory* pKernelMemory;
 
     // 大小
     int size;
@@ -32,7 +32,7 @@ struct PDeviceMemory{
         this->data = data;
     }
 
-    PDeviceMemory(const SDevice& spDevice, const SDeviceMemory& spKernelMemory) {
+    PDeviceMemory(const SDevice& spDevice, const SKernelMemory& spKernelMemory) {
         this->pDevice = &spDevice;
         this->pKernelMemory = &spKernelMemory;
     }

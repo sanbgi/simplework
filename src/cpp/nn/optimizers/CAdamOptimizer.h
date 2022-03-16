@@ -93,7 +93,7 @@ private:
 
         m_dBeta1Bais *= beta1;
         m_dBeta2Bais *= beta2;
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             nBatchs,
             m_dBeta1Bais,
             m_dBeta2Bais,
@@ -101,7 +101,7 @@ private:
             m_spMomentum.data(spDevice),
             m_spVelocity.data(spDevice),
         };
-        static int sKernalId = 0;
+        static int sKernelId = 0;
         switch(CBasicData<Q>::getStaticType()) {
             case PDATATYPE_FLOAT:{
                 static PRuntimeKey sKernelKey("sw.nn.Adam.floatEval");

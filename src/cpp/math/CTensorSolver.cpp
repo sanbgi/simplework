@@ -199,32 +199,32 @@ public:
 
         SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
-        PKernalVariable pKernelArgs[__MAX_VARS*2+1];
-        int nKernalArgs = 0;
-        PKernalVariable* pKernelArg = pKernelArgs;
+        PKernelVariable pKernelArgs[__MAX_VARS*2+1];
+        int nKernelArgs = 0;
+        PKernelVariable* pKernelArg = pKernelArgs;
 
         //
         // 如果运算设备不是CPU，并且当前的内核计算参数如果大于__MAX_PARAMETER_SIZE个字
-        //  节，则需要将计算参数拷贝到设备内存, 注意，这个时候，设备内存由spKernalParameterInDevice
+        //  节，则需要将计算参数拷贝到设备内存, 注意，这个时候，设备内存由spKernelParameterInDevice
         //  持有，所以，执行必须同步执行，不能异步执行（？）
         //
-        SDeviceMemory spKernalParameterInDevice;
+        SKernelMemory spKernelParameterInDevice;
         if(kernelParameter.size>0) {
             //
             // 如果大于8个字节，则在非CPU情况下，需要把指针转化为设备指针再传递指针
             //
             if(kernelParameter.size > __MAX_PARAMETER_SIZE) {
-                if( spKernelDevice->createKernelMemory(spKernalParameterInDevice, kernelParameter.size, kernelParameter.data) != sCtx.success() ) {
+                if( spKernelDevice->createKernelMemory(spKernelParameterInDevice, kernelParameter.size, kernelParameter.data) != sCtx.success() ) {
                     return sCtx.error("创建设备内存错误");
                 }
-                *pKernelArg = spKernalParameterInDevice.data(spKernelDevice);
+                *pKernelArg = spKernelParameterInDevice.data();
             }else{
                 for(int i=0; i<kernelParameter.size; i++) {
                     pKernelArg->data[i] = kernelParameter.pByteArray[i];
                     pKernelArg->size = kernelParameter.size;
                 }
             }
-            nKernalArgs += 1, pKernelArg++;
+            nKernelArgs += 1, pKernelArg++;
         }
 
         for(int i=0; i<nVars; i++) {
@@ -234,11 +234,11 @@ public:
             }
             pKernelArg[0] = pVars[i].size();
             pKernelArg[1] = spDataBuffer.data(spKernelDevice);
-            nKernalArgs += 2, pKernelArg += 2;
+            nKernelArgs += 2, pKernelArg += 2;
         }
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
-        return spKernelDevice->runKernel(kernelKey, nKernalArgs, pKernelArgs, nRanges, pRanges);
+        return spKernelDevice->runKernel(kernelKey, nKernelArgs, pKernelArgs, nRanges, pRanges);
     }
 
     int pushHooker(const STensorHooker& spHooker){
@@ -276,16 +276,16 @@ public:
         }
 
         int nArgs = nVars*2;
-        PKernalVariable pArgs[__MAX_VARS*2+1];
-        PKernalVariable* pMemory = pArgs;
+        PKernelVariable pArgs[__MAX_VARS*2+1];
+        PKernelVariable* pMemory = pArgs;
         if(kernelParameter.size>0) {
             nArgs += 1;
             *pMemory = kernelParameter;
             pMemory++;
         }
         for(int i=0; i<nVars; i++, pMemory+=2) {
-            pMemory[0] = PKernalVariable(pVars[i].size);
-            pMemory[1] = PKernalVariable(pVars[i].data);
+            pMemory[0] = PKernelVariable(pVars[i].size);
+            pMemory[1] = PKernelVariable(pVars[i].data);
         }
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理

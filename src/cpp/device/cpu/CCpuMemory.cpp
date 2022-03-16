@@ -5,10 +5,10 @@ using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CCpuMemory");
-class CCpuMemory : public CObject, IDeviceMemory, IArchivable{
+class CCpuMemory : public CObject, IKernelMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IKernelMemory)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
@@ -37,7 +37,7 @@ protected://IArchivable
         return ar.visitTaker("data", m_nSize, m_spTaker);
     }
 
-private://IDeviceMemory
+private://IKernelMemory
     int getSize() {
         return m_nSize;
     }
@@ -47,38 +47,20 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    void* getData(const SDevice& spDevice){
-        if( spDevice.getPtr() != SDevice::cpu().getPtr() ) {
-            sCtx.error("无法获取非CPU设备内存");
-            return nullptr;
-        }
+    void* getData(){
         return m_spTaker;
     }
 
-    int getKernelMemory(SDeviceMemory& spKernelMemory){
-        spKernelMemory.setPtr(this);
-        return sCtx.success();
-    }
-
-    int writeMemory(const SDeviceMemory& spMemory) {
+    int writeMemory(const SKernelMemory& spMemory) {
         if(spMemory.getPtr() == this) {
             return sCtx.success();
         }
 
-        SDeviceMemory kernelMemory;
-        if( !spMemory || spMemory->getKernelMemory(kernelMemory) != sCtx.success() ) {
-            return sCtx.error("无效的内存");
-        }
-
-        if(kernelMemory.getPtr() == this) {
-            return sCtx.success();
-        }
-
-        if(kernelMemory.size() != m_nSize) {
+        if(spMemory.size() != m_nSize) {
             return sCtx.error("不能写入大小不一样的内存");
         }
 
-        return kernelMemory->readMemory(m_nSize, m_spTaker);
+        return spMemory->readMemory(m_nSize, m_spTaker);
     }
 
     int writeMemory(int nSize, void* pData, int iOffset=0){

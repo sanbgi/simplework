@@ -62,7 +62,7 @@ private://IDevice
 
     int runKernel(  const PRuntimeKey& kernelKey, 
                     int nArgs, 
-                    PKernalVariable pArgs[], 
+                    PKernelVariable pArgs[], 
                     int nRanges = 0, 
                     int pRanges[]=nullptr) {
         return sCtx.success();

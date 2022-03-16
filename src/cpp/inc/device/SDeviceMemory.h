@@ -7,6 +7,8 @@
 
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
+class SKernelMemory;
+
 //
 // 设备内存
 //
@@ -32,12 +34,17 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         //
         // 获取真正的内核内存(如果是内核内存，则直接返回自己)
         //
-        virtual int getKernelMemory(SDeviceMemory& spKernelMemory) = 0;
+        virtual int getKernelMemory(SKernelMemory& spKernelMemory) = 0;
+
+        //
+        // 创建内核内存
+        //
+        virtual int createKernelMemory(const SDevice& spDevice, SKernelMemory& spKernelMemory) = 0;
 
         //
         // 写回内存
         //
-        virtual int writeMemory(const SDeviceMemory& spMemory) = 0;
+        virtual int writeMemory(const SKernelMemory& spMemory) = 0;
 
         //
         // 修改内存值
@@ -72,7 +79,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice,nSize,pData}));
     }
 
-    static SDeviceMemory createDeviceMemory(const SDevice& spDevice, const SDeviceMemory& spKernelMemory) {
+    static SDeviceMemory createDeviceMemory(const SDevice& spDevice, const SKernelMemory& spKernelMemory) {
         return SObject::createObject(SDeviceMemory::__getClassKey(), CData<PDeviceMemory>({spDevice, spKernelMemory}));
     }
 

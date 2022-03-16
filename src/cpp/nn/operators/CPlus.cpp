@@ -4,9 +4,9 @@
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-class CPlus : public CObject, IKernalOperator {
+class CPlus : public CObject, IKernelOperator {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IKernalOperator)
+        SIMPLEWORK_INTERFACE_ENTRY(IKernelOperator)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://Factory
@@ -15,13 +15,13 @@ public://Factory
 public://Kernel
     struct CKernelWraper {
     public:
-        const PKernalCtx* pCtx;
+        const PKernelCtx* pCtx;
 
 #include "PrepareKernel.hpp"
 #include "Plus.cl"
     };
     
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void floatEval(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatEval(
                 _KArg(CKernelWraper::PPlusParameter*,0), 
@@ -31,7 +31,7 @@ public://Kernel
                 _KArg(int,6), _KArg(float*,7));
     }
 
-    static void floatDevia(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void floatDevia(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatDevia(
                 _KArg(CKernelWraper::PPlusParameter*,0), 
@@ -41,8 +41,8 @@ public://Kernel
                 _KArg(int,8), _KArg(float*,9));
     }
 
-public://IKernalOperator
-    FKernalFunc getKernalFunc(const char* szName) {
+public://IKernelOperator
+    FKernelFunc getKernelFunc(const char* szName) {
         if(szName != nullptr) {
             if( strcmp(szName, "floatEval") == 0 ) return floatEval;
             if( strcmp(szName, "floatDevia") == 0 ) return floatDevia;

@@ -6,17 +6,17 @@
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
 static SCtx sCtx("CTensorOneHot");
-class CTensorOneHot : public CObject, IKernalOperator, ITensorOperator {
+class CTensorOneHot : public CObject, IKernelOperator, ITensorOperator {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IKernalOperator)
+        SIMPLEWORK_INTERFACE_ENTRY(IKernelOperator)
         SIMPLEWORK_INTERFACE_ENTRY(ITensorOperator)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://Factory
     static const char* __getClassKey() { return "sw.math.TensorOneHot"; }
 
-private://IKernalOperator
-    FKernalFunc getKernalFunc(const char* szName) {
+private://IKernelOperator
+    FKernelFunc getKernelFunc(const char* szName) {
         if(szName != nullptr) {
             if( strcmp(szName, "int2floatEval") == 0 ) return int2floatEval;
             if( strcmp(szName, "int2doubleEval") == 0 ) return int2doubleEval;
@@ -82,7 +82,7 @@ private://ITensorOperator
 public:
     struct CKernelWraper {
     public:
-        const PKernalCtx* pCtx;
+        const PKernelCtx* pCtx;
         int get_global_id(int i) {
             return pCtx->pRanges[i];
         }
@@ -90,7 +90,7 @@ public:
 #include "TensorOneHot.cl"
     };
 
-    static void int2floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void int2floatEval(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.int2floatEval(
                 _KArg(int,0),
@@ -98,7 +98,7 @@ public:
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void int2doubleEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void int2doubleEval(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.int2doubleEval(
                 _KArg(int,0),
@@ -106,7 +106,7 @@ public:
                 _KArg(int,3), _KArg(double*,4));
     }
 
-    static void uchar2floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void uchar2floatEval(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.uchar2floatEval(
                 _KArg(int,0),
@@ -114,7 +114,7 @@ public:
                 _KArg(int,3), _KArg(float*,4));
     }
 
-    static void uchar2doubleEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void uchar2doubleEval(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.uchar2doubleEval(
                 _KArg(int,0),

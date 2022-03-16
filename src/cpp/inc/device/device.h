@@ -11,6 +11,7 @@
 #include "SDevice.h"
 #include "SDeviceFactory.h"
 #include "SDeviceEvent.h"
-#include "SKernalOperator.h"
+#include "SKernelMemory.h"
+#include "SKernelOperator.h"
 
 #endif//__SimpleWork_Device_h__

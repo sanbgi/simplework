@@ -14,10 +14,10 @@ using namespace std;
 
 static SCtx sCtx("COpencl");
 
-class COpenclMemory : public CObject, IDeviceMemory{
+class COpenclMemory : public CObject, IKernelMemory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IKernelMemory)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 protected://CObject
@@ -41,7 +41,7 @@ protected://CObject
         return sCtx.success();
     }
 
-private://IDeviceMemory
+private://IKernelMemory
     int getSize() {
         return m_nSize;
     }
@@ -51,41 +51,24 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    void* getData(const SDevice& spDevice){
-        if( spDevice.getPtr() != SDevice::opencl().getPtr() ) {
-            return nullptr;
-        }
+    void* getData(){
         return m_sBuffer.get();
     }
 
-    int getKernelMemory(SDeviceMemory& spKernelMemory){
-        spKernelMemory.setPtr(this);
-        return sCtx.success();
-    }
-
-    int writeMemory(const SDeviceMemory& spMemory) {
+    int writeMemory(const SKernelMemory& spMemory) {
         if(spMemory.getPtr() == this) {
             return sCtx.success();
         }
 
-        SDeviceMemory kernelMemory;
-        if( !spMemory || spMemory->getKernelMemory(kernelMemory) != sCtx.success() ) {
-            return sCtx.error("无效的内存");
-        }
-
-        if(kernelMemory.getPtr() == this) {
-            return sCtx.success();
-        }
-
-        if(kernelMemory.size() != m_nSize) {
+        if(spMemory.size() != m_nSize) {
             return sCtx.error("不能写入大小不一样的内存");
         }
 
-        SDevice spDevice = kernelMemory.device();
-        if( spDevice.getPtr() == SDevice::cpu().getPtr() ) {
-            return writeMemory(m_nSize, kernelMemory.data(spDevice));
-        }else if( spDevice.getPtr() == SDevice::opencl().getPtr() ) {
-            void* pSrc = kernelMemory.data(spDevice);
+        SDevice spDevice = spMemory.device();
+        if( spDevice.isCpu() ) {
+            return writeMemory(m_nSize, spMemory.data());
+        }else if( spDevice.isOpencl() ) {
+            void* pSrc = spMemory.data();
             if( pSrc == m_sBuffer.get() ) {
                 return sCtx.success();
             }
@@ -95,11 +78,10 @@ private://IDeviceMemory
             //
             return spDevice.memoryCopy(m_sBuffer.get(), 0, pSrc, 0, m_nSize);
         }
-        
         CTaker<char*> spTaker(new char[m_nSize], [](char* pMemory){
             delete[] pMemory;
         });
-        if( kernelMemory->readMemory(m_nSize, spTaker) != sCtx.success() ){
+        if( spMemory->readMemory(m_nSize, spTaker) != sCtx.success() ){
             return sCtx.error("读取数据源数据异常");
         } 
         return writeMemory(m_nSize, spTaker);
@@ -207,20 +189,20 @@ protected://CObject
     }
 
 private://IDevice
-    int createKernelMemory(SDeviceMemory& spDeviceMemory, int nSize, void* pInitData = nullptr){
+    int createKernelMemory(SKernelMemory& spDeviceMemory, int nSize, void* pInitData = nullptr){
         spDeviceMemory = SObject::createObject("sw.device.OpenclMemory", CData<PMemory>({nSize, pInitData}));
         return spDeviceMemory ? sCtx.success() : sCtx.error("创建内存失败");
     }
 
-    int createKernelMemory(SDeviceMemory& spDeviceMemory, const SDeviceMemory& spMemory){
+    int createKernelMemory(SKernelMemory& spDeviceMemory, const SKernelMemory& spMemory){
         SDevice spDevice = spMemory.device();
         if(spDevice.getPtr() == this) {
             spDeviceMemory = spMemory;
             return sCtx.success();
         }
 
-        if(spDevice.getPtr() == SDevice::cpu().getPtr()) {
-            void* pData = spMemory.data(spDevice);
+        if(spDevice.isCpu() ) {
+            void* pData = spMemory.data();
             if( pData == nullptr ) {
                 return sCtx.error("无法获取内存指针");
             }
@@ -241,7 +223,7 @@ private://IDevice
 
     int runKernel(  const PRuntimeKey& kernelKey, 
                     int nArgs, 
-                    PKernalVariable pArgs[], 
+                    PKernelVariable pArgs[], 
                     int nRanges = 0, 
                     int pRanges[]=nullptr) {
         cl::Kernel kernel;
@@ -249,7 +231,7 @@ private://IDevice
             return sCtx.error("内核计算错误，找不到指定的内核");
         }
 
-        PKernalVariable* pArg = pArgs;
+        PKernelVariable* pArg = pArgs;
         for(int i=0; i<nArgs; i++, pArg++) {
             kernel.setArg(i, pArg->size, pArg->data);
         }

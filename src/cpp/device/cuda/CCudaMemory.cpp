@@ -12,10 +12,10 @@ using namespace std;
 
 static SCtx sCtx("CCudaMemory");
 
-class CCudaMemory : public CObject, IDeviceMemory{
+class CCudaMemory : public CObject, IKernelMemory{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IDeviceMemory)
+        SIMPLEWORK_INTERFACE_ENTRY(IKernelMemory)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 protected://CObject
@@ -23,7 +23,7 @@ protected://CObject
         return sCtx.success();
     }
 
-private://IDeviceMemory
+private://IKernelMemory
     int getSize() {
         return m_nSize;
     }
@@ -33,24 +33,11 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    void* getData(const SDevice& spDevice){
-        if( spDevice.getPtr() != SDevice::cuda().getPtr() ) {
-            return nullptr;
-        }
-        //return m_sBuffer.get();
+    void* getData(){
         return nullptr;
     }
 
-    int getKernelMemory(SDeviceMemory& spKernelMemory){
-        spKernelMemory.setPtr(this);
-        return sCtx.success();
-    }
-
-    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
-        return sCtx.success();
-    }
-
-    int writeMemory(const SDeviceMemory& spMemory) {
+    int writeMemory(const SKernelMemory& spMemory) {
         if(spMemory.getPtr() == this) {
             return sCtx.success();
         }

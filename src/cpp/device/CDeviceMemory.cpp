@@ -20,11 +20,7 @@ protected://CObject
         }
         SDevice spDevice = pDeviceMemory->pDevice == nullptr ? SDevice::defaultHostDevice() : *pDeviceMemory->pDevice;
         if(pDeviceMemory->pKernelMemory) {
-            SDeviceMemory spKernelMemory = *(pDeviceMemory->pKernelMemory);
-            if( !spKernelMemory || spKernelMemory->getKernelMemory(spKernelMemory) != sCtx.success() ) {
-                return sCtx.error("未知异常，按理说，所有内存对象必须返回一个内核内存对象");
-            }
-            return spDevice->createKernelMemory(m_spMemory, spKernelMemory);
+            return spDevice->createKernelMemory(m_spMemory, *(pDeviceMemory->pKernelMemory));
         }
         return spDevice->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
     }
@@ -44,8 +40,7 @@ protected://IArchivable
 
 private://IDeviceMemory
     int getSize() {
-        IDeviceMemory* pMemory = m_spMemory.getPtr();
-        return pMemory != nullptr ? pMemory->getSize() : 0;
+        return m_spMemory.size();
     }
 
     int getDevice(SDevice& spDevice){
@@ -55,30 +50,26 @@ private://IDeviceMemory
     void* getData(const SDevice& spDevice){
         SDevice spInDevice = m_spMemory.device();
         if( spInDevice.getPtr() != spDevice.getPtr() ) {
-            SDeviceMemory toMemory;
+            SKernelMemory toMemory;
             if( spDevice->createKernelMemory(toMemory, m_spMemory) != sCtx.success()) {
                 sCtx.error("创建设备内存异常");
                 return nullptr;
             }
             m_spMemory = toMemory;
         }
-        return m_spMemory->getData(spDevice);
+        return m_spMemory->getData();
     }
 
-    int getKernelMemory(SDeviceMemory& spKernelMemory){
+    int getKernelMemory(SKernelMemory& spKernelMemory) {
         spKernelMemory = m_spMemory;
         return sCtx.success();
     }
 
-    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
-        if( spDevice->createKernelMemory(m_spMemory, m_spMemory) ) {
-            return sCtx.error("设备转化异常");
-        }
-        spMemory.setPtr(this);
-        return sCtx.success();
+    int createKernelMemory(const SDevice& spDevice, SKernelMemory& spKernelMemory) {
+        return spDevice->createKernelMemory(spKernelMemory, m_spMemory);
     }
 
-    int writeMemory(const SDeviceMemory& spMemory){
+    int writeMemory(const SKernelMemory& spMemory){
         if(spMemory.getPtr() == m_spMemory.getPtr() ) {
             return sCtx.success();
         }
@@ -94,7 +85,7 @@ private://IDeviceMemory
     }
 
 private:
-    SDeviceMemory m_spMemory;
+    SKernelMemory m_spMemory;
 };
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CDevicMemory, SDeviceMemory::__getClassKey())

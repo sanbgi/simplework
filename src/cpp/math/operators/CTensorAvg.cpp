@@ -4,9 +4,9 @@
 //
 // 张量基类，主要用于申明不带模板参数的初始化函数
 //
-class CTensorAvg : public CObject, IKernalOperator {
+class CTensorAvg : public CObject, IKernelOperator {
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
-        SIMPLEWORK_INTERFACE_ENTRY(IKernalOperator)
+        SIMPLEWORK_INTERFACE_ENTRY(IKernelOperator)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
 public://Factory
@@ -15,7 +15,7 @@ public://Factory
 public://Kernel
     struct CKernelWraper {
     public:
-        const PKernalCtx* pCtx;
+        const PKernelCtx* pCtx;
         int get_global_id(int i) {
             return pCtx->pRanges[i];
         }
@@ -23,15 +23,15 @@ public://Kernel
 #include "TensorAvg.cl"
     };
     
-    static void floatEval(const PKernalCtx* pCtx, int nArgs, PKernalVariable pArgs[]) {
+    static void floatEval(const PKernelCtx* pCtx, int nArgs, PKernelVariable pArgs[]) {
         CKernelWraper sKernel = {pCtx};
         sKernel.floatEval(
                 _KArg(int,0), _KArg(float*,1),
                 _KArg(int,2), _KArg(float*,3));
     }
 
-public://IKernalOperator
-    FKernalFunc getKernalFunc(const char* szName) {
+public://IKernelOperator
+    FKernelFunc getKernelFunc(const char* szName) {
         if(szName != nullptr) {
             if( strcmp(szName, "floatEval") == 0 ) return floatEval;
         }

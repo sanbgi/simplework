@@ -1,15 +1,15 @@
-#ifndef __SimpleWork_MathKernal_h__
-#define __SimpleWork_MathKernal_h__
+#ifndef __SimpleWork_MathKernel_h__
+#define __SimpleWork_MathKernel_h__
 
 SIMPLEWORK_MATH_NAMESPACE_ENTER
 
-SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
+SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernel)
 
-    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IMathKernal", 211202)
+    SIMPLEWORK_INTERFACE_ENTER(IObject, "sw.math.IMathKernel", 211202)
     SIMPLEWORK_INTERFACE_LEAVE
     
     static int plusEqual(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             {pDest},
             {iDestOffset},
             {pSrc},
@@ -34,7 +34,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int plusEqual(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
+        PKernelVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
         switch(CBasicData<Q>::getStaticType()) {
         case PDATATYPE_INT:{
             static PRuntimeKey sKernelKey("sw.math.PlusEqual.intEval");
@@ -53,7 +53,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
     }
 
     static int minusEqual(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             {pDest},
             {iDestOffset},
             {pSrc},
@@ -78,7 +78,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int minusEqual(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
+        PKernelVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
         switch(CBasicData<Q>::getStaticType()) {
         case PDATATYPE_INT:{
             static PRuntimeKey sKernelKey("sw.math.MinusEqual.intEvalV");
@@ -97,7 +97,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
     }
 
     static int multiplyEqual(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             {pDest},
             {iDestOffset},
             {pSrc},
@@ -122,7 +122,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int multiplyEqual(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
+        PKernelVariable pArgs[] = {{pDest}, {iDestOffset}, {v}};
         switch(CBasicData<Q>::getStaticType()) {
         case PDATATYPE_INT:{
             static PRuntimeKey sKernelKey("sw.math.MultiplyEqual.intEvalV");
@@ -141,7 +141,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
     }
 
     static int equal(const SDevice& spDevice, PDATATYPE idType, void* pDest, int iDestOffset, void* pSrc, int iSrcOffset, int nElements) {
-        PKernalVariable pArgs[] = {
+        PKernelVariable pArgs[] = {
             {pDest},
             {iDestOffset},
             {pSrc},
@@ -166,7 +166,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
 
     template<typename Q>
     static int equal(const SDevice& spDevice, void* pDest, int iDestOffset, Q v, int nElements) {
-        PKernalVariable pArgs[] = {{pDest}, {iDestOffset}, {v} };
+        PKernelVariable pArgs[] = {{pDest}, {iDestOffset}, {v} };
         switch(CBasicData<Q>::getStaticType()) {
         case PDATATYPE_INT:{
             static PRuntimeKey sKernelKey("sw.math.Equal.intEvalV");
@@ -185,8 +185,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(MathKernal)
     }
 
 
-SIMPLEWORK_INTERFACECLASS_LEAVE(MathKernal)
+SIMPLEWORK_INTERFACECLASS_LEAVE(MathKernel)
 
 SIMPLEWORK_MATH_NAMESPACE_LEAVE
 
-#endif//__SimpleWork_MathKernal_h__
+#endif//__SimpleWork_MathKernel_h__

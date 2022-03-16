@@ -18,10 +18,11 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
     }
 
     int getDevice(const char* szName, SDevice& spDevice) {
+        static PMemory sInitMemory;
         static std::map<string,SDevice> sDeviceMap = {
-            { "cpu", SObject::createObject("sw.device.CpuDevice") },
-            { "cuda", SObject::createObject("sw.device.cuda.CudaDevice") },
-            { "opencl", SObject::createObject("sw.device.opencl.OpenclDevice") },
+            { "cpu", SObject::createObject("sw.device.CpuDevice", CData<PMemory>(sInitMemory)) },
+            //{ "cuda", SObject::createObject("sw.device.cuda.CudaDevice") },
+            { "opencl", SObject::createObject("sw.device.opencl.OpenclDevice", CData<PMemory>(sInitMemory)) },
         };
         auto it = sDeviceMap.find(szName);
         if(it != sDeviceMap.end()) {

@@ -264,10 +264,10 @@ int CDeviceAdvNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     // 遍历计算序列并执行
     //
     PSolveVector* pVec;
-    PKernalVariable pKernelArgs[12];
+    PKernelVariable pKernelArgs[12];
     for(auto& instruct : solveCtx.arrInstructs ) {
-        int nKernalArgs = instruct.nInVars*2 + 4;
-        PKernalVariable* pMemory = pKernelArgs;
+        int nKernelArgs = instruct.nInVars*2 + 4;
+        PKernelVariable* pMemory = pKernelArgs;
         pMemory[0] = (instruct.spParameters)?instruct.spParameters.data(spKernelDevice):nullptr;
         pMemory[1] = nBatchs;
         pMemory += 2;
@@ -297,7 +297,7 @@ int CDeviceAdvNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spKernelDevice->runKernel(
                 {instruct.evalKernelId, instruct.evalKernameName.c_str()}, 
-                nKernalArgs, pKernelArgs, 
+                nKernelArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }
@@ -422,14 +422,14 @@ int CDeviceAdvNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOu
     // 遍历计算序列并执行
     //
     PSolveDeviaVector* pVec;
-    PKernalVariable pKernelArgs[17];
+    PKernelVariable pKernelArgs[17];
     for(auto itSolver=solveCtx.arrInstructs.rbegin(); itSolver != solveCtx.arrInstructs.rend(); itSolver++) {
 
         //准备输入输出计算参数
         PSolveGraphInfos::PSolveInstruct& instruct = *itSolver;
 
-        int nKernalArgs = instruct.nInVars*3 + 4;
-        PKernalVariable* pMemory = pKernelArgs;
+        int nKernelArgs = instruct.nInVars*3 + 4;
+        PKernelVariable* pMemory = pKernelArgs;
         pMemory[0] = (instruct.spParameters)?instruct.spParameters.data(spKernelDevice):nullptr;
         pMemory[1] = nBatchs;
         pMemory += 2;
@@ -468,7 +468,7 @@ int CDeviceAdvNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOu
         pRanges[2] *= pRanges[2] < 0 ? -nBatchs : 1;
         if( spKernelDevice->runKernel(
                 {instruct.deviaKernelId, instruct.deviaKernameName.c_str()}, 
-                nKernalArgs, pKernelArgs, 
+                nKernelArgs, pKernelArgs, 
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }
@@ -489,7 +489,7 @@ int CDeviceAdvNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOu
     void* pDeviations = spKernelDeviations.data(spKernelDevice);
     for(auto pItVec : weightVars) {
 
-        SMathKernal::equal(spKernelDevice, idType, pDeviations, iDeviationOffset, pItVec->deviaBuffer.data(spKernelDevice), 0, pItVec->size );
+        SMathKernel::equal(spKernelDevice, idType, pDeviations, iDeviationOffset, pItVec->deviaBuffer.data(spKernelDevice), 0, pItVec->size );
 
         iDeviationOffset += pItVec->size;
 
@@ -541,7 +541,7 @@ int CDeviceAdvNetwork::update(const STensor& spBatchInDeviation) {
                 switch(solveCtx.idType) {
                     case PDATATYPE_FLOAT:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.floatEval");
-                        PKernalVariable pArgs[] = {
+                        PKernelVariable pArgs[] = {
                             0,
                             iDeviationOffset,
                             -1.0f,
@@ -557,7 +557,7 @@ int CDeviceAdvNetwork::update(const STensor& spBatchInDeviation) {
 
                     case PDATATYPE_DOUBLE:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.doubleEval");
-                        PKernalVariable pArgs[] = {
+                        PKernelVariable pArgs[] = {
                             0,
                             iDeviationOffset,
                             -1.0f,
