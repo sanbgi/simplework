@@ -271,7 +271,10 @@ int CAvFrameConverter::convertAudio(const SAvFrame& spIn, SAvFrame& spOut) {
 
     CPointer<CAvFrame> spAvFrameOut;
     CObject::createObject(spAvFrameOut);
-    int nTargetSamples = (int64_t)pSrc->nWidth * targetRate / sourceRate + 256;
+    int nTargetSamples = swr_get_out_samples(m_spSwrCtx,pSrc->nWidth);
+    if(nTargetSamples < 1) {
+        return sCtx.error("计算目标缓冲区大小异常");
+    }
     if( CAvFrame::allocAudioSampleDataBuffer(spAvFrameOut->m_spBuffer, 
                 targetFormat, targetChannels, nTargetSamples, 
                 spAvFrameOut->m_pLinesizes,spAvFrameOut->m_ppPlanes) != sCtx.success() ) {
@@ -289,11 +292,6 @@ int CAvFrameConverter::convertAudio(const SAvFrame& spIn, SAvFrame& spOut) {
     int nb_samples = swr_convert(m_spSwrCtx, spAvFrameOut->m_ppPlanes, nTargetSamples, in, pSrc->nWidth);
     if (nb_samples < 0) {
         return sCtx.error("swr_convert()失败");
-    }
-    if (nb_samples == nTargetSamples)
-    {
-        sCtx.warn("音频缓冲区太小了");
-        return sCtx.success();
     }
 
     // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
