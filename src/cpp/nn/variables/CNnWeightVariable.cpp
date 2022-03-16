@@ -52,24 +52,17 @@ int CNnWeightVariable::__initialize(const PData* pData) {
 
 STensor CNnWeightVariable::getData(PDATATYPE idType) {
     if(!m_spData) {
-        int nDims = m_spDimension.size();
-        const int* pDimSize = m_spDimension.data();
-
-        int nData = 1;
-        for(int i=0; i<nDims; i++) {
-            nData *= pDimSize[i];
-        }
-
-        if(STensor::createTensor(m_spData, m_spDimension, idType, nData) != sCtx.success()) {
+        int nSize = m_spDimension.dataSize();
+        if(STensor::createTensor(m_spData, m_spDimension, idType, nSize) != sCtx.success()) {
             return STensor();
         }
 
         void* pData = m_spData.data();
         if(idType == CBasicData<float>::getStaticType()) {
-            initWeightT<float>(nData, pData);
+            initWeightT<float>(nSize, pData);
         }else
         if(idType == CBasicData<double>::getStaticType()) {
-            initWeightT<double>(nData, pData);
+            initWeightT<double>(nSize, pData);
         }
     }
     return m_spData;

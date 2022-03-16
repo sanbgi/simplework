@@ -453,11 +453,6 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
 
             void* pDevia;
             if(!pVec->deviaBuffer) {
-                pVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pVec->size*nElementSize);
-                if( !pVec->deviaBuffer ) {
-                    return sCtx.error("创建偏导数失败");
-                }
-
                 if( spKernelDevice->createKernelMemory(pKernelDeviaMemory[j], pVec->size*nElementSize) != sCtx.success()) {
                     return sCtx.error("创建内核内存失败");
                 }
@@ -504,7 +499,16 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         //
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
-            pVec->deviaBuffer->writeMemory(pKernelDeviaMemory[j]);
+            if(!pVec->deviaBuffer) {
+                pVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pKernelDeviaMemory[j]);
+                if( !pVec->deviaBuffer ) {
+                    return sCtx.error("创建偏导数失败");
+                }
+            }else{
+                if( pVec->deviaBuffer->writeMemory(pKernelDeviaMemory[j]) != sCtx.success() ){
+                    return sCtx.error("回写偏导数失败");
+                }
+            }
         }
     }
 
@@ -576,7 +580,6 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
         case ENnVariableType::EVWeight:
             {
                 SDeviceMemory spWeightBuffer = itVar->data.dataBuffer();
-
                 SKernelMemory spKernelWeights;
                 if( spWeightBuffer->createKernelMemory(spKernelDevice, spKernelWeights) != sCtx.success() ) {
                     return sCtx.error("创建内核计算对象失败");

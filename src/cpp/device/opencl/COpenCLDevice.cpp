@@ -202,11 +202,7 @@ private://IDevice
         }
 
         if(spDevice.isCpu() ) {
-            void* pData = spMemory.data();
-            if( pData == nullptr ) {
-                return sCtx.error("无法获取内存指针");
-            }
-            return createKernelMemory(spDeviceMemory, spMemory.size(), pData);
+            return createKernelMemory(spDeviceMemory, spMemory.size(), spMemory.data());
         }
 
         //如果不是CPU内存，则需要内存拷贝到CPU内存，作为中转
@@ -214,7 +210,6 @@ private://IDevice
         CTaker<char*> spTaker(new char[size], [](char* pMemory){
             delete[] pMemory;
         });
-
         if( !spMemory || spMemory->readMemory(size, spTaker) != sCtx.success() ) {
             return sCtx.error("创建内存所对应的原始内存无效");
         }

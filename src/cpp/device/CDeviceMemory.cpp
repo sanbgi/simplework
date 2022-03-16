@@ -66,7 +66,9 @@ private://IDeviceMemory
     }
 
     int createKernelMemory(const SDevice& spDevice, SKernelMemory& spKernelMemory) {
-        return spDevice->createKernelMemory(spKernelMemory, m_spMemory);
+        int ret = spDevice->createKernelMemory(spKernelMemory, m_spMemory);
+        //m_spMemory = spKernelMemory;
+        return ret;
     }
 
     int writeMemory(const SKernelMemory& spMemory){
