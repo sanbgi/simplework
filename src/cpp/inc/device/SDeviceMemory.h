@@ -37,14 +37,14 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         virtual int getKernelMemory(SKernelMemory& spKernelMemory) = 0;
 
         //
-        // 创建内核内存
+        // 创建指定设备的内核内存
         //
         virtual int createKernelMemory(const SDevice& spDevice, SKernelMemory& spKernelMemory) = 0;
 
         //
         // 写回内存
         //
-        virtual int writeMemory(const SKernelMemory& spMemory) = 0;
+        virtual int writeKernelMemory(const SDevice& spDevice, const SKernelMemory& spMemory) = 0;
 
         //
         // 修改内存值

@@ -42,7 +42,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceFactory, "sw.device.DeviceFactory")
         //
         // 设置默认内核计算设备
         //
-        virtual int setDefaultHostDevic(const SDevice& spDevice) = 0;
+        virtual int setDefaultHostDevice(const SDevice& spDevice) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

@@ -73,7 +73,7 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
         return sCtx.success();
     }
 
-    int setDefaultHostDevic(const SDevice& spDevice) {
+    int setDefaultHostDevice(const SDevice& spDevice) {
         m_spDefaultHostDevice = spDevice;
         return sCtx.success();
     }

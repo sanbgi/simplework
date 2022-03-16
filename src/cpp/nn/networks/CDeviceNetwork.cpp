@@ -505,7 +505,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
                     return sCtx.error("创建偏导数失败");
                 }
             }else{
-                if( pVec->deviaBuffer->writeMemory(pKernelDeviaMemory[j]) != sCtx.success() ){
+                if( pVec->deviaBuffer->writeKernelMemory(spDevice, pKernelDeviaMemory[j]) != sCtx.success() ){
                     return sCtx.error("回写偏导数失败");
                 }
             }
@@ -566,6 +566,7 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
+    SDevice spDevice = SDevice::defaultHostDevice();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
     SKernelMemory spKernelDeiva;
     if( spWeightDevia->createKernelMemory(spKernelDevice, spKernelDeiva) != sCtx.success() ) {
@@ -621,7 +622,7 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
                     }break;
                 }
                 
-                if( spWeightBuffer->writeMemory(spKernelWeights) != sCtx.success() ) {
+                if( spWeightBuffer->writeKernelMemory(spDevice, spKernelWeights) != sCtx.success() ) {
                     return sCtx.error("拷贝内核权重结果异常");
                 }
 

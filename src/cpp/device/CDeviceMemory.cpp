@@ -66,16 +66,11 @@ private://IDeviceMemory
     }
 
     int createKernelMemory(const SDevice& spDevice, SKernelMemory& spKernelMemory) {
-        int ret = spDevice->createKernelMemory(spKernelMemory, m_spMemory);
-        //m_spMemory = spKernelMemory;
-        return ret;
+        return spDevice->createKernelMemory(spKernelMemory, m_spMemory);
     }
 
-    int writeMemory(const SKernelMemory& spMemory){
-        if(spMemory.getPtr() == m_spMemory.getPtr() ) {
-            return sCtx.success();
-        }
-        return m_spMemory->writeMemory(spMemory);
+    int writeKernelMemory(const SDevice& spDevice, const SKernelMemory& spMemory){
+        return spDevice->createKernelMemory(m_spMemory, spMemory);
     }
 
     int writeMemory(int nSize, void* pData, int iOffset=0){

@@ -219,7 +219,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 }
 
 SNnNetwork CNnNetwork::createLayerNetwork() {
-    //SDeviceFactory::getFactory()->setDefaultHostDevic(SDevice::opencl());
+    //SDeviceFactory::getFactory()->setDefaultHostDevice(SDevice::opencl());
     SDeviceFactory::getFactory()->setDefaultKernelDevic(SDevice::opencl());
     int pDimSizes[] = {28, 28};
     SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
