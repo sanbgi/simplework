@@ -697,7 +697,7 @@ int CAvFrame::allocImageDataBuffer(
         return sCtx.error("图像格式异常，无法计算需要分配的图像缓冲大小");
     }
 
-    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(SDevice::cpu(), size);
+    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(SDevice::defaultHostDevice(), size);
     if( !spBuffer ) {
         return sCtx.error("分配图像缓冲失败");
     }
@@ -725,7 +725,7 @@ int CAvFrame::allocAudioSampleDataBuffer(
         return sCtx.error("图像格式异常，无法计算需要分配的图像缓冲大小");
     }
 
-    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(SDevice::cpu(), size);
+    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(SDevice::defaultHostDevice(), size);
     if( !spBuffer ) {
         return sCtx.error("分配图像缓冲失败");
     }

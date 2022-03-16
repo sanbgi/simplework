@@ -160,7 +160,7 @@ int CDeviceAdvNetwork::initNetwork(PDATATYPE idType) {
         PSolveFunc solveFunc;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);
         if(solveFunc.nParamterSize > 0) {
-            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::cpu(),solveFunc.nParamterSize, solveFunc.pParameterData);
+            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::defaultHostDevice(),solveFunc.nParamterSize, solveFunc.pParameterData);
         }
         solveParameter.nInVars = spOp.nInVars;
         solveParameter.iOutVar = spOp.iOutVar;

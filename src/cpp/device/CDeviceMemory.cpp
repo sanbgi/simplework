@@ -18,7 +18,7 @@ protected://CObject
         if( pDeviceMemory == nullptr ){
             return sCtx.error("创建内存参数无效");
         }
-        SDevice spDevice = pDeviceMemory->pDevice == nullptr ? SDevice::cpu() : *pDeviceMemory->pDevice;
+        SDevice spDevice = pDeviceMemory->pDevice == nullptr ? SDevice::defaultHostDevice() : *pDeviceMemory->pDevice;
         if(pDeviceMemory->pKernelMemory) {
             return spDevice->createKernelMemory(m_spMemory, *pDeviceMemory->pKernelMemory);
         }

@@ -221,7 +221,7 @@ SNnNetwork CNnNetwork::createTestNetwork() {
 SNnNetwork CNnNetwork::createLayerNetwork() {
     SDeviceFactory::getFactory()->setDefaultKernelDevic(SDevice::opencl());
     int pDimSizes[] = {28, 28};
-    SNnNetwork spNetwork = SNnNetwork::createDeviceAdvNetwork({
+    SNnNetwork spNetwork = SNnNetwork::createDeviceNetwork({
         SDimension::createDimension(2,pDimSizes),
         [](const SNnVariable& spIn, SNnVariable& spOut) -> int{
             SNnVariable x = spIn;

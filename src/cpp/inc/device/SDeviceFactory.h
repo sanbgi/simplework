@@ -35,14 +35,24 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceFactory, "sw.device.DeviceFactory")
         virtual int getOpenclDevice(SDevice& spDevice) = 0;
 
         //
-        // 获得当前默认计算设备
+        // 获得当前默认内核计算设备
         //
         virtual int getDefaultKernelDevic(SDevice& spDevice) = 0;
 
         //
-        // 设置默认计算设备
+        // 设置默认内核计算设备
         //
         virtual int setDefaultKernelDevic(const SDevice& spDevice) = 0;
+
+        //
+        // 获得当前默认内核计算设备
+        //
+        virtual int getDefaultHostDevic(SDevice& spDevice) = 0;
+
+        //
+        // 设置默认内核计算设备
+        //
+        virtual int setDefaultHostDevic(const SDevice& spDevice) = 0;
 
     SIMPLEWORK_INTERFACE_LEAVE
 

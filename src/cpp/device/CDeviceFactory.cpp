@@ -36,19 +36,33 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
     }
 
     int getDefaultKernelDevic(SDevice& spDevice) {
-        if(!m_spDefaultDevice) {
-            m_spDefaultDevice = SDevice::cpu();
+        if(!m_spDefaultKernelDevice) {
+            m_spDefaultKernelDevice = SDevice::cpu();
         }
-        spDevice = m_spDefaultDevice;
+        spDevice = m_spDefaultKernelDevice;
         return sCtx.success();
     }
 
     int setDefaultKernelDevic(const SDevice& spDevice) {
-        m_spDefaultDevice = spDevice;
+        m_spDefaultKernelDevice = spDevice;
         return sCtx.success();
     }
 
-    SDevice m_spDefaultDevice;
+    int getDefaultHostDevic(SDevice& spDevice) {
+        if(!m_spDefaultHostDevice) {
+            m_spDefaultHostDevice = SDevice::cpu();
+        }
+        spDevice = m_spDefaultHostDevice;
+        return sCtx.success();
+    }
+
+    int setDefaultHostDevic(const SDevice& spDevice) {
+        m_spDefaultHostDevice = spDevice;
+        return sCtx.success();
+    }
+
+    SDevice m_spDefaultKernelDevice;
+    SDevice m_spDefaultHostDevice;
 };
 
 SIMPLEWORK_SINGLETON_FACTORY_AUTO_REGISTER(CDeviceFactory, SDeviceFactory::__getClassKey())

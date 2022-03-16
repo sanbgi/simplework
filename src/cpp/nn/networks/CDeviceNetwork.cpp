@@ -160,7 +160,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         PSolveFunc solveFunc;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);
         if(solveFunc.nParamterSize > 0) {
-            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::cpu(),solveFunc.nParamterSize, solveFunc.pParameterData);
+            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::defaultHostDevice(),solveFunc.nParamterSize, solveFunc.pParameterData);
         }
         solveParameter.nInVars = spOp.nInVars;
         solveParameter.iOutVar = spOp.iOutVar;
@@ -257,7 +257,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     auto pInVar = solveVars.data() + solveCtx.iInVar;
     pInVar->dataBuffer = spBatchIn.dataBuffer();
 
-    SDevice spDevice = pInVar->dataBuffer.device();
+    SDevice spDevice = SDevice::defaultKernelDevice();//pInVar->dataBuffer.device();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     //
@@ -305,10 +305,6 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }
-
-        //
-        // 这里存在性能问题，因为内核内存刚拷贝回主内存，下一次内核计算，又很快需要这个，所以还要拷贝到设备中
-        //
         pVec->dataBuffer = SDeviceMemory::createDeviceMemory(spDevice, sKernelOut);
     }
 
@@ -357,7 +353,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    SDevice spDevice = spBatchOutDeviation.device();
+    SDevice spDevice = SDevice::defaultKernelDevice();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     PNnExtraTensor sResizeTensor;
