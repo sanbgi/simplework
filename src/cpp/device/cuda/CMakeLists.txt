@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.0.0)
-
 find_package(CUDA REQUIRED)
 if (CUDA_FOUND)
 
