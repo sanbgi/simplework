@@ -22,7 +22,8 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
     }
 
     int getCudaDevice(SDevice& spDevice){
-        static SDevice g_cudaDevice = SObject::createObject("sw.device.cuda.CudaDevice");
+        static PMemory g_initMemory;
+        static SDevice g_cudaDevice = SObject::createObject("sw.device.cuda.CudaDevice", CData<PMemory>(g_initMemory));
         spDevice = g_cudaDevice;
         return sCtx.success();
     }
