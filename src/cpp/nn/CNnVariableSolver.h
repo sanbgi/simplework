@@ -11,7 +11,7 @@ using namespace std;
 //
 // 每一步求解参数信息定义
 //
-struct PNnAtomOperatorArgs {
+struct PNnOperator {
     //
     // 输入变量数以及对应的下标
     //
@@ -32,14 +32,14 @@ struct PNnSolveGraph {
     int iOutVar;
     vector<SNnVariable> arrVars;
     vector<SNnAtomOperator> arrOperators;
-    vector<PNnAtomOperatorArgs> arrOperatorArgs;
+    vector<PNnOperator> arrOperatorArgs;
 
     int toArchive(const SArchive& ar){
         ar.arBlock("iinvar", iInVar);
         ar.arBlock("ioutvar", iOutVar);
         ar.arObjectArray("operators", arrOperators);
         ar.arObjectArray("vars", arrVars);
-        ar.arBlockArray<PNnAtomOperatorArgs, vector<PNnAtomOperatorArgs>>("parameters", arrOperatorArgs);
+        ar.arBlockArray<PNnOperator, vector<PNnOperator>>("parameters", arrOperatorArgs);
         return 0;
     }
 };

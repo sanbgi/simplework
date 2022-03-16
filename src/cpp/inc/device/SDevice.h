@@ -90,7 +90,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         return spDevice;
     }
  
-     static SDevice opencl() {
+    static SDevice cuda() {
+        SDevice spDevice;
+        SDeviceFactory::getFactory()->getCudaDevice(spDevice);
+        return spDevice;
+    }
+
+    static SDevice opencl() {
         SDevice spDevice;
         SDeviceFactory::getFactory()->getOpenclDevice(spDevice);
         return spDevice;

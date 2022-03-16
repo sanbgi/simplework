@@ -61,7 +61,7 @@ private:
         // 计算指令
         struct PSolveInstruct {
             PSolveFunc solver;
-            PNnAtomOperatorArgs args;
+            PNnOperator args;
         };
 
         //解算参数列表
@@ -135,7 +135,7 @@ int CLayerNetwork::initNetwork(PDATATYPE idType) {
     auto itParameter = m_sSolveGraph.arrOperatorArgs.begin();
     auto itOp = m_sSolveGraph.arrOperators.begin();
     while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
-        PNnAtomOperatorArgs spOp = *itParameter;
+        PNnOperator spOp = *itParameter;
         PSolveGraphInfos::PSolveInstruct solveParameter;
         solveParameter.args = spOp;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveParameter.solver);

@@ -155,7 +155,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
     auto itParameter = m_sSolveGraph.arrOperatorArgs.begin();
     auto itOp = m_sSolveGraph.arrOperators.begin();
     while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
-        PNnAtomOperatorArgs spOp = *itParameter;
+        PNnOperator spOp = *itParameter;
         PSolveGraphInfos::PSolveInstruct solveParameter;
         PSolveFunc solveFunc;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);

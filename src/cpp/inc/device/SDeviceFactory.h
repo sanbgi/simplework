@@ -25,6 +25,11 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceFactory, "sw.device.DeviceFactory")
         virtual int getCpuDevice(SDevice& spDevice) = 0;
 
         //
+        // 获得Cuda设备
+        //
+        virtual int getCudaDevice(SDevice& spDevice) = 0;
+
+        //
         // 获得Opencl设备
         //
         virtual int getOpenclDevice(SDevice& spDevice) = 0;

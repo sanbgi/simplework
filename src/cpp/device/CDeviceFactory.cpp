@@ -21,9 +21,15 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
         return sCtx.success();
     }
 
+    int getCudaDevice(SDevice& spDevice){
+        static SDevice g_cudaDevice = SObject::createObject("sw.device.cuda.CudaDevice");
+        spDevice = g_cudaDevice;
+        return sCtx.success();
+    }
+
     int getOpenclDevice(SDevice& spDevice) {
         static PMemory g_initMemory;
-        static SDevice g_openclDevice = SObject::createObject("sw.device.OpenclDevice", CData<PMemory>(g_initMemory));
+        static SDevice g_openclDevice = SObject::createObject("sw.device.opencl.OpenclDevice", CData<PMemory>(g_initMemory));
         spDevice = g_openclDevice;
         return sCtx.success();
     }

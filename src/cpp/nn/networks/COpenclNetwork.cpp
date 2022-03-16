@@ -67,7 +67,7 @@ private:
             PSolveFunc solver;
             cl::Kernel eval;
             cl::Kernel devia;
-            PNnAtomOperatorArgs args;
+            PNnOperator args;
         };
         cl::Kernel kZero;
 
@@ -245,7 +245,7 @@ int COpenclNetwork::initNetwork(PDATATYPE idType) {
     auto itParameter = m_sSolveGraph.arrOperatorArgs.begin();
     auto itOp = m_sSolveGraph.arrOperators.begin();
     while(itParameter != m_sSolveGraph.arrOperatorArgs.end()) {
-        PNnAtomOperatorArgs spOp = *itParameter;
+        PNnOperator spOp = *itParameter;
         PSolveGraphInfos::PSolveInstruct solveParameter;
         solveParameter.args = spOp;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveParameter.solver);

@@ -272,7 +272,7 @@ private://IDevice
             globalRange,
             cl::NullRange,
             nullptr,
-            &event
+            nullptr//&event
         );
         
         /*
@@ -352,9 +352,9 @@ private://IDevice
         if(ret != CL_SUCCESS) {
             return sCtx.error("OpenCL计算错误");
         }
-        if( (ret = event.wait()) != CL_SUCCESS ) {
-            return sCtx.error("等待执行结果失败");
-        }
+        //if( (ret = event.wait()) != CL_SUCCESS ) {
+        //    return sCtx.error("等待执行结果失败");
+        //}
         return sCtx.success();
     }
 
@@ -452,7 +452,7 @@ private:
     }
 
 public://Factory
-    static const char* __getClassKey() { return "sw.device.OpenclDevice"; }
+    static const char* __getClassKey() { return "sw.device.opencl.OpenclDevice"; }
 
 private:
     int m_nMaxRanges;
