@@ -38,7 +38,7 @@ void testIdx() {
 
 int main(int argc, char *argv[]){
 
-    SDevice cuda = SDevice::cuda();
+    //SDevice cuda = SDevice::cuda();
     /*
     std::vector<SDeviceMemory> arrMemorirs;
     SDevice spDevice = SDevice::opencl();
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]){
     //testNN();
     //testIdx();
     //CNnNetwork::runFile();
-    CNnNetwork::run();
-    //CAvNetwork::runImage();
+    //CNnNetwork::run();
+    CAvNetwork::runImage();
 
     return 0;
 }

@@ -16,8 +16,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(AvFrame)
         //
         virtual const PAvFrame* getFramePtr() = 0; 
 
+        //
+        // 获取数据
+        //
+        virtual int getDataBuffer(SDeviceMemory& spDataBuffer) = 0;
+
     SIMPLEWORK_INTERFACE_LEAVE
 
+    SDeviceMemory dataBuffer() {
+        SDeviceMemory spBuffer;
+        IFace * pFace = getPtr();
+        int ret = (pFace == nullptr) ? 0 : pFace->getDataBuffer(spBuffer);
+        return spBuffer;
+    }
 
     static SAvFrame loadImageFile(const char* szFileName) {
         SAvFrame spFrame;

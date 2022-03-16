@@ -221,10 +221,10 @@ int CAvIn::sendPackageAndReceiveFrame(SAvFrame& spAvFrame, AVPacket* pPackage) {
 
 int CAvIn::receiveFrame(SAvFrame& spAvFrame, CAvInStreaming* pStreaming) {
     AVCodecContext* pCodecCtx = pStreaming->m_spCodecCtx;
-    CPointer<CAvFrame> spFrame;
-    CObject::createObject(spFrame);
-    AVFrame* pAvFrame = spFrame->allocAvFramePtr(pStreaming->m_pAvStream, pStreaming->m_avStreaming.streamingId);
-    int ret = avcodec_receive_frame(pCodecCtx, pAvFrame);
+    CTaker<AVFrame*> spFrame(av_frame_alloc(), [](AVFrame* pFrame){
+        av_frame_free(&pFrame);
+    });
+    int ret = avcodec_receive_frame(pCodecCtx, spFrame);
 /*
 *      0:                 success, a frame was returned
 *      AVERROR(EAGAIN):   output is not available in this state - user must try
@@ -252,14 +252,9 @@ int CAvIn::receiveFrame(SAvFrame& spAvFrame, CAvInStreaming* pStreaming) {
         return sCtx.error();
     }
 
-    if( spFrame->setAVFrameToPAvFrame() != sCtx.success() ) {
-        return sCtx.error("更新帧信息失败");
-    }
-
     //如果读取成功，则下次继续读取
     m_arrToReadingStreamings.push_back(pStreaming);
-    spAvFrame.setPtr(spFrame.getPtr());
-    return sCtx.success();
+    return CAvFrame::createFrame(pStreaming->m_pAvStream, pStreaming->m_avStreaming.streamingId, spFrame, spAvFrame);
 }
 
 bool CAvIn::isCompleted() {

@@ -40,7 +40,7 @@ void CAvNetwork::run() {
             if(nFrames % 100 == 50) {
                 std::stringstream ss;
                 ss << "d://tmp/frame_" << nFrames << ".bmp";
-                SAvOut::saveAvImageFile(ss.str().c_str(), spFrame);
+                //SAvOut::saveAvImageFile(ss.str().c_str(), spFrame);
             }
 
             break;

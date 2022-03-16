@@ -12,85 +12,106 @@ using namespace std;
 FFMPEG_NAMESPACE_ENTER
 
 static SCtx sCtx("CAvFrame");
-
-AVFrame* CAvFrame::allocAvFramePtr(AVStream* pStreaming, int iStringingId) {
-    m_spAvFrame.take(av_frame_alloc(), [](AVFrame* pFrame){
-        av_frame_free(&pFrame);
-    });
-    AVFrame* pAvFrame = m_spAvFrame;
+int CAvFrame::createFrame(AVStream* pStreaming, int iStreamingId, AVFrame* pFrame, SAvFrame& spNewFrame){
+    CPointer<CAvFrame> spFrame;
+    CObject::createObject(spFrame);
     AVCodecParameters * pCodecCtx = pStreaming->codecpar;
+    int ret = 0;
     switch (pCodecCtx->codec_type)
     {
     case AVMEDIA_TYPE_VIDEO:
-        {
-            m_avFrame.sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-            m_avFrame.sampleMeta.sampleFormat = CAvSampleType::convert((AVPixelFormat)pCodecCtx->format);
-            m_avFrame.sampleMeta.videoWidth = pCodecCtx->width;
-            m_avFrame.sampleMeta.videoHeight = pCodecCtx->height;
-        }
+        ret = spFrame->writeVideoFrame(pStreaming, iStreamingId, pFrame);
         break;
     
     case AVMEDIA_TYPE_AUDIO:
-        {
-            m_avFrame.sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
-            m_avFrame.sampleMeta.sampleFormat = CAvSampleType::convert((AVSampleFormat)pCodecCtx->format);
-            m_avFrame.sampleMeta.audioRate = pCodecCtx->sample_rate;
-            m_avFrame.sampleMeta.audioChannels = pCodecCtx->channels;
-        }
+        ret = spFrame->writeAudioSampleFrame(pStreaming, iStreamingId, pFrame);
         break;
 
     default:
-        sCtx.error("未知的帧类型");
-        return nullptr;
+        return sCtx.error("未知的帧类型");
     }
-    AVRational r = pStreaming->time_base;
-    m_avFrame.timeRate = r.den/r.num;
-    m_avFrame.streamingId = iStringingId;
-    return pAvFrame;
+    if( ret == sCtx.success()) {
+        spNewFrame.setPtr(spFrame.getPtr());
+    }
+    return ret;
 }
 
-int CAvFrame::setAVFrameToPAvFrame() {
-    if(!m_spAvFrame) {
-        return sCtx.error("没有帧信息，无法更新");
+int CAvFrame::writeVideoFrame(AVStream* pStreaming, int iStreamingId, AVFrame* pFrame) {
+    if( allocImageDataBuffer(m_spBuffer, 
+                (AVPixelFormat)pFrame->format, pFrame->width, pFrame->height,
+                m_pLinesizes, m_ppPlanes) != sCtx.success() ){
+        return sCtx.error("分配帧内存异常");
     }
 
-    AVFrame* pAvFrame = m_spAvFrame;
-    PAvFrame& avFrame = m_avFrame;
-    
-    avFrame.ppPlanes = pAvFrame->data;
-    avFrame.pPlaneLineSizes = pAvFrame->linesize;
+    const uint8_t **src_data = (const uint8_t **)pFrame->data;
+    const int *src_linesize = pFrame->linesize;
+    av_image_copy(
+            m_ppPlanes, m_pLinesizes,
+            src_data, src_linesize, 
+            (AVPixelFormat)pFrame->format, pFrame->width, pFrame->height);
 
     //
     // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据，这里面要注意，是否存在
     //  planar audio，并且通道数超过8？如果存在这种情况，则这里的数据是存在丢失的
     //
     int nPlanes = 0;
-    for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
+    for( int i=0; i<AV_NUM_DATA_POINTERS && pFrame->data[i]; i++ ) {
+        nPlanes = i+1;
+    }
+    m_avFrame.sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
+    m_avFrame.sampleMeta.sampleFormat = CAvSampleType::convert((AVPixelFormat)pFrame->format);
+    m_avFrame.sampleMeta.videoWidth = pFrame->width;
+    m_avFrame.sampleMeta.videoHeight = pFrame->height;
+    m_avFrame.nWidth = pFrame->width;
+    m_avFrame.nHeight = pFrame->height;
+    m_avFrame.nPlanes = nPlanes;
+    m_avFrame.ppPlanes = m_ppPlanes;
+    m_avFrame.pPlaneLineSizes = m_pLinesizes;
+    AVRational r = pStreaming->time_base;
+    m_avFrame.timeRate = r.den/r.num;
+    m_avFrame.timeStamp = pFrame->pts;
+    m_avFrame.streamingId = iStreamingId;
+    return sCtx.success();
+}
+
+int CAvFrame::writeAudioSampleFrame(AVStream* pStreaming, int iStreamingId, AVFrame* pFrame){
+    if( allocAudioSampleDataBuffer(m_spBuffer, 
+                (AVSampleFormat)pFrame->format, pFrame->channels, pFrame->nb_samples,
+                m_pLinesizes, m_ppPlanes) != sCtx.success() ){
+        return sCtx.error("分配帧内存异常");
+    }
+
+    av_samples_copy(
+            m_ppPlanes, pFrame->extended_data, 0, 0, 
+            pFrame->nb_samples, pFrame->channels, (AVSampleFormat)pFrame->format);
+
+    //TODO: 如何计算？
+    m_pLinesizes[0] = pFrame->nb_samples * pFrame->channels * av_get_bytes_per_sample((AVSampleFormat)pFrame->format);
+    m_pLinesizes[1] = m_pLinesizes[0];
+
+    //
+    // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据，这里面要注意，是否存在
+    //  planar audio，并且通道数超过8？如果存在这种情况，则这里的数据是存在丢失的
+    //
+    int nPlanes = 0;
+    for( int i=0; i<AV_NUM_DATA_POINTERS && pFrame->data[i]; i++ ) {
         nPlanes = i+1;
     }
 
-    avFrame.nPlanes = nPlanes;
-    avFrame.timeStamp = pAvFrame->pts;
-    switch(m_avFrame.sampleMeta.sampleType) {
-    case EAvSampleType::AvSampleType_Audio:
-        {
-            avFrame.nWidth = pAvFrame->nb_samples;
-            avFrame.nHeight = 1;
-        }
-        break;
-
-    case EAvSampleType::AvSampleType_Video:
-        {
-            avFrame.nWidth = pAvFrame->width;
-            avFrame.nHeight = pAvFrame->height;
-        }
-        break;
-
-    default:
-        {
-            return sCtx.error("暂时没有支持的帧类型");
-        }
-    }
+    m_avFrame.sampleMeta.sampleType = EAvSampleType::AvSampleType_Audio;
+    m_avFrame.sampleMeta.sampleFormat = CAvSampleType::convert((AVSampleFormat)pFrame->format);
+    m_avFrame.sampleMeta.audioRate = pFrame->sample_rate;
+    m_avFrame.sampleMeta.audioChannels = pFrame->channels;
+    m_avFrame.nWidth = pFrame->nb_samples;
+    m_avFrame.nHeight = 1;
+    m_avFrame.nPlanes = nPlanes;
+    m_avFrame.nPlanes = nPlanes;
+    m_avFrame.ppPlanes = m_ppPlanes;
+    m_avFrame.pPlaneLineSizes = m_pLinesizes;
+    AVRational r = pStreaming->time_base;
+    m_avFrame.timeRate = r.den/r.num;
+    m_avFrame.timeStamp = pFrame->pts;
+    m_avFrame.streamingId = iStreamingId;
     return sCtx.success();
 }
 
@@ -98,12 +119,18 @@ const PAvFrame* CAvFrame::getFramePtr() {
     return &m_avFrame;
 }
 
+int CAvFrame::getDataBuffer(SDeviceMemory& spDataBuffer) {
+    spDataBuffer = m_spBuffer;
+    return sCtx.success();
+}
+
 //
 // 从ffmpeg中拷贝过来的代码，目录在：lavfutils.c
+//  修改内存分配部分代码
 //
 int ff_load_image(uint8_t *data[4], int linesize[4],
                   int *w, int *h, enum AVPixelFormat *pix_fmt,
-                  const char *filename, void *log_ctx)
+                  const char *filename, void *log_ctx, SDeviceMemory& spDataBuffer)
 {
     AVInputFormat *iformat = NULL;
     AVFormatContext *format_ctx = NULL;
@@ -182,9 +209,16 @@ int ff_load_image(uint8_t *data[4], int linesize[4],
     *w       = frame->width;
     *h       = frame->height;
     *pix_fmt = (AVPixelFormat)frame->format;
-
-    if ((ret = av_image_alloc(data, linesize, *w, *h, *pix_fmt, 16)) < 0)
+    //if ((ret = av_image_alloc(data, linesize, *w, *h, *pix_fmt, 16)) < 0)
+    //    goto end;
+    //
+    // 分配图片内存(修改拷贝过来的内核函数，替换为自己的内存分配方式)
+    //
+    if( CAvFrame::allocImageDataBuffer(spDataBuffer, 
+                *pix_fmt, *w, *h,
+                linesize, data) != sCtx.success() ){
         goto end;
+    }
     ret = 0;
 
     av_image_copy(data, linesize, (const uint8_t **)frame->data, frame->linesize, *pix_fmt, *w, *h);
@@ -554,32 +588,29 @@ int CAvFrame::loadImage(const char* szFileName, SAvFrame& spFrame) {
     }
     #endif//ENABLE_JPEG_LIBRARY
 
-    sp->m_spAvFrame.take(av_frame_alloc(), [](AVFrame* pFrame){
-        av_freep(&pFrame->data[0]);
-        av_frame_free(&pFrame);
-    });
-    AVFrame* pAvFrame = sp->m_spAvFrame;
+    int width, height;
+    AVPixelFormat pixelFormat;
     if( ff_load_image(
-                pAvFrame->data, pAvFrame->linesize, 
-                &pAvFrame->width, &pAvFrame->height, 
-                (AVPixelFormat*)&pAvFrame->format, szFileName, nullptr) < 0 ) {
+                sp->m_ppPlanes, sp->m_pLinesizes, 
+                &width, &height, &pixelFormat,
+                szFileName, nullptr, sp->m_spBuffer) < 0 ) {
         return sCtx.error("读取图片文件失败");
     }
-    
+
     PAvFrame* pFrame = &sp->m_avFrame;
-    pFrame->nHeight = pAvFrame->height;
-    pFrame->nWidth = pAvFrame->width;
+    pFrame->nHeight = height;
+    pFrame->nWidth = width;
     pFrame->streamingId = 0;
     pFrame->timeRate = 0;
     pFrame->timeStamp = 0;
     pFrame->sampleMeta.sampleType = EAvSampleType::AvSampleType_Video;
-    pFrame->sampleMeta.sampleFormat = CAvSampleType::convert((AVPixelFormat)pAvFrame->format);
-    pFrame->sampleMeta.videoHeight = pAvFrame->height;
-    pFrame->sampleMeta.videoWidth = pAvFrame->width;
-    pFrame->pPlaneLineSizes = pAvFrame->linesize;
-    pFrame->ppPlanes = pAvFrame->data;
+    pFrame->sampleMeta.sampleFormat = CAvSampleType::convert(pixelFormat);
+    pFrame->sampleMeta.videoHeight = height;
+    pFrame->sampleMeta.videoWidth = width;
+    pFrame->pPlaneLineSizes = sp->m_pLinesizes;
+    pFrame->ppPlanes = sp->m_ppPlanes;
     pFrame->nPlanes = 0;
-    for( int i=0; i<AV_NUM_DATA_POINTERS && pAvFrame->data[i]; i++ ) {
+    for( int i=0; i<AV_NUM_DATA_POINTERS && pFrame->ppPlanes[i]; i++ ) {
         pFrame->nPlanes = i+1;
     }
     spFrame.setPtr(sp.getPtr());
@@ -652,6 +683,65 @@ int CAvFrame::saveImage(const char* szFileName, const SAvFrame& spFrame) {
         return sCtx.error("写入图片文件尾部信息失败");
     };
  
+    return sCtx.success();
+}
+
+int CAvFrame::allocImageDataBuffer(
+                    SDeviceMemory& spDataBuffer, 
+                    AVPixelFormat pixFormat, int nWidth, int nHeight, 
+                    int pLinesizes[AV_NUM_DATA_POINTERS], 
+                    uint8_t *ppPlanes[AV_NUM_DATA_POINTERS] ) 
+{
+    int size = av_image_get_buffer_size(pixFormat, nWidth, nHeight, BUFFER_ALIGN);
+    if(size <= 0) {
+        return sCtx.error("图像格式异常，无法计算需要分配的图像缓冲大小");
+    }
+
+    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(SDevice::cpu(), size);
+    if( !spBuffer ) {
+        return sCtx.error("分配图像缓冲失败");
+    }
+    
+    if( av_image_fill_linesizes(pLinesizes, pixFormat, nWidth) < 0) {
+        return sCtx.error("计算图片Linesize失败");
+    }
+
+    int nBufferSize = spBuffer.size();
+    int nRequireSize = av_image_fill_pointers(ppPlanes, pixFormat, nHeight, (uint8_t*)spBuffer.data(), pLinesizes);
+    if( nRequireSize != spBuffer.size() ) {
+        return sCtx.error("分配的缓冲区和需要的缓冲区大小不一致");
+    }
+    spDataBuffer = spBuffer;
+    return sCtx.success();
+}
+
+int CAvFrame::allocAudioSampleDataBuffer(
+                    SDeviceMemory& spDataBuffer, 
+                    AVSampleFormat sampleFormat, int nb_channels, int nb_samples,
+                    int pLinesizes[AV_NUM_DATA_POINTERS], 
+                    uint8_t *ppPlanes[AV_NUM_DATA_POINTERS] ){
+    int size = av_samples_get_buffer_size(pLinesizes, nb_channels, nb_samples, sampleFormat, BUFFER_ALIGN);
+    if(size <= 0) {
+        return sCtx.error("图像格式异常，无法计算需要分配的图像缓冲大小");
+    }
+
+    SDeviceMemory spBuffer = SDeviceMemory::createDeviceMemory(SDevice::cpu(), size);
+    if( !spBuffer ) {
+        return sCtx.error("分配图像缓冲失败");
+    }
+    
+    for(int i=0; i<AV_NUM_DATA_POINTERS; i++) {
+        ppPlanes[i] = nullptr;
+    }
+
+    uint8_t *pDataBuffer = (uint8_t*)spBuffer.data();
+    int nRequireSize = av_samples_fill_arrays(
+        ppPlanes, pLinesizes, pDataBuffer, 
+        nb_channels, nb_samples, sampleFormat, BUFFER_ALIGN);
+    if( nRequireSize != spBuffer.size() ) {
+        return sCtx.error("分配的缓冲区和需要的缓冲区大小不一致");
+    }
+    spDataBuffer = spBuffer;
     return sCtx.success();
 }
 

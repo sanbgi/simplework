@@ -166,16 +166,12 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
 
     CPointer<CAvFrame> spAvFrameOut;
     CObject::createObject(spAvFrameOut);
-    if( av_image_alloc(spAvFrameOut->m_ppPlanes, spAvFrameOut->m_pLinesizes,
-        targetWidth, targetHeight, targetFormat, 1) < 0 ){
+     
+    if( CAvFrame::allocImageDataBuffer(spAvFrameOut->m_spBuffer, 
+                targetFormat, targetWidth, targetHeight, 
+                spAvFrameOut->m_pLinesizes,spAvFrameOut->m_ppPlanes) != sCtx.success() ) {
         return sCtx.error("分配图像内存失败");
     }
-    spAvFrameOut->m_spPlanes.take(spAvFrameOut->m_ppPlanes, [](uint8_t** ppPlanes){
-        if(ppPlanes[0] != nullptr) {
-            av_freep(&ppPlanes[0]);
-            ppPlanes[0] = nullptr;
-        }
-    });
 
     int ret_height = sws_scale(
         //SwsContext *swsContext 转换上下文
@@ -200,7 +196,7 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
     // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
     int nPlanes = 0;
     for( int i=0; i<AV_NUM_DATA_POINTERS && spAvFrameOut->m_ppPlanes[i]; i++ ) {
-        nPlanes = i;
+        nPlanes = i+1;
     }
 
     PAvFrame& targetFrame = spAvFrameOut->m_avFrame;
@@ -209,7 +205,7 @@ int CAvFrameConverter::convertVideo(const SAvFrame& spIn, SAvFrame& spOut) {
     targetFrame.nHeight = m_targetSample.videoHeight;
     targetFrame.nWidth = m_targetSample.videoWidth;
     targetFrame.nPlanes = nPlanes;
-    targetFrame.ppPlanes = spAvFrameOut->m_spPlanes;
+    targetFrame.ppPlanes = spAvFrameOut->m_ppPlanes;
     targetFrame.pPlaneLineSizes = spAvFrameOut->m_pLinesizes;
     spOut.setPtr(spAvFrameOut.getPtr());
     return sCtx.success();
@@ -275,18 +271,13 @@ int CAvFrameConverter::convertAudio(const SAvFrame& spIn, SAvFrame& spOut) {
 
     CPointer<CAvFrame> spAvFrameOut;
     CObject::createObject(spAvFrameOut);
-    int nBufSize;
     int nTargetSamples = (int64_t)pSrc->nWidth * targetRate / sourceRate + 256;
-    uint8_t** ppPlanes = nullptr;
-    if( nBufSize = av_samples_alloc_array_and_samples( &ppPlanes, nullptr,
-                        targetChannels, nTargetSamples, 
-                        targetFormat, 0) <0 ){
-        return sCtx.error("分配音频缓冲失败");
+    if( CAvFrame::allocAudioSampleDataBuffer(spAvFrameOut->m_spBuffer, 
+                targetFormat, targetChannels, nTargetSamples, 
+                spAvFrameOut->m_pLinesizes,spAvFrameOut->m_ppPlanes) != sCtx.success() ) {
+        return sCtx.error("分配音频帧内存失败");
     }
-    spAvFrameOut->m_spPlanes.take(ppPlanes, [](uint8_t** ptr){
-        av_freep(&ptr[0]);
-    });
-    
+
     //
     // 这里面关系比较复杂，extended_data与pData格式相同，一般情况下也是相同的，其含义是
     //  对于planar audio，都是指向指针数组的指针，其中数组中每一个指针指向一个channel的数据
@@ -295,7 +286,7 @@ int CAvFrameConverter::convertAudio(const SAvFrame& spIn, SAvFrame& spOut) {
     const uint8_t **in = (const uint8_t **)pSrc->ppPlanes;
 
     // 音频重采样：返回值是重采样后得到的音频数据中单个声道的样本数
-    int nb_samples = swr_convert(m_spSwrCtx, ppPlanes, nTargetSamples, in, pSrc->nWidth);
+    int nb_samples = swr_convert(m_spSwrCtx, spAvFrameOut->m_ppPlanes, nTargetSamples, in, pSrc->nWidth);
     if (nb_samples < 0) {
         return sCtx.error("swr_convert()失败");
     }
@@ -305,16 +296,21 @@ int CAvFrameConverter::convertAudio(const SAvFrame& spIn, SAvFrame& spOut) {
         return sCtx.success();
     }
 
-    //假设音频的plane只可能是1或者2，对于package audio为1，对于plannar audio为2
-    int nPlanes = av_sample_fmt_is_planar(targetFormat) ? 2 : 1;
-    int nAudioSamples = nb_samples;
+    // 通过搜索linesize里面的值，来判断究竟有多少plane, 便于处理数据
+    int nPlanes = 0;
+    for( int i=0; i<AV_NUM_DATA_POINTERS && spAvFrameOut->m_ppPlanes[i]; i++ ) {
+        nPlanes = i+1;
+    }
+    //TODO: 如何计算？
     spAvFrameOut->m_pLinesizes[0] = nb_samples * targetChannels * av_get_bytes_per_sample(targetFormat);
     spAvFrameOut->m_pLinesizes[1] = spAvFrameOut->m_pLinesizes[0];
 
     PAvFrame& targetFrame = spAvFrameOut->m_avFrame;
     targetFrame.sampleMeta = m_targetSample;
+    targetFrame.nWidth = nb_samples;
+    targetFrame.nHeight = 1;
     targetFrame.nPlanes = nPlanes;
-    targetFrame.ppPlanes = ppPlanes;
+    targetFrame.ppPlanes = spAvFrameOut->m_ppPlanes;
     targetFrame.pPlaneLineSizes = spAvFrameOut->m_pLinesizes;
     spOut.setPtr(spAvFrameOut.getPtr());
     return sCtx.success();
