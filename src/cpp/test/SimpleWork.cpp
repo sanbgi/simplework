@@ -99,7 +99,7 @@ int main(int argc, char *argv[]){
     //testIdx();
     //CNnNetwork::runFile();
     //CNnNetwork::run();
-    CAvNetwork::runImage();
+    CAvNetwork::run();
 
     return 0;
 }
