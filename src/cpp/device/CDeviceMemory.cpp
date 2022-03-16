@@ -34,7 +34,9 @@ protected://IArchivable
     const char* getClassKey() { return SDeviceMemory::__getClassKey(); }
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
-            m_spMemory = m_spMemory.toDevice(SDevice::cpu());
+            if( SDevice::cpu()->createKernelMemory(m_spMemory, m_spMemory) != sCtx.success() ) {
+                return sCtx.error("转化为CPU内存错误");
+            }
         }
         return ar.arObject("data", m_spMemory);
     }

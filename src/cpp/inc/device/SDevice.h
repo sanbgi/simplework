@@ -78,6 +78,12 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
 
     SIMPLEWORK_INTERFACE_LEAVE
 
+    static SDevice getDevice(const char* szDeviceName) {
+        SDevice spDevice;
+        SDeviceFactory::getFactory()->getDevice(szDeviceName, spDevice);
+        return spDevice;
+    }
+
     static SDevice defaultKernelDevice() {
         SDevice spDevice;
         SDeviceFactory::getFactory()->getDefaultKernelDevic(spDevice);
@@ -90,22 +96,19 @@ SIMPLEWORK_INTERFACECLASS_ENTER0(Device)
         return spDevice;
     }
 
-    static SDevice cpu() {
-        SDevice spDevice;
-        SDeviceFactory::getFactory()->getCpuDevice(spDevice);
-        return spDevice;
+    static const SDevice& cpu() {
+        static SDevice s_spDevice = getDevice("cpu");
+        return s_spDevice;
     }
  
-    static SDevice cuda() {
-        SDevice spDevice;
-        SDeviceFactory::getFactory()->getCudaDevice(spDevice);
-        return spDevice;
+    static const SDevice& cuda() {
+        static SDevice s_spDevice = getDevice("cuda");
+        return s_spDevice;
     }
 
-    static SDevice opencl() {
-        SDevice spDevice;
-        SDeviceFactory::getFactory()->getOpenclDevice(spDevice);
-        return spDevice;
+    static const SDevice& opencl() {
+        static SDevice s_spDevice = getDevice("opencl");
+        return s_spDevice;
     }
 
 public://常用辅助函数

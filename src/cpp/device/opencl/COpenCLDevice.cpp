@@ -63,14 +63,6 @@ private://IDeviceMemory
         return sCtx.success();
     }
 
-    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
-        if( spDevice.getPtr() == SDevice::opencl().getPtr() ) {
-            spMemory.setPtr(this);
-            return sCtx.success();
-        }
-        return spDevice->createKernelMemory(spMemory, SDeviceMemory::wrapPtr(this));
-    }
-
     int writeMemory(const SDeviceMemory& spMemory) {
         if(spMemory.getPtr() == this) {
             return sCtx.success();

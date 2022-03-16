@@ -43,7 +43,8 @@ private://IDeviceMemory
     }
 
     int getDevice(SDevice& spDevice){
-        return SDeviceFactory::getFactory()->getCpuDevice(spDevice);
+        spDevice = SDevice::cpu();
+        return sCtx.success();
     }
 
     void* getData(const SDevice& spDevice){
@@ -57,14 +58,6 @@ private://IDeviceMemory
     int getKernelMemory(SDeviceMemory& spKernelMemory){
         spKernelMemory.setPtr(this);
         return sCtx.success();
-    }
-
-    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
-        if( spDevice.getPtr() == SDevice::cpu().getPtr() ) {
-            spMemory.setPtr(this);
-            return sCtx.success();
-        }
-        return spDevice->createKernelMemory(spMemory, SDeviceMemory::wrapPtr(this));
     }
 
     int writeMemory(const SDeviceMemory& spMemory) {

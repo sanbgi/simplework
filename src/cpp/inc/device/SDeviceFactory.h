@@ -22,17 +22,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceFactory, "sw.device.DeviceFactory")
         //
         // 获得Cpu设备
         //
-        virtual int getCpuDevice(SDevice& spDevice) = 0;
-
-        //
-        // 获得Cuda设备
-        //
-        virtual int getCudaDevice(SDevice& spDevice) = 0;
-
-        //
-        // 获得Opencl设备
-        //
-        virtual int getOpenclDevice(SDevice& spDevice) = 0;
+        virtual int getDevice(const char* szName, SDevice& spDevice) = 0;
 
         //
         // 获得当前默认内核计算设备

@@ -1,5 +1,7 @@
 
 #include "device.h"
+#include <map>
+#include <string>
 
 using namespace sw;
 using namespace std;
@@ -13,6 +15,20 @@ class CDeviceFactory : public CObject, public IDeviceFactory{
 
     int getAvaiableDevices(const char* szName, IVisitor<const SDevice&>& cbVisitor) {
         return sCtx.success();
+    }
+
+    int getDevice(const char* szName, SDevice& spDevice) {
+        static std::map<string,SDevice> sDeviceMap = {
+            { "cpu", SObject::createObject("sw.device.CpuDevice") },
+            { "cuda", SObject::createObject("sw.device.cuda.CudaDevice") },
+            { "opencl", SObject::createObject("sw.device.opencl.OpenclDevice") },
+        };
+        auto it = sDeviceMap.find(szName);
+        if(it != sDeviceMap.end()) {
+            spDevice = it->second;
+            return sCtx.success();
+        }
+        return sCtx.error((string("找不到对应的设备:")+szName).c_str());
     }
 
     int getCpuDevice(SDevice& spDevice) {

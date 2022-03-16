@@ -258,7 +258,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     auto pInVar = solveVars.data() + solveCtx.iInVar;
     pInVar->dataBuffer = spBatchIn.dataBuffer();
 
-    SDevice spDevice = SDevice::defaultKernelDevice();
+    SDevice spDevice = SDevice::defaultHostDevice();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     //
@@ -358,7 +358,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    SDevice spDevice = SDevice::defaultKernelDevice();
+    SDevice spDevice = SDevice::defaultHostDevice();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     PNnExtraTensor sResizeTensor;
