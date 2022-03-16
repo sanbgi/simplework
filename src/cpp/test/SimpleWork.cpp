@@ -98,8 +98,8 @@ int main(int argc, char *argv[]){
     //testNN();
     //testIdx();
     //CNnNetwork::runFile();
-    //CNnNetwork::run();
-    CAvNetwork::run();
+    CNnNetwork::run();
+    //CAvNetwork::run();
 
     return 0;
 }

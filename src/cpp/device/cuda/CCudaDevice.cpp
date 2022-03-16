@@ -92,25 +92,25 @@ private:
             return sCtx.success();
         }
 
-        string kernalName = kernelKey.runtimeKey;
-        auto iProgramName = kernalName.rfind('.');
-        if( iProgramName <= 0 && iProgramName >= kernalName.length() - 1) {
-            return sCtx.error((string("无效的内核名，")+kernalName).c_str());
+        string kernelName = kernelKey.runtimeKey;
+        auto iProgramName = kernelName.rfind('.');
+        if( iProgramName <= 0 && iProgramName >= kernelName.length() - 1) {
+            return sCtx.error((string("无效的内核名，")+kernelName).c_str());
         }
 
         //cl::Program clProgram;
-        //if( getProgram(kernalName.substr(0,iProgramName), clProgram) != sCtx.success() ) {
+        //if( getProgram(kernelName.substr(0,iProgramName), clProgram) != sCtx.success() ) {
         //    return sCtx.error((string("内核创建错误，内核名：")+kernelKey.runtimeKey).c_str());
         //}
         
-        //cl::Kernel kernel = cl::Kernel(clProgram, kernalName.substr(iProgramName+1).c_str());
+        //cl::Kernel kernel = cl::Kernel(clProgram, kernelName.substr(iProgramName+1).c_str());
         //if(kernel.get() == nullptr) {
         //    return sCtx.error((string("创建内核错误，内核名：")+kernelKey.runtimeKey).c_str());
         //}
 
         //kernelFunc = kernel;
         //sMapKernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = kernel;
-        //sNamedKernels[kernalName] = kernel;
+        //sNamedKernels[kernelName] = kernel;
         return sCtx.success();
     }
     */

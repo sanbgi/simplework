@@ -41,13 +41,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //  记录下张量求解步骤。
         //
         //  @kernelKey (同runEvalKernel)
-        //  @kernalRange (同runEvalKernel)
-        //  @kernalParameter (同runEvalKernel)
+        //  @kernelRange (同runEvalKernel)
+        //  @kernelParameter (同runEvalKernel)
         //  @pVars 求解涉及的张量，每个张量必须是一个合法的张量，内核求解时，不会检查张量是否合法
         //
         virtual int solve(
-                        PRuntimeKey kernalKey, 
-                        PMemory kernalParameter,
+                        PRuntimeKey kernelKey, 
+                        PMemory kernelParameter,
                         int nRanges, int pRanges[], 
                         int nVars, STensor pVars[]) = 0;
 
@@ -74,7 +74,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //  用后，确保指针直指向的值与实际内核ID相同。这么设计的目的是，允许调用着在第一次调用后，
         //  缓存内核ID，便于下次调用时，内核可以根据这个ID，快速找到内核对象。
         //
-        //  @kernalParameter：
+        //  @kernelParameter：
         //          1，如果size == 0 字节，则不会传递这个参数给内核
         //          2，如果size > 0 && size <= 8字节，则指针指向的内容，会作为参数传递给内核；
         //          3，如果size > 8字节，则指针值会作为参数，传递给内核(大小为指针大小)
@@ -86,8 +86,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //virtual int runEvalKernel(
         //                const SDevice& spDevice,
         //                PRuntimeKey kernelKey,
-        //                PVector kernalRange,
-        //                PMemory kernalParameter,
+        //                PVector kernelRange,
+        //                PMemory kernelParameter,
         //                int nVars,
         //                const PVector pVars[] ) = 0;
 
@@ -96,7 +96,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //
         //  @kernelKey，内核标识（同runEvalKernel)
         //
-        //  @kernalParameter，内核参数（同runEvalKernel)
+        //  @kernelParameter，内核参数（同runEvalKernel)
         //
         //  @pVars，求解需要的张量
         //      1，每一个pVar会传递三个参数给内核；
@@ -107,8 +107,8 @@ SIMPLEWORK_INTERFACECLASS_ENTER(TensorSolver, "sw.math.TensorSolver")
         //virtual int runDeviaKernel(
         //                const SDevice& spDevice,
         //                PRuntimeKey kernelKey,
-        //                PVector kernalRange,
-        //                PMemory kernalParameter,
+        //                PVector kernelRange,
+        //                PMemory kernelParameter,
         //                int nVars,
         //                const PDeviaVector pVars[] ) = 0;
 

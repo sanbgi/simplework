@@ -182,13 +182,13 @@ public:
     }
     
     int solve(  PRuntimeKey kernelKey,
-                PMemory kernalParameter,
+                PMemory kernelParameter,
                 int nRanges, int pRanges[], 
                 int nVars, STensor pVars[]) {
 
         //钩子机制
         if( m_arrHookers.size() ) {
-            if( (*m_arrHookers.rbegin())->onSolve(kernelKey,kernalParameter,nRanges,pRanges,nVars,pVars) == sCtx.success() ) {
+            if( (*m_arrHookers.rbegin())->onSolve(kernelKey,kernelParameter,nRanges,pRanges,nVars,pVars) == sCtx.success() ) {
                 return sCtx.success();
             }
         }
@@ -209,19 +209,19 @@ public:
         //  持有，所以，执行必须同步执行，不能异步执行（？）
         //
         SDeviceMemory spKernalParameterInDevice;
-        if(kernalParameter.size>0) {
+        if(kernelParameter.size>0) {
             //
             // 如果大于8个字节，则在非CPU情况下，需要把指针转化为设备指针再传递指针
             //
-            if(kernalParameter.size > __MAX_PARAMETER_SIZE) {
-                if( spKernelDevice->createKernelMemory(spKernalParameterInDevice, kernalParameter.size, kernalParameter.data) != sCtx.success() ) {
+            if(kernelParameter.size > __MAX_PARAMETER_SIZE) {
+                if( spKernelDevice->createKernelMemory(spKernalParameterInDevice, kernelParameter.size, kernelParameter.data) != sCtx.success() ) {
                     return sCtx.error("创建设备内存错误");
                 }
                 *pKernelArg = spKernalParameterInDevice.data(spKernelDevice);
             }else{
-                for(int i=0; i<kernalParameter.size; i++) {
-                    pKernelArg->data[i] = kernalParameter.pByteArray[i];
-                    pKernelArg->size = kernalParameter.size;
+                for(int i=0; i<kernelParameter.size; i++) {
+                    pKernelArg->data[i] = kernelParameter.pByteArray[i];
+                    pKernelArg->size = kernelParameter.size;
                 }
             }
             nKernalArgs += 1, pKernelArg++;
@@ -267,8 +267,8 @@ public:
     /*
     int runKernel(const SDevice& spKernelDevice,
                         PRuntimeKey kernelKey,
-                        PVector kernalRange,
-                        PMemory kernalParameter,
+                        PVector kernelRange,
+                        PMemory kernelParameter,
                         int nVars,
                         const PVector pVars[] ) {
         if(nVars>__MAX_VARS) {
@@ -278,9 +278,9 @@ public:
         int nArgs = nVars*2;
         PKernalVariable pArgs[__MAX_VARS*2+1];
         PKernalVariable* pMemory = pArgs;
-        if(kernalParameter.size>0) {
+        if(kernelParameter.size>0) {
             nArgs += 1;
-            *pMemory = kernalParameter;
+            *pMemory = kernelParameter;
             pMemory++;
         }
         for(int i=0; i<nVars; i++, pMemory+=2) {
@@ -290,7 +290,7 @@ public:
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
         SDeviceEvent sEvent;
-        int ret = spKernelDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        int ret = spKernelDevice->runKernel(kernelKey, nArgs, pArgs, kernelRange.size, kernelRange.pIntArray, &sEvent);
         if(sEvent) {
             sEvent->wait();
         }
@@ -300,8 +300,8 @@ public:
     int runDeviaKernel(
                         const SDevice& spKernelDevice,
                         PRuntimeKey kernelKey,
-                        PVector kernalRange,
-                        PMemory kernalParameter,
+                        PVector kernelRange,
+                        PMemory kernelParameter,
                         int nVars,
                         const PDeviaVector pVars[] ) {
                 if(nVars>__MAX_VARS) {
@@ -311,10 +311,10 @@ public:
         int nArgs = nVars*3;
         PMemory pArgs[__MAX_VARS*3+1];
         PMemory* pMemory = pArgs;
-        if(kernalParameter.size>0) {
+        if(kernelParameter.size>0) {
             nArgs += 1;
-            pMemory->size = kernalParameter.size;
-            pMemory->data = kernalParameter.data;
+            pMemory->size = kernelParameter.size;
+            pMemory->data = kernelParameter.data;
             pMemory++;
         }
         for(int i=0; i<nVars; i++, pMemory+=3) {
@@ -328,7 +328,7 @@ public:
 
         //目前暂时不支持异步计算，因为还未设计好异步计算时，对于设备内存资源如何管理
         SDeviceEvent sEvent;
-        int ret = spKernelDevice->runKernel(kernelKey, nArgs, pArgs, kernalRange.size, kernalRange.pIntArray, &sEvent);
+        int ret = spKernelDevice->runKernel(kernelKey, nArgs, pArgs, kernelRange.size, kernelRange.pIntArray, &sEvent);
         if(sEvent) {
             sEvent->wait();
         }

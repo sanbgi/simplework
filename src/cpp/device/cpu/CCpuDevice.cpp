@@ -120,20 +120,20 @@ private:
             return itNamedKernel->second;
         }
 
-        string kernalName = kernelKey.runtimeKey;
-        auto iProgramName = kernalName.rfind('.');
-        if( iProgramName <= 0 && iProgramName >= kernalName.length() - 1) {
+        string kernelName = kernelKey.runtimeKey;
+        auto iProgramName = kernelName.rfind('.');
+        if( iProgramName <= 0 && iProgramName >= kernelName.length() - 1) {
             return nullptr;
         }
-        SKernalOperator spOp = getOperator(kernalName.substr(0,iProgramName));
+        SKernalOperator spOp = getOperator(kernelName.substr(0,iProgramName));
         if(!spOp) {
             return nullptr;
         }
 
-        FKernalFunc kernelFunc = spOp->getKernalFunc(kernalName.substr(iProgramName+1).c_str());
+        FKernalFunc kernelFunc = spOp->getKernalFunc(kernelName.substr(iProgramName+1).c_str());
         if(kernelFunc) {
             sId2Kernels[PRuntimeKey(kernelKey.runtimeKey).runtimeId] = kernelFunc;
-            sName2Kernels[kernalName] = kernelFunc;
+            sName2Kernels[kernelName] = kernelFunc;
         }
         return kernelFunc;
     }
