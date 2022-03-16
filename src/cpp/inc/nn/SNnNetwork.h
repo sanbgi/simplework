@@ -50,13 +50,6 @@ public:
     static SNnNetwork createDeviceNetwork(const PNnNetwork& rNet) {
         return SObject::createObject("sw.nn.DeviceNetwork", CData<PNnNetwork>(rNet));
     }
-    //
-    // 高性能，最小化内存拷贝版本，跑小网络没有问题，不过在跑ResNet50时，不知道啥
-    //  原因（drive），显卡就就不工作了
-    //
-    static SNnNetwork createDeviceAdvNetwork(const PNnNetwork& rNet) {
-        return SObject::createObject("sw.nn.DeviceAdvNetwork", CData<PNnNetwork>(rNet));
-    }
     static SNnNetwork createOpenclNetwork(const PNnNetwork& rNet) {
         return SObject::createObject("sw.nn.OpenclNetwork", CData<PNnNetwork>(rNet));
     }

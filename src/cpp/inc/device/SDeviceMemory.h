@@ -30,6 +30,16 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         virtual int getDevice(SDevice& spDevice) = 0;
 
         //
+        // 获取真正的内核内存(如果是内核内存，则直接返回自己)
+        //
+        virtual int getKernelMemory(SDeviceMemory& spKernelMemory) = 0;
+
+        //
+        // 转换为目标设备内存
+        //
+        virtual int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) = 0;
+
+        //
         // 写回内存
         //
         virtual int writeMemory(const SDeviceMemory& spMemory) = 0;
@@ -61,6 +71,13 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         IFace* pFace = getPtr();
         if(pFace) pFace->getDevice(spDevice);
         return spDevice;
+    }
+
+    SDeviceMemory toDevice(const SDevice& spDevice) {
+        SDeviceMemory toMemory;
+        IFace* pFace = getPtr();
+        if(pFace) pFace->toDevice(spDevice, toMemory);
+        return toMemory;
     }
 
     static SDeviceMemory createDeviceMemory(const SDevice& spDevice, int nSize, void* pData=nullptr) {

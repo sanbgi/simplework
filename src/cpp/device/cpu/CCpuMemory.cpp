@@ -54,16 +54,34 @@ private://IDeviceMemory
         return m_spTaker;
     }
 
+    int getKernelMemory(SDeviceMemory& spKernelMemory){
+        spKernelMemory.setPtr(this);
+        return sCtx.success();
+    }
+
+    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
+        if( spDevice.getPtr() == SDevice::cpu().getPtr() ) {
+            spMemory.setPtr(this);
+            return sCtx.success();
+        }
+        return spDevice->createKernelMemory(spMemory, SDeviceMemory::wrapPtr(this));
+    }
+
     int writeMemory(const SDeviceMemory& spMemory) {
-        if(spMemory.getPtr() == this) {
+        SDeviceMemory kernelMemory;
+        if( !spMemory || spMemory->getKernelMemory(kernelMemory) != sCtx.success() ) {
+            return sCtx.error("无效的内存");
+        }
+
+        if(kernelMemory.getPtr() == this) {
             return sCtx.success();
         }
 
-        if(spMemory.size() != m_nSize) {
+        if(kernelMemory.size() != m_nSize) {
             return sCtx.error("不能写入大小不一样的内存");
         }
 
-        return spMemory->readMemory(m_nSize, m_spTaker);
+        return kernelMemory->readMemory(m_nSize, m_spTaker);
     }
 
     int writeMemory(int nSize, void* pData, int iOffset=0){

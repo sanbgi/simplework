@@ -41,6 +41,15 @@ private://IDeviceMemory
         return nullptr;
     }
 
+    int getKernelMemory(SDeviceMemory& spKernelMemory){
+        spKernelMemory.setPtr(this);
+        return sCtx.success();
+    }
+
+    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
+        return sCtx.success();
+    }
+
     int writeMemory(const SDeviceMemory& spMemory) {
         if(spMemory.getPtr() == this) {
             return sCtx.success();

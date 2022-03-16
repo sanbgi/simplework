@@ -20,7 +20,11 @@ protected://CObject
         }
         SDevice spDevice = pDeviceMemory->pDevice == nullptr ? SDevice::defaultHostDevice() : *pDeviceMemory->pDevice;
         if(pDeviceMemory->pKernelMemory) {
-            return spDevice->createKernelMemory(m_spMemory, *pDeviceMemory->pKernelMemory);
+            SDeviceMemory spKernelMemory = *(pDeviceMemory->pKernelMemory);
+            if( !spKernelMemory || spKernelMemory->getKernelMemory(spKernelMemory) != sCtx.success() ) {
+                return sCtx.error("未知异常，按理说，所有内存对象必须返回一个内核内存对象");
+            }
+            return spDevice->createKernelMemory(m_spMemory, spKernelMemory);
         }
         return spDevice->createKernelMemory(m_spMemory, pDeviceMemory->size, pDeviceMemory->data);
     }
@@ -30,8 +34,7 @@ protected://IArchivable
     const char* getClassKey() { return SDeviceMemory::__getClassKey(); }
     int toArchive(const SArchive& ar) {
         if(!ar->isReading()) {
-            //转化为CPU内存
-            getData(SDevice::cpu());
+            m_spMemory = m_spMemory.toDevice(SDevice::cpu());
         }
         return ar.arObject("data", m_spMemory);
     }
@@ -58,6 +61,19 @@ private://IDeviceMemory
             m_spMemory = toMemory;
         }
         return m_spMemory->getData(spDevice);
+    }
+
+    int getKernelMemory(SDeviceMemory& spKernelMemory){
+        spKernelMemory = m_spMemory;
+        return sCtx.success();
+    }
+
+    int toDevice(const SDevice& spDevice, SDeviceMemory& spMemory) {
+        if( spDevice->createKernelMemory(m_spMemory, m_spMemory) ) {
+            return sCtx.error("设备转化异常");
+        }
+        spMemory.setPtr(this);
+        return sCtx.success();
     }
 
     int writeMemory(const SDeviceMemory& spMemory){
