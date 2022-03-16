@@ -77,6 +77,9 @@ private://IDeviceMemory
     }
 
     int writeMemory(const SDeviceMemory& spMemory){
+        if(spMemory.getPtr() == m_spMemory.getPtr() ) {
+            return sCtx.success();
+        }
         return m_spMemory->writeMemory(spMemory);
     }
 

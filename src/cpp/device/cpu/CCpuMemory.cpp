@@ -68,6 +68,10 @@ private://IDeviceMemory
     }
 
     int writeMemory(const SDeviceMemory& spMemory) {
+        if(spMemory.getPtr() == this) {
+            return sCtx.success();
+        }
+
         SDeviceMemory kernelMemory;
         if( !spMemory || spMemory->getKernelMemory(kernelMemory) != sCtx.success() ) {
             return sCtx.error("无效的内存");
