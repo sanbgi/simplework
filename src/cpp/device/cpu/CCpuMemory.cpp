@@ -1,11 +1,10 @@
-
-#include "../device.h"
+#include "CpuDevice.h"
 
 using namespace sw;
 using namespace std;
 
 static SCtx sCtx("CCpuMemory");
-class CCpuMemory : public CObject, IKernelMemory, IArchivable{
+class CCpuMemory : public CObject, public IKernelMemory, IArchivable{
 
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(IKernelMemory)
@@ -18,7 +17,11 @@ protected://CObject
         if(pMemory == nullptr || pMemory->size < 1) {
             return sCtx.error("创建内存参数无效");
         }
+        return initialize(pMemory);
+    }
 
+public:
+    int initialize(const PMemory* pMemory){
         m_nSize = pMemory->size;
         m_spTaker.take(new unsigned char[m_nSize], [](unsigned char* pBuffer){
             delete[] pBuffer;
@@ -95,5 +98,16 @@ private:
     int m_nSize;
     CTaker<unsigned char*> m_spTaker;
 };
+
+int createMemory(PMemory initMemory, SKernelMemory& spMempry) {
+    CPointer<CCpuMemory> spPointer;
+    CObject::createObject(spPointer);
+    int ret = spPointer->initialize(&initMemory);
+    if( ret != sCtx.success() ) {
+        return ret;
+    }
+    spMempry.setPtr(spPointer.getPtr());
+    return ret;
+}
 
 SIMPLEWORK_FACTORY_AUTO_REGISTER(CCpuMemory, CCpuMemory::__getClassKey())

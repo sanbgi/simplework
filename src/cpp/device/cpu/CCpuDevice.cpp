@@ -1,5 +1,6 @@
 
-#include "../device.h"
+#include "CpuDevice.h"
+
 #include <map>
 #include <string>
 
@@ -15,8 +16,7 @@ class CCpuDevice : public CObject, public IDevice{
 
 private://IDevice
     int createKernelMemory(SKernelMemory& spKernelMemory, int nSize, void* pData = nullptr){
-        spKernelMemory = SObject::createObject("sw.device.CpuMemory", CData<PMemory>({nSize, pData}));
-        return spKernelMemory ? sCtx.success() : sCtx.error("创建CPU内存失败");
+        return createMemory({nSize, pData}, spKernelMemory);
     }
 
     int createKernelMemory(SKernelMemory& spKernelMemory, const SKernelMemory& spMemory){

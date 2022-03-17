@@ -1,5 +1,5 @@
 
-#include "../device.h"
+#include "OpenclDevice.h"
 #include <map>
 #include <string>
 #include <fstream> 
@@ -20,24 +20,23 @@ class COpenclMemory : public CObject, IKernelMemory{
         SIMPLEWORK_INTERFACE_ENTRY(IKernelMemory)
     SIMPLEWORK_INTERFACE_ENTRY_LEAVE(CObject)
 
-protected://CObject
-    int __initialize(const PData* pData){
-        const PMemory* pMemory = CData<PMemory>(pData);
-        if(pMemory == nullptr || pMemory->size < 1) {
-            return sCtx.error("创建内存参数无效");
-        }
+public:
+    static int createMemory(const PMemory& initMemory, SKernelMemory& spMemory) {
+        CPointer<COpenclMemory> spPointer;
+        CObject::createObject(spPointer);
 
         cl_int err;
-        if(pMemory->data != nullptr) {
-            m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)pMemory->size, pMemory->data, &err);
+        if(initMemory.data != nullptr) {
+            spPointer->m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, (cl::size_type)initMemory.size, initMemory.data, &err);
         }else{
-            m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)pMemory->size, nullptr, &err);
+            spPointer->m_sBuffer = cl::Buffer(CL_MEM_READ_WRITE, (cl::size_type)initMemory.size, nullptr, &err);
         }
         if( err != CL_SUCCESS ) {
             return sCtx.error("创建Opencl内存失败");
         }
 
-        m_nSize = pMemory->size;
+        spPointer->m_nSize = initMemory.size;
+        spMemory.setPtr(spPointer.getPtr());
         return sCtx.success();
     }
 
@@ -193,8 +192,7 @@ protected://CObject
 
 private://IDevice
     int createKernelMemory(SKernelMemory& spDeviceMemory, int nSize, void* pInitData = nullptr){
-        spDeviceMemory = SObject::createObject("sw.device.OpenclMemory", CData<PMemory>({nSize, pInitData}));
-        return spDeviceMemory ? sCtx.success() : sCtx.error("创建内存失败");
+        return COpenclMemory::createMemory({nSize, pInitData}, spDeviceMemory);
     }
 
     int createKernelMemory(SKernelMemory& spDeviceMemory, const SKernelMemory& spMemory){
