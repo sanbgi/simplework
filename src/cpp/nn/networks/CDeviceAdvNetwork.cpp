@@ -1,4 +1,3 @@
-
 #include "network.h"
 
 #include <map>
@@ -9,9 +8,8 @@
 using namespace sw;
 using namespace std;
 
-static SCtx sCtx("CDeviceNetwork");
-
-class CDeviceNetwork : public CObject, public INnNetwork, public IArchivable{
+static SCtx sCtx("CDeviceAdvNetwork");
+class CDeviceAdvNetwork : public CObject, public INnNetwork, public IArchivable{
     SIMPLEWORK_INTERFACE_ENTRY_ENTER(CObject)
         SIMPLEWORK_INTERFACE_ENTRY(INnNetwork)
         SIMPLEWORK_INTERFACE_ENTRY(IArchivable)
@@ -26,9 +24,9 @@ private://IArchivable
     int toArchive(const SArchive& ar);
 
 public://Factory
-    static const char* __getClassKey() { return "sw.nn.DeviceNetwork"; }
+    static const char* __getClassKey() { return "sw.nn.DeviceAdvNetwork"; }
 
-public://INnDeviceNetwork
+public://INnDeviceAdvNetwork
     int eval(const STensor& spBatchIn, STensor& spBatchOut);
     int devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation);
     int update(const STensor& spBatchInDeviation);
@@ -87,7 +85,7 @@ public:
     int initNetwork(PDATATYPE idType);
 };
 
-int CDeviceNetwork::__initialize(const PData* pData){
+int CDeviceAdvNetwork::__initialize(const PData* pData){
     const PNnNetwork* pNet = CData<PNnNetwork>(pData);
     if(pNet == nullptr) {
         return sCtx.error("缺少构造参数");
@@ -98,7 +96,7 @@ int CDeviceNetwork::__initialize(const PData* pData){
     return sCtx.success();
 }
 
-int CDeviceNetwork::initNetwork(PDATATYPE idType) {
+int CDeviceAdvNetwork::initNetwork(PDATATYPE idType) {
     if(m_spSolveGraphInfos) {
         if(idType == m_spSolveGraphInfos->idType) {
             return sCtx.success();
@@ -161,7 +159,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
         PSolveFunc solveFunc;
         (*itOp)->prepareSolver({idType,PSolveCtx::CPU}, solveFunc);
         if(solveFunc.nParamterSize > 0) {
-            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::cpu(),solveFunc.nParamterSize, solveFunc.pParameterData);
+            solveParameter.spParameters = SDeviceMemory::createDeviceMemory(SDevice::defaultHostDevice(),solveFunc.nParamterSize, solveFunc.pParameterData);
         }
         solveParameter.nInVars = spOp.nInVars;
         solveParameter.iOutVar = spOp.iOutVar;
@@ -214,7 +212,7 @@ int CDeviceNetwork::initNetwork(PDATATYPE idType) {
     return sCtx.success();
 }
 
-int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
+int CDeviceAdvNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     PDATATYPE idType = spBatchIn.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -258,7 +256,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     auto pInVar = solveVars.data() + solveCtx.iInVar;
     pInVar->dataBuffer = spBatchIn.dataBuffer();
 
-    SDevice spDevice = SDevice::defaultHostDevice();
+    SDevice spDevice = pInVar->dataBuffer.device();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     //
@@ -274,25 +272,21 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
         pMemory += 2;
 
         //输入参数
-        SKernelMemory pKernelMemory[4];
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
-            if( pVec->dataBuffer->createKernelMemory(spKernelDevice, pKernelMemory[j]) != sCtx.success() ) {
-                return sCtx.error("无法创建计算内核需要的参数");
-            }
             pMemory[0] = pVec->size;
-            pMemory[1] = pKernelMemory[j].data();
+            pMemory[1] = pVec->dataBuffer.data(spKernelDevice);
             pMemory+=2;
         }
 
         //输出参数
         pVec = &solveVars[instruct.iOutVar];
-        SKernelMemory sKernelOut;
-        if( spKernelDevice->createKernelMemory(sKernelOut, pVec->size*nElementSize) != sCtx.success() ) {
+        pVec->dataBuffer = SDeviceMemory::createDeviceMemory(spKernelDevice, pVec->size*nElementSize);
+        if( !pVec->dataBuffer ) {
             return sCtx.error("创建内核内存错误");
         }
         pMemory[0] = pVec->size;
-        pMemory[1] = sKernelOut.data();
+        pMemory[1] = pVec->dataBuffer.data(spKernelDevice);
 
         //内核计算
         int nRanges = instruct.nRanges;
@@ -306,11 +300,6 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }
-
-        //
-        // 这里存在性能问题，因为内核内存刚拷贝回主内存，下一次内核计算，又很快需要这个，所以还要拷贝到设备中
-        //
-        pVec->dataBuffer = SDeviceMemory::createDeviceMemory(spDevice, sKernelOut);
     }
 
     std::vector<SObject> arrExtras = {spBatchIn};
@@ -333,7 +322,7 @@ int CDeviceNetwork::eval(const STensor& spBatchIn, STensor& spBatchOut) {
     return CNnExtraTensor::createResizeTensor({spOut, (int)arrExtras.size(), arrExtras.data()}, spBatchOut);
 }
 
-int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
+int CDeviceAdvNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDeviation, STensor& spBatchIn, STensor& spBatchInDeviation) {
     int idType = spBatchOut.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -358,7 +347,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         return sCtx.error("非有效的输出，无法用于学习");
     }
 
-    SDevice spDevice = SDevice::defaultHostDevice();
+    SDevice spDevice = spBatchOutDeviation.device();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
 
     PNnExtraTensor sResizeTensor;
@@ -447,40 +436,29 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         //
         // 创建内核参数
         //
-        SKernelMemory pKernelMemory[4], pKernelDeviaMemory[4];
         for(int j=0; j<instruct.nInVars; j++) {
             pVec = &solveVars[instruct.pInVars[j]];
 
             void* pDevia;
             if(!pVec->deviaBuffer) {
-                if( spKernelDevice->createKernelMemory(pKernelDeviaMemory[j], pVec->size*nElementSize) != sCtx.success()) {
+                pVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spKernelDevice, pVec->size*nElementSize);
+                if(!pVec->deviaBuffer){
                     return sCtx.error("创建内核内存失败");
                 }
-                pDevia = pKernelDeviaMemory[j].data();
+                pDevia = pVec->deviaBuffer.data(spKernelDevice);
                 spKernelDevice.memoryZero(pDevia, 0, pVec->size* nElementSize);
             }else{
-                if( pVec->deviaBuffer->createKernelMemory(spKernelDevice, pKernelDeviaMemory[j] ) != sCtx.success()) {
-                    return sCtx.error("创建内核内存失败");
-                }
-                pDevia = pKernelDeviaMemory[j].data();
-            }
-
-            if( pVec->dataBuffer->createKernelMemory(spKernelDevice, pKernelMemory[j]) != sCtx.success() ) {
-                return sCtx.error("创建内核内存失败");
+                pDevia = pVec->deviaBuffer.data(spKernelDevice);
             }
 
             pMemory[0] = pVec->size;
-            pMemory[1] = pKernelMemory[j].data();
+            pMemory[1] = pVec->dataBuffer.data(spKernelDevice);
             pMemory[2] = pDevia;
             pMemory+=3;
         }
         pVec = &solveVars[instruct.iOutVar];
-        SKernelMemory sKernelOutDevia;
-        if( pVec->deviaBuffer->createKernelMemory(spKernelDevice, sKernelOutDevia) != sCtx.success() ) {
-            return sCtx.error("创建内核内存失败");
-        }
         pMemory[0] = pVec->size;
-        pMemory[1] = sKernelOutDevia.data();
+        pMemory[1] = pVec->deviaBuffer.data(spKernelDevice);
 
         int nRanges = instruct.nRanges;
         int pRanges[3] = { instruct.pRanges[0], instruct.pRanges[1], instruct.pRanges[2] };
@@ -493,30 +471,13 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
                 nRanges, pRanges) != sCtx.success() ) {
             return sCtx.error("设备计算错误");
         }
-
-        //
-        // 从内核计算结果拷贝回主机设备
-        //
-        for(int j=0; j<instruct.nInVars; j++) {
-            pVec = &solveVars[instruct.pInVars[j]];
-            if(!pVec->deviaBuffer) {
-                pVec->deviaBuffer = SDeviceMemory::createDeviceMemory(spDevice, pKernelDeviaMemory[j]);
-                if( !pVec->deviaBuffer ) {
-                    return sCtx.error("创建偏导数失败");
-                }
-            }else{
-                if( pVec->deviaBuffer->writeKernelMemory(pKernelDeviaMemory[j]) != sCtx.success() ){
-                    return sCtx.error("回写偏导数失败");
-                }
-            }
-        }
     }
 
     //
     // 创建偏导数
     //
-    SKernelMemory spKernelDeviations;
-    if( spKernelDevice->createKernelMemory(spKernelDeviations, nWeights*nElementSize) != sCtx.success() ){
+    SDeviceMemory spKernelDeviations = SDeviceMemory::createDeviceMemory(spKernelDevice, nWeights*nElementSize);
+    if( !spKernelDeviations ){
         return sCtx.error("创建权重张量失败");
     }
 
@@ -524,7 +485,7 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
     // 拷贝权重偏导数
     //
     int iDeviationOffset = 0;
-    void* pDeviations = spKernelDeviations.data();
+    void* pDeviations = spKernelDeviations.data(spKernelDevice);
     for(auto pItVec : weightVars) {
 
         SMathKernel::equal(spKernelDevice, idType, pDeviations, iDeviationOffset, pItVec->deviaBuffer.data(spKernelDevice), 0, pItVec->size );
@@ -542,11 +503,11 @@ int CDeviceNetwork::devia(const STensor& spBatchOut, const STensor& spBatchOutDe
         return sCtx.error("权重计算异常");
     }
 
-    SObject pExtras2[] = { SDeviceMemory::createDeviceMemory(spDevice, spKernelDeviations) };
+    SObject pExtras2[] = { spKernelDeviations };
     return CNnExtraTensor::createResizeTensor({spBatchInDeviation, 1, pExtras2}, spBatchInDeviation);
 }
 
-int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
+int CDeviceAdvNetwork::update(const STensor& spBatchInDeviation) {
     int idType = spBatchInDeviation.type();
     if( initNetwork(idType) != sCtx.success() ) {
         return sCtx.error("网络初始化失败");
@@ -566,27 +527,16 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
         return sCtx.error("数据错误，无法用于更新权重");
     }
 
-    SDevice spDevice = SDevice::defaultHostDevice();
     SDevice spKernelDevice = SDevice::defaultKernelDevice();
-    SKernelMemory spKernelDeiva;
-    if( spWeightDevia->createKernelMemory(spKernelDevice, spKernelDeiva) != sCtx.success() ) {
-        return sCtx.error("创建内核计算对象失败");
-    }
 
     int iDeviationOffset = 0;
-    void* pWeightDevia = spKernelDeiva.data();
+    void* pWeightDevia = spWeightDevia.data(spKernelDevice);
     vector<PSolveGraphInfos::PSolveVar>::iterator itVar = solveCtx.arrVars.begin();
     while(itVar != solveCtx.arrVars.end() ) {
         switch(itVar->type) {
         case ENnVariableType::EVWeight:
             {
-                SDeviceMemory spWeightBuffer = itVar->data.dataBuffer();
-                SKernelMemory spKernelWeights;
-                if( spWeightBuffer->createKernelMemory(spKernelDevice, spKernelWeights) != sCtx.success() ) {
-                    return sCtx.error("创建内核计算对象失败");
-                }
-                
-                void* pWeightData = spKernelWeights.data();
+                void* pWeightData = itVar->data.dataBuffer().data(spKernelDevice);
                 switch(solveCtx.idType) {
                     case PDATATYPE_FLOAT:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.floatEval");
@@ -621,11 +571,6 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
 
                     }break;
                 }
-                
-                if( spWeightBuffer->writeKernelMemory(spKernelWeights) != sCtx.success() ) {
-                    return sCtx.error("拷贝内核权重结果异常");
-                }
-
                 iDeviationOffset += itVar->size;
             }
             break;
@@ -635,10 +580,10 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
     return sCtx.success();
 }
 
-int CDeviceNetwork::toArchive(const SArchive& ar) {
+int CDeviceAdvNetwork::toArchive(const SArchive& ar) {
     m_sSolveGraph.toArchive(ar);
     ar.visitString("optimizer", m_strOptimizer);
     return sCtx.success();
 }
 
-SIMPLEWORK_FACTORY_AUTO_REGISTER(CDeviceNetwork, CDeviceNetwork::__getClassKey())
+SIMPLEWORK_FACTORY_AUTO_REGISTER(CDeviceAdvNetwork, CDeviceAdvNetwork::__getClassKey())

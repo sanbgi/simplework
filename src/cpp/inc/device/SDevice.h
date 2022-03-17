@@ -2,52 +2,12 @@
 #define __SimpleWork_Device_SDevice_h__
 
 #include "device.h"
+#include "PKernelVariable.h"
 #include "SDeviceFactory.h"
 
 SIMPLEWORK_DEVICE_NAMESPACE_ENTER
 
-class SDeviceEvent;
 class SKernelMemory;
-
-//
-// 内核计算变量
-//
-struct PKernelVariable{
-    int size;
-    union {
-        unsigned char data[8];
-        char c;
-        int i;
-        float f;
-        double d;
-        long long l;
-        void* p;
-    };
-
-    inline PKernelVariable() {
-        size = 0;
-        l = 0;
-    }
-
-#define PKERNALVARIABLE_TYPE(type) \
-    inline PKernelVariable(type v) {\
-        size = sizeof(type);\
-        *((type*)data) = v;\
-    }
-
-PKERNALVARIABLE_TYPE(char)
-PKERNALVARIABLE_TYPE(unsigned char)
-PKERNALVARIABLE_TYPE(short)
-PKERNALVARIABLE_TYPE(unsigned short)
-PKERNALVARIABLE_TYPE(int)
-PKERNALVARIABLE_TYPE(unsigned int)
-PKERNALVARIABLE_TYPE(float)
-PKERNALVARIABLE_TYPE(double)
-PKERNALVARIABLE_TYPE(long)
-PKERNALVARIABLE_TYPE(long long)
-PKERNALVARIABLE_TYPE(void*)
-};
-
 
 //
 // 计算设备

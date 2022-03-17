@@ -41,6 +41,52 @@ private://IDevice
         return sCtx.success();
     }
 
+    #define MAX_WRITE_BACK 20
+    class CWriteBack{
+    public:
+        struct CItem{
+            SKernelMemory spKernelMemory;
+            SDeviceMemory spDeviceMemory;
+        }arrWriteBacks[MAX_WRITE_BACK];
+        int nWriteBacks = 0;
+        int nErr;
+    public:
+        void pushIn(const SKernelMemory& spKernelMemory) {
+            if(nWriteBacks == MAX_WRITE_BACK) {
+                nErr = sCtx.error("内核参数过多，超过了限制范围");
+            }else{
+                arrWriteBacks[nWriteBacks++].spKernelMemory = spKernelMemory;
+            }
+        }
+        void pushIn(const SDeviceMemory& spDeviceMemory, const SKernelMemory& spKernelMemory) {
+            if(nWriteBacks == MAX_WRITE_BACK) {
+                nErr = sCtx.error("内核参数过多，超过了限制范围");
+            }else{
+                arrWriteBacks[nWriteBacks].spDeviceMemory = spDeviceMemory;
+                arrWriteBacks[nWriteBacks].spKernelMemory = spKernelMemory;
+                nWriteBacks++;
+            }
+        }
+        int error(const char* szError) {
+            nErr = sCtx.error(szError);
+            return nErr;
+        }
+
+        static void release(CWriteBack* pWriteBack) {
+            CWriteBack::CItem* pItem = pWriteBack->arrWriteBacks;
+            while(pWriteBack->nWriteBacks-->0){
+                if(pItem->spDeviceMemory) {
+                    if( pItem->spDeviceMemory->writeKernelMemory(pItem->spKernelMemory) != sCtx.success() ) {
+                        pWriteBack->error("从内核回写内存错误");
+                    }
+                    pItem->spDeviceMemory.release();
+                }
+                pItem->spKernelMemory.release();
+                pItem++;
+            }
+        }
+    };
+
     int runKernel(  const PRuntimeKey& kernelKey, 
                 int nArgs, 
                 PKernelVariable pArgs[], 
@@ -49,6 +95,57 @@ private://IDevice
         FKernelFunc func = getKernel(kernelKey);
         if(func == nullptr) {
             return sCtx.error((std::string("创建运算内核失败, 名称:") + kernelKey.runtimeKey).c_str());
+        }
+
+        //
+        //  回写控制
+        //
+        static CWriteBack sWriteBack;
+        sWriteBack.nErr = sCtx.success();
+        CTaker<CWriteBack*> spWriteTaker(&sWriteBack, CWriteBack::release);
+
+        //
+        //  支持IKernelPointer和IDeviceMemory类型参数
+        //
+        const SDevice& spDevice = SDevice::cpu();
+        PKernelVariable* pArg = pArgs;
+        for(int i=0; i<nArgs; i++, pArg++) {
+            switch(pArg->type){
+                case PKernelVariable::EDevicePointer:
+                {
+                    SDeviceMemory& spDeviceMemory = *pArg->pDeviceMemory;
+                    switch(pArg->mode) {
+                        case PKernelVariable::EReadOnly:{
+                            SKernelMemory spKernelMemory;
+                            if( spDeviceMemory->createKernelMemory(spDevice, spKernelMemory) != sCtx.success() ) {
+                                return sCtx.error("创建内核参数异常");
+                            }
+                            sWriteBack.pushIn(spKernelMemory);
+                            pArg->p = spKernelMemory.data();
+                        }break;
+
+                        case PKernelVariable::EReadWrite:{
+                            SKernelMemory spKernelMemory;
+                            if( spDeviceMemory->createKernelMemory(spDevice, spKernelMemory) != sCtx.success() ) {
+                                return sCtx.error("创建内核参数异常");
+                            }
+                            sWriteBack.pushIn(spDeviceMemory, spKernelMemory);
+                            pArg->p = spKernelMemory.data();
+                        }
+                        break;
+
+                        case PKernelVariable::EWriteOnly:{
+                            SKernelMemory spKernelMemory;
+                            if( spDevice->createKernelMemory(spKernelMemory, spDeviceMemory.size()) != sCtx.success() ) {
+                                return sCtx.error("创建内核参数异常");
+                            }
+                            sWriteBack.pushIn(spDeviceMemory, spKernelMemory);
+                            pArg->p = spKernelMemory.data();
+                        }break;
+                    }
+                    break;
+                }
+            }
         }
 
         #define MAX_RANGE_SIZE 10
@@ -97,7 +194,9 @@ private://IDevice
         }else{
             func(&ctx,nArgs,pArgs);
         }
-        return sCtx.success();
+
+        spWriteTaker.release();
+        return sWriteBack.nErr;
     }
 
 private:

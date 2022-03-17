@@ -44,7 +44,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         //
         // 写回内存
         //
-        virtual int writeKernelMemory(const SDevice& spDevice, const SKernelMemory& spMemory) = 0;
+        virtual int writeKernelMemory(const SKernelMemory& spMemory) = 0;
 
         //
         // 修改内存值
