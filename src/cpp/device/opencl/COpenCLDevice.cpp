@@ -215,52 +215,6 @@ private://IDevice
         }
         return createKernelMemory(spDeviceMemory, size, spTaker);
     }
-
-    #define MAX_WRITE_BACK 20
-    class CWriteBack{
-    public:
-        struct CItem{
-            SKernelMemory spKernelMemory;
-            SDeviceMemory spDeviceMemory;
-        }arrWriteBacks[MAX_WRITE_BACK];
-        int nWriteBacks = 0;
-        int nErr;
-    public:
-        void pushIn(const SKernelMemory& spKernelMemory) {
-            if(nWriteBacks == MAX_WRITE_BACK) {
-                nErr = sCtx.error("内核参数过多，超过了限制范围");
-            }else{
-                arrWriteBacks[nWriteBacks++].spKernelMemory = spKernelMemory;
-            }
-        }
-        void pushIn(const SDeviceMemory& spDeviceMemory, const SKernelMemory& spKernelMemory) {
-            if(nWriteBacks == MAX_WRITE_BACK) {
-                nErr = sCtx.error("内核参数过多，超过了限制范围");
-            }else{
-                arrWriteBacks[nWriteBacks].spDeviceMemory = spDeviceMemory;
-                arrWriteBacks[nWriteBacks].spKernelMemory = spKernelMemory;
-                nWriteBacks++;
-            }
-        }
-        int error(const char* szError) {
-            nErr = sCtx.error(szError);
-            return nErr;
-        }
-
-        static void release(CWriteBack* pWriteBack) {
-            CWriteBack::CItem* pItem = pWriteBack->arrWriteBacks;
-            while(pWriteBack->nWriteBacks-->0){
-                if(pItem->spDeviceMemory) {
-                    if( pItem->spDeviceMemory->writeKernelMemory(pItem->spKernelMemory) != sCtx.success() ) {
-                        pWriteBack->error("从内核回写内存错误");
-                    }
-                    pItem->spDeviceMemory.release();
-                }
-                pItem->spKernelMemory.release();
-                pItem++;
-            }
-        }
-    };
     
     int runKernel(  const PRuntimeKey& kernelKey, 
                     int nArgs, 
@@ -276,54 +230,12 @@ private://IDevice
             return sCtx.error("内核计算错误，找不到指定的内核");
         }
 
-        static CWriteBack sWriteBack;
-        sWriteBack.nErr = sCtx.success();
-        class CTaker<CWriteBack*> spWriteTaker(&sWriteBack, CWriteBack::release);
-
         //
         // 设置内核参数
         //
         PKernelVariable* pArg = pArgs;
-        const SDevice& spDevice = SDevice::opencl();
         for(int i=0; i<nArgs; i++, pArg++) {
-            switch(pArg->type){
-                case PKernelVariable::EValue:
-                case PKernelVariable::EKernelPointer:
-                    kernel.setArg(i, pArg->size, pArg->data);
-                    break;
-
-                case PKernelVariable::EDevicePointer:
-                    SDeviceMemory& spDeviceMemory = *pArg->pDeviceMemory;
-                    switch(pArg->mode) {
-                        case PKernelVariable::EReadOnly:{
-                            SKernelMemory spKernelMemory;
-                            if( spDeviceMemory->createKernelMemory(spDevice, spKernelMemory) != sCtx.success() ) {
-                                return sCtx.error("创建内核参数异常");
-                            }
-                            sWriteBack.pushIn(spKernelMemory);
-                        }break;
-
-                        case PKernelVariable::EReadWrite:{
-                            SKernelMemory spKernelMemory;
-                            if( spDeviceMemory->createKernelMemory(spDevice, spKernelMemory) != sCtx.success() ) {
-                                return sCtx.error("创建内核参数异常");
-                            }
-                            sWriteBack.pushIn(spDeviceMemory, spKernelMemory);
-                        }
-                        break;
-
-                        case PKernelVariable::EWriteOnly:{
-                            SKernelMemory spKernelMemory;
-                            if( spDevice->createKernelMemory(spKernelMemory, spDeviceMemory.size()) != sCtx.success() ) {
-                                return sCtx.error("创建内核参数异常");
-                            }
-                            sWriteBack.pushIn(spDeviceMemory, spKernelMemory);
-                        }break;
-                    }
-                    pArg->p = (*(pArgs[i].pDeviceMemory)).data(SDevice::opencl());
-                    kernel.setArg(i, pArg->size, pArg->data);
-                    break;
-            }
+            kernel.setArg(i, pArg->size, pArg->data);
         }
 
         if(nRanges < 0 || nRanges > m_nMaxRanges ) {
@@ -367,8 +279,7 @@ private://IDevice
         //if( (ret = event.wait()) != CL_SUCCESS ) {
         //    return sCtx.error("等待执行结果失败");
         //}
-        spWriteTaker.release();
-        return sWriteBack.nErr;
+        return sCtx.success();
     }
 
 private:
