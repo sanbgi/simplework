@@ -587,40 +587,30 @@ int CDeviceNetwork::update(const STensor& spBatchInDeviation) {
                 }
                 
                 void* pWeightData = spKernelWeights.data();
+                PRuntimeKey kernelKey;
                 switch(solveCtx.idType) {
                     case PDATATYPE_FLOAT:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.floatEval");
-                        PKernelVariable pArgs[] = {
-                            0,
-                            iDeviationOffset,
-                            -1.0f,
-                            1.0f,
-                            pWeightData,
-                            pWeightDevia
-                        };
-                        spKernelDevice->runKernel(
-                            sKernelKey,
-                            6, pArgs,
-                            1, &itVar->size);
+                        kernelKey = sKernelKey;
                     }break;
 
                     case PDATATYPE_DOUBLE:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.doubleEval");
-                        PKernelVariable pArgs[] = {
-                            0,
-                            iDeviationOffset,
-                            -1.0f,
-                            1.0f,
-                            pWeightData,
-                            pWeightDevia
-                        };
-                        spKernelDevice->runKernel(
-                            sKernelKey,
-                            6, pArgs,
-                            1, &itVar->size);
-
+                        kernelKey = sKernelKey;
                     }break;
                 }
+                PKernelVariable pArgs[] = {
+                    0,
+                    iDeviationOffset,
+                    -1.0f,
+                    1.0f,
+                    pWeightData,
+                    pWeightDevia
+                };
+                spKernelDevice->runKernel(
+                    kernelKey,
+                    6, pArgs,
+                    1, &itVar->size);
                 
                 if( spWeightBuffer->writeKernelMemory(spKernelWeights) != sCtx.success() ) {
                     return sCtx.error("拷贝内核权重结果异常");

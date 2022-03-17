@@ -537,40 +537,27 @@ int CDeviceAdvNetwork::update(const STensor& spBatchInDeviation) {
         case ENnVariableType::EVWeight:
             {
                 void* pWeightData = itVar->data.dataBuffer().data(spKernelDevice);
+                PRuntimeKey kernelKey;
                 switch(solveCtx.idType) {
                     case PDATATYPE_FLOAT:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.floatEval");
-                        PKernelVariable pArgs[] = {
-                            0,
-                            iDeviationOffset,
-                            -1.0f,
-                            1.0f,
-                            pWeightData,
-                            pWeightDevia
-                        };
-                        spKernelDevice->runKernel(
-                            sKernelKey,
-                            6, pArgs,
-                            1, &itVar->size);
+                        kernelKey = sKernelKey;
                     }break;
 
                     case PDATATYPE_DOUBLE:{
                         static PRuntimeKey sKernelKey("sw.nn.UpdateWeight.doubleEval");
-                        PKernelVariable pArgs[] = {
-                            0,
-                            iDeviationOffset,
-                            -1.0f,
-                            1.0f,
-                            pWeightData,
-                            pWeightDevia
-                        };
-                        spKernelDevice->runKernel(
-                            sKernelKey,
-                            6, pArgs,
-                            1, &itVar->size);
-
+                        kernelKey = sKernelKey;
                     }break;
                 }
+                PKernelVariable pArgs[] = {
+                    0, iDeviationOffset,
+                    -1.0f, 1.0f,
+                    pWeightData, pWeightDevia
+                };
+                spKernelDevice->runKernel(
+                    kernelKey,
+                    6, pArgs,
+                    1, &itVar->size);
                 iDeviationOffset += itVar->size;
             }
             break;
