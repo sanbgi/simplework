@@ -18,9 +18,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER(KernelMemory, "sw.device.KernelMemory")
         virtual int getSize() = 0;
 
         //
-        // 获取内存值
+        // 获取设备指针
         //
-        virtual void* getData() = 0;
+        virtual void* getPointer(const SDevice& spDevice) = 0;
 
         //
         // 获取设备
@@ -49,9 +49,9 @@ SIMPLEWORK_INTERFACECLASS_ENTER(KernelMemory, "sw.device.KernelMemory")
         return pFace != nullptr ? pFace->getSize() : 0;
     }
 
-    void* data() const {
+    void* data(const SDevice& spDevice) const {
         IFace* pFace = getPtr();
-        return (pFace != nullptr) ? pFace->getData() : nullptr;
+        return (pFace != nullptr) ? pFace->getPointer(spDevice) : nullptr;
     }
 
     SDevice device() const {

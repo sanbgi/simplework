@@ -47,17 +47,18 @@ private://IDeviceMemory
         return m_spMemory->getDevice(spDevice);
     }
 
-    void* getData(const SDevice& spDevice){
-        SDevice spInDevice = m_spMemory.device();
-        if( spInDevice.getPtr() != spDevice.getPtr() ) {
+    void* getPointer(const SDevice& spDevice){
+        void* pPointer = m_spMemory->getPointer(spDevice);
+        if(pPointer == nullptr) {
             SKernelMemory toMemory;
             if( spDevice->createKernelMemory(toMemory, m_spMemory) != sCtx.success()) {
                 sCtx.error("创建设备内存异常");
                 return nullptr;
             }
             m_spMemory = toMemory;
+            return m_spMemory->getPointer(spDevice);
         }
-        return m_spMemory->getData();
+        return pPointer;
     }
 
     int getKernelMemory(SKernelMemory& spKernelMemory) {

@@ -33,7 +33,7 @@ private://IDevice
         }
 
         //拷贝内存值
-        if( spMemory->readMemory(toMemory.size(), toMemory.data()) != sCtx.success() ) {
+        if( spMemory->readMemory(toMemory.size(), toMemory.data(SDevice::cpu())) != sCtx.success() ) {
             return sCtx.error("从指定的设备内存，拷贝值到CPU内存失败");
         }
 

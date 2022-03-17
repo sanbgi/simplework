@@ -47,8 +47,11 @@ private://IKernelMemory
         return sCtx.success();
     }
 
-    void* getData(){
-        return m_spTaker;
+    void* getPointer(const SDevice& spDevice){
+        if(spDevice.getPtr() == SDevice::cpu().getPtr()){
+            return m_spTaker;
+        }
+        return nullptr;
     }
 
     int writeMemory(const SKernelMemory& spMemory) {

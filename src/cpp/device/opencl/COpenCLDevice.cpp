@@ -51,8 +51,11 @@ private://IKernelMemory
         return sCtx.success();
     }
 
-    void* getData(){
-        return m_sBuffer.get();
+    void* getPointer(const SDevice& spDevice){
+        if(spDevice.getPtr() == SDevice::opencl().getPtr()) {
+            return m_sBuffer.get();
+        }
+        return nullptr;
     }
 
     int writeMemory(const SKernelMemory& spMemory) {
@@ -66,9 +69,9 @@ private://IKernelMemory
 
         SDevice spDevice = spMemory.device();
         if( spDevice.isCpu() ) {
-            return writeMemory(m_nSize, spMemory.data());
+            return writeMemory(m_nSize, spMemory.data(spDevice));
         }else if( spDevice.isOpencl() ) {
-            void* pSrc = spMemory.data();
+            void* pSrc = spMemory.data(spDevice);
             if( pSrc == m_sBuffer.get() ) {
                 return sCtx.success();
             }
@@ -202,7 +205,7 @@ private://IDevice
         }
 
         if(spDevice.isCpu() ) {
-            return createKernelMemory(spDeviceMemory, spMemory.size(), spMemory.data());
+            return createKernelMemory(spDeviceMemory, spMemory.size(), spMemory.data(spDevice));
         }
 
         //如果不是CPU内存，则需要内存拷贝到CPU内存，作为中转

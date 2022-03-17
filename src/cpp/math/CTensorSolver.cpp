@@ -217,7 +217,7 @@ public:
                 if( spKernelDevice->createKernelMemory(spKernelParameterInDevice, kernelParameter.size, kernelParameter.data) != sCtx.success() ) {
                     return sCtx.error("创建设备内存错误");
                 }
-                *pKernelArg = spKernelParameterInDevice.data();
+                *pKernelArg = spKernelParameterInDevice.data(spKernelDevice);
             }else{
                 for(int i=0; i<kernelParameter.size; i++) {
                     pKernelArg->data[i] = kernelParameter.pByteArray[i];

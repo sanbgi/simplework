@@ -24,7 +24,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
         //
         // 获取内存值
         //
-        virtual void* getData(const SDevice& spDevice) = 0;
+        virtual void* getPointer(const SDevice& spDevice) = 0;
 
         //
         // 获取设备
@@ -65,7 +65,7 @@ SIMPLEWORK_INTERFACECLASS_ENTER(DeviceMemory, "sw.device.DeviceMemory")
 
     void* data(const SDevice& spDevice = SDevice::cpu()) const {
         IFace* pFace = getPtr();
-        return (pFace != nullptr) ? pFace->getData(spDevice) : nullptr;
+        return (pFace != nullptr) ? pFace->getPointer(spDevice) : nullptr;
     }
 
     SDevice device() const {
