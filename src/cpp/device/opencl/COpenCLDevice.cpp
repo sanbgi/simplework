@@ -240,10 +240,6 @@ private://IDevice
             kernel.setArg(i, pArg->size, pArg->data);
         }
 
-        if(nRanges < 0 || nRanges > m_nMaxRanges ) {
-            return sCtx.error("内核计算参数错误，nRnages不符合要求");
-        }
-
         cl::Event event;
         cl::NDRange globalRange;
         switch(nRanges) {
